@@ -48,12 +48,12 @@ The project provides feature-rich development and collaboration
 environment using advanced tools such as GCC compilers, git, Atlassian
 JIRA, Confluence, FishEye, Crucible, Bamboo, github mirror and forums.
 
-Main project front-end:   http://www.linuxdrone.org/        (redirect to wiki)
-Project forums:           http://forum.linuxdrone.org/  (multirotorforums.com)
-Wiki, docs and manuals:   http://wiki.linuxdrone.org/   (Atlassian Confluence)
-Bug and issue tracker:    http://jira.linuxdrone.org/         (Atlassian JIRA)
-Project build server:     http://bamboo.linuxdrone.org/     (Atlassian Bamboo)
-Repository browser:       http://code.linuxdrone.org/      (FishEye, Crucible)
-Read/write source access: ssh://git@git.linuxdrone.org    (gitolite with keys)
-Github repository mirror: https://github.com/osnwt/LinuxDrone      (read-only)
-Toolchain downloads:      http://downloads.linuxdrone.org    (used by scripts)
+Main project front-end:    http://www.linuxdrone.org/        (redirect to wiki)
+Project forums:            http://forum.linuxdrone.org/  (multirotorforums.com)
+Wiki, docs and manuals:    http://wiki.linuxdrone.org/   (Atlassian Confluence)
+Bug and issue tracker:     http://jira.linuxdrone.org/         (Atlassian JIRA)
+Project build server:      http://bamboo.linuxdrone.org/     (Atlassian Bamboo)
+Repository browser:        http://code.linuxdrone.org/      (FishEye, Crucible)
+Read/write git repository: ssh://git@git.linuxdrone.org    (gitolite with keys)
+Read-only official mirror: https://github.com/LinuxDrone/LinuxDrone    (GitHub)
+Toolchain downloads:       http://downloads.linuxdrone.org    (used by scripts)
