@@ -17,7 +17,7 @@
 #include "../../modules/mpu6050/cmpu6050meta.h"
 #include "../../modules/sensors/csensorsmeta.h"
 
-#include "../../system/csystembus.h"
+#include "system/CSystemBus"
 
 #include "my_memory"
 

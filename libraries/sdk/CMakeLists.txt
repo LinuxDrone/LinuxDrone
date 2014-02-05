@@ -10,5 +10,11 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-CMakeLists.txt	text eol=crlf
-*		text eol=lf
+file(GLOB_RECURSE INC "include/*")
+file(GLOB_RECURSE SRC "src/*.cpp")
+
+include_directories(${LIB_DIR}/core/include)
+
+add_library(sdk ${INC} ${SRC})
+
+install(TARGETS sdk DESTINATION lib)

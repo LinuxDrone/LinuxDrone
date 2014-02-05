@@ -13,7 +13,7 @@
 #pragma once
 
 #include "../base/cmodule.h"
-#include "../../system/cbus.h"
+#include "system/CBus"
 
 class CMpu6050 : public CModule
 {

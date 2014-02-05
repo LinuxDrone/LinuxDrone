@@ -11,8 +11,8 @@
 //--------------------------------------------------------------------
 
 #include "cmpu6050.h"
-#include "../../system/csystembuspool.h"
-#include "../../system/csystembus.h"
+#include "system/CSystemBusPool"
+#include "system/CSystemBus"
 #include "system/CSystem"
 #include "system/Logger"
 
