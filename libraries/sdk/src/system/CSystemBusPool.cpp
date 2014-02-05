@@ -10,8 +10,8 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "csystembuspool.h"
-#include "csystemi2c.h"
+#include "CSystemBusPool.h"
+#include "CSystemI2C.h"
 #include "my_memory"
 
 CSystemBusPool::CSystemBusPool()

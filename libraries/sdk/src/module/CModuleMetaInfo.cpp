@@ -10,33 +10,27 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#pragma once
+#include "CModuleMetaInfo.h"
 
-#include <vector>
-#include "csystembus.h"
-#include "thread/CMutex"
-
-class CString;
-class CSystemBus;
-
-class CSystemBusPool
+CModuleMetainfo::CModuleMetainfo()
 {
-public:
-	CSystemBusPool();
-	~CSystemBusPool();
+}
 
-	static CSystemBusPool* instance();
+CModuleMetainfo::~CModuleMetainfo()
+{
+}
 
-	void lock();
-	void unlock();
-	CMutex* mutex();
+CString CModuleMetainfo::moduleName() const
+{
+	return CString();
+}
 
-	CSystemBus* sysBus(CSystemBus::BusType type, const CString& devName);
-	void releaseBus(CSystemBus* bus);
+mongo::BSONObj CModuleMetainfo::metainformation() const
+{
+	return mongo::BSONObj();
+}
 
-	void clear();
-
-private:
-	std::vector<CSystemBus*> m_pool;
-	CMutex m_mutex;
-};
+CModule* CModuleMetainfo::createModule() const
+{
+	return 0;
+}

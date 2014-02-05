@@ -1,2 +1,2 @@
 
-#include "../../src/system/csettings.h"
+#include "../../src/system/CSettings.h"

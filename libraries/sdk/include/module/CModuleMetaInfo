@@ -1,2 +1,2 @@
 
-#include "../../src/module/cmodulemetainfo.h"
+#include "../../src/module/CModuleMetaInfo.h"

@@ -10,9 +10,9 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "cmodulesystem.h"
-#include "cmodulemetainfo.h"
-#include "cmodule.h"
+#include "CModuleSystem.h"
+#include "CModuleMetaInfo.h"
+#include "CModule.h"
 #include "io/CDir"
 #include <system/Logger>
 

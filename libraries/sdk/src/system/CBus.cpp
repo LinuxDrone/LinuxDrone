@@ -10,8 +10,8 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "cbus.h"
-#include "csystembuspool.h"
+#include "CBus.h"
+#include "CSystemBusPool.h"
 
 CBus::CBus(CSystemBus::BusType type, const CString& device, int slave /*= 0*/)
 {

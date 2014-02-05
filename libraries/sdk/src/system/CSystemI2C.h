@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "csystembus.h"
+#include "CSystemBus.h"
 
 class CSystemI2C : public CSystemBus
 {

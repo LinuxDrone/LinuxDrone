@@ -10,7 +10,7 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "cmodule.h"
+#include "CModule.h"
 #include "system/CSystem"
 #include "system/Logger"
 

@@ -10,31 +10,32 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "csettings.h"
-#include "text/CString"
+#pragma once
 
-#include "my_memory"
+#include "CSystemBus.h"
 
-CSettings::CSettings()
+class CBus
 {
-}
+public:
+	CBus(CSystemBus::BusType type = CSystemBus::BusType_Unknown, const CString& device = CString(), int slave = 0);
+	CBus(const CBus& bus);
+	~CBus();
 
-CSettings::~CSettings()
-{
-}
+	CBus& operator=(const CBus& bus);
 
-bool CSettings::setValue(const CString& name, const mongo::BSONObj& value)
-{
-	// C style UTF-8 string
-//	const char* data = name.data();
-	return false;
-}
+	void lock();
+	void unlock();
+	CMutex* mutex();
 
-mongo::BSONObj CSettings::value(const CString& value) const
-{
-	return mongo::BSONObj();
-}
+	CSystemBus* handle();
+	bool isOpened() const;
 
-//===================================================================
-//  p r i v a t e   f u n c t i o n s
-//===================================================================
+	void setSlave(uint32_t slave);
+	uint32_t slave();
+	int write(const void* data, size_t size);
+	int read(void* data, size_t size);
+
+private:
+	CSystemBus * m_bus;
+	uint32_t     m_slave;
+};

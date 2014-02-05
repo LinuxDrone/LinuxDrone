@@ -1,2 +1,2 @@
 
-#include "../../src/module/cmodule.h"
+#include "../../src/module/CModule.h"

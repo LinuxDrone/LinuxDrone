@@ -10,7 +10,7 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "csystemi2c.h"
+#include "CSystemI2C.h"
 #include "text/CString"
 #include "system/Logger"
 
