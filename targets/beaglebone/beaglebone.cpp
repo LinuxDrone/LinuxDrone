@@ -13,7 +13,7 @@
 #include "system/CSystem"
 #include <stdio.h>
 
-#include "../../modules/base/cmodulesystem.h"
+#include "module/CModuleSystem"
 #include "../../modules/mpu6050/cmpu6050meta.h"
 #include "../../modules/sensors/csensorsmeta.h"
 

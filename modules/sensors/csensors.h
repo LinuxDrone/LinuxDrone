@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "../base/cmodule.h"
+#include "module/CModule"
 
 class CSensors : public CModule
 {

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "../base/cmodule.h"
+#include "module/CModule"
 #include "system/CBus"
 
 class CMpu6050 : public CModule

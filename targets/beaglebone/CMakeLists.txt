@@ -27,8 +27,8 @@ include_directories(${LIB_DIR}/core/include)
 include_directories(${LIB_DIR}/sdk/include)
 
 set(EXTRA_LIBS
-	core
 	sdk
+	core
 	${MongoDB_LIBRARIES}
 	${Boost_LIBRARIES}
 	${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}

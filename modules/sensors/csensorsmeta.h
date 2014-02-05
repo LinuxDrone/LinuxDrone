@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "../base/cmodulemetainfo.h"
+#include "module/CModuleMetaInfo"
 
 class CSensorsMeta : public CModuleMetainfo
 {
