@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf8"/>
+
+		<title>Basic shapes</title>
+
+		<link rel="stylesheet" type="text/css" href="javascripts/joint/dist/joint.css" />
+
+		<style>
+            #paper {
+                width: 1024px;
+                height: 300px;
+                border: 1px solid gray;
+                box-sizing: border-box;
+            }
+		</style>
+	</head>
+	<body>
+
+        <table border="1" >
+            <tr>
+                <td>
+                    <div id="ModulesPanel">
+                        
+                    </div>
+                </td>
+                <td>
+                    <div id="paper"></div>
+                </td>
+                <td style="width:200px">
+                    Properties
+                </td>
+            </tr>
+            <tr>
+            	<td><select id="listConfigs" onChange="SelectConfig()"></select></td>
+            	<td>
+                    <span>Name:</span>
+            		<input id="configName" type="input" value="Hexa" >
+                    <span>Version:</span>
+                    <input id="configVersion" type="input" value="1" >
+            		<input type="button" value="Save Config" onclick="SaveConfig()" />
+                    <input type="button" value="Delete Config" onclick="DeleteConfig()" />
+            	</td>
+            	<td>&nbsp;</td>
+            </tr>
+        </table>
+
+
+		<script src="javascripts/joint/lib/jquery.js"></script>
+		<script src="javascripts/joint/lib/jquery.sortElements.js"></script>
+		<script src="javascripts/joint/lib/lodash.js"></script>
+		<script src="javascripts/joint/lib/backbone.js"></script>
+
+		<script src="javascripts/joint/src/core.js"></script>
+		<script src="javascripts/joint/src/vectorizer.js"></script>
+		<script src="javascripts/joint/src/geometry.js"></script>
+
+
+		<script src="javascripts/joint/src/joint.dia.graph.js"></script>
+
+		<script src="javascripts/joint/src/joint.dia.cell.js"></script>
+		<script src="javascripts/joint/src/joint.dia.element.js"></script>
+		<script src="javascripts/joint/src/joint.dia.link.js"></script>
+		<script src="javascripts/joint/src/joint.dia.paper.js"></script>
+		
+		
+
+		<script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
+		<script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>
+
+		<script src="javascripts/configurator.js"></script>
+
+		
+	</body>
+</html>
