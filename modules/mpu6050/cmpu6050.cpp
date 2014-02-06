@@ -62,7 +62,7 @@
 #define MPU6000_GYRO_Z_OUT_LSB           0x48
 
 CMpu6050::CMpu6050() :
-	CModule("Mpu60x0", 20, 1024)
+	CModule("Mpu60x0", 1024)
 {
 }
 

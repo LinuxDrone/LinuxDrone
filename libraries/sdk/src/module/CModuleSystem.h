@@ -10,8 +10,7 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#ifndef __CMODULE_SYSTEM_H__
-#define __CMODULE_SYSTEM_H__
+#pragma once
 
 #include "text/CString"
 #include "thread/CMutex"
@@ -37,8 +36,13 @@ public:
 // module instances
 	bool createModules(const mongo::BSONObj& info);
 	bool createModule(const mongo::BSONObj& moduleInfo);
+	void linkObjects(const mongo::BSONObj& linksInfo);
 	void removeAllModules();
 	CModule* moduleByName(const CString& name);
+
+// working
+	void start();
+	void stop();
 
 private:
 	std::map<CString, CModuleMetainfo*> m_metaInfo;
@@ -47,7 +51,4 @@ private:
 	std::map<CString, CModule*> m_modules;
 	CMutex m_mutexModules;
 
-	void linkObjects(const mongo::BSONObj& linksInfo);
 };
-
-#endif // __CMODULE_SYSTEM_H__

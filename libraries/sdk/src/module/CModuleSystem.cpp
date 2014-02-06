@@ -80,21 +80,22 @@ bool CModuleSystem::createModules(const mongo::BSONObj& info)
 	if (info.isEmpty()) {
 		return false;
 	}
-	mongo::BSONElement modulesArray = info["modules"];
-	assert(modulesArray.isABSONObj());
-	std::vector<mongo::BSONElement> modarr = modulesArray.Array();
-	for (auto it = modarr.begin();it<modarr.end();it++) {
-		mongo::BSONObj obj = (*it).Obj();
+	mongo::BSONObjIterator objIt(info);
+	while (objIt.more()) {
+		mongo::BSONElement elem = objIt.next();
+		if (elem.isNull()) {
+			continue;
+		}
+		mongo::BSONObj obj = elem.Obj();
 		createModule(obj);
 	}
-	linkObjects(info);
 	return true;
 }
 
 bool CModuleSystem::createModule(const mongo::BSONObj& moduleInfo)
 {
 	CString name = moduleInfo["name"].String().c_str();
-	CString instance = moduleInfo["name"].String().c_str();
+	CString instance = moduleInfo["instance"].String().c_str();
 	{
 		CMutexSection locker(&m_mutexModules);
 		if (m_modules.count(instance)) {
@@ -111,7 +112,18 @@ bool CModuleSystem::createModule(const mongo::BSONObj& moduleInfo)
 	if (!module) {
 		return false;
 	}
-	if (!module->init(moduleInfo)) {
+	mongo::BSONObjBuilder builder;
+	mongo::BSONObjIterator objIt(moduleInfo);
+	while (objIt.more()) {
+		mongo::BSONElement elem = objIt.next();
+		if (elem.isNull()) {
+			continue;
+		}
+		builder.append(elem);
+	}
+	builder << "metaInfo" << info->metainformation();
+//	Logger() << builder.obj().toString(false, true).c_str();
+	if (!module->init(builder.obj())) {
 		SAFE_RELEASE(module);
 		return false;
 	}
@@ -125,6 +137,35 @@ bool CModuleSystem::createModule(const mongo::BSONObj& moduleInfo)
 		m_modules[instance] = module;
 	}
 	return true;
+}
+
+void CModuleSystem::linkObjects(const mongo::BSONObj& linksInfo)
+{
+	mongo::BSONObjIterator objIt(linksInfo);
+	while (objIt.more()) {
+		mongo::BSONElement elem = objIt.next();
+		if (elem.isNull()) {
+			continue;
+		}
+		mongo::BSONObj link = elem.Obj();
+		if (link.isEmpty()) {
+			continue;
+		}
+		// verify link
+		if (!link.hasField("type") || !link.hasField("outInst") || !link.hasField("inInst") ||
+			!link.hasField("outPin") || !link.hasField("inPin")) {
+			Logger() << "failed link (" << link.toString(false, true).c_str() << "). Verify failed";
+			continue;
+		}
+		CModule* module = moduleByName(link["inInst"].String().c_str());
+		if (module) {
+			module->link(link);
+		}
+		module = moduleByName(link["outInst"].String().c_str());
+		if (module) {
+			module->link(link);
+		}
+	}
 }
 
 void CModuleSystem::removeAllModules()
@@ -145,36 +186,26 @@ CModule* CModuleSystem::moduleByName(const CString& name)
 	return m_modules[name];
 }
 
+/////////////////////////////////////////////////////////////////////
+//                            working                              //
+/////////////////////////////////////////////////////////////////////
+
+void CModuleSystem::start()
+{
+	CMutexSection locker(&m_mutexModules);
+	for (auto it = m_modules.begin();it!=m_modules.end();it++) {
+		(*it).second->start();
+	}
+}
+
+void CModuleSystem::stop()
+{
+	CMutexSection locker(&m_mutexModules);
+	for (auto it = m_modules.begin();it!=m_modules.end();it++) {
+		(*it).second->stop();
+	}
+}
+
 //===================================================================
 //  p r i v a t e   f u n c t i o n s
 //===================================================================
-
-void CModuleSystem::linkObjects(const mongo::BSONObj& linksInfo)
-{
-	if (linksInfo.hasElement("link") == false) {
-		return;
-	}
-	mongo::BSONElement linksArray = linksInfo["link"];
-	assert(linksArray.isABSONObj());
-	std::vector<mongo::BSONElement> linkarr = linksArray.Array();
-	for (auto it = linkarr.begin();it<linkarr.end();it++) {
-		const mongo::BSONObj& link = (*it).Obj();
-		if (link.isEmpty()) {
-			continue;
-		}
-		// verify link
-		if (!link.hasField("type") || !link.hasField("outInst") || !link.hasField("inInst") ||
-			!link.hasField("outPin") || !link.hasField("inPin")) {
-			Logger() << "failed link (" << link.toString(false, true).c_str() << "). Verify failed";
-			continue;
-		}
-		CModule* module = moduleByName(link["inInst"].String().c_str());
-		if (module) {
-			module->link(link);
-		}
-		module = moduleByName(link["outInst"].String().c_str());
-		if (module) {
-			module->link(link);
-		}
-	}
-}

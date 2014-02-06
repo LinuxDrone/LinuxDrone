@@ -29,4 +29,7 @@ public:
 	virtual CModule* createModule() const;
 
 protected:
+	mongo::BSONObj m_metaObject;
+
+	void setMetaObject(const mongo::BSONObj& metaObject);
 };

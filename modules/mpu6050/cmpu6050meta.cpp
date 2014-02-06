@@ -16,21 +16,17 @@
 
 CMpu6050Meta::CMpu6050Meta()
 {
+	mongo::BSONObjBuilder builder;
+	builder << "name" << "Mpu6050";
+	builder << "task_priority" << 40;
+	builder << "period" << 1000;
+
+	setMetaObject(builder.obj());
 }
 
 CString CMpu6050Meta::moduleName() const
 {
 	return "Mpu6050";
-}
-
-mongo::BSONObj CMpu6050Meta::metainformation() const
-{
-	mongo::BSONObjBuilder builder;
-	builder << "name" << "Mpu6050";
-	builder << "task_priority" << 40;
-
-	mongo::BSONObj obj = builder.obj();
-	return obj;
 }
 
 CModule* CMpu6050Meta::createModule() const

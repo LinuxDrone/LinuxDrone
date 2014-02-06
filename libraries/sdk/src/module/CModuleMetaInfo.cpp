@@ -27,10 +27,19 @@ CString CModuleMetainfo::moduleName() const
 
 mongo::BSONObj CModuleMetainfo::metainformation() const
 {
-	return mongo::BSONObj();
+	return m_metaObject;
 }
 
 CModule* CModuleMetainfo::createModule() const
 {
 	return 0;
+}
+
+//===================================================================
+//  p r o t e c t e d   f u n c t i o n s
+//===================================================================
+
+void CModuleMetainfo::setMetaObject(const mongo::BSONObj& metaObject)
+{
+	m_metaObject = metaObject.copy();
 }

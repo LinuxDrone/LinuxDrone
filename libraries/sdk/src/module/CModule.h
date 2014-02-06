@@ -10,13 +10,12 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#ifndef __CMODULE_H__
-#define __CMODULE_H__
+#pragma once
 
 #include "thread/CRunnable"
 #include "xeno/CXenoTask"
 #include "thread/CMutex"
-#include <native/pipe.h>
+#include <native/queue.h>
 #include <native/heap.h>
 
 #include <mongo/bson/bson.h>
@@ -29,22 +28,25 @@ class CModule : public CObject
 public:
 	typedef struct tagLink {
 		tagLink() {
-			pipeCreated = false;
-			heapCreated = false;
+			queueCreated = false;
+			heapCreated  = false;
 		}
 		std::vector<mongo::BSONObj> links;
-		RT_HEAP heap;
-		RT_PIPE pipe;
-		bool    pipeCreated;
-		bool    heapCreated;
+		RT_HEAP  heap;
+		RT_QUEUE queue;
+		bool     queueCreated;
+		bool     heapCreated;
 
 	} LINK, *PLINK;
+
 public:
-	CModule(const CString& taskName, int priority, int stackSize);
+	CModule(const CString& taskName, int stackSize);
 	virtual ~CModule();
 
 	virtual bool init(const mongo::BSONObj& initObject);
 	virtual bool link(const mongo::BSONObj& link);
+	virtual bool start();
+	virtual void stop();
 
 	// module name
 	virtual CString name() const;
@@ -65,26 +67,29 @@ public:
 
 // data
 	void addData(const mongo::BSONObj& object);
+	mongo::BSONObj data() const;
 
 protected:
 	CString       m_name;
 	CString       m_instance;
+	uint32_t      m_period;
+	bool          m_notifyOnChange;
 
 	bool          m_terminate;
 	CL_Runnable * m_runnable;
 	CXenoTask     m_task;
 
-	RT_PIPE m_inputQueue;
-	bool    m_queueCreated;
-	RT_HEAP m_outputHeap;
-	bool    m_heapCreated;
+	RT_QUEUE m_inputQueue;
+	bool     m_queueCreated;
+	RT_HEAP  m_outputHeap;
+	bool     m_heapCreated;
 
 	std::map<CString, LINK> m_linksIn;
 	std::map<CString, LINK> m_linksOut;
 	CMutex                  m_mutexLinks;
 
-//	std::list<CUAVObject*> m_dataQueue;
-//	CMutex                 m_mutexQueue;
+	mongo::BSONObj m_data;
+	CMutex         m_mutexData;
 
 	void startTask();
 	void stopTask();
@@ -93,10 +98,7 @@ protected:
 // queue objects
 	void sendObject(const mongo::BSONObj& obj);
 	void recvObjects();
-//	void addToQueue(CUAVObject* data);
 
 // notify
-//	virtual void recievedData(CUAVObject* data);
+	virtual void recievedData(const mongo::BSONObj& data);
 };
-
-#endif // __CMODULE_H__

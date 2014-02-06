@@ -20,6 +20,5 @@ public:
 	CSensorsMeta();
 
 	virtual CString moduleName() const;
-	virtual mongo::BSONObj metainformation() const;
 	virtual CModule* createModule() const;
 };

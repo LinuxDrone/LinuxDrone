@@ -17,21 +17,17 @@
 
 CSensorsMeta::CSensorsMeta()
 {
+	mongo::BSONObjBuilder builder;
+	builder << "name" << "Sensors";
+	builder << "task_priority" << 40;
+	builder << "notifyOnChange" << true;
 
+	setMetaObject(builder.obj());
 }
 
 CString CSensorsMeta::moduleName() const
 {
 	return "Sensors";
-}
-
-mongo::BSONObj CSensorsMeta::metainformation() const
-{
-	mongo::BSONObjBuilder builder;
-	builder << "name" << "Sensors";
-	builder << "task_priority" << 60;
-
-	return builder.obj();
 }
 
 CModule* CSensorsMeta::createModule() const
