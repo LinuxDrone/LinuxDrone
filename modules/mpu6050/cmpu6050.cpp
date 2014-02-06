@@ -77,11 +77,15 @@ bool CMpu6050::init(const mongo::BSONObj& initObject)
 	}
 	CString busName = "/dev/i2c-1";
 	CSystemBus::BusType busType = CSystemBus::BusType_I2C;
-	if (initObject.hasElement("bus_name")) {
-		busName = initObject["bus_name"].String().c_str();
-	}
-	if (initObject.hasElement("bus_type")) {
-		busType = (CSystemBus::BusType)initObject["bus_type"].Int();
+	if (initObject.hasElement("params")) {
+		mongo::BSONElement elemParam = initObject["params"];
+		mongo::BSONObj objParam = elemParam.Obj();
+		if (objParam.hasElement("bus_name")) {
+			busName = objParam["bus_name"].String().c_str();
+		}
+		if (objParam.hasElement("bus_type")) {
+			busType = (CSystemBus::BusType)objParam["bus_type"].Number();
+		}
 	}
 	m_bus = CBus(busType, busName, 0x68);
 	if (!m_bus.isOpened()) {
