@@ -9,8 +9,8 @@
 
 		<style>
             #paper {
-                width: 1024px;
-                height: 300px;
+                width: window.innerWidth-20;
+                height: window.innerHeight-100;
                 border: 1px solid gray;
                 box-sizing: border-box;
             }
@@ -19,9 +19,21 @@
 	<body>
 
         <table border="1" >
-            <tr>
+            <tr style="height:60px;">
+                <td><select id="listConfigs" onChange="SelectConfig()"></select></td>
                 <td>
-                    <div id="ModulesPanel">
+                    <span>Name:</span>
+                    <input id="configName" type="input" value="Hexa" >
+                    <span>Version:</span>
+                    <input id="configVersion" type="input" value="1" >
+                    <input type="button" value="Save Config" onclick="SaveConfig()" />
+                    <input type="button" value="Delete Config" onclick="DeleteConfig()" />
+                </td>
+                <td>&nbsp;</td>
+            </tr>            
+            <tr>
+                <td style="vertical-align: top">
+                    <div id="ModulesPanel" style="margin:2px;">
                         
                     </div>
                 </td>
@@ -31,18 +43,6 @@
                 <td style="width:200px">
                     Properties
                 </td>
-            </tr>
-            <tr>
-            	<td><select id="listConfigs" onChange="SelectConfig()"></select></td>
-            	<td>
-                    <span>Name:</span>
-            		<input id="configName" type="input" value="Hexa" >
-                    <span>Version:</span>
-                    <input id="configVersion" type="input" value="1" >
-            		<input type="button" value="Save Config" onclick="SaveConfig()" />
-                    <input type="button" value="Delete Config" onclick="DeleteConfig()" />
-            	</td>
-            	<td>&nbsp;</td>
             </tr>
         </table>
 

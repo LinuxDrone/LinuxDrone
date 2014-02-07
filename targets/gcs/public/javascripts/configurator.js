@@ -59,8 +59,8 @@ var graph = new joint.dia.Graph;
 
 var paper = new joint.dia.Paper({
     el: $('#paper'),
-    width: 1024,
-    height: 400,
+    width: window.innerWidth-220,
+    height: window.innerHeight-100,
     gridSize: 20,
     model: graph
 });
@@ -71,6 +71,7 @@ function InitListModules() {
         var newButton = document.createElement("input");
         newButton.type = "button";
         newButton.value = entry.attributes.attrs[".label"].text;
+        newButton.style.margin="2px";
         newButton.onclick = function () {
             AddModule(entry);
         };
@@ -124,3 +125,7 @@ function SelectConfig() {
         $('#configVersion')[0].value="";
     }
 }
+
+$( window ).resize(function() {
+    paper.setDimensions(window.innerWidth-220, window.innerHeight-100);
+});
