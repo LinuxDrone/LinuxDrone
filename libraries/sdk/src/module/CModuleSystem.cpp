@@ -14,6 +14,7 @@
 #include "CModuleMetaInfo.h"
 #include "CModule.h"
 #include "io/CDir"
+#include "io/CFile"
 #include <system/Logger>
 
 #include <dlfcn.h>
@@ -39,6 +40,56 @@ CModuleSystem* CModuleSystem::instance()
 /////////////////////////////////////////////////////////////////////
 //                       modules information                       //
 /////////////////////////////////////////////////////////////////////
+
+void CModuleSystem::readAllModules()
+{
+	pid_t pid = getpid();
+	CString processPath = CString("/proc/%1/cmdline").arg(pid);
+	CFile file(processPath);
+	if (file.open(CIODevice::ReadOnly)) {
+		CByteArray data;
+		data.setSize(1024);
+		int len = file.read((void*)data.data(), 1024);
+		if (len == 0) {
+			return;
+		}
+		processPath = CString(data.data(), len);
+	} else {
+		return;
+	}
+	processPath.remove(processPath.length()-15, 15);		// minus sizeof "bin/linuxdrone"
+	CString pathToModules = CString("%1modules").arg(processPath);
+	Logger() << "path to modules: " << pathToModules;
+
+	CDir dir(pathToModules);
+	int count = dir.count();
+	for (int i = 0;i<count;i++) {
+		if (!dir.isFolder(i)) {
+			continue;
+		}
+		CString path = CString("%1/%2").arg(dir.absolutePath()).arg(dir[i]);
+		Logger() << path;
+		// try load module
+		CDir moduleDir(path, "*.so");
+		if (moduleDir.count() == 0) {
+			continue;
+		} else {
+			CString modulePath = CString("%1/%2").arg(path).arg(moduleDir[0]);
+			Logger() << modulePath;
+			void* handle = dlopen(modulePath.data(), RTLD_NOW);
+			if (handle == 0) {
+				continue;
+			}
+			ptr_moduleMetainfoCreator sym = (ptr_moduleMetainfoCreator)dlsym(handle, "moduleMetainfoCreator");
+			if (sym == 0) {
+				continue;
+			}
+			CModuleMetainfo* info = sym(path);
+			registerModuleMetainformation(info);
+			info->release();
+		}
+	}
+}
 
 bool CModuleSystem::registerModuleMetainformation(CModuleMetainfo* info)
 {
