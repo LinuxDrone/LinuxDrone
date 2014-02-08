@@ -11,9 +11,27 @@
 //--------------------------------------------------------------------
 
 #include "CModuleMetaInfo.h"
+#include "io/CFile"
+#include "system/Logger"
 
-CModuleMetainfo::CModuleMetainfo()
+#include <mongo/db/json.h>
+
+CModuleMetainfo::CModuleMetainfo(const CString& pathToConfig)
 {
+	if (pathToConfig.isEmpty()) {
+		return;
+	}
+	CFile file;
+	file.setFileName(pathToConfig);
+	if (file.open(CIODevice::ReadOnly)) {
+		CByteArray data = file.readAll();
+		if (!data.isEmpty()) {
+			int len = data.size();
+			m_metaObject = mongo::fromjson(data.data(), &len);
+			Logger() << m_metaObject.toString(false, true).c_str();
+		}
+		file.close();
+	}
 }
 
 CModuleMetainfo::~CModuleMetainfo()

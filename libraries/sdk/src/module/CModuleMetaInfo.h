@@ -17,11 +17,15 @@
 #include <mongo/bson/bson.h>
 
 class CModule;
+class CModuleMetainfo;
+
+// main function of module 'CModuleMetainfo* moduleMetainfoCreator(void)'
+typedef CModuleMetainfo* (*ptr_moduleMetainfoCreator)(const CString& pathToModule);
 
 class CModuleMetainfo : public CObject
 {
 public:
-	CModuleMetainfo();
+	CModuleMetainfo(const CString& pathToConfig);
 	virtual ~CModuleMetainfo();
 
 	virtual CString moduleName() const;
