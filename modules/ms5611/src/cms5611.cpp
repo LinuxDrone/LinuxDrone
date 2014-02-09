@@ -214,7 +214,7 @@ void CMs5611::moduleTask()
     RTIME diff = time - rt_timer_read();
     SRTIME el = rt_timer_ticks2ns(diff);
     uint64_t elapsed = abs(el) / 1000;
-    Logger() << elapsed;
+    //Logger() << elapsed;
     printf("Temp=%f, Pres=%f\n",Temperature/100.0,Pressure/1000.0);
     CSystem::sleep(100);
 }

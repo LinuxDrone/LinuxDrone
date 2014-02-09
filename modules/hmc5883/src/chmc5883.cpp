@@ -273,9 +273,9 @@ void CHmc5883::moduleTask()
     mongo::BSONObjBuilder builder;
     builder.append("name", "Hmc5883");
 
-    builder.append("x", out[0]);
-    builder.append("y", out[1]);
-    builder.append("z", out[2]);
+    builder.append("magX", out[0]);
+    builder.append("magZ", out[1]);
+    builder.append("magY", out[2]);
 
     mongo::BSONObj obj = builder.obj();
     addData(obj);
@@ -284,6 +284,6 @@ void CHmc5883::moduleTask()
     SRTIME el = rt_timer_ticks2ns(diff);
     uint64_t elapsed = abs(el) / 1000;
     //Logger() << elapsed;
-    printf("%5d,%5d,%5d\n",out[0],out[1],out[2]);
+    printf("x:%5d,y:%5d,z:%5d\n",out[0],out[2],out[1]);
     CSystem::sleep(100);
 }
