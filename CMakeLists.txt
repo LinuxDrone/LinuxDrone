@@ -75,5 +75,7 @@ add_subdirectory(${LIB_DIR}/sdk)
 #add_subdirectory(${LIB_DIR}/gcs)
 
 add_subdirectory(${MOD_DIR}/mpu6050)
+add_subdirectory(${MOD_DIR}/bmp180)
+
 # Main project target
 add_subdirectory(${TGT_DIR}/beaglebone) 

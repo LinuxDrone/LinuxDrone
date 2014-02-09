@@ -34,9 +34,7 @@ int main()
 	mongo::BSONObj links = settings.getLinks();
 
 	CModuleSystem* system = CModuleSystem::instance();
-//	system->registerModuleMetainformation(new CMpu6050Meta());
 //	system->registerModuleMetainformation(new CSensorsMeta());
-//	system->registerModuleMetainformation(new CBmp180Meta());
 //	system->registerModuleMetainformation(new CHmc5883Meta());
 //	system->registerModuleMetainformation(new CMs5611Meta());
 
