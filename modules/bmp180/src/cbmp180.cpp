@@ -34,7 +34,7 @@ bool CBmp180::init(const mongo::BSONObj& initObject)
 	if (!CModule::init(initObject)) {
 		return false;
 	}
-	CString busName = "/dev/i2c-2";
+	CString busName = "/dev/i2c-1";
 	CSystemBus::BusType busType = CSystemBus::BusType_I2C;
 	if (initObject.hasElement("params")) {
 		mongo::BSONElement elemParam = initObject["params"];

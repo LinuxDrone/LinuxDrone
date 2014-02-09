@@ -260,6 +260,7 @@ void CMpu6050::moduleTask()
 
     RTIME diff = time - rt_timer_read();
     SRTIME el = rt_timer_ticks2ns(diff);
-    uint64_t elapsed = abs(el) / 1000000;
+    uint64_t elapsed = abs(el) / 1000;
     Logger() << elapsed;
+    CSystem::sleep(100);
 }

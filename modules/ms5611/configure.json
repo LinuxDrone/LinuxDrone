@@ -1,6 +1,6 @@
 {
     "type": "module_def",
-    "name": "Bmp180",  
+    "name": "Ms5611",  
     "version": 2,
     "task_priority": 80,
     "task_period": 200,

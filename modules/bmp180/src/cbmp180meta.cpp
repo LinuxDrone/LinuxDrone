@@ -14,8 +14,8 @@ CModuleMetainfo* moduleMetainfoCreator(const CString& pathToModule)
 }
 }
 
-CBmp180Meta::CBmp180Meta(const CString& pathToConfig) :
-		CModuleMetainfo(pathToConfig)
+CBmp180Meta::CBmp180Meta(const CString& pathToModule) :
+		CModuleMetainfo(pathToModule)
 {
 }
 

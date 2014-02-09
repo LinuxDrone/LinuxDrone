@@ -8,11 +8,11 @@
         "type":"object",
         "id": "http://jsonschema.net",
         "properties":{
-            "busType": {
-                "type":"string",
+            "bus_type": {
+                "type":"number",
                 "required":true
             },
-            "busName": {
+            "bus_name": {
                 "type":"string",
                 "required":true
             }
