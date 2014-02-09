@@ -17,7 +17,7 @@
 class CMpu6050Meta : public CModuleMetainfo
 {
 public:
-	CMpu6050Meta();
+	CMpu6050Meta(const CString& pathToModule);
 
 	virtual CString moduleName() const;
 	virtual CModule* createModule() const;

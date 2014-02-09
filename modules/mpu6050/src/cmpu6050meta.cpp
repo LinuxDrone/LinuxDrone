@@ -13,8 +13,22 @@
 #include "cmpu6050meta.h"
 #include "cmpu6050.h"
 #include "my_memory"
+#include "system/Logger"
 
-CMpu6050Meta::CMpu6050Meta()
+extern "C" {
+CModuleMetainfo* moduleMetainfoCreator(const CString& pathToModule)
+{
+	Logger() << pathToModule;
+	CMpu6050Meta* meta = new CMpu6050Meta(CString("%1/configure.json").arg(pathToModule));
+	if (meta) {
+		meta->addRef();
+	}
+	return meta;
+}
+}
+
+CMpu6050Meta::CMpu6050Meta(const CString& pathToModule) :
+		CModuleMetainfo(pathToModule)
 {
 	mongo::BSONObjBuilder builder;
 	builder << "name" << "Mpu6050";

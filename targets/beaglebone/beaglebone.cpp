@@ -16,8 +16,8 @@
 
 #include "module/CModuleSystem"
 
-#include "../../modules/mpu6050/cmpu6050meta.h"
-#include "../../modules/sensors/csensorsmeta.h"
+//#include "../../modules/mpu6050/cmpu6050meta.h"
+//#include "../../modules/sensors/csensorsmeta.h"
 //#include "../../modules/bmp180/cbmp180meta.h"
 //#include "../../modules/hmc5883/chmc5883meta.h"
 //#include "../../modules/ms5611/cms5611meta.h"
@@ -34,12 +34,13 @@ int main()
 	mongo::BSONObj links = settings.getLinks();
 
 	CModuleSystem* system = CModuleSystem::instance();
-	system->registerModuleMetainformation(new CMpu6050Meta());
-	system->registerModuleMetainformation(new CSensorsMeta());
+//	system->registerModuleMetainformation(new CMpu6050Meta());
+//	system->registerModuleMetainformation(new CSensorsMeta());
 //	system->registerModuleMetainformation(new CBmp180Meta());
 //	system->registerModuleMetainformation(new CHmc5883Meta());
 //	system->registerModuleMetainformation(new CMs5611Meta());
 
+	system->readAllModules();
 	system->createModules(modules);
 	system->linkObjects(links);
 	system->start();
