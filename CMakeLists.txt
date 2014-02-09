@@ -58,11 +58,10 @@ include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
 find_package(Xenomai REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
 
-# Link-only system libraries (do not check headers, just link shared objects)
-set(EXTRA_LIBRARIES rt dl)
-set(CMAKE_THREAD_LIBS_INIT pthread)
-set(OPENSSL_LIBRARIES ssl crypto)
-find_library(ZLIB_LIBRARIES NAMES z HINTS ${CMAKE_FIND_ROOT_PATH})
+# Link-only libraries (do not check headers, just link shared objects)
+find_library(ZLIB_LIBRARIES z)
+find_library(OPENSSL_LIBRARIES ssl)
+find_library(CRYPTO_LIBRARIES crypto)
 
 # RPATH handling to use relative paths in the install tree like above
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
