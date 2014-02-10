@@ -51,7 +51,6 @@ include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 # Libraries: ${Boost_LIBRARIES}
 find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
 include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
-link_directories(${LINK_DIRECTORIES} ${Boost_LIBRARY_DIRS})
 
 # Xenomai libraries
 # Libraries: ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
@@ -60,9 +59,10 @@ find_package(Xenomai REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
 
 # Link-only system libraries (do not check headers, just link shared objects)
+set(EXTRA_LIBRARIES rt dl)
 set(CMAKE_THREAD_LIBS_INIT pthread)
 set(OPENSSL_LIBRARIES ssl crypto)
-set(ZLIB_LIBRARIES z)
+find_library(ZLIB_LIBRARIES NAMES z HINTS ${CMAKE_FIND_ROOT_PATH})
 
 # RPATH handling to use relative paths in the install tree like above
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
