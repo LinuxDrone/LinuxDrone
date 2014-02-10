@@ -19,12 +19,17 @@ set(CMAKE_SYSTEM_VERSION 1)
 
 # Specify the cross compiler
 if(CMAKE_HOST_WIN32)
+    set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-4.8-2013.10_win32")
     set(CMAKE_HOST_EXECUTABLE_SUFFIX ".exe")
+elseif(CMAKE_HOST_APPLE)
+    set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-4.8-2013.10_osx")
+    set(CMAKE_HOST_EXECUTABLE_SUFFIX "")
 else()
+    set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-4.8-2013.10_linux")
     set(CMAKE_HOST_EXECUTABLE_SUFFIX "")
 endif()
 
-set(TOOLCHAIN_PREFIX   ${PROJECT_SOURCE_DIR}/tools/gcc-linaro-arm-linux-gnueabihf-4.8-2013.10/bin/arm-linux-gnueabihf-)
+set(TOOLCHAIN_PREFIX   ${PROJECT_SOURCE_DIR}/tools/${TOOLCHAIN_SUBDIR}/bin/arm-linux-gnueabihf-)
 set(CMAKE_C_COMPILER   ${TOOLCHAIN_PREFIX}gcc${CMAKE_HOST_EXECUTABLE_SUFFIX})
 set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}g++${CMAKE_HOST_EXECUTABLE_SUFFIX})
 
