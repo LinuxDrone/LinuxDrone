@@ -69,7 +69,7 @@ function loadModuleDefs (dir, done) {
                                 console.log("Load module " + objModuleDef.name + " - OK.");
                             });
                         } catch(e) {
-                            console.log("Error parse file " + configFile + " (" + e.type + ")");
+                            console.log("Error parse file " + configFile + " (" + e + ")");
                         }
                     });
                 }

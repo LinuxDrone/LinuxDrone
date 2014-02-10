@@ -5,7 +5,7 @@ $(document).ready(function () {
     $.getJSON("metamodules",
         function (data) {
             $.each(data, function (i, item) {
-                modulesDefs[item.name] = item;
+                modulesDefs[item.name] = {definition: item, instancesCount: 0};
             });
 
             InitListModules();
@@ -23,10 +23,15 @@ $(document).ready(function () {
 });
 
 // Создает экзмепляр визуального модуля библиотеки joint, из описания модуля в формате linuxdrone
-function MakeVisualModule(moduleDef) {
+function MakeVisualModule(moduleInfo) {
+    var moduleDef = moduleInfo.definition;
+
+    var maxPins = 0;
+
     var module = {
+        moduleType: moduleDef.name,
         position: { x: 10, y: 20 },
-        size: { width: 90, height: 250 },
+        size: { width: 90},
         attrs: {
             '.label': {'ref-x': .2, 'ref-y': -2 },
             rect: { fill: '#2ECC71' },
@@ -35,11 +40,16 @@ function MakeVisualModule(moduleDef) {
         }
     };
 
-    module.attrs['.label'].text = moduleDef.name;
+    moduleInfo.instancesCount++;
+    module.attrs['.label'].text = moduleDef.name + "-" + moduleInfo.instancesCount;
 
     if (moduleDef.outputs) {
         module.outPorts = new Array();
         $.each(moduleDef.outputs, function (i, output) {
+            var propsCount = Object.keys(output.Schema.properties).length;
+            if (maxPins < propsCount) {
+                maxPins = propsCount;
+            }
             $.each(output.Schema.properties, function (i, pin) {
                 module.outPorts.push(i);
             });
@@ -48,10 +58,19 @@ function MakeVisualModule(moduleDef) {
 
     if (moduleDef.inputShema) {
         module.inPorts = new Array();
+        var propsCount = Object.keys(moduleDef.inputShema.properties).length;
+        if (maxPins < propsCount) {
+            maxPins = propsCount;
+        }
         $.each(moduleDef.inputShema.properties, function (i, pin) {
             module.inPorts.push(i);
         });
     }
+
+    module.size.height= maxPins * 30;
+
+    // Добавление параметров, со значениями по умолчанию
+
 
     return new joint.shapes.devs.Model(module);
 }
@@ -71,14 +90,14 @@ var paper = new joint.dia.Paper({
 function InitListModules() {
     var modulesNames = Object.keys(modulesDefs);
     modulesNames.forEach(function (i) {
-        var moduleDef = modulesDefs[i];
+        var moduleDef = modulesDefs[i].definition;
         var newButton = document.createElement("input");
         newButton.type = "button";
         //newButton.value = entry.attributes.attrs[".label"].text;
         newButton.value = moduleDef.name + " (v" + moduleDef.version + ")";
         newButton.style.margin = "2px";
         newButton.onclick = function () {
-            AddModule2Paper(moduleDef);
+            AddModule2Paper(modulesDefs[i]);
         };
         document.getElementById("ModulesPanel").appendChild(newButton);
     });
