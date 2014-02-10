@@ -29,7 +29,7 @@ public:
 	static CModuleSystem* instance();
 
 // modules information
-	void readAllModules();
+	void readAllModules(const CString& path);
 	bool registerModuleMetainformation(CModuleMetainfo* info);
 	void removeAllInformation();
 	CModuleMetainfo* infoByName(const CString& name);

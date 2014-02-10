@@ -41,23 +41,12 @@ CModuleSystem* CModuleSystem::instance()
 //                       modules information                       //
 /////////////////////////////////////////////////////////////////////
 
-void CModuleSystem::readAllModules()
+void CModuleSystem::readAllModules(const CString& path)
 {
-	pid_t pid = getpid();
-	CString processPath = CString("/proc/%1/cmdline").arg(pid);
-	CFile file(processPath);
-	if (file.open(CIODevice::ReadOnly)) {
-		CByteArray data;
-		data.setSize(1024);
-		int len = file.read((void*)data.data(), 1024);
-		if (len == 0) {
-			return;
-		}
-		processPath = CString(data.data(), len);
-	} else {
-		return;
-	}
-	processPath.remove(processPath.length()-15, 15);		// minus sizeof "bin/linuxdrone"
+	Logger() << path;
+	CString processPath = path;
+	processPath.remove(processPath.length()-14, 14);		// minus sizeof "bin/linuxdrone"
+	Logger() << processPath;
 	CString pathToModules = CString("%1modules").arg(processPath);
 	Logger() << "path to modules: " << pathToModules;
 
