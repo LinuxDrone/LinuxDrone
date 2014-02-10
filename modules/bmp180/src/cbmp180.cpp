@@ -9,6 +9,19 @@
 
 #include "my_memory"
 
+extern "C" {
+CModule* moduleCreator()
+{
+	return new CBmp180();
+}
+
+const char* moduleName() {
+	return "Bmp180";
+}
+}
+
+
+
 /* BMP085 Addresses */
 #define BMP180_I2C_ADDR     0x77
 #define BMP180_CALIB_ADDR   0xAA

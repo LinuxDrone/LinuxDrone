@@ -43,9 +43,6 @@ int main(int argc, char* argv[])
 	mongo::BSONObj links = settings.getLinks();
 
 	CModuleSystem* system = CModuleSystem::instance();
-//	system->registerModuleMetainformation(new CSensorsMeta());
-//	system->registerModuleMetainformation(new CHmc5883Meta());
-//	system->registerModuleMetainformation(new CMs5611Meta());
 
 	system->readAllModules(appPath);
 	system->createModules(modules);

@@ -20,6 +20,19 @@
 
 #include "my_memory"
 
+extern "C" {
+CModule* moduleCreator()
+{
+	return new CMpu6050();
+}
+
+const char* moduleName() {
+	return "Mpu6050";
+}
+}
+
+
+
 /* Power management and clock selection */
 #define MPU6000_PWRMGMT_IMU_RST          0X80
 #define MPU6000_PWRMGMT_INTERN_CLK       0X00
