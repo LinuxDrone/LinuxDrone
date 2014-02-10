@@ -1,43 +1,11 @@
 var allConfigs = {};
-var modules = new Array();
+var modulesDefs = {};
 
 $(document).ready(function () {
     $.getJSON("metamodules",
         function (data) {
             $.each(data, function (i, item) {
-
-                var module = {
-                    position: { x: 10, y: 20 },
-                    size: { width: 90, height: 250 },
-                    attrs: {
-                        '.label': { text: 'Mpu6050', 'ref-x': .2, 'ref-y': -2 },
-                        rect: { fill: '#2ECC71' },
-                        '.inPorts circle': { fill: '#16A085' },
-                        '.outPorts circle': { fill: '#E74C3C' }
-                    }
-                };
-
-                module.attrs['.label'].text = item.name;
-
-                if (item.outputs) {
-                    module.outPorts = new Array();
-                    $.each(item.outputs, function (i, output) {
-                        $.each(output.Schema.properties, function (i, pin) {
-                            module.outPorts.push(i);
-                        });
-                    });
-                }
-
-                if (item.inputShema) {
-                    module.inPorts = new Array();
-                    $.each(item.inputShema.properties, function (i, pin) {
-                        module.inPorts.push(i);
-                    });
-                }
-
-                modules.push(new joint.shapes.devs.Model(module));
-
-                //console.log(module);
+                modulesDefs[item.name] = item;
             });
 
             InitListModules();
@@ -54,34 +22,71 @@ $(document).ready(function () {
         });
 });
 
+// Создает экзмепляр визуального модуля библиотеки joint, из описания модуля в формате linuxdrone
+function MakeVisualModule(moduleDef) {
+    var module = {
+        position: { x: 10, y: 20 },
+        size: { width: 90, height: 250 },
+        attrs: {
+            '.label': {'ref-x': .2, 'ref-y': -2 },
+            rect: { fill: '#2ECC71' },
+            '.inPorts circle': { fill: '#16A085' },
+            '.outPorts circle': { fill: '#E74C3C' }
+        }
+    };
+
+    module.attrs['.label'].text = moduleDef.name;
+
+    if (moduleDef.outputs) {
+        module.outPorts = new Array();
+        $.each(moduleDef.outputs, function (i, output) {
+            $.each(output.Schema.properties, function (i, pin) {
+                module.outPorts.push(i);
+            });
+        });
+    }
+
+    if (moduleDef.inputShema) {
+        module.inPorts = new Array();
+        $.each(moduleDef.inputShema.properties, function (i, pin) {
+            module.inPorts.push(i);
+        });
+    }
+
+    return new joint.shapes.devs.Model(module);
+}
+
 
 var graph = new joint.dia.Graph;
 
 var paper = new joint.dia.Paper({
     el: $('#paper'),
-    width: window.innerWidth-220,
-    height: window.innerHeight-100,
+    width: window.innerWidth - 220,
+    height: window.innerHeight - 100,
     gridSize: 20,
     model: graph
 });
 
 
 function InitListModules() {
-    modules.forEach(function (entry) {
+    var modulesNames = Object.keys(modulesDefs);
+    modulesNames.forEach(function (i) {
+        var moduleDef = modulesDefs[i];
         var newButton = document.createElement("input");
         newButton.type = "button";
-        newButton.value = entry.attributes.attrs[".label"].text;
-        newButton.style.margin="2px";
+        //newButton.value = entry.attributes.attrs[".label"].text;
+        newButton.value = moduleDef.name + " (v" + moduleDef.version + ")";
+        newButton.style.margin = "2px";
         newButton.onclick = function () {
-            AddModule(entry);
+            AddModule2Paper(moduleDef);
         };
         document.getElementById("ModulesPanel").appendChild(newButton);
     });
 }
 
 
-function AddModule(module) {
-    graph.addCell(module.clone());
+function AddModule2Paper(moduleDef) {
+    graph.addCell(MakeVisualModule(moduleDef));
 }
 
 function SaveConfig() {
@@ -118,14 +123,13 @@ function SelectConfig() {
         $('#configVersion')[0].value = allConfigs[$('#listConfigs')[0].selectedIndex].version;
         graph.fromJSON(JSON.parse(allConfigs[$('#listConfigs')[0].selectedIndex].jsonGraph));
     }
-    else
-    {
+    else {
         graph.clear();
-        $('#configName')[0].value="";
-        $('#configVersion')[0].value="";
+        $('#configName')[0].value = "";
+        $('#configVersion')[0].value = "";
     }
 }
 
-$( window ).resize(function() {
-    paper.setDimensions(window.innerWidth-220, window.innerHeight-100);
+$(window).resize(function () {
+    paper.setDimensions(window.innerWidth - 220, window.innerHeight - 100);
 });
