@@ -71,7 +71,6 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 # Project libraries
 add_subdirectory(${LIB_DIR}/core)
 add_subdirectory(${LIB_DIR}/sdk)
-#add_subdirectory(${LIB_DIR}/gcs)
 
 add_subdirectory(${MOD_DIR}/mpu6050)
 add_subdirectory(${MOD_DIR}/bmp180)
