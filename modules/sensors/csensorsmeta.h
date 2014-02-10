@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "../base/cmodulemetainfo.h"
+#include "module/CModuleMetaInfo"
 
 class CSensorsMeta : public CModuleMetainfo
 {
@@ -20,6 +20,5 @@ public:
 	CSensorsMeta();
 
 	virtual CString moduleName() const;
-	virtual mongo::BSONObj metainformation() const;
 	virtual CModule* createModule() const;
 };

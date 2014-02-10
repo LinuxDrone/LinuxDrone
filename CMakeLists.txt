@@ -70,7 +70,14 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
 # Project libraries
 add_subdirectory(${LIB_DIR}/core)
+add_subdirectory(${LIB_DIR}/sdk)
 #add_subdirectory(${LIB_DIR}/gcs)
+
+add_subdirectory(${MOD_DIR}/mpu6050)
+add_subdirectory(${MOD_DIR}/bmp180)
+add_subdirectory(${MOD_DIR}/ms5611)
+add_subdirectory(${MOD_DIR}/hmc5883)
+add_subdirectory(${MOD_DIR}/pwmoutput)
 
 # Main project target
 add_subdirectory(${TGT_DIR}/beaglebone) 

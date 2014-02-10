@@ -13,7 +13,7 @@
 #include "csensors.h"
 
 CSensors::CSensors() :
-	CModule("Sensors", 20, 1024)
+	CModule("Sensors", 1024)
 {
 	for (int i = 0;i<3;i++) {
 		m_gyroScale[i] = 1.0f;

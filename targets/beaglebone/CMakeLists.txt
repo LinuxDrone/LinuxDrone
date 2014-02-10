@@ -10,22 +10,15 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-file(GLOB_RECURSE SRC_BASE    "${MOD_DIR}/base/*.cpp")
-file(GLOB_RECURSE SRC_MPU6050 "${MOD_DIR}/mpu6050/*.cpp")
-file(GLOB_RECURSE SRC_SENSORS "${MOD_DIR}/sensors/*.cpp")
-file(GLOB_RECURSE SRC_SYSTEM  "${SYS_DIR}/*.cpp")
-
 set(SRC
 	beaglebone.cpp 
-	${SRC_BASE}
-	${SRC_MPU6050}
-	${SRC_SENSORS}
-	${SRC_SYSTEM}
 )
 
 include_directories(${LIB_DIR}/core/include)
+include_directories(${LIB_DIR}/sdk/include)
 
 set(EXTRA_LIBS
+	sdk
 	core
 	${MongoDB_LIBRARIES}
 	${Boost_LIBRARIES}

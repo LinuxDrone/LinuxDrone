@@ -18,8 +18,16 @@
 
 class CDir
 {
+	typedef struct tagDirEntry {
+		tagDirEntry() {
+			isDir = false;
+		};
+		CString path;
+		bool    isDir;
+	} DIR_ENTRY, *PDIR_ENTRY;
+
 public:
-	CDir(const CString& path = CString(), const CString& mask = CString());
+	CDir(const CString& path = CString(), const CString& mask = CString("*"));
 	~CDir();
 
 // path
@@ -38,12 +46,13 @@ public:
 	void refresh();
 	void clearFileList();
 	CString operator[](int pos) const;
+	bool isFolder(int pos) const;
 
 private:
 	CString              m_path;
 	CString              m_mask;
-	mutable std::vector<CString> m_files;
-	mutable bool                 m_existFileList;
+	mutable std::vector<DIR_ENTRY> m_files;
+	mutable bool                   m_existFileList;
 
 	void makeFileList() const;
 };

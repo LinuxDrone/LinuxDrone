@@ -21,11 +21,14 @@
 #include <sys/stat.h>
 #include <Windows.h>
 #endif
+#include "../system/Logger.h"
 
-CDir::CDir(const CString& path /*= CString()*/, const CString& mask /*= CString()*/)
+CDir::CDir(const CString& path /*= CString()*/, const CString& mask /*= CString("*")*/)
 {
 	m_mask          = mask;
 	m_existFileList = false;
+
+	setPath(path);
 }
 
 CDir::~CDir()
@@ -118,7 +121,18 @@ CString CDir::operator[](int pos) const
 	if (0 > pos || pos >= int(m_files.size())) {
 		return CString();
 	}
-	return m_files[pos];
+	return m_files[pos].path;
+}
+
+bool CDir::isFolder(int pos) const
+{
+	if (!m_existFileList) {
+		makeFileList();
+	}
+	if (0 > pos || pos >= int(m_files.size())) {
+		return false;
+	}
+	return m_files[pos].isDir;
 }
 
 //===================================================================
@@ -131,7 +145,6 @@ void CDir::makeFileList() const
 	m_existFileList = true;
 	if (m_path.isEmpty())
 		return;
-#ifndef _WIN32
 	DIR* dir = opendir(m_path.data());
 	if (dir)
 	{
@@ -139,42 +152,18 @@ void CDir::makeFileList() const
 		while( (entry = readdir(dir)) != 0)
 		{
 			if (fnmatch(m_mask.data(), entry->d_name, FNM_PATHNAME | FNM_NOESCAPE | FNM_CASEFOLD) == 0 /*match*/) {
-				m_files.push_back(entry->d_name);
+				CString name = CString(entry->d_name);
+				if (name == "." || name == "..") {
+					continue;
+				}
+				DIR_ENTRY dirEntry;
+				if ((entry->d_type & DT_DIR)) {
+					dirEntry.isDir = true;
+				}
+				dirEntry.path = entry->d_name;
+				m_files.push_back(dirEntry);
 			}
 		}
 		closedir( dir );
 	}
-#else
-
-	WIN32_FIND_DATAW fileData;
-	CString mask;
-	if (m_path.endsWith("\\"))
-		mask = CString("\\\\?\\") + m_path + m_mask;
-	else
-		mask = CString("\\\\?\\") + m_path + CString("\\") + m_mask;
-	HANDLE hFind = FindFirstFileW((wchar_t*)(mask.toUtf16().getData()), &fileData);
-	if (hFind == INVALID_HANDLE_VALUE)
-	{
-		const DWORD err = GetLastError();
-		//2 означает "нет файлов в указанной папке", 3 - "нет такой папки"
-		if (err != 2 && err	!= 3)
-			Logger() << "FindFirstFileW failed with error:\n" << errorMessageFromLastError() << "In folder " << mask;
-		return;
-	}
-
-	m_files.push_back( CString::fromUtf16((hluint16*)fileData.cFileName) );
-
-	while (FindNextFileW(hFind, &fileData))
-	{
-		m_files.push_back( CString::fromUtf16((hluint16*)fileData.cFileName) );
-	}
-
-	if (GetLastError() != ERROR_NO_MORE_FILES)
-	{
-		Logger() << "Error enumerating files:\n" << errorMessageFromLastError();
-		Logger() << "In folder " << mask;
-	}
-
-	FindClose(hFind);
-#endif
 }
