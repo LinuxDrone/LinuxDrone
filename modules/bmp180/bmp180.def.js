@@ -1,7 +1,7 @@
 {
     "type": "module_def",
     "name": "Bmp180",  
-    "version": 2,
+    "version": 3,
     "task_priority": 80,
     "task_period": 200,
     "paramsSchema":{
