@@ -58,6 +58,9 @@ include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
 find_package(Xenomai REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
 
+# Threads
+find_package(Threads)
+
 # Link-only libraries (do not check headers, just link shared objects)
 find_library(ZLIB_LIBRARIES z)
 find_library(OPENSSL_LIBRARIES ssl)

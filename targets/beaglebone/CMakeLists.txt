@@ -26,6 +26,7 @@ set(EXTRA_LIBS
 	${CRYPTO_LIBRARIES}
 	${OPENSSL_LIBRARIES}
 	${ZLIB_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
 )
 
 add_executable(linuxdrone ${SRC})
