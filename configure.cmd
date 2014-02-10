@@ -11,9 +11,10 @@ set TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/beaglebone.cmake
 set BUILD_TYPE=Debug
 rem set BUILD_TYPE=Release
 set BUILD="%ROOT_DIR%\build.%BUILD_TYPE%"
-set GENERATOR=-G"Unix Makefiles"
+set GENERATOR=-G"Eclipse CDT4 - NMake Makefiles"
+rem set GENERATOR=-G"Eclipse CDT4 - Unix Makefiles"
 rem set GENERATOR=-G"NMake Makefiles"
-rem set GENERATOR=-G"Eclipse CDT4 - NMake Makefiles"
+rem set GENERATOR=-G"Unix Makefiles"
 
 %CMAKE% -E make_directory %BUILD%
 cd %BUILD%

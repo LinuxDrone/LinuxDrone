@@ -11,8 +11,8 @@ TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/beaglebone.cmake
 BUILD_TYPE=Debug
 #BUILD_TYPE=Release
 BUILD="$ROOT_DIR/build.$BUILD_TYPE"
-GENERATOR=-G"Unix Makefiles"
-#GENERATOR=-G"Eclipse CDT4 - Unix Makefiles"
+GENERATOR=-G"Eclipse CDT4 - Unix Makefiles"
+#GENERATOR=-G"Unix Makefiles"
 
 "$CMAKE" -E make_directory "$BUILD"
 cd "$BUILD"
