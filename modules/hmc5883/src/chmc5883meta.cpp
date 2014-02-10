@@ -10,32 +10,38 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "csensorsmeta.h"
-#include "csensors.h"
-#include "text/CString"
+#include "chmc5883meta.h"
+#include "chmc5883.h"
 #include "my_memory"
+#include "system/Logger"
 
-CSensorsMeta::CSensorsMeta()
+extern "C" {
+CModuleMetainfo* moduleMetainfoCreator(const CString& pathToModule)
 {
-	mongo::BSONObjBuilder builder;
-	builder << "name" << "Sensors";
-	builder << "task_priority" << 40;
-	builder << "notifyOnChange" << true;
-
-	setMetaObject(builder.obj());
+	CHmc5883Meta* meta = new CHmc5883Meta(CString("%1/configure.json").arg(pathToModule));
+	if (meta) {
+		meta->addRef();
+	}
+	return meta;
+}
 }
 
-CString CSensorsMeta::moduleName() const
+CHmc5883Meta::CHmc5883Meta(const CString& pathToModule) :
+		CModuleMetainfo(pathToModule)
 {
-	return "Sensors";
 }
 
-CModule* CSensorsMeta::createModule() const
+CString CHmc5883Meta::moduleName() const
 {
-	CSensors* sensors = new CSensors();
-	if (!sensors) {
+	return "Hmc5883";
+}
+
+CModule* CHmc5883Meta::createModule() const
+{
+	CHmc5883* module = new CHmc5883();
+	if (!module) {
 		return 0;
 	}
-	sensors->addRef();
-	return sensors;
+	module->addRef();
+	return module;
 }

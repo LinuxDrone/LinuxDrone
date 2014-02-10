@@ -12,13 +12,30 @@
 
 #pragma once
 
-#include "module/CModuleMetaInfo"
+#include "CSystemBus.h"
 
-class CSensorsMeta : public CModuleMetainfo
+class CBus
 {
 public:
-	CSensorsMeta();
+	CBus(CSystemBus::BusType type = CSystemBus::BusType_Unknown, const CString& device = CString(), int slave = 0);
+	CBus(const CBus& bus);
+	~CBus();
 
-	virtual CString moduleName() const;
-	virtual CModule* createModule() const;
+	CBus& operator=(const CBus& bus);
+
+	void lock();
+	void unlock();
+	CMutex* mutex();
+
+	CSystemBus* handle();
+	bool isOpened() const;
+
+	void setSlave(uint32_t slave);
+	uint32_t slave();
+	int write(const void* data, size_t size);
+	int read(void* data, size_t size);
+
+private:
+	CSystemBus * m_bus;
+	uint32_t     m_slave;
 };

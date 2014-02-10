@@ -12,13 +12,26 @@
 
 #pragma once
 
-#include "module/CModuleMetaInfo"
+#include "module/CModule"
+#include "system/CBus"
 
-class CSensorsMeta : public CModuleMetainfo
+class CHmc5883 : public CModule
 {
 public:
-	CSensorsMeta();
+	CHmc5883();
+	~CHmc5883();
 
-	virtual CString moduleName() const;
-	virtual CModule* createModule() const;
+	virtual bool init(const mongo::BSONObj& initObject);
+	bool start();
+
+private:
+	CBus m_bus;
+
+	bool initHmc5883();
+	bool readId(uint8_t& hmcId);
+	int32_t ReadMag(int16_t out[3]);
+	bool setOneReg(uint8_t reg);
+	bool setReg(uint8_t reg, uint8_t data);
+	bool getReg(uint8_t reg, uint8_t* data, size_t size = 1);
+	void moduleTask();
 };

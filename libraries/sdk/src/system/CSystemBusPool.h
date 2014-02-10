@@ -12,13 +12,31 @@
 
 #pragma once
 
-#include "module/CModuleMetaInfo"
+#include <vector>
+#include "CSystemBus.h"
+#include "thread/CMutex"
 
-class CSensorsMeta : public CModuleMetainfo
+class CString;
+class CSystemBus;
+
+class CSystemBusPool
 {
 public:
-	CSensorsMeta();
+	CSystemBusPool();
+	~CSystemBusPool();
 
-	virtual CString moduleName() const;
-	virtual CModule* createModule() const;
+	static CSystemBusPool* instance();
+
+	void lock();
+	void unlock();
+	CMutex* mutex();
+
+	CSystemBus* sysBus(CSystemBus::BusType type, const CString& devName);
+	void releaseBus(CSystemBus* bus);
+
+	void clear();
+
+private:
+	std::vector<CSystemBus*> m_pool;
+	CMutex m_mutex;
 };

@@ -10,15 +10,37 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#pragma once
+#include "CSystemBus.h"
 
-#include "module/CModuleMetaInfo"
-
-class CSensorsMeta : public CModuleMetainfo
+CSystemBus::CSystemBus()
 {
-public:
-	CSensorsMeta();
+}
 
-	virtual CString moduleName() const;
-	virtual CModule* createModule() const;
-};
+CSystemBus::~CSystemBus()
+{
+}
+
+CSystemBus::BusType CSystemBus::type() const
+{
+	return BusType_Unknown;
+}
+
+void CSystemBus::lock()
+{
+	m_mutex.lock();
+}
+
+void CSystemBus::unlock()
+{
+	m_mutex.unlock();
+}
+
+CMutex* CSystemBus::mutex()
+{
+	return &m_mutex;
+}
+
+CString CSystemBus::busName() const
+{
+	return m_busName;
+}

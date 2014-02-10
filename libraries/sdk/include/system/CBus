@@ -10,15 +10,5 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#pragma once
-
-#include "module/CModuleMetaInfo"
-
-class CSensorsMeta : public CModuleMetainfo
-{
-public:
-	CSensorsMeta();
-
-	virtual CString moduleName() const;
-	virtual CModule* createModule() const;
-};
+#include "../../src/system/CBus.h"
+ 

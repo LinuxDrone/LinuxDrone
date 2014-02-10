@@ -12,13 +12,28 @@
 
 #pragma once
 
-#include "module/CModuleMetaInfo"
+#include "core/CObject"
+#include "text/CString"
+#include <mongo/bson/bson.h>
 
-class CSensorsMeta : public CModuleMetainfo
+class CModule;
+class CModuleMetainfo;
+
+// main function of module 'CModuleMetainfo* moduleMetainfoCreator(void)'
+typedef CModuleMetainfo* (*ptr_moduleMetainfoCreator)(const CString& pathToModule);
+
+class CModuleMetainfo : public CObject
 {
 public:
-	CSensorsMeta();
+	CModuleMetainfo(const CString& pathToConfig);
+	virtual ~CModuleMetainfo();
 
 	virtual CString moduleName() const;
+	virtual mongo::BSONObj metainformation() const;
 	virtual CModule* createModule() const;
+
+protected:
+	mongo::BSONObj m_metaObject;
+
+	void setMetaObject(const mongo::BSONObj& metaObject);
 };

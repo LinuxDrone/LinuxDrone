@@ -10,32 +10,38 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "csensorsmeta.h"
-#include "csensors.h"
-#include "text/CString"
+#include "cmpu6050meta.h"
+#include "cmpu6050.h"
 #include "my_memory"
+#include "system/Logger"
 
-CSensorsMeta::CSensorsMeta()
+extern "C" {
+CModuleMetainfo* moduleMetainfoCreator(const CString& pathToModule)
 {
-	mongo::BSONObjBuilder builder;
-	builder << "name" << "Sensors";
-	builder << "task_priority" << 40;
-	builder << "notifyOnChange" << true;
-
-	setMetaObject(builder.obj());
+	CMpu6050Meta* meta = new CMpu6050Meta(CString("%1/configure.json").arg(pathToModule));
+	if (meta) {
+		meta->addRef();
+	}
+	return meta;
+}
 }
 
-CString CSensorsMeta::moduleName() const
+CMpu6050Meta::CMpu6050Meta(const CString& pathToModule) :
+		CModuleMetainfo(pathToModule)
 {
-	return "Sensors";
 }
 
-CModule* CSensorsMeta::createModule() const
+CString CMpu6050Meta::moduleName() const
 {
-	CSensors* sensors = new CSensors();
-	if (!sensors) {
+	return "Mpu6050";
+}
+
+CModule* CMpu6050Meta::createModule() const
+{
+	CMpu6050* module = new CMpu6050();
+	if (!module) {
 		return 0;
 	}
-	sensors->addRef();
-	return sensors;
+	module->addRef();
+	return module;
 }

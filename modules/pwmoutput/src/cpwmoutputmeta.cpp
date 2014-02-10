@@ -1,3 +1,4 @@
+
 //--------------------------------------------------------------------
 // This file was created as a part of the LinuxDrone project:
 //                http://www.linuxdrone.org
@@ -10,32 +11,38 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "csensorsmeta.h"
-#include "csensors.h"
-#include "text/CString"
+#include "cpwmoutputmeta.h"
+#include "cpwmoutput.h"
 #include "my_memory"
+#include "system/Logger"
 
-CSensorsMeta::CSensorsMeta()
+extern "C" {
+CModuleMetainfo* moduleMetainfoCreator(const CString& pathToModule)
 {
-	mongo::BSONObjBuilder builder;
-	builder << "name" << "Sensors";
-	builder << "task_priority" << 40;
-	builder << "notifyOnChange" << true;
-
-	setMetaObject(builder.obj());
+	CPwmOutputMeta* meta = new CPwmOutputMeta(CString("%1/configure.json").arg(pathToModule));
+	if (meta) {
+		meta->addRef();
+	}
+	return meta;
+}
 }
 
-CString CSensorsMeta::moduleName() const
+CPwmOutputMeta::CPwmOutputMeta(const CString& pathToModule) :
+		CModuleMetainfo(pathToModule)
 {
-	return "Sensors";
 }
 
-CModule* CSensorsMeta::createModule() const
+CString CPwmOutputMeta::moduleName() const
 {
-	CSensors* sensors = new CSensors();
-	if (!sensors) {
+	return "PwmOutput";
+}
+
+CModule* CPwmOutputMeta::createModule() const
+{
+	CPwmOutput* module = new CPwmOutput();
+	if (!module) {
 		return 0;
 	}
-	sensors->addRef();
-	return sensors;
+	module->addRef();
+	return module;
 }

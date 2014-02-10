@@ -12,13 +12,28 @@
 
 #pragma once
 
-#include "module/CModuleMetaInfo"
+#include <mongo/bson/bson.h>
 
-class CSensorsMeta : public CModuleMetainfo
+class CString;
+
+namespace mongo {
+class DBClientConnection;
+};
+
+class CSettings
 {
 public:
-	CSensorsMeta();
+	CSettings();
+	virtual ~CSettings();
 
-	virtual CString moduleName() const;
-	virtual CModule* createModule() const;
+	int Init();
+	bool setValue(const CString& name, const mongo::BSONObj& value);
+	mongo::BSONObj value(const CString& value) const;
+
+	mongo::BSONObj getModules();
+	mongo::BSONObj getLinks();
+
+private:
+	const char *port = "27017";
+	mongo::DBClientConnection * m_dbConnection;
 };

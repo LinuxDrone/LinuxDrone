@@ -12,13 +12,27 @@
 
 #pragma once
 
-#include "module/CModuleMetaInfo"
+#include "CSystemBus.h"
 
-class CSensorsMeta : public CModuleMetainfo
+class CSystemI2C : public CSystemBus
 {
 public:
-	CSensorsMeta();
+	CSystemI2C();
+	virtual ~CSystemI2C();
 
-	virtual CString moduleName() const;
-	virtual CModule* createModule() const;
+	virtual BusType type() const;
+
+	virtual bool open(const CString& busName);
+	virtual void close();
+	virtual bool isOpened() const;
+
+	virtual bool setSlave(uint32_t slave);
+	virtual uint32_t slave() const;
+
+	virtual int write(const void* data, size_t size);
+	virtual int read(void* data, size_t size);
+
+private:
+	int      m_file;
+	uint32_t m_slave;
 };

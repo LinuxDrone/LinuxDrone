@@ -1,3 +1,4 @@
+
 //--------------------------------------------------------------------
 // This file was created as a part of the LinuxDrone project:
 //                http://www.linuxdrone.org
@@ -10,32 +11,38 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "csensorsmeta.h"
-#include "csensors.h"
-#include "text/CString"
+#include "cms5611meta.h"
+#include "cms5611.h"
 #include "my_memory"
+#include "system/Logger"
 
-CSensorsMeta::CSensorsMeta()
+extern "C" {
+CModuleMetainfo* moduleMetainfoCreator(const CString& pathToModule)
 {
-	mongo::BSONObjBuilder builder;
-	builder << "name" << "Sensors";
-	builder << "task_priority" << 40;
-	builder << "notifyOnChange" << true;
-
-	setMetaObject(builder.obj());
+	CMs5611Meta* meta = new CMs5611Meta(CString("%1/configure.json").arg(pathToModule));
+	if (meta) {
+		meta->addRef();
+	}
+	return meta;
+}
 }
 
-CString CSensorsMeta::moduleName() const
+CMs5611Meta::CMs5611Meta(const CString& pathToModule) :
+		CModuleMetainfo(pathToModule)
 {
-	return "Sensors";
 }
 
-CModule* CSensorsMeta::createModule() const
+CString CMs5611Meta::moduleName() const
 {
-	CSensors* sensors = new CSensors();
-	if (!sensors) {
+	return "Ms5611";
+}
+
+CModule* CMs5611Meta::createModule() const
+{
+	CMs5611* module = new CMs5611();
+	if (!module) {
 		return 0;
 	}
-	sensors->addRef();
-	return sensors;
+	module->addRef();
+	return module;
 }

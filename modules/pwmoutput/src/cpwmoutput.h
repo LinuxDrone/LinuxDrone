@@ -12,13 +12,27 @@
 
 #pragma once
 
-#include "module/CModuleMetaInfo"
+#include "module/CModule"
+#include "system/CBus"
+#include "system/CSystemPru"
 
-class CSensorsMeta : public CModuleMetainfo
+class CPwmOutput : public CModule
 {
 public:
-	CSensorsMeta();
+	CPwmOutput();
+	~CPwmOutput();
 
-	virtual CString moduleName() const;
-	virtual CModule* createModule() const;
+	virtual bool init(const mongo::BSONObj& initObject);
+	bool start();
+
+private:
+	CSystemPru m_pru;
+	uint16_t m_C[6];
+	uint8_t m_oversampling;
+
+	bool initPwmOutput();
+	bool setOneReg(uint8_t reg);
+	bool setReg(uint8_t reg, uint8_t data);
+	bool getReg(uint8_t reg, uint8_t* data, size_t size = 1);
+	void moduleTask();
 };

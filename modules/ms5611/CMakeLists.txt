@@ -10,9 +10,8 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-set(SRC
-	beaglebone.cpp 
-)
+file(GLOB_RECURSE INC "include/*")
+file(GLOB_RECURSE SRC "src/*.cpp")
 
 include_directories(${LIB_DIR}/core/include)
 include_directories(${LIB_DIR}/sdk/include)
@@ -20,16 +19,8 @@ include_directories(${LIB_DIR}/sdk/include)
 set(EXTRA_LIBS
 	sdk
 	core
-	${MongoDB_LIBRARIES}
-	${Boost_LIBRARIES}
-	${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
-	${CMAKE_THREAD_LIBS_INIT}
-	${CRYPTO_LIBRARIES}
-	${OPENSSL_LIBRARIES}
-	${ZLIB_LIBRARIES}
 )
 
-add_executable(linuxdrone ${SRC})
-target_link_libraries(linuxdrone ${EXTRA_LIBS})
+add_library(ms5611 MODULE ${INC} ${SRC})
 
-install(TARGETS linuxdrone DESTINATION bin)
+install(TARGETS ms5611 DESTINATION modules/ms5611)

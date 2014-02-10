@@ -14,10 +14,10 @@
 
 #include "module/CModuleMetaInfo"
 
-class CSensorsMeta : public CModuleMetainfo
+class CPwmOutputMeta : public CModuleMetainfo
 {
 public:
-	CSensorsMeta();
+	CPwmOutputMeta(const CString& pathToModule);
 
 	virtual CString moduleName() const;
 	virtual CModule* createModule() const;

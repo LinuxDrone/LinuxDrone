@@ -51,7 +51,7 @@ include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 # Libraries: ${Boost_LIBRARIES}
 find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
 include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
-link_directories(${LINK_DIRECTORIES} ${Boost_LIBRARY_DIRS})
+#link_directories(${LINK_DIRECTORIES} ${Boost_LIBRARY_DIRS})
 
 # Xenomai libraries
 # Libraries: ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
@@ -61,8 +61,10 @@ include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
 
 # Link-only system libraries (do not check headers, just link shared objects)
 set(CMAKE_THREAD_LIBS_INIT pthread)
-set(OPENSSL_LIBRARIES ssl crypto)
-set(ZLIB_LIBRARIES z)
+#find_library( CMAKE_THREAD_LIBS_INIT pthread )
+find_library( ZLIB_LIBRARIES z )
+find_library( OPENSSL_LIBRARIES ssl )
+find_library( CRYPTO_LIBRARIES crypto )
 
 # RPATH handling to use relative paths in the install tree like above
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
@@ -71,7 +73,14 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
 # Project libraries
 add_subdirectory(${LIB_DIR}/core)
+add_subdirectory(${LIB_DIR}/sdk)
 #add_subdirectory(${LIB_DIR}/gcs)
+
+add_subdirectory(${MOD_DIR}/mpu6050)
+add_subdirectory(${MOD_DIR}/bmp180)
+add_subdirectory(${MOD_DIR}/ms5611)
+add_subdirectory(${MOD_DIR}/hmc5883)
+add_subdirectory(${MOD_DIR}/pwmoutput)
 
 # Main project target
 add_subdirectory(${TGT_DIR}/beaglebone) 
