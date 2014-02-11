@@ -1,76 +1,139 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf8"/>
+<html class="h100">
+<head>
+    <meta charset="utf8"/>
 
-		<title>Basic shapes</title>
+    <title>LinuxDrone Configurator</title>
 
-		<link rel="stylesheet" type="text/css" href="javascripts/joint/dist/joint.css" />
+    <link rel="stylesheet" type="text/css" href="javascripts/joint/dist/joint.css"/>
+    <link rel="stylesheet" type="text/css" href="stylesheets/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="stylesheets/bootstrap-theme.min.css"/>
+    <link rel="stylesheet" type="text/css" href="stylesheets/style.css"/>
 
-		<style>
-            #paper {
-                width: window.innerWidth-20;
-                height: window.innerHeight-100;
-                border: 1px solid gray;
-                box-sizing: border-box;
-            }
-		</style>
-	</head>
-	<body>
+    <style>
+        #paper {
+            width: window.innerWidth-20;
+            height: window.innerHeight-100;
+            border: 1px solid gray;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body class="h100">
 
-        <table border="1" >
-            <tr style="height:60px;">
-                <td><select id="listConfigs" onChange="SelectConfig()"></select></td>
-                <td>
-                    <span>Name:</span>
-                    <input id="configName" type="input" value="Hexa" >
-                    <span>Version:</span>
-                    <input id="configVersion" type="input" value="1" >
-                    <input type="button" value="Save Config" onclick="SaveConfig()" />
-                    <input type="button" value="Delete Config" onclick="DeleteConfig()" />
-                </td>
-                <td>&nbsp;</td>
-            </tr>            
-            <tr>
-                <td style="vertical-align: top">
-                    <div id="ModulesPanel" style="margin:2px;">
-                        
+<div class="main-region">
+    <div id="ModulesPanel" class="module-panel panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">Modules</h3>
+        </div>
+        <div class="panel-body">
+
+        </div>
+    </div>
+    <div id="board" class="board panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">Schema</h3>
+        </div>
+        <div class="panel-body">
+            <div class="tools-region">
+                <div id="listConfigs" class="">
+                    <!-- Выпадающий список схем -->
+                    <div class="btn-group">
+                        <button id="configName" role="button" class="dropdown-toggle btn btn-default" data-toggle="dropdown"
+                                onChange="SelectConfig()">Config <span
+                                class="caret"></span></button>
+                        <ul class="dropdown-menu" role="menu" aria-labelledby="configName">
+                            <li></li>
+                            <li></li>
+                        </ul>
                     </div>
-                </td>
-                <td>
-                    <div id="paper"></div>
-                </td>
-                <td style="width:200px">
-                    Properties
-                </td>
-            </tr>
-        </table>
+                    <!-- -->
+                    <!-- Выпадающий список версий -->
+                    <div class="btn-group">
+                        <button role="button" id="configVersion" class="dropdown-toggle btn btn-default" data-toggle="dropdown"
+                                onChange="SelectConfig()">Version <span
+                                class="caret"></span></button>
+                        <ul class="dropdown-menu" role="menu" aria-labelledby="configVersion">
+                            <li></li>
+                            <li></li>
+                        </ul>
+                    </div>
+                    <!-- -->
+                    <button type="button" class="btn btn-success" onclick="SaveConfig()">Save</button>
+                    <button type="button" class="btn btn-success">Save As</button>
+                    <button type="button" class="btn btn-danger" onclick="DeleteConfig()">Delete</button>
+                    <button type="button" class="btn btn-info">Import</button>
+                    <button type="button" class="btn btn-info">Export</button>
+
+                </div>
+            </div>
+            <div id="paper"></div>
+        </div>
+    </div>
+    <div class="properties-panel panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Properties</h3>
+        </div>
+        <div class="panel-body">
+
+        </div>
+    </div>
+</div>
 
 
-		<script src="javascripts/joint/lib/jquery.js"></script>
-		<script src="javascripts/joint/lib/jquery.sortElements.js"></script>
-		<script src="javascripts/joint/lib/lodash.js"></script>
-		<script src="javascripts/joint/lib/backbone.js"></script>
+<!--table border="1" >
+    <tr style="height:60px;">
+        <td><select id="listConfigs" onChange="SelectConfig()"></select></td>
+        <td>
+            <span>Name:</span>
+            <input id="configName" type="input" value="Hexa" >
+            <span>Version:</span>
+            <input id="configVersion" type="input" value="1" >
+            <input type="button" value="Save Config" onclick="SaveConfig()" />
+            <input type="button" value="Delete Config" onclick="DeleteConfig()" />
+        </td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">
+            <div id="ModulesPanel" style="margin:2px;">
 
-		<script src="javascripts/joint/src/core.js"></script>
-		<script src="javascripts/joint/src/vectorizer.js"></script>
-		<script src="javascripts/joint/src/geometry.js"></script>
+            </div>
+        </td>
+        <td>
+            <div id="paper"></div>
+        </td>
+        <td style="width:200px">
+            Properties
+        </td>
+    </tr>
+</table-->
 
 
-		<script src="javascripts/joint/src/joint.dia.graph.js"></script>
+<script src="javascripts/joint/lib/jquery.js"></script>
+<script src="javascripts/joint/lib/jquery.sortElements.js"></script>
+<script src="javascripts/joint/lib/lodash.js"></script>
+<script src="javascripts/joint/lib/backbone.js"></script>
 
-		<script src="javascripts/joint/src/joint.dia.cell.js"></script>
-		<script src="javascripts/joint/src/joint.dia.element.js"></script>
-		<script src="javascripts/joint/src/joint.dia.link.js"></script>
-		<script src="javascripts/joint/src/joint.dia.paper.js"></script>
-		
-		
+<script src="javascripts/joint/src/core.js"></script>
+<script src="javascripts/joint/src/vectorizer.js"></script>
+<script src="javascripts/joint/src/geometry.js"></script>
 
-		<script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
-		<script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>
 
-		<script src="javascripts/configurator.js"></script>
+<script src="javascripts/joint/src/joint.dia.graph.js"></script>
 
-		
-	</body>
+<script src="javascripts/joint/src/joint.dia.cell.js"></script>
+<script src="javascripts/joint/src/joint.dia.element.js"></script>
+<script src="javascripts/joint/src/joint.dia.link.js"></script>
+<script src="javascripts/joint/src/joint.dia.paper.js"></script>
+
+<script src="javascripts/bootstrap/bootstrap.js"></script>
+
+<script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
+<script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>
+
+<script src="javascripts/configurator.js"></script>
+
+
+</body>
 </html>

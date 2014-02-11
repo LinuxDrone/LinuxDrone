@@ -77,11 +77,13 @@ function MakeVisualModule(moduleInfo) {
 
 
 var graph = new joint.dia.Graph;
+var offsetPaperHeight = 150;
+var offsetPaperWidth = 220;
 
 var paper = new joint.dia.Paper({
     el: $('#paper'),
-    width: window.innerWidth - 220,
-    height: window.innerHeight - 100,
+    width: window.innerWidth - offsetPaperWidth,
+    height: window.innerHeight - offsetPaperHeight,
     gridSize: 20,
     model: graph
 });
@@ -150,5 +152,5 @@ function SelectConfig() {
 }
 
 $(window).resize(function () {
-    paper.setDimensions(window.innerWidth - 220, window.innerHeight - 100);
+    paper.setDimensions(window.innerWidth - offsetPaperWidth, window.innerHeight - offsetPaperHeight);
 });
