@@ -77,17 +77,13 @@ function MakeVisualModule(moduleInfo) {
 
 
 var graph = new joint.dia.Graph;
-var offsetPaperHeight = 150;
-var offsetPaperWidth = 220;
 
 var paper = new joint.dia.Paper({
     el: $('#paper'),
-    width: window.innerWidth - offsetPaperWidth,
-    height: window.innerHeight - offsetPaperHeight,
     gridSize: 20,
     model: graph
 });
-
+$(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 
 function InitListModules() {
     var modulesNames = Object.keys(modulesDefs);
@@ -150,7 +146,3 @@ function SelectConfig() {
         $('#configVersion')[0].value = "";
     }
 }
-
-$(window).resize(function () {
-    paper.setDimensions(window.innerWidth - offsetPaperWidth, window.innerHeight - offsetPaperHeight);
-});

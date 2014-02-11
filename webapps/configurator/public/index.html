@@ -12,17 +12,16 @@
 
     <style>
         #paper {
-            width: window.innerWidth-20;
-            height: window.innerHeight-100;
             border: 1px solid gray;
             box-sizing: border-box;
+            overflow: auto;
         }
     </style>
 </head>
 <body class="h100">
 
-<div class="main-region">
-    <div id="ModulesPanel" class="module-panel panel panel-info">
+<div class="main-region clearfix">
+    <div id="ModulesPanel" class="module-panel panel panel-info h100">
         <div class="panel-heading">
             <h3 class="panel-title">Modules</h3>
         </div>
@@ -34,7 +33,7 @@
         <div class="panel-heading">
             <h3 class="panel-title">Schema</h3>
         </div>
-        <div class="panel-body">
+        <div class="panel-body h90">
             <div class="tools-region">
                 <div id="listConfigs" class="">
                     <!-- Выпадающий список схем -->
@@ -67,7 +66,7 @@
 
                 </div>
             </div>
-            <div id="paper"></div>
+            <div id="paper" class="h100"></div>
         </div>
     </div>
     <div class="properties-panel panel panel-default">
@@ -127,7 +126,7 @@
 <script src="javascripts/joint/src/joint.dia.link.js"></script>
 <script src="javascripts/joint/src/joint.dia.paper.js"></script>
 
-<script src="javascripts/bootstrap/bootstrap.js"></script>
+<script src="javascripts/bootstrap.js"></script>
 
 <script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
 <script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>

@@ -1,13 +1,7 @@
-.h100 {
-    height: 100%;
-}
+.h100 {height: 100%;} .h99 {height: 99%;} .h95 {height: 95%;} .h90 {height: 90%;}
 
 .module-panel, .properties-panel {
     width: 15%;
-}
-
-.board {
-    width: 70%;
 }
 
 .module-panel, .properties-panel, .board {
@@ -15,6 +9,12 @@
     float: left;
     overflow: auto;
     height: 100%;
+}
+
+.board {
+    width: 70%;
+    max-width: 70%;
+    overflow: hidden;
 }
 
 .main-region {
