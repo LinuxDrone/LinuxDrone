@@ -24,3 +24,4 @@ set(EXTRA_LIBS
 add_library(mpu6050 MODULE ${INC} ${SRC})
 
 install(TARGETS mpu6050 DESTINATION modules/mpu6050)
+install(FILES mpu6050.def.js DESTINATION modules/mpu6050)
