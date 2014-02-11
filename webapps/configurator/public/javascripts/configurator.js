@@ -1,3 +1,53 @@
+var my = my || {};
+
+my.ModelConfiguration = function () {
+    var self = this;
+    self.name = ko.observable();
+    self.listVersions = ko.observable();
+};
+
+my.VM = (function () {
+    var Configurations = ko.observableArray([]);
+    var configSelected = ko.observable();
+    var Versions = ko.observableArray([]);
+    var versionSelected = ko.observable();
+
+    var LoadConfigurations = function (_initialData) {
+        // clear array if loading dynamic data
+        Configurations([]);
+
+        $.each(_initialData, function (configName, listVersions) {
+            Configurations.push(new my.ModelConfiguration()
+                .name(configName)
+                .listVersions(listVersions)
+            );
+        });
+    };
+
+    configSelected.subscribe(function (versions) {
+        Versions([]);
+
+        $.each(versions, function (i, configVersion) {
+            Versions.push(configVersion.version);
+        });
+    });
+
+    versionSelected.subscribe(function (version) {
+        var g=0;
+    });
+
+    return {
+        LoadConfigurations: LoadConfigurations,
+        Configurations: Configurations,
+        Versions: Versions,
+        configSelected: configSelected,
+        versionSelected: versionSelected
+    };
+})();
+
+
+
+
 var allConfigs = {};
 var modulesDefs = {};
 
@@ -13,12 +63,17 @@ $(document).ready(function () {
 
     $.getJSON("getconfigs",
         function (data) {
+
+            my.VM.LoadConfigurations(_.groupBy(data, 'name'));
+            ko.applyBindings(my.VM);
+
+
             //console.log(data);
-            allConfigs = data;
-            $.each(data, function (i, item) {
-                $('#listConfigs')[0].options[i] = new Option(item.name, i);
-            });
-            SelectConfig();
+            /*            allConfigs = data;
+             $.each(data, function (i, item) {
+             $('#listConfigs')[0].options[i] = new Option(item.name, i);
+             });
+             SelectConfig();*/
         });
 });
 
@@ -67,7 +122,7 @@ function MakeVisualModule(moduleInfo) {
         });
     }
 
-    module.size.height= maxPins * 30;
+    module.size.height = maxPins * 30;
 
     // Добавление параметров, со значениями по умолчанию
 

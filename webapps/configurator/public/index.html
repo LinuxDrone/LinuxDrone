@@ -17,6 +17,30 @@
             overflow: auto;
         }
     </style>
+
+    <script src="javascripts/joint/lib/jquery.js"></script>
+    <script src="javascripts/joint/lib/jquery.sortElements.js"></script>
+    <script src="javascripts/joint/lib/lodash.js"></script>
+    <script src="javascripts/joint/lib/backbone.js"></script>
+
+    <script src="javascripts/joint/src/core.js"></script>
+    <script src="javascripts/joint/src/vectorizer.js"></script>
+    <script src="javascripts/joint/src/geometry.js"></script>
+
+
+    <script src="javascripts/joint/src/joint.dia.graph.js"></script>
+
+    <script src="javascripts/joint/src/joint.dia.cell.js"></script>
+    <script src="javascripts/joint/src/joint.dia.element.js"></script>
+    <script src="javascripts/joint/src/joint.dia.link.js"></script>
+    <script src="javascripts/joint/src/joint.dia.paper.js"></script>
+
+    <script src="javascripts/bootstrap.js"></script>
+    <script type='text/javascript' src='javascripts/knockout-3.0.0.js'></script>
+    <script type='text/javascript' src='javascripts/underscore-min.js'></script>
+
+    <script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
+    <script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>
 </head>
 <body class="h100">
 
@@ -31,32 +55,21 @@
     </div>
     <div id="board" class="board panel panel-primary">
         <div class="panel-heading">
-            <h3 class="panel-title">Schema</h3>
-        </div>
-        <div class="panel-body h90">
+            <!--h3 class="panel-title">Schema</h3-->
             <div class="tools-region">
+                <!--h3 class="panel-title">Schema</h3-->
                 <div id="listConfigs" class="">
                     <!-- Выпадающий список схем -->
-                    <div class="btn-group">
-                        <button id="configName" role="button" class="dropdown-toggle btn btn-default" data-toggle="dropdown"
-                                onChange="SelectConfig()">Config <span
-                                class="caret"></span></button>
-                        <ul class="dropdown-menu" role="menu" aria-labelledby="configName">
-                            <li></li>
-                            <li></li>
-                        </ul>
-                    </div>
+                    <select data-bind="options: my.VM.Configurations,
+                        optionsText: 'name',
+                        optionsValue: 'listVersions',
+                        value: my.VM.configSelected"></select>
                     <!-- -->
                     <!-- Выпадающий список версий -->
-                    <div class="btn-group">
-                        <button role="button" id="configVersion" class="dropdown-toggle btn btn-default" data-toggle="dropdown"
-                                onChange="SelectConfig()">Version <span
-                                class="caret"></span></button>
-                        <ul class="dropdown-menu" role="menu" aria-labelledby="configVersion">
-                            <li></li>
-                            <li></li>
-                        </ul>
-                    </div>
+                    <select data-bind="options: my.VM.Versions,
+                        optionsText: $data,
+                        optionsValue: $data,
+                        value: my.VM.versionSelected"></select>
                     <!-- -->
                     <button type="button" class="btn btn-success" onclick="SaveConfig()">Save</button>
                     <button type="button" class="btn btn-success">Save As</button>
@@ -66,6 +79,9 @@
 
                 </div>
             </div>
+        </div>
+        <div class="panel-body h90">
+
             <div id="paper" class="h100"></div>
         </div>
     </div>
@@ -109,27 +125,7 @@
 </table-->
 
 
-<script src="javascripts/joint/lib/jquery.js"></script>
-<script src="javascripts/joint/lib/jquery.sortElements.js"></script>
-<script src="javascripts/joint/lib/lodash.js"></script>
-<script src="javascripts/joint/lib/backbone.js"></script>
 
-<script src="javascripts/joint/src/core.js"></script>
-<script src="javascripts/joint/src/vectorizer.js"></script>
-<script src="javascripts/joint/src/geometry.js"></script>
-
-
-<script src="javascripts/joint/src/joint.dia.graph.js"></script>
-
-<script src="javascripts/joint/src/joint.dia.cell.js"></script>
-<script src="javascripts/joint/src/joint.dia.element.js"></script>
-<script src="javascripts/joint/src/joint.dia.link.js"></script>
-<script src="javascripts/joint/src/joint.dia.paper.js"></script>
-
-<script src="javascripts/bootstrap.js"></script>
-
-<script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
-<script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>
 
 <script src="javascripts/configurator.js"></script>
 
