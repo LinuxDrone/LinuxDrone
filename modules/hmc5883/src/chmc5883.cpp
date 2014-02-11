@@ -20,6 +20,18 @@
 
 #include "my_memory"
 
+extern "C" {
+CModule* moduleCreator()
+{
+	return new CHmc5883();
+}
+
+const char* moduleName() {
+	return "Hmc5883";
+}
+}
+
+
 /* HMC5883 Addresses */
 #define HMC5883_I2C_ADDR           0x1E
 #define HMC5883_I2C_READ_ADDR      0x3D

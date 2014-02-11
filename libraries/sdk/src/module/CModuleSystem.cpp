@@ -11,7 +11,6 @@
 //--------------------------------------------------------------------
 
 #include "CModuleSystem.h"
-#include "CModuleMetaInfo.h"
 #include "CModule.h"
 #include "io/CDir"
 #include "io/CFile"
@@ -41,23 +40,10 @@ CModuleSystem* CModuleSystem::instance()
 //                       modules information                       //
 /////////////////////////////////////////////////////////////////////
 
-void CModuleSystem::readAllModules()
+void CModuleSystem::readAllModules(const CString& path)
 {
-	pid_t pid = getpid();
-	CString processPath = CString("/proc/%1/cmdline").arg(pid);
-	CFile file(processPath);
-	if (file.open(CIODevice::ReadOnly)) {
-		CByteArray data;
-		data.setSize(1024);
-		int len = file.read((void*)data.data(), 1024);
-		if (len == 0) {
-			return;
-		}
-		processPath = CString(data.data(), len);
-	} else {
-		return;
-	}
-	processPath.remove(processPath.length()-15, 15);		// minus sizeof "bin/linuxdrone"
+	CString processPath = path;
+	processPath.remove(processPath.length()-14, 14);		// minus sizeof "bin/linuxdrone"
 	CString pathToModules = CString("%1modules").arg(processPath);
 	Logger() << "path to modules: " << pathToModules;
 
@@ -80,46 +66,31 @@ void CModuleSystem::readAllModules()
 			if (handle == 0) {
 				continue;
 			}
-			ptr_moduleMetainfoCreator sym = (ptr_moduleMetainfoCreator)dlsym(handle, "moduleMetainfoCreator");
-			if (sym == 0) {
+			MODULEINFO info;
+			info.creator = (ptr_moduleCreator)dlsym(handle, "moduleCreator");
+			info.name = (ptr_moduleName)dlsym(handle, "moduleName");
+			if (info.creator == 0 || info.name == 0) {
+				dlclose(handle);
 				continue;
 			}
-			CModuleMetainfo* info = sym(path);
-			registerModuleMetainformation(info);
-			info->release();
+			{
+				CString name = info.name();
+				CMutexSection locker(&m_mutexInfo);
+				if (m_metaInfo.count(name) != 0) {
+					dlclose(handle);
+					continue;
+				} else {
+					m_metaInfo[name] = info;
+				}
+			}
 		}
 	}
-}
-
-bool CModuleSystem::registerModuleMetainformation(CModuleMetainfo* info)
-{
-	if (!info) {
-		return false;
-	}
-	CMutexSection locker(&m_mutexInfo);
-	if (m_metaInfo.count(info->moduleName())) {
-		return false;
-	}
-	info->addRef();
-	m_metaInfo[info->moduleName()] = info;
-	return true;
 }
 
 void CModuleSystem::removeAllInformation()
 {
 	CMutexSection locker(&m_mutexInfo);
-	for (auto it = m_metaInfo.begin();it!=m_metaInfo.end();it++) {
-		SAFE_RELEASE((*it).second);
-	}
-}
-
-CModuleMetainfo* CModuleSystem::infoByName(const CString& name)
-{
-	CMutexSection locker(&m_mutexInfo);
-	if (m_metaInfo.count(name) == 0) {
-		return 0;
-	}
-	return m_metaInfo[name];
+	m_metaInfo.clear();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -154,27 +125,20 @@ bool CModuleSystem::createModule(const mongo::BSONObj& moduleInfo)
 			return false;
 		}
 	}
-	CModuleMetainfo* info = infoByName(name);
-	if (!info) {
-		Logger() << "error creating module (name=" << name << "). can`t find meta information";
-		return false;
+	MODULEINFO info;
+	{
+		CMutexSection locker(&m_mutexInfo);
+		if (m_metaInfo.count(name) == 0) {
+			Logger() << "error creating module (name=" << name << "). can`t find meta information";
+			return false;
+		}
+		info = m_metaInfo[name];
 	}
-	CModule* module = info->createModule();
+	CModule* module = info.creator();
 	if (!module) {
 		return false;
 	}
-	mongo::BSONObjBuilder builder;
-	mongo::BSONObjIterator objIt(moduleInfo);
-	while (objIt.more()) {
-		mongo::BSONElement elem = objIt.next();
-		if (elem.isNull()) {
-			continue;
-		}
-		builder.append(elem);
-	}
-	builder << "metaInfo" << info->metainformation();
-//	Logger() << builder.obj().toString(false, true).c_str();
-	if (!module->init(builder.obj())) {
+	if (!module->init(moduleInfo)) {
 		SAFE_RELEASE(module);
 		return false;
 	}

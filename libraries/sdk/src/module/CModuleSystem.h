@@ -17,11 +17,22 @@
 #include <map>
 #include <mongo/bson/bson.h>
 
-class CModuleMetainfo;
 class CModule;
+
+// main function of module 'CModuleMetainfo* moduleCreator(void)'
+typedef CModule* (*ptr_moduleCreator)(void);
+// return name of module
+typedef const char* (*ptr_moduleName)(void);
 
 class CModuleSystem
 {
+private:
+	typedef struct tagModuleInfo
+	{
+		ptr_moduleCreator creator;
+		ptr_moduleName    name;
+	} MODULEINFO, *PMODULEINFO;
+
 public:
 	CModuleSystem();
 	~CModuleSystem();
@@ -29,10 +40,8 @@ public:
 	static CModuleSystem* instance();
 
 // modules information
-	void readAllModules();
-	bool registerModuleMetainformation(CModuleMetainfo* info);
+	void readAllModules(const CString& path);
 	void removeAllInformation();
-	CModuleMetainfo* infoByName(const CString& name);
 
 // module instances
 	bool createModules(const mongo::BSONObj& info);
@@ -46,7 +55,7 @@ public:
 	void stop();
 
 private:
-	std::map<CString, CModuleMetainfo*> m_metaInfo;
+	std::map<CString, MODULEINFO> m_metaInfo;
 	CMutex m_mutexInfo;
 
 	std::map<CString, CModule*> m_modules;

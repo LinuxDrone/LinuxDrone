@@ -183,12 +183,12 @@ void CModule::mainTask()
 	RTIME startTime = rt_timer_read();
 
 	while (!m_terminate) {
-		if (m_period == 0 && m_notifyOnChange == false) {
+		if (m_period == -1 && m_notifyOnChange == false) {
 			m_task.sleep(10 * 1000000);
 			continue;
 		}
 		RTIME current = rt_timer_read();
-		if (m_period != 0 && m_runnable) {
+		if (m_period != -1 && m_runnable) {
 			RTIME result = current - startTime;
 			if (result >= m_period) {
 				m_runnable->run();
@@ -241,7 +241,7 @@ void CModule::sendObject(const mongo::BSONObj& object)
 			CString name = CString((link_data.links[0])["inInst"].String().c_str()) + CString("inputQueue");
 			int err = rt_queue_bind(&link_data.queue, name.data(), TM_NONBLOCK);
 			if (err != 0) {
-				Logger() << "error binding pipe for send data to module. err =" << err;
+				Logger() << "error binding queue for send data to module. err =" << err;
 				continue;
 			}
 			link_data.queueCreated = true;
@@ -250,14 +250,13 @@ void CModule::sendObject(const mongo::BSONObj& object)
 		;
 		void* ptr = rt_queue_alloc(&link_data.queue, objForSend.objsize());
 		if (!ptr) {
-//			Logger() << "error allocation memory from queue heap";
 			continue;
 		}
 		memcpy(ptr, objForSend.objdata(), objForSend.objsize());
 		int err = rt_queue_send(&link_data.queue, ptr, objForSend.objsize(), Q_NORMAL);
 		if (err < 0) {
 			rt_queue_free(&link_data.queue, ptr);
-			Logger() << "error writing in pipe. err =" << err;
+			Logger() << "error writing in queue. err =" << err;
 		}
 	}
 }

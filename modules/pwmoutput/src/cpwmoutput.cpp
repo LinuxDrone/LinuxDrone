@@ -21,6 +21,19 @@
 
 #include "my_memory"
 
+extern "C" {
+CModule* moduleCreator()
+{
+	return new CPwmOutput();
+}
+
+const char* moduleName() {
+	return "PwmOutput";
+}
+}
+
+
+
 CPwmOutput::CPwmOutput() :
 	CModule("PwmOutput", 1024)
 {
