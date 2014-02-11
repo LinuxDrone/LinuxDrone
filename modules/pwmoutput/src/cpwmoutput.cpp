@@ -64,7 +64,7 @@ bool CPwmOutput::start()
 bool CPwmOutput::initPwmOutput()
 {
 	m_pru.Init();
-	void* sharedMem = m_pru.GetSharedMem();
+	uint8_t *sharedMem = static_cast<uint8_t *>(m_pru.GetSharedMem());
 
 	*(unsigned long *)(sharedMem + 0x200) = 1000 * 200;
 	*(unsigned long *)(sharedMem + 0x210) = 1000 * 200;
