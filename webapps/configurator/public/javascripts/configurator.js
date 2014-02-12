@@ -1,51 +1,70 @@
-var my = my || {};
+var graph = new joint.dia.Graph;
 
-my.ModelConfiguration = function () {
+var paper = new joint.dia.Paper({
+    el: $('#paper'),
+    gridSize: 20,
+    model: graph
+});
+$(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
+
+
+var viewModels = viewModels || {};
+
+viewModels.ConfigurationSelector = function () {
     var self = this;
     self.name = ko.observable();
     self.listVersions = ko.observable();
 };
 
-my.VM = (function () {
-    var Configurations = ko.observableArray([]);
-    var configSelected = ko.observable();
-    var Versions = ko.observableArray([]);
-    var versionSelected = ko.observable();
+viewModels.Editor = (function () {
+    var res = {
+        Configurations: ko.observableArray([]),
+        configSelected: ko.observable(),
+        Versions: ko.observableArray([]),
+        versionSelected: ko.observable()
+    };
 
-    var LoadConfigurations = function (_initialData) {
+    res.LoadConfigurations = function (_initialData) {
         // clear array if loading dynamic data
-        Configurations([]);
+        res.Configurations([]);
 
         $.each(_initialData, function (configName, listVersions) {
-            Configurations.push(new my.ModelConfiguration()
+            res.Configurations.push(new viewModels.ConfigurationSelector()
                 .name(configName)
                 .listVersions(listVersions)
             );
         });
     };
 
-    configSelected.subscribe(function (versions) {
-        Versions([]);
 
+    res.SaveConfig = function SaveConfig() {
+        $.post("saveconfig",
+            {
+                "name": res.configSelected()[0].name,
+                "version": res.configSelected()[0].version,
+                "jsonGraph": JSON.stringify(graph.toJSON())
+            },
+            function (data) {
+                alert("Data Loaded: " + data);
+            });
+    }
+
+
+    res.configSelected.subscribe(function (versions) {
+        res.Versions([]);
         $.each(versions, function (i, configVersion) {
-            Versions.push(configVersion.version);
+            res.Versions.push(configVersion.version);
         });
     });
 
-    versionSelected.subscribe(function (version) {
-        var g=0;
+    res.versionSelected.subscribe(function (version) {
+        if (version) {
+            graph.fromJSON(JSON.parse(_.where(res.configSelected(), {version: version})[0].jsonGraph));
+        }
     });
 
-    return {
-        LoadConfigurations: LoadConfigurations,
-        Configurations: Configurations,
-        Versions: Versions,
-        configSelected: configSelected,
-        versionSelected: versionSelected
-    };
+    return res;
 })();
-
-
 
 
 var allConfigs = {};
@@ -64,8 +83,8 @@ $(document).ready(function () {
     $.getJSON("getconfigs",
         function (data) {
 
-            my.VM.LoadConfigurations(_.groupBy(data, 'name'));
-            ko.applyBindings(my.VM);
+            viewModels.Editor.LoadConfigurations(_.groupBy(data, 'name'));
+            ko.applyBindings(viewModels.Editor);
 
 
             //console.log(data);
@@ -131,15 +150,6 @@ function MakeVisualModule(moduleInfo) {
 }
 
 
-var graph = new joint.dia.Graph;
-
-var paper = new joint.dia.Paper({
-    el: $('#paper'),
-    gridSize: 20,
-    model: graph
-});
-$(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
-
 function InitListModules() {
     var modulesNames = Object.keys(modulesDefs);
     modulesNames.forEach(function (i) {
@@ -161,17 +171,6 @@ function AddModule2Paper(moduleDef) {
     graph.addCell(MakeVisualModule(moduleDef));
 }
 
-function SaveConfig() {
-    $.post("saveconfig",
-        {
-            "name": $('#configName')[0].value,
-            "version": parseInt($('#configVersion')[0].value),
-            "jsonGraph": JSON.stringify(graph.toJSON())
-        },
-        function (data) {
-            alert("Data Loaded: " + data);
-        });
-}
 
 function DeleteConfig() {
 

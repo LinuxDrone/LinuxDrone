@@ -37,7 +37,6 @@
 
     <script src="javascripts/bootstrap.js"></script>
     <script type='text/javascript' src='javascripts/knockout-3.0.0.js'></script>
-    <script type='text/javascript' src='javascripts/underscore-min.js'></script>
 
     <script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
     <script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>
@@ -60,18 +59,18 @@
                 <!--h3 class="panel-title">Schema</h3-->
                 <div id="listConfigs" class="">
                     <!-- Выпадающий список схем -->
-                    <select data-bind="options: my.VM.Configurations,
+                    <select data-bind="options: viewModels.Editor.Configurations,
                         optionsText: 'name',
                         optionsValue: 'listVersions',
-                        value: my.VM.configSelected"></select>
+                        value: viewModels.Editor.configSelected"></select>
                     <!-- -->
                     <!-- Выпадающий список версий -->
-                    <select data-bind="options: my.VM.Versions,
+                    <select data-bind="options: viewModels.Editor.Versions,
                         optionsText: $data,
                         optionsValue: $data,
-                        value: my.VM.versionSelected"></select>
+                        value: viewModels.Editor.versionSelected"></select>
                     <!-- -->
-                    <button type="button" class="btn btn-success" onclick="SaveConfig()">Save</button>
+                    <button type="button" class="btn btn-success" data-bind="click: SaveConfig">Save</button>
                     <button type="button" class="btn btn-success">Save As</button>
                     <button type="button" class="btn btn-danger" onclick="DeleteConfig()">Delete</button>
                     <button type="button" class="btn btn-info">Import</button>
