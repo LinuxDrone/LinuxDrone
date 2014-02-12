@@ -51,7 +51,7 @@ function loadModuleDefs (dir, done) {
             var fullFile = dir + '/' + file;
             fs.stat(fullFile, function(err, stat) {
                 if (stat && stat.isDirectory()) {
-                    var configFile = fullFile + '/' + file + '.def.js';
+                    var configFile = fullFile + '/' + file + '.def.json';
                     fs.readFile(configFile, 'utf8', function (err,data) {
                         if (err) {
                             console.log("Not found definition file " + configFile + " for module '" + file + "'");
@@ -69,7 +69,7 @@ function loadModuleDefs (dir, done) {
                                 console.log("Load module " + objModuleDef.name + " - OK.");
                             });
                         } catch(e) {
-                            console.log("Error parse file " + configFile + " (" + e.type + ")");
+                            console.log("Error parse file " + configFile + " (" + e + ")");
                         }
                     });
                 }

@@ -20,51 +20,47 @@ exports.metamodules = function (db) {
 
 exports.saveconfig = function (db) {
     return function (req, res) {
-        req.body.version = parseInt(req.body.version);
-        console.log(req.body);
+        //req.body.version = parseInt(req.body.version);
+        //console.log(req.body);
         var collection = db.get('visual_configuration');
 
-        collection.insert(req.body,
-            function (err, doc) {
-                if (err) {
-                    // If it failed, return error
-                    console.log(err);
-                    res.send("There was a problem adding the information to the database.");
-                }
-                else {
-
-                }
-            });
-
+        collection.update({"name": req.body.name, "version": req.body.version}, req.body, {"upsert":true }, function (err,count){
+            if(err)
+            {
+                res.send("There was a problem adding the information to the database.");
+                return console.log(err);
+            }
+            console.log("Save configuration " + req.body.name + " v." +req.body.version + " - OK.");
+        });
 
         var configuration = ConvertGraph2Configuration(JSON.parse(req.body.jsonGraph));
         configuration.version = req.body.version;
         configuration.name = req.body.name;
 
         var configurations = db.get('configuration');
-        configurations.insert(configuration,
-            function (err, doc) {
-                if (err) {
-                    // If it failed, return error
-                    console.log(err);
-                    res.send("There was a problem adding the information to the database.");
-                }
-                else {
-
-                }
-            });
+        configurations.update({"name": req.body.name, "version": req.body.version}, configuration, {"upsert":true }, function (err,count){
+            if(err)
+            {
+                res.send("There was a problem adding the information to the database.");
+                return console.log(err);
+            }
+            console.log("Save LinuxDrone configuration " + req.body.name + " v." +req.body.version + " - OK.");
+        });
+        res.send("OK");
     };
 };
 
 exports.delconfig = function (db) {
     return function (req, res) {
-        req.body.version = parseInt(req.body.version);
+        //req.body.version = parseInt(req.body.version);
 
         var collection = db.get('visual_configuration');
         collection.remove({"name":req.body.name, "version":req.body.version});
 
         var configurations = db.get('configuration');
         configurations.remove({"name":req.body.name, "version":req.body.version});
+
+        res.send("OK");
     };
 };
 

@@ -1,8 +1,27 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+.h100 {height: 100%;} .h99 {height: 99%;} .h95 {height: 95%;} .h90 {height: 90%;}
+
+.module-panel, .properties-panel {
+    width: 15%;
 }
 
-a {
-  color: #00B7FF;
+.module-panel, .properties-panel, .board {
+    //resize : both;
+    float: left;
+    overflow: auto;
+    height: 100%;
+}
+
+.board {
+    width: 70%;
+    max-width: 70%;
+    overflow: hidden;
+}
+
+.main-region {
+    height: 100%;
+    padding: 5px;
+}
+
+.tools-region {
+    padding: 5px;
 }
