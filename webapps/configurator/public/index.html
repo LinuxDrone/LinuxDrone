@@ -75,6 +75,7 @@
                     <button type="button" class="btn btn-danger" onclick="DeleteConfig()">Delete</button>
                     <button type="button" class="btn btn-info">Import</button>
                     <button type="button" class="btn btn-info">Export</button>
+                    <a href="#myModal" role="button" class="btn" data-toggle="modal">Launch demo modal</a>
 
                 </div>
             </div>
@@ -95,35 +96,21 @@
 </div>
 
 
-<!--table border="1" >
-    <tr style="height:60px;">
-        <td><select id="listConfigs" onChange="SelectConfig()"></select></td>
-        <td>
-            <span>Name:</span>
-            <input id="configName" type="input" value="Hexa" >
-            <span>Version:</span>
-            <input id="configVersion" type="input" value="1" >
-            <input type="button" value="Save Config" onclick="SaveConfig()" />
-            <input type="button" value="Delete Config" onclick="DeleteConfig()" />
-        </td>
-        <td>&nbsp;</td>
-    </tr>
-    <tr>
-        <td style="vertical-align: top">
-            <div id="ModulesPanel" style="margin:2px;">
 
-            </div>
-        </td>
-        <td>
-            <div id="paper"></div>
-        </td>
-        <td style="width:200px">
-            Properties
-        </td>
-    </tr>
-</table-->
-
-
+<-- Modal -->
+<div class="modal" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel">Modal header</h3>
+    </div>
+    <div class="modal-body">
+        <p>One fine body…</p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn btn-primary">Save changes</button>
+    </div>
+</div>
 
 
 <script src="javascripts/configurator.js"></script>
