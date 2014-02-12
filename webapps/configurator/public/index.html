@@ -59,10 +59,10 @@
                 <!--h3 class="panel-title">Schema</h3-->
                 <div id="listConfigs" class="">
                     <!-- Выпадающий список схем -->
-                    <select data-bind="options: viewModels.Editor.Configurations,
-                        optionsText: 'name',
-                        optionsValue: 'listVersions',
-                        value: viewModels.Editor.configSelected"></select>
+                    <select data-bind="options: viewModels.Editor.ConfigNames,
+                        optionsText: $data,
+                        optionsValue: $data,
+                        value: viewModels.Editor.configNameSelected"></select>
                     <!-- -->
                     <!-- Выпадающий список версий -->
                     <select data-bind="options: viewModels.Editor.Versions,

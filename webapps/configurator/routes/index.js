@@ -20,7 +20,7 @@ exports.metamodules = function (db) {
 
 exports.saveconfig = function (db) {
     return function (req, res) {
-        req.body.version = parseInt(req.body.version);
+        //req.body.version = parseInt(req.body.version);
         //console.log(req.body);
         var collection = db.get('visual_configuration');
 
@@ -46,12 +46,13 @@ exports.saveconfig = function (db) {
             }
             console.log("Save LinuxDrone configuration " + req.body.name + " v." +req.body.version + " - OK.");
         });
+        res.send("OK");
     };
 };
 
 exports.delconfig = function (db) {
     return function (req, res) {
-        req.body.version = parseInt(req.body.version);
+        //req.body.version = parseInt(req.body.version);
 
         var collection = db.get('visual_configuration');
         collection.remove({"name":req.body.name, "version":req.body.version});

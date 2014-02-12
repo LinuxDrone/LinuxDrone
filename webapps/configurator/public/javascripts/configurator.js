@@ -10,78 +10,112 @@ $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 
 var viewModels = viewModels || {};
 
+/*
 viewModels.ConfigurationSelector = function () {
     var self = this;
     self.name = ko.observable();
-    self.listVersions = ko.observable();
+    self.listVersions = ko.observableArray([]);
 };
+*/
 
 viewModels.Editor = (function () {
+    var allConfigs = {};
+
     var res = {
-        // Список имен конфигураций и ассоциированных с именем одной или нескольких версий конфигураций
-        Configurations: ko.observableArray([]),
-        // Выбранная (имя+ассоциированные версии) конфигурация
-        configSelected: ko.observable(),
-        // Список версий (конфигураций) для выбранного имени конфигурации
+        // Список имен конфигураций
+        ConfigNames: ko.observableArray([]),
+        // Выбранное имя конфигурации
+        configNameSelected: ko.observable(),
+        // Список версий для выбранного имени конфигурации
         Versions: ko.observableArray([]),
-        // Выбранная версия (строка - назвение версии)
+        // Выбранная версия
         versionSelected: ko.observable(),
+        // Новое название конфигурации (связано с полем в диалоге "Сохранить как")
         newConfigName: ko.observable(),
+        // Новая версия конфигурации (связано с полем в диалоге "Сохранить как")
         newConfigVersion: ko.observable()
     };
 
     // Публичная функция загрузки конфигурации
     res.LoadConfigurations = function (_initialData) {
-        // clear array if loading dynamic data
-        res.Configurations([]);
+        allConfigs=_initialData;
 
-        $.each(_initialData, function (configName, listVersions) {
-            res.Configurations.push(new viewModels.ConfigurationSelector()
-                .name(configName)
-                .listVersions(listVersions)
-            );
+        res.ConfigNames([]);
+
+        $.each(_.groupBy(allConfigs, 'name'), function (configName, listVersions) {
+            res.ConfigNames.push(configName);
         });
     };
 
     // Публичная функция сохранения текущей конфигурации
     // Название и версия берутся из комбобоксов имени и версий
     res.SaveConfig = function SaveConfig() {
-        SaveCurrentConfig(res.configSelected()[0].name, res.configSelected()[0].version);
+        SaveCurrentConfig(res.configNameSelected(), res.versionSelected());
     }
 
     // Публичная функция сохранения текущей конфигурации под новым именем
     // Название и версия берутся из полей ввода диалога "Сохранить как.."
     res.SaveConfigAs = function SaveConfigAs() {
-        SaveCurrentConfig(res.newConfigName(), res.newConfigVersion());
+        SaveCurrentConfig(res.newConfigName(), res.newConfigVersion(), true);
     }
 
     // Обработчик события выбора имени конфигурации
-    res.configSelected.subscribe(function (versions) {
+    res.configNameSelected.subscribe(function (selectedName) {
         res.Versions([]);
-        $.each(versions, function (i, configVersion) {
-            res.Versions.push(configVersion.version);
+
+        $.each(_.where(allConfigs, {name: selectedName}), function (i, config) {
+            res.Versions.push(config.version);
         });
-        res.newConfigName(versions[0].name);
+        res.newConfigName(selectedName);
     });
 
     // Обработчик события выбора версии
     res.versionSelected.subscribe(function (version) {
         if (version) {
-            graph.fromJSON(JSON.parse(_.where(res.configSelected(), {version: version})[0].jsonGraph));
+            graph.fromJSON(JSON.parse(_.where(allConfigs, {version: version, name:res.configNameSelected()})[0].jsonGraph));
         }
     });
 
 
     // Приватная функция сохранения конфигурации (текущего графа) с именем и версией
-    function SaveCurrentConfig(name, version) {
-        $.post("saveconfig",
-            {
-                "name": name,
-                "version": version,
-                "jsonGraph": JSON.stringify(graph.toJSON())
-            },
+    function SaveCurrentConfig(name, version, isNew) {
+        var data4save = {
+            "name": name,
+            "version": version,
+            "jsonGraph": JSON.stringify(graph.toJSON())
+        };
+        $.post("saveconfig", data4save,
             function (data) {
-                alert("Data Loaded: " + data);
+                if(data=="OK" && isNew)
+                {
+                    allConfigs.push(data4save);
+
+                    // Если была записана новая конфигурация, добавим ее в комбобоксы
+                    // Если была записана новая версия, а имя конфигурации не изменилось, то добавим новую строку только
+                    // в комбобокс версий.
+                    // Иначе добавим новые строки в оба комбобокса. И установим как выбранные значения в комбобоксах,
+                    // соответсвующие имени и версии новой конфигурации
+                    //var names = _.where(res.Configurations(), {"name()":name});
+                    //var existConfig = _.find(res.Configurations(), function(confSel){ return confSel.name() == name; });
+                    if(_.contains(res.ConfigNames(), name))
+                    {
+                        if(res.configNameSelected()==name)
+                        {
+                            // Добавим контент конфигурации к списку версий выбранной конфигурации
+                            res.Versions.push(version);
+                        }
+                        else
+                        {
+                            res.configNameSelected(name);
+                        }
+                        res.versionSelected(version);
+                    }
+                    else
+                    {
+                        res.ConfigNames.push(name);
+                        res.configNameSelected(name);
+                    }
+                }
             });
     }
 
@@ -89,7 +123,7 @@ viewModels.Editor = (function () {
 })();
 
 
-var allConfigs = {};
+
 var modulesDefs = {};
 
 $(document).ready(function () {
@@ -104,7 +138,7 @@ $(document).ready(function () {
 
     $.getJSON("getconfigs",
         function (data) {
-            viewModels.Editor.LoadConfigurations(_.groupBy(data, 'name'));
+            viewModels.Editor.LoadConfigurations(data);
             ko.applyBindings(viewModels.Editor);
         });
 });
@@ -190,7 +224,7 @@ function DeleteConfig() {
     $.post("delconfig",
         {
             "name": $('#configName')[0].value,
-            "version": parseInt($('#configVersion')[0].value)
+            "version": $('#configVersion')[0].value
         },
         function (data) {
             alert("Data Loaded: " + data);
