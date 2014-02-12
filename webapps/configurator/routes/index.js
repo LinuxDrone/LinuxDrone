@@ -59,6 +59,8 @@ exports.delconfig = function (db) {
 
         var configurations = db.get('configuration');
         configurations.remove({"name":req.body.name, "version":req.body.version});
+
+        res.send("OK");
     };
 };
 

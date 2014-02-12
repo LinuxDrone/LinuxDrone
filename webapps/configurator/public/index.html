@@ -62,19 +62,24 @@
                     <select data-bind="options: viewModels.Editor.ConfigNames,
                         optionsText: $data,
                         optionsValue: $data,
-                        value: viewModels.Editor.configNameSelected"></select>
+                        value: viewModels.Editor.configNameSelected,
+                        visible: viewModels.Editor.ConfigNames().length > 0"></select>
                     <!-- -->
                     <!-- Выпадающий список версий -->
                     <select data-bind="options: viewModels.Editor.Versions,
                         optionsText: $data,
                         optionsValue: $data,
-                        value: viewModels.Editor.versionSelected"></select>
+                        value: viewModels.Editor.versionSelected,
+                        visible: viewModels.Editor.Versions().length > 0"></select>
                     <!-- -->
-                    <button type="button" class="btn btn-success" data-bind="click: SaveConfig">Save</button>
-                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#saveAsModal">Save As</button>
-                    <button type="button" class="btn btn-danger" onclick="DeleteConfig()">Delete</button>
-                    <button type="button" class="btn btn-info">Import</button>
-                    <button type="button" class="btn btn-info">Export</button>
+                    <button type="button" class="btn btn-success" data-bind="click: SaveConfig,
+                        visible: viewModels.Editor.Versions().length > 0, enable: viewModels.Editor.graphChanged()">Save</button>
+                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#saveAsModal"
+                            data-bind="enable: viewModels.Editor.graphChanged()">Save As</button>
+                    <button type="button" class="btn btn-danger" data-bind="click: DeleteConfig,
+                        visible: viewModels.Editor.Versions().length > 0">Delete</button>
+                    <button type="button" class="btn btn-info" disabled title="Not Implemented">Import</button>
+                    <button type="button" class="btn btn-info" disabled data-bind="visible: viewModels.Editor.Versions().length > 0">Export</button>
                 </div>
             </div>
         </div>

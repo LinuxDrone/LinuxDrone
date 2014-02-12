@@ -33,7 +33,9 @@ viewModels.Editor = (function () {
         // Новое название конфигурации (связано с полем в диалоге "Сохранить как")
         newConfigName: ko.observable(),
         // Новая версия конфигурации (связано с полем в диалоге "Сохранить как")
-        newConfigVersion: ko.observable()
+        newConfigVersion: ko.observable(),
+        // Принимает true, когда в схему внесено изменение
+        graphChanged: ko.observable()
     };
 
     // Публичная функция загрузки конфигурации
@@ -59,20 +61,54 @@ viewModels.Editor = (function () {
         SaveCurrentConfig(res.newConfigName(), res.newConfigVersion(), true);
     }
 
+    // Публичная функция удаления текущей конфигурации
+    res.DeleteConfig=function DeleteConfig() {
+        var data4Send = {
+            "name": res.configNameSelected(),
+            "version": res.versionSelected()
+        };
+        $.post("delconfig", data4Send,
+            function (data) {
+                if(data=="OK")
+                {
+                    allConfigs=_.reject(allConfigs, function(cfg){ return cfg.name == data4Send.name && cfg.version==data4Send.version; });
+
+                    // Если в списке версий осталась одна версия, то просто удалим название конфигурации из списка
+                    // конфигураций. Иначе удалим версию из списка версий
+                    if(res.Versions().length==1)
+                    {
+                        res.ConfigNames.splice(res.ConfigNames.indexOf(res.configNameSelected()),1);
+                    }
+                    else
+                    {
+                        res.Versions.splice(res.Versions.indexOf(res.versionSelected()),1);
+                    }
+                }
+            });
+    }
+
     // Обработчик события выбора имени конфигурации
     res.configNameSelected.subscribe(function (selectedName) {
         res.Versions([]);
-
-        $.each(_.where(allConfigs, {name: selectedName}), function (i, config) {
-            res.Versions.push(config.version);
-        });
-        res.newConfigName(selectedName);
+        if(selectedName)
+        {
+            $.each(_.where(allConfigs, {name: selectedName}), function (i, config) {
+                res.Versions.push(config.version);
+            });
+            res.newConfigName(selectedName);
+        }
+        else
+        {
+            graph.clear();
+            res.graphChanged(false);
+        }
     });
 
     // Обработчик события выбора версии
     res.versionSelected.subscribe(function (version) {
         if (version) {
             graph.fromJSON(JSON.parse(_.where(allConfigs, {version: version, name:res.configNameSelected()})[0].jsonGraph));
+            res.graphChanged(false);
         }
     });
 
@@ -116,8 +152,13 @@ viewModels.Editor = (function () {
                         res.configNameSelected(name);
                     }
                 }
+                res.graphChanged(false);
             });
     }
+
+    graph.on('change', function() {
+        res.graphChanged(true);
+    });
 
     return res;
 })();
@@ -217,22 +258,3 @@ function InitListModules() {
 function AddModule2Paper(moduleDef) {
     graph.addCell(MakeVisualModule(moduleDef));
 }
-
-
-function DeleteConfig() {
-
-    $.post("delconfig",
-        {
-            "name": $('#configName')[0].value,
-            "version": $('#configVersion')[0].value
-        },
-        function (data) {
-            alert("Data Loaded: " + data);
-        });
-
-    $('#listConfigs')[0].remove($('#listConfigs')[0].selectedIndex);
-    //SelectConfig();
-
-}
-
-
