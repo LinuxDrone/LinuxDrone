@@ -93,7 +93,9 @@
             <h3 class="panel-title">Properties</h3>
         </div>
         <div class="panel-body">
-
+            <span data-bind="text: viewModels.Editor.instnameSelectedModule"></span>
+            <button type="button" class="btn btn-danger" data-bind="click: RemoveModule,
+                        enable: viewModels.Editor.instnameSelectedModule()!=''">Remove Module</button>
         </div>
     </div>
 </div>

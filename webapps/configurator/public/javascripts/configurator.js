@@ -35,7 +35,10 @@ viewModels.Editor = (function () {
         // Новая версия конфигурации (связано с полем в диалоге "Сохранить как")
         newConfigVersion: ko.observable(),
         // Принимает true, когда в схему внесено изменение
-        graphChanged: ko.observable()
+        graphChanged: ko.observable(),
+
+        selectedCell: ko.observable(),
+        instnameSelectedModule: ko.observable('')
     };
 
     // Публичная функция загрузки конфигурации
@@ -87,6 +90,15 @@ viewModels.Editor = (function () {
             });
     }
 
+    res.RemoveModule=function RemoveModule()
+    {
+        if(res.selectedCell())
+        {
+            res.selectedCell().remove();
+            res.instnameSelectedModule("");
+        }
+    }
+
     // Обработчик события выбора имени конфигурации
     res.configNameSelected.subscribe(function (selectedName) {
         res.Versions([]);
@@ -112,6 +124,13 @@ viewModels.Editor = (function () {
         }
     });
 
+    // Обработчик события выбора версии
+    res.selectedCell.subscribe(function (cell) {
+        if(cell)
+        {
+            res.instnameSelectedModule(cell.attributes.attrs[".label"].text);
+        }
+    });
 
     // Приватная функция сохранения конфигурации (текущего графа) с именем и версией
     function SaveCurrentConfig(name, version, isNew) {
@@ -160,6 +179,22 @@ viewModels.Editor = (function () {
         res.graphChanged(true);
     });
 
+    paper.on('cell:pointerdown', function(cellView, evt, x, y) {
+
+        res.selectedCell(graph.findModelsFromPoint({x:x,y:y})[0]);
+
+        if(evt.button==2)
+        {
+            console.log("press " + x +" " + y);
+        }
+
+    })
+
+    /*
+    graph.on('all', function(type, param) {
+        console.log(type);
+    })
+*/
     return res;
 })();
 
