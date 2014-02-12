@@ -71,12 +71,10 @@
                         value: viewModels.Editor.versionSelected"></select>
                     <!-- -->
                     <button type="button" class="btn btn-success" data-bind="click: SaveConfig">Save</button>
-                    <button type="button" class="btn btn-success">Save As</button>
+                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#saveAsModal">Save As</button>
                     <button type="button" class="btn btn-danger" onclick="DeleteConfig()">Delete</button>
                     <button type="button" class="btn btn-info">Import</button>
                     <button type="button" class="btn btn-info">Export</button>
-                    <a href="#myModal" role="button" class="btn" data-toggle="modal">Launch demo modal</a>
-
                 </div>
             </div>
         </div>
@@ -98,17 +96,18 @@
 
 
 <-- Modal -->
-<div class="modal" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal" id="saveAsModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="myModalLabel">Modal header</h3>
+        <h3 id="myModalLabel">Save current config as</h3>
     </div>
     <div class="modal-body">
-        <p>One fine body…</p>
+        <p>Config Name: <input data-bind="value: viewModels.Editor.newConfigName" /></p>
+        <p>Version: <input data-bind="value: viewModels.Editor.newConfigVersion" /></p>
     </div>
     <div class="modal-footer">
         <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-        <button class="btn btn-primary">Save changes</button>
+        <button class="btn btn-primary" data-dismiss="modal" data-bind="click: SaveConfigAs">Save New Config</button>
     </div>
 </div>
 

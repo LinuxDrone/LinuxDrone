@@ -18,12 +18,19 @@ viewModels.ConfigurationSelector = function () {
 
 viewModels.Editor = (function () {
     var res = {
+        // Список имен конфигураций и ассоциированных с именем одной или нескольких версий конфигураций
         Configurations: ko.observableArray([]),
+        // Выбранная (имя+ассоциированные версии) конфигурация
         configSelected: ko.observable(),
+        // Список версий (конфигураций) для выбранного имени конфигурации
         Versions: ko.observableArray([]),
-        versionSelected: ko.observable()
+        // Выбранная версия (строка - назвение версии)
+        versionSelected: ko.observable(),
+        newConfigName: ko.observable(),
+        newConfigVersion: ko.observable()
     };
 
+    // Публичная функция загрузки конфигурации
     res.LoadConfigurations = function (_initialData) {
         // clear array if loading dynamic data
         res.Configurations([]);
@@ -36,32 +43,47 @@ viewModels.Editor = (function () {
         });
     };
 
-
+    // Публичная функция сохранения текущей конфигурации
+    // Название и версия берутся из комбобоксов имени и версий
     res.SaveConfig = function SaveConfig() {
+        SaveCurrentConfig(res.configSelected()[0].name, res.configSelected()[0].version);
+    }
+
+    // Публичная функция сохранения текущей конфигурации под новым именем
+    // Название и версия берутся из полей ввода диалога "Сохранить как.."
+    res.SaveConfigAs = function SaveConfigAs() {
+        SaveCurrentConfig(res.newConfigName(), res.newConfigVersion());
+    }
+
+    // Обработчик события выбора имени конфигурации
+    res.configSelected.subscribe(function (versions) {
+        res.Versions([]);
+        $.each(versions, function (i, configVersion) {
+            res.Versions.push(configVersion.version);
+        });
+        res.newConfigName(versions[0].name);
+    });
+
+    // Обработчик события выбора версии
+    res.versionSelected.subscribe(function (version) {
+        if (version) {
+            graph.fromJSON(JSON.parse(_.where(res.configSelected(), {version: version})[0].jsonGraph));
+        }
+    });
+
+
+    // Приватная функция сохранения конфигурации (текущего графа) с именем и версией
+    function SaveCurrentConfig(name, version) {
         $.post("saveconfig",
             {
-                "name": res.configSelected()[0].name,
-                "version": res.configSelected()[0].version,
+                "name": name,
+                "version": version,
                 "jsonGraph": JSON.stringify(graph.toJSON())
             },
             function (data) {
                 alert("Data Loaded: " + data);
             });
     }
-
-
-    res.configSelected.subscribe(function (versions) {
-        res.Versions([]);
-        $.each(versions, function (i, configVersion) {
-            res.Versions.push(configVersion.version);
-        });
-    });
-
-    res.versionSelected.subscribe(function (version) {
-        if (version) {
-            graph.fromJSON(JSON.parse(_.where(res.configSelected(), {version: version})[0].jsonGraph));
-        }
-    });
 
     return res;
 })();
@@ -82,17 +104,8 @@ $(document).ready(function () {
 
     $.getJSON("getconfigs",
         function (data) {
-
             viewModels.Editor.LoadConfigurations(_.groupBy(data, 'name'));
             ko.applyBindings(viewModels.Editor);
-
-
-            //console.log(data);
-            /*            allConfigs = data;
-             $.each(data, function (i, item) {
-             $('#listConfigs')[0].options[i] = new Option(item.name, i);
-             });
-             SelectConfig();*/
         });
 });
 
@@ -184,19 +197,8 @@ function DeleteConfig() {
         });
 
     $('#listConfigs')[0].remove($('#listConfigs')[0].selectedIndex);
-    SelectConfig();
+    //SelectConfig();
 
 }
 
-function SelectConfig() {
-    if ($('#listConfigs')[0].options.length != 0) {
-        $('#configName')[0].value = allConfigs[$('#listConfigs')[0].selectedIndex].name;
-        $('#configVersion')[0].value = allConfigs[$('#listConfigs')[0].selectedIndex].version;
-        graph.fromJSON(JSON.parse(allConfigs[$('#listConfigs')[0].selectedIndex].jsonGraph));
-    }
-    else {
-        graph.clear();
-        $('#configName')[0].value = "";
-        $('#configVersion')[0].value = "";
-    }
-}
+
