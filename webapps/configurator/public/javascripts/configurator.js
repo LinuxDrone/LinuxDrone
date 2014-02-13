@@ -10,28 +10,28 @@ $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 
 var viewModels = viewModels || {};
 
-inputShema =[
+inputShema = [
     {
         name: "Task Priority",
-        description: {ru:"Приоритет потока (задачи) xenomai"},
+        description: {ru: "Приоритет потока (задачи) xenomai"},
         defaultValue: 80,
         unitMeasured: "%",
-        value:80
+        value: 80
     },
     {
         name: "Task Period",
         type: "number",
-        required:true,
-        description: {ru:"время между двумя вызовами бизнес функции (микросекунд) 0  - не зависать на очереди в ожидании данных -1 - зависать навечно, до факта появления данных в очереди"},
+        required: true,
+        description: {ru: "время между двумя вызовами бизнес функции (микросекунд) 0  - не зависать на очереди в ожидании данных -1 - зависать навечно, до факта появления данных в очереди"},
         defaultValue: 20,
         unitMeasured: "Ms",
-        value:20
+        value: 20
     },
     {
         name: "Notify on change",
         type: "bool",
         unitMeasured: "",
-        value:true
+        value: true
     }
 ]
 
@@ -64,9 +64,9 @@ viewModels.Editor = (function () {
 
 
     inputShema.forEach(function (prop) {
+        prop.value = ko.observable(prop.value);
         res.moduleCommonProperties.push(prop);
     });
-
 
 
     // Публичная функция загрузки конфигурации
@@ -124,14 +124,11 @@ viewModels.Editor = (function () {
         }
     }
 
-    res.chooseTemplate4Property = function chooseTemplate4Property(metaProperty)
-    {
-        if(metaProperty.type=="bool")
-        {
+    res.chooseTemplate4Property = function chooseTemplate4Property(metaProperty) {
+        if (metaProperty.type == "bool") {
             return "boolTemplate";
         }
-        else
-        {
+        else {
             return "stringTemplate";
         }
     }
@@ -164,6 +161,14 @@ viewModels.Editor = (function () {
     res.selectedCell.subscribe(function (cell) {
         if (cell) {
             res.instnameSelectedModule(cell.attributes.attrs[".label"].text);
+
+            res.moduleCommonProperties().forEach(function (prop) {
+                // Подписываемся на изменения значений свойств, указывая в качестве контекста cell
+                prop.value.subscribe(function (newValue) {
+                    cell.commonProperies = cell.commonProperies || {};
+                    cell.commonProperies[prop.name] = newValue;
+                }, {metaProperty: prop, cell: cell});
+            });
         }
     });
 
