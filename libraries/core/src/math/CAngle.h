@@ -10,19 +10,25 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#ifndef CSYSTEM_H
-#define CSYSTEM_H
+#pragma once
 
-#include <unistd.h>
-class CSystem
+#define DR_PI 3.14159274101257f
+
+class CAngle
 {
 public:
-    CSystem();
+	enum AngleUnit {
+		AngleUnit_Degress,
+		AngleUnit_Radians
+	};
 
-    static void sleep( int ms );
+public:
+	CAngle();
+	CAngle(float value, AngleUnit unit);
 
-	static void* alignedAlloc(size_t size, size_t alignment = 16);
-	static void alignedFree(void* ptr);
+	float toRadians() const;
+	float toDegress() const;
+
+private:
+	float m_valueRad;
 };
-
-#endif // CSYSTEM_H

@@ -10,19 +10,28 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#ifndef CSYSTEM_H
-#define CSYSTEM_H
+#include "CAngle.h"
 
-#include <unistd.h>
-class CSystem
+CAngle::CAngle()
 {
-public:
-    CSystem();
+	m_valueRad = 0.0f;
+}
 
-    static void sleep( int ms );
+CAngle::CAngle(float value, AngleUnit unit)
+{
+	if (unit == AngleUnit_Radians) {
+		m_valueRad = value;
+	} else {
+		m_valueRad = value * float (DR_PI) / 180.0f;
+	}
+}
 
-	static void* alignedAlloc(size_t size, size_t alignment = 16);
-	static void alignedFree(void* ptr);
-};
+float CAngle::toRadians() const
+{
+	return m_valueRad;
+}
 
-#endif // CSYSTEM_H
+float CAngle::toDegress() const
+{
+	return m_valueRad * 180.0f / float(DR_PI);
+}
