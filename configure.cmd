@@ -7,6 +7,10 @@ for %%F in (.) do set ROOT_DIR=%%~fF
 set CMAKE="%ROOT_DIR%/tools/cmake-2.8.12.2/bin/cmake"
 rem set CMAKE="cmake"
 
+rem Remove cmake cache if found in the source directory
+%CMAKE% -E remove "%ROOT_DIR%/CMakeCache.txt"
+%CMAKE% -E remove_directory "%ROOT_DIR%/CMakeFiles/"
+
 set TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/beaglebone.cmake
 set BUILD_TYPE=Debug
 rem set BUILD_TYPE=Release

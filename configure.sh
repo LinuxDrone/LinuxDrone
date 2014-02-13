@@ -7,6 +7,10 @@ ROOT_DIR=`pwd`
 #CMAKE="$ROOT_DIR/tools/cmake-2.8.12.2/bin/cmake"
 CMAKE="cmake"
 
+# Remove cmake cache if found in the source directory
+"$CMAKE" -E remove "$ROOT_DIR/CMakeCache.txt"
+"$CMAKE" -E remove_directory "$ROOT_DIR/CMakeFiles/"
+
 TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/beaglebone.cmake
 BUILD_TYPE=Debug
 #BUILD_TYPE=Release
