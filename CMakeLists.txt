@@ -24,8 +24,8 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project(linuxdrone)
 
-# Project root and custom cmake modules path
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
+# Extra cmake modules path (must be set by toolchain file passed from command line)
+#set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
 
 # Install path for relocatable copy (uner the build directory)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME})
