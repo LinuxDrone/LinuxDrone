@@ -68,16 +68,17 @@ find_library(ZLIB_LIBRARIES z)
 find_library(OPENSSL_LIBRARIES ssl)
 find_library(CRYPTO_LIBRARIES crypto)
 
-# RPATH handling to use relative paths in the install tree like above
+# RPATH handling to use relative paths in the install tree
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
 # Project libraries
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 add_subdirectory(${LIB_DIR}/core)
 add_subdirectory(${LIB_DIR}/sdk)
 
-# Loadable modules
+# Loadable modules (one level deeper than apps or libs)
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
 add_subdirectory(${MOD_DIR}/mpu6050)
 add_subdirectory(${MOD_DIR}/bmp180)
 add_subdirectory(${MOD_DIR}/ms5611)
@@ -85,4 +86,5 @@ add_subdirectory(${MOD_DIR}/hmc5883)
 add_subdirectory(${MOD_DIR}/pwmoutput)
 
 # Main project target
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 add_subdirectory(${TGT_DIR}/beaglebone) 
