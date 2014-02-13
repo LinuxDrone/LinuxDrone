@@ -10,13 +10,31 @@ $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 
 var viewModels = viewModels || {};
 
-/*
- viewModels.ConfigurationSelector = function () {
- var self = this;
- self.name = ko.observable();
- self.listVersions = ko.observableArray([]);
- };
- */
+inputShema =[
+    {
+        name: "Task Priority",
+        description: {ru:"Приоритет потока (задачи) xenomai"},
+        defaultValue: 80,
+        unitMeasured: "%",
+        value:80
+    },
+    {
+        name: "Task Period",
+        type: "number",
+        required:true,
+        description: {ru:"время между двумя вызовами бизнес функции (микросекунд) 0  - не зависать на очереди в ожидании данных -1 - зависать навечно, до факта появления данных в очереди"},
+        defaultValue: 20,
+        unitMeasured: "Ms",
+        value:20
+    },
+    {
+        name: "Notify on change",
+        type: "bool",
+        unitMeasured: "",
+        value:true
+    }
+]
+
 
 viewModels.Editor = (function () {
     var allConfigs = {};
@@ -36,10 +54,20 @@ viewModels.Editor = (function () {
         newConfigVersion: ko.observable(),
         // Принимает true, когда в схему внесено изменение
         graphChanged: ko.observable(),
-
+        // Модуль выбранный на схеме
         selectedCell: ko.observable(),
-        instnameSelectedModule: ko.observable('')
+        // Имя инстанса выбранного в схеме модуля
+        instnameSelectedModule: ko.observable(''),
+        // Общие свойства выбранного в схеме инстанса модуля
+        moduleCommonProperties: ko.observableArray([])
     };
+
+
+    inputShema.forEach(function (prop) {
+        res.moduleCommonProperties.push(prop);
+    });
+
+
 
     // Публичная функция загрузки конфигурации
     res.LoadConfigurations = function (_initialData) {
@@ -93,6 +121,18 @@ viewModels.Editor = (function () {
         if (res.selectedCell()) {
             res.selectedCell().remove();
             res.instnameSelectedModule("");
+        }
+    }
+
+    res.chooseTemplate4Property = function chooseTemplate4Property(metaProperty)
+    {
+        if(metaProperty.type=="bool")
+        {
+            return "boolTemplate";
+        }
+        else
+        {
+            return "stringTemplate";
         }
     }
 
@@ -164,8 +204,7 @@ viewModels.Editor = (function () {
                             res.configNameSelected(name);
                         }
                     }
-                    else
-                    {
+                    else {
                         allConfigs = _.reject(allConfigs, function (cfg) {
                             return cfg.name == name && cfg.version == version;
                         });
