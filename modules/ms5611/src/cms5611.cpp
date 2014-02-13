@@ -43,7 +43,7 @@ const char* moduleName() {
 
 
 CMs5611::CMs5611() :
-	CModule("Ms5611", 1024)
+	CModule(1024)
 {
 }
 

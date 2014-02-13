@@ -40,7 +40,7 @@ public:
 	} LINK, *PLINK;
 
 public:
-	CModule(const CString& taskName, int stackSize);
+	CModule(int stackSize);
 	virtual ~CModule();
 
 	virtual bool init(const mongo::BSONObj& initObject);
@@ -94,6 +94,7 @@ protected:
 	void startTask();
 	void stopTask();
 	void mainTask();
+	void stubTaskFunc();
 
 // queue objects
 	void sendObject(const mongo::BSONObj& obj);

@@ -93,7 +93,7 @@ const char* moduleName() {
 
 
 CHmc5883::CHmc5883() :
-	CModule("Hmc5883", 1024)
+	CModule(1024)
 {
 }
 

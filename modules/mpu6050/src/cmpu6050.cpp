@@ -75,7 +75,7 @@ const char* moduleName() {
 #define MPU6000_GYRO_Z_OUT_LSB           0x48
 
 CMpu6050::CMpu6050() :
-	CModule("Mpu60x0", 1024)
+	CModule(1024)
 {
 }
 

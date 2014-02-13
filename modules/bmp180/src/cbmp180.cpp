@@ -34,7 +34,7 @@ const char* moduleName() {
 #define BMP180_OVERSAMPLING BMP180_OSS_3
 
 CBmp180::CBmp180() :
-	CModule("Bmp180", 1024)
+	CModule(1024)
 {
 }
 

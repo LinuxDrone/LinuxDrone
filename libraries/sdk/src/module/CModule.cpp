@@ -15,8 +15,8 @@
 #include "system/Logger"
 #include <native/timer.h>
 
-CModule::CModule(const CString& taskName, int stackSize) :
-	m_task(taskName, 50, stackSize)
+CModule::CModule(int stackSize) :
+	m_task("", 50, stackSize)
 {
 	m_runnable     = 0;
 	m_terminate    = false;
@@ -40,6 +40,7 @@ bool CModule::init(const mongo::BSONObj& initObject)
 {
 	m_name = initObject["name"].valuestr();
 	m_instance = initObject["instance"].valuestr();
+	m_task.setTaskName(m_instance);
 	bool existMetainfo = initObject.hasElement("metaInfo");
 	mongo::BSONObj metaInfo;
 	if (existMetainfo) {
@@ -110,7 +111,8 @@ bool CModule::link(const mongo::BSONObj& link)
 
 bool CModule::start()
 {
-	return false;
+	startTask();
+	return true;
 }
 
 void CModule::stop()
@@ -200,6 +202,10 @@ void CModule::mainTask()
 		m_task.sleep(100);
 	}
 	SAFE_RELEASE(m_runnable);
+}
+
+void CModule::stubTaskFunc()
+{
 }
 
 //-------------------------------------------------------------------

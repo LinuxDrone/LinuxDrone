@@ -35,7 +35,7 @@ const char* moduleName() {
 
 
 CPwmOutput::CPwmOutput() :
-	CModule("PwmOutput", 1024)
+	CModule(1024)
 {
 }
 
