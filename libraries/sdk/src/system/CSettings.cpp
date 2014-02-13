@@ -13,7 +13,11 @@
 #include "CSettings.h"
 #include "text/CString"
 #include "system/Logger"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <mongo/client/dbclient.h>
+#pragma GCC diagnostic pop
 
 #include "my_memory"
 
