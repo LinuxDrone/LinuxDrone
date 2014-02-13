@@ -24,4 +24,4 @@ set(EXTRA_LIBS
 add_library(ms5611 MODULE ${INC} ${SRC})
 
 install(TARGETS ms5611 DESTINATION modules/ms5611)
-install(FILES ms5611.def.js DESTINATION modules/ms5611)
+install(FILES ms5611.def.json DESTINATION modules/ms5611)
