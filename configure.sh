@@ -14,6 +14,10 @@ CMAKE="cmake"
 TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/beaglebone.cmake
 BUILD_TYPE=Debug
 #BUILD_TYPE=Release
+
+# If you face any of problems with Eclipse listed here:
+# http://www.cmake.org/Wiki/Eclipse_CDT4_Generator
+# please let us know.
 BUILD="$ROOT_DIR/build.$BUILD_TYPE"
 GENERATOR=-G"Eclipse CDT4 - Unix Makefiles"
 #GENERATOR=-G"Unix Makefiles"
