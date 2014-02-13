@@ -12,12 +12,12 @@
 
 #--------------------------------------------------------------------
 # TODO:
-#  - native cross-toolchain for OSX
 #  - automatic download for toolchains and utilities (apart from git and cmake)
 #  - automatic target environment download (for distributed rootfs image)
+#  - compiler options (debug/release and others)
 #  - configure: board type options (target)
 #  - configure: debug/release options
-#  - configure: toolchain finding using environment variables
+#  - add javascript code install target
 #--------------------------------------------------------------------
 
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
