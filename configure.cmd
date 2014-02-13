@@ -4,7 +4,7 @@ rem THIS FILE IS TEMPORARY, it will be reworked later
 rem
 
 for %%F in (.) do set ROOT_DIR=%%~fF
-set CMAKE="%ROOT_DIR%/tools/cmake-2.8.12.2/bin/cmake"
+set CMAKE="%ROOT_DIR%/tools/cmake-2.8.12.2-win32-x86/bin/cmake"
 rem set CMAKE="cmake"
 
 rem Remove cmake cache if found in the source directory
