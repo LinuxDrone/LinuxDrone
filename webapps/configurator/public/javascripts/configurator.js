@@ -11,12 +11,12 @@ $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 var viewModels = viewModels || {};
 
 /*
-viewModels.ConfigurationSelector = function () {
-    var self = this;
-    self.name = ko.observable();
-    self.listVersions = ko.observableArray([]);
-};
-*/
+ viewModels.ConfigurationSelector = function () {
+ var self = this;
+ self.name = ko.observable();
+ self.listVersions = ko.observableArray([]);
+ };
+ */
 
 viewModels.Editor = (function () {
     var allConfigs = {};
@@ -43,7 +43,7 @@ viewModels.Editor = (function () {
 
     // Публичная функция загрузки конфигурации
     res.LoadConfigurations = function (_initialData) {
-        allConfigs=_initialData;
+        allConfigs = _initialData;
 
         res.ConfigNames([]);
 
@@ -65,35 +65,32 @@ viewModels.Editor = (function () {
     }
 
     // Публичная функция удаления текущей конфигурации
-    res.DeleteConfig=function DeleteConfig() {
+    res.DeleteConfig = function DeleteConfig() {
         var data4Send = {
             "name": res.configNameSelected(),
             "version": res.versionSelected()
         };
         $.post("delconfig", data4Send,
             function (data) {
-                if(data=="OK")
-                {
-                    allConfigs=_.reject(allConfigs, function(cfg){ return cfg.name == data4Send.name && cfg.version==data4Send.version; });
+                if (data == "OK") {
+                    allConfigs = _.reject(allConfigs, function (cfg) {
+                        return cfg.name == data4Send.name && cfg.version == data4Send.version;
+                    });
 
                     // Если в списке версий осталась одна версия, то просто удалим название конфигурации из списка
                     // конфигураций. Иначе удалим версию из списка версий
-                    if(res.Versions().length==1)
-                    {
-                        res.ConfigNames.splice(res.ConfigNames.indexOf(res.configNameSelected()),1);
+                    if (res.Versions().length == 1) {
+                        res.ConfigNames.splice(res.ConfigNames.indexOf(res.configNameSelected()), 1);
                     }
-                    else
-                    {
-                        res.Versions.splice(res.Versions.indexOf(res.versionSelected()),1);
+                    else {
+                        res.Versions.splice(res.Versions.indexOf(res.versionSelected()), 1);
                     }
                 }
             });
     }
 
-    res.RemoveModule=function RemoveModule()
-    {
-        if(res.selectedCell())
-        {
+    res.RemoveModule = function RemoveModule() {
+        if (res.selectedCell()) {
             res.selectedCell().remove();
             res.instnameSelectedModule("");
         }
@@ -102,15 +99,13 @@ viewModels.Editor = (function () {
     // Обработчик события выбора имени конфигурации
     res.configNameSelected.subscribe(function (selectedName) {
         res.Versions([]);
-        if(selectedName)
-        {
+        if (selectedName) {
             $.each(_.where(allConfigs, {name: selectedName}), function (i, config) {
                 res.Versions.push(config.version);
             });
             res.newConfigName(selectedName);
         }
-        else
-        {
+        else {
             graph.clear();
             res.graphChanged(false);
         }
@@ -119,15 +114,15 @@ viewModels.Editor = (function () {
     // Обработчик события выбора версии
     res.versionSelected.subscribe(function (version) {
         if (version) {
-            graph.fromJSON(JSON.parse(_.where(allConfigs, {version: version, name:res.configNameSelected()})[0].jsonGraph));
+            graph.fromJSON(JSON.parse(_.where(allConfigs, {version: version, name: res.configNameSelected()})[0].jsonGraph));
             res.graphChanged(false);
+            res.instnameSelectedModule("");
         }
     });
 
     // Обработчик события выбора версии
     res.selectedCell.subscribe(function (cell) {
-        if(cell)
-        {
+        if (cell) {
             res.instnameSelectedModule(cell.attributes.attrs[".label"].text);
         }
     });
@@ -141,63 +136,67 @@ viewModels.Editor = (function () {
         };
         $.post("saveconfig", data4save,
             function (data) {
-                if(data=="OK" && isNew)
-                {
-                    allConfigs.push(data4save);
-
-                    // Если была записана новая конфигурация, добавим ее в комбобоксы
-                    // Если была записана новая версия, а имя конфигурации не изменилось, то добавим новую строку только
-                    // в комбобокс версий.
-                    // Иначе добавим новые строки в оба комбобокса. И установим как выбранные значения в комбобоксах,
-                    // соответсвующие имени и версии новой конфигурации
-                    //var names = _.where(res.Configurations(), {"name()":name});
-                    //var existConfig = _.find(res.Configurations(), function(confSel){ return confSel.name() == name; });
-                    if(_.contains(res.ConfigNames(), name))
-                    {
-                        if(res.configNameSelected()==name)
-                        {
-                            // Добавим контент конфигурации к списку версий выбранной конфигурации
-                            res.Versions.push(version);
+                if (data != "OK") {
+                    alert(data);
+                }
+                else {
+                    if (isNew) {
+                        allConfigs.push(data4save);
+                        // Если была записана новая конфигурация, добавим ее в комбобоксы
+                        // Если была записана новая версия, а имя конфигурации не изменилось, то добавим новую строку только
+                        // в комбобокс версий.
+                        // Иначе добавим новые строки в оба комбобокса. И установим как выбранные значения в комбобоксах,
+                        // соответсвующие имени и версии новой конфигурации
+                        //var names = _.where(res.Configurations(), {"name()":name});
+                        //var existConfig = _.find(res.Configurations(), function(confSel){ return confSel.name() == name; });
+                        if (_.contains(res.ConfigNames(), name)) {
+                            if (res.configNameSelected() == name) {
+                                // Добавим контент конфигурации к списку версий выбранной конфигурации
+                                res.Versions.push(version);
+                            }
+                            else {
+                                res.configNameSelected(name);
+                            }
+                            res.versionSelected(version);
                         }
-                        else
-                        {
+                        else {
+                            res.ConfigNames.push(name);
                             res.configNameSelected(name);
                         }
-                        res.versionSelected(version);
                     }
                     else
                     {
-                        res.ConfigNames.push(name);
-                        res.configNameSelected(name);
+                        allConfigs = _.reject(allConfigs, function (cfg) {
+                            return cfg.name == name && cfg.version == version;
+                        });
+                        allConfigs.push(data4save);
                     }
+                    res.graphChanged(false);
                 }
-                res.graphChanged(false);
             });
     }
 
-    graph.on('change', function() {
+    graph.on('change', function () {
         res.graphChanged(true);
     });
 
-    paper.on('cell:pointerdown', function(cellView, evt, x, y) {
+    paper.on('cell:pointerdown', function (cellView, evt, x, y) {
 
-        res.selectedCell(graph.findModelsFromPoint({x:x,y:y})[0]);
+        res.selectedCell(graph.findModelsFromPoint({x: x, y: y})[0]);
 
-        if(evt.button==2)
-        {
-            console.log("press " + x +" " + y);
+        if (evt.button == 2) {
+            console.log("press " + x + " " + y);
         }
 
     })
 
     /*
-    graph.on('all', function(type, param) {
-        console.log(type);
-    })
-*/
+     graph.on('all', function(type, param) {
+     console.log(type);
+     })
+     */
     return res;
 })();
-
 
 
 var modulesDefs = {};
