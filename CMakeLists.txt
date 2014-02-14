@@ -33,7 +33,7 @@ project(linuxdrone)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME})
 
 # Compiler options
-add_definitions(-std=c++11 ${XENOMAI_DEFINITIONS})
+add_definitions(-std=c++11 -mfpu=neon ${XENOMAI_DEFINITIONS})
 
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
@@ -84,6 +84,7 @@ add_subdirectory(${MOD_DIR}/bmp180)
 add_subdirectory(${MOD_DIR}/ms5611)
 add_subdirectory(${MOD_DIR}/hmc5883)
 add_subdirectory(${MOD_DIR}/pwmoutput)
+add_subdirectory(${MOD_DIR}/SimpleTransform)
 
 # Main project target
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")

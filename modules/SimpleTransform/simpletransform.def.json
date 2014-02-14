@@ -1,0 +1,62 @@
+{
+    "type": "module_def",
+    "name": "SimpleTransform",  
+    "version": 2,
+    "task_priority": 80,
+    "task_period": 200,
+    "paramsSchema":{
+        "type":"object",
+        "id": "http://jsonschema.net",
+        "properties":{
+            "bus_type": {
+                "type":"number",
+                "required":true
+            },
+            "bus_name": {
+                "type":"string",
+                "required":true
+            }
+        }
+    },
+    "inputShema":{
+        "type":"object",
+        "id": "http://jsonschema.net",
+        "properties":{
+            "in_x": {
+                "type":"number",
+                "required":true
+            },
+            "in_y": {
+                "type":"number",
+                "required":true
+            },
+            "in_z": {
+                "type":"number",
+                "required":true
+            }
+        }
+    },
+    "outputs": [
+        {
+            "name": "out_data",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "out_x": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "out_y": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "out_z": {
+                        "type": "number",
+                        "required": true
+                    }
+                }
+            }
+        }
+    ]
+}
