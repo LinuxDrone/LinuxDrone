@@ -49,7 +49,7 @@
             <h3 class="panel-title">Modules</h3>
         </div>
         <div class="panel-body">
-
+            <div data-bind="template: { name: 'listModulesButtonsTemplate', foreach: metaModules }"></div>
         </div>
     </div>
     <div id="board" class="board panel panel-primary">
@@ -117,6 +117,14 @@
         <button class="btn btn-primary" data-dismiss="modal" data-bind="click: SaveConfigAs">Save New Config</button>
     </div>
 </div>
+
+
+
+<script type="text/html" id="listModulesButtonsTemplate">
+    <div>
+        <button style="margin: 2px" type="button" class="btn btn-info" data-bind="click: AddModule2Paper, text: definition().name + ' (v' + definition().version + ')'"></button>
+    </div>
+</script>
 
 <script type="text/html" id="stringTemplate">
     <div>

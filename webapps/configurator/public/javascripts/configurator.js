@@ -7,8 +7,10 @@ var paper = new joint.dia.Paper({
 });
 $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 
+var modulesDefs = {};
 
 var viewModels = viewModels || {};
+
 
 inputShema = [
     {
@@ -40,6 +42,8 @@ viewModels.Editor = (function () {
     var allConfigs = {};
 
     var res = {
+        // Метаинформация модулей
+        metaModules: ko.observableArray([]),
         // Список имен конфигураций
         ConfigNames: ko.observableArray([]),
         // Выбранное имя конфигурации
@@ -72,13 +76,32 @@ viewModels.Editor = (function () {
     // Публичная функция загрузки конфигурации
     res.LoadConfigurations = function (_initialData) {
         allConfigs = _initialData;
-
         res.ConfigNames([]);
-
         $.each(_.groupBy(allConfigs, 'name'), function (configName, listVersions) {
             res.ConfigNames.push(configName);
         });
     };
+
+    MetaOfModule = function () {
+        var self = this;
+        self.definition = ko.observable();
+        self.instancesCount = ko.observable();
+        self.AddModule2Paper = function () {
+            graph.addCell(MakeVisualModule(self));
+        };
+    };
+
+    // Публичная функция загрузки метаинформации модулей
+    res.LoadMetaModules = function (_initialData) {
+        res.metaModules([]);
+        $.each(_initialData, function (i, item) {
+            res.metaModules.push(new MetaOfModule()
+                    .definition(item)
+                    .instancesCount(0)
+            );
+        });
+    };
+
 
     // Публичная функция сохранения текущей конфигурации
     // Название и версия берутся из комбобоксов имени и версий
@@ -151,16 +174,19 @@ viewModels.Editor = (function () {
     // Обработчик события выбора версии
     res.versionSelected.subscribe(function (version) {
         if (version) {
-            graph.fromJSON(JSON.parse(_.where(allConfigs, {version: version, name: res.configNameSelected()})[0].jsonGraph));
+            graph.fromJSON(JSON.parse(GetCurrentSchema(res.configNameSelected(), version).jsonGraph));
             res.graphChanged(false);
             res.instnameSelectedModule("");
         }
     });
 
-    // Обработчик события выбора версии
+    // Обработчик события выбора модуля
     res.selectedCell.subscribe(function (cell) {
         if (cell) {
             res.instnameSelectedModule(cell.attributes.attrs[".label"].text);
+
+            var d = GetModuleParams(res.configNameSelected(), res.versionSelected(), res.instnameSelectedModule());
+
 
             res.moduleCommonProperties().forEach(function (prop) {
                 // Подписываемся на изменения значений свойств, указывая в качестве контекста cell
@@ -192,8 +218,6 @@ viewModels.Editor = (function () {
                         // в комбобокс версий.
                         // Иначе добавим новые строки в оба комбобокса. И установим как выбранные значения в комбобоксах,
                         // соответсвующие имени и версии новой конфигурации
-                        //var names = _.where(res.Configurations(), {"name()":name});
-                        //var existConfig = _.find(res.Configurations(), function(confSel){ return confSel.name() == name; });
                         if (_.contains(res.ConfigNames(), name)) {
                             if (res.configNameSelected() == name) {
                                 // Добавим контент конфигурации к списку версий выбранной конфигурации
@@ -220,6 +244,100 @@ viewModels.Editor = (function () {
             });
     }
 
+
+    // Приватная функция
+    // Возвращает объект текущей отображаемой схемы (из списка всех схем allConfigs)
+    function GetCurrentSchema(schemaName, version) {
+        return _.where(allConfigs, {name: schemaName, version: version})[0];
+    }
+
+    // Приватная функция
+    // Возвращает объект - значения конфигурационных параметров инстанса модуля
+    function GetModuleParams(schemaName, version, instanceName) {
+        var vSchema = GetCurrentSchema(schemaName, version);
+        vSchema.modulesParams = vSchema.modulesParams || {};
+
+        if (!vSchema.modulesParams[instanceName]) {
+            // Если для указанного инстанса нет в конфигурации параметров, следует их создать на основе дефолтных
+            // из метаописания модуля
+            vSchema.modulesParams[instanceName] = {};
+
+            var d = 0;
+        }
+
+        return vSchema.modulesParams;
+    }
+
+    // Приватная функция
+    // Возвращает описание модуля
+    function GetModuleMeta(moduleName) {
+        var vSchema = GetCurrentSchema(schemaName, version);
+        vSchema.modulesParams = vSchema.modulesParams || {};
+
+        if (!vSchema.modulesParams[instanceName]) {
+            // Если для указанного инстанса нет в конфигурации параметров, следует их создать на основе дефолтных
+            // из метаописания модуля
+            vSchema.modulesParams[instanceName] = {};
+
+            var d = 0;
+        }
+
+        return vSchema.modulesParams;
+    }
+
+    // Приватная функция
+    // Создает экзмепляр визуального модуля библиотеки joint, из описания модуля в формате linuxdrone
+    function MakeVisualModule(moduleInfo) {
+        var moduleDef = moduleInfo.definition();
+
+        var maxPins = 0;
+
+        var module = {
+            moduleType: moduleDef.name,
+            position: { x: 10, y: 20 },
+            size: { width: 90},
+            attrs: {
+                '.label': {'ref-x': .2, 'ref-y': -2 },
+                rect: { fill: '#2ECC71' },
+                '.inPorts circle': { fill: '#16A085' },
+                '.outPorts circle': { fill: '#E74C3C' }
+            }
+        };
+
+        moduleInfo.instancesCount(moduleInfo.instancesCount()+1);
+        module.attrs['.label'].text = moduleDef.name + "-" + moduleInfo.instancesCount();
+
+        if (moduleDef.outputs) {
+            module.outPorts = new Array();
+            $.each(moduleDef.outputs, function (i, output) {
+                var propsCount = Object.keys(output.Schema.properties).length;
+                if (maxPins < propsCount) {
+                    maxPins = propsCount;
+                }
+                $.each(output.Schema.properties, function (i, pin) {
+                    module.outPorts.push(i);
+                });
+            });
+        }
+
+        if (moduleDef.inputShema) {
+            module.inPorts = new Array();
+            var propsCount = Object.keys(moduleDef.inputShema.properties).length;
+            if (maxPins < propsCount) {
+                maxPins = propsCount;
+            }
+            $.each(moduleDef.inputShema.properties, function (i, pin) {
+                module.inPorts.push(i);
+            });
+        }
+
+        module.size.height = maxPins * 30;
+
+        // Добавление параметров, со значениями по умолчанию
+        return new joint.shapes.devs.Model(module);
+    }
+
+
     graph.on('change', function () {
         res.graphChanged(true);
     });
@@ -243,96 +361,25 @@ viewModels.Editor = (function () {
 })();
 
 
-var modulesDefs = {};
-
 $(document).ready(function () {
-    $.getJSON("metamodules",
-        function (data) {
-            $.each(data, function (i, item) {
-                modulesDefs[item.name] = {definition: item, instancesCount: 0};
-            });
 
-            InitListModules();
-        });
+    $.when(
+        $.getJSON("metamodules",
+            function (data) {
+                viewModels.Editor.LoadMetaModules(data);
+            }),
 
-    $.getJSON("getconfigs",
-        function (data) {
-            viewModels.Editor.LoadConfigurations(data);
+        $.getJSON("getconfigs",
+            function (data) {
+                viewModels.Editor.LoadConfigurations(data);
+            })
+    ).then(function (a1, a2) {
+            //Request OK
             ko.applyBindings(viewModels.Editor);
+        }, function (err1, err2) {
+            alert("error server request");
         });
+
 });
 
-// Создает экзмепляр визуального модуля библиотеки joint, из описания модуля в формате linuxdrone
-function MakeVisualModule(moduleInfo) {
-    var moduleDef = moduleInfo.definition;
 
-    var maxPins = 0;
-
-    var module = {
-        moduleType: moduleDef.name,
-        position: { x: 10, y: 20 },
-        size: { width: 90},
-        attrs: {
-            '.label': {'ref-x': .2, 'ref-y': -2 },
-            rect: { fill: '#2ECC71' },
-            '.inPorts circle': { fill: '#16A085' },
-            '.outPorts circle': { fill: '#E74C3C' }
-        }
-    };
-
-    moduleInfo.instancesCount++;
-    module.attrs['.label'].text = moduleDef.name + "-" + moduleInfo.instancesCount;
-
-    if (moduleDef.outputs) {
-        module.outPorts = new Array();
-        $.each(moduleDef.outputs, function (i, output) {
-            var propsCount = Object.keys(output.Schema.properties).length;
-            if (maxPins < propsCount) {
-                maxPins = propsCount;
-            }
-            $.each(output.Schema.properties, function (i, pin) {
-                module.outPorts.push(i);
-            });
-        });
-    }
-
-    if (moduleDef.inputShema) {
-        module.inPorts = new Array();
-        var propsCount = Object.keys(moduleDef.inputShema.properties).length;
-        if (maxPins < propsCount) {
-            maxPins = propsCount;
-        }
-        $.each(moduleDef.inputShema.properties, function (i, pin) {
-            module.inPorts.push(i);
-        });
-    }
-
-    module.size.height = maxPins * 30;
-
-    // Добавление параметров, со значениями по умолчанию
-
-
-    return new joint.shapes.devs.Model(module);
-}
-
-
-function InitListModules() {
-    var modulesNames = Object.keys(modulesDefs);
-    modulesNames.forEach(function (i) {
-        var moduleDef = modulesDefs[i].definition;
-        var newButton = document.createElement("input");
-        newButton.type = "button";
-        //newButton.value = entry.attributes.attrs[".label"].text;
-        newButton.value = moduleDef.name + " (v" + moduleDef.version + ")";
-        newButton.style.margin = "2px";
-        newButton.onclick = function () {
-            AddModule2Paper(modulesDefs[i]);
-        };
-        document.getElementById("ModulesPanel").appendChild(newButton);
-    });
-}
-
-
-function AddModule2Paper(moduleDef) {
-    graph.addCell(MakeVisualModule(moduleDef));
-}
