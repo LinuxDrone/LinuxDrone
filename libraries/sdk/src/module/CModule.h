@@ -94,7 +94,6 @@ protected:
 	void startTask();
 	void stopTask();
 	void mainTask();
-	void stubTaskFunc();
 
 // queue objects
 	void sendObject(const mongo::BSONObj& obj);

@@ -41,31 +41,14 @@ bool CModule::init(const mongo::BSONObj& initObject)
 	m_name = initObject["name"].valuestr();
 	m_instance = initObject["instance"].valuestr();
 	m_task.setTaskName(m_instance);
-	bool existMetainfo = initObject.hasElement("metaInfo");
-	mongo::BSONObj metaInfo;
-	if (existMetainfo) {
-		metaInfo = initObject["metaInfo"].Obj();
-	}
 	if (initObject.hasElement("task_priority")) {
 		m_task.setPriority(initObject["task_priority"].Number());
-	} else if (existMetainfo) {
-		if (metaInfo.hasElement("task_priority")) {
-			m_task.setPriority(metaInfo["task_priority"].Number());
-		}
 	}
 	if (initObject.hasElement("period")) {
 		m_period = int (initObject["period"].Number());
-	} else if (existMetainfo) {
-		if (metaInfo.hasElement("period")) {
-			m_period = int (metaInfo["period"].Number());
-		}
 	}
 	if (initObject.hasElement("notifyOnChange")) {
 		m_notifyOnChange = initObject["notifyOnChange"].Bool();
-	} else if (existMetainfo) {
-		if (metaInfo.hasElement("notifyOnChange")) {
-			m_notifyOnChange = metaInfo["notifyOnChange"].Bool();
-		}
 	}
 	return true;
 }
@@ -198,14 +181,8 @@ void CModule::mainTask()
 			}
 		}
 		recvObjects();
-
-		m_task.sleep(100);
 	}
 	SAFE_RELEASE(m_runnable);
-}
-
-void CModule::stubTaskFunc()
-{
 }
 
 //-------------------------------------------------------------------
@@ -217,6 +194,8 @@ void CModule::sendObject(const mongo::BSONObj& object)
 	if (object.isEmpty()) {
 		return;
 	}
+//	Logger() << object.toString(false, true).c_str();
+
 	std::map<CString, mongo::BSONElement> objElements;
 	{
 		mongo::BSONObjIterator objIt(object);
@@ -237,6 +216,7 @@ void CModule::sendObject(const mongo::BSONObj& object)
 		mongo::BSONObjBuilder builder;
 		for (auto it = link_data.links.begin();it<link_data.links.end();it++) {
 			mongo::BSONObj& link = *it;
+//			Logger() << link.toString(false, true).c_str();
 			CString outPin = link["outPin"].String().c_str();
 			if (objElements.count(outPin) == 0) {
 				continue;
@@ -270,10 +250,19 @@ void CModule::sendObject(const mongo::BSONObj& object)
 void CModule::recvObjects()
 {
 	if (!m_queueCreated) {
+		if (m_period == -1) {
+			m_task.sleep(1000);
+		} else {
+			m_task.sleep(100);
+		}
 		return;
 	}
 	void* ptr = 0;
-	int readed = rt_queue_receive(&m_inputQueue, &ptr, TM_NONBLOCK);
+	unsigned long long timeout = TM_NONBLOCK;
+	if (m_period == -1) {
+		timeout = 1000;
+	}
+	int readed = rt_queue_receive(&m_inputQueue, &ptr, timeout);
 	if (readed < 0) {
 		CSystem::sleep(2);
 		return;
