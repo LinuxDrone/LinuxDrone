@@ -1,7 +1,7 @@
 {
     "type": "module_def",
     "name": "GY-87",
-    "version": 6,
+    "version": 7,
     "Task Priority": 80,
     "Task Period": 200,
     "Notify on change": false,
@@ -21,7 +21,22 @@
             },
             "type": "string",
             "defaultValue": "/dev/i2c-1",
-            "validValues" : ["/dev/i2c-1","/dev/i2c-2"]
+            "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
+            "unitMeasured": ""
+        },
+        {
+            "name": "Test Param",
+            "displayName": {
+                "en": "Bus Name",
+                "ru": "Имя шины"
+            },
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "string",
+            "defaultValue": "bla bla bla",
+            "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
+            "unitMeasured": ""
         }
     ],
     "outputs": [

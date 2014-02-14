@@ -75,13 +75,15 @@ viewModels.Editor = (function () {
         // Имя инстанса выбранного в схеме модуля
         instnameSelectedModule: ko.observable(''),
         // Общие свойства выбранного в схеме инстанса модуля
-        moduleCommonProperties: ko.observableArray([])
+        instanceCommonProperties: ko.observableArray([]),
+        // Специфические свойства выбранного в схеме инстанса модуля
+        instanceSpecificProperties: ko.observableArray([])
     };
 
 
     commonModuleParamsDefinition.forEach(function (prop) {
         prop.value = ko.observable(prop.value);
-        res.moduleCommonProperties.push(prop);
+        res.instanceCommonProperties.push(prop);
     });
 
 
@@ -210,16 +212,24 @@ viewModels.Editor = (function () {
         if (cell) {
             res.instnameSelectedModule(cell.attributes.attrs[".label"].text);
 
-            var d = GetInstanceParams(res.instnameSelectedModule(), cell.attributes.moduleType);
+
+            res.instanceSpecificProperties.removeAll();
+            var moduleMeta = GetModuleMeta(cell.attributes.moduleType);
+            res.instanceSpecificProperties(moduleMeta.definition().paramsDefinitions);
+
+            //var d = GetInstanceSpecificParams(res.instnameSelectedModule(), cell.attributes.moduleType);
 
 
-            res.moduleCommonProperties().forEach(function (prop) {
+            res.instanceCommonProperties().forEach(function (prop) {
                 // Подписываемся на изменения значений свойств, указывая в качестве контекста cell
                 prop.value.subscribe(function (newValue) {
+
                     cell.commonProperies = cell.commonProperies || {};
                     cell.commonProperies[prop.name] = newValue;
+
                 }, {metaProperty: prop, cell: cell});
             });
+
         }
     });
 
@@ -288,7 +298,7 @@ viewModels.Editor = (function () {
 
     // Приватная функция
     // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
-    function GetInstanceCommonParams(instanceName, moduleType) {
+    function GetInstanceSpecificParams(instanceName, moduleType) {
         return GetInstanceParams(instanceName, moduleType).specific;
     }
 
@@ -320,8 +330,9 @@ viewModels.Editor = (function () {
             });
 
             // Теперь установим специфичные для модуля параметры, взяв их значения из определения типа модуля
-
-
+            $.each(moduleMeta.definition().paramsDefinitions, function (i, paramDefinition) {
+                moduleParams.specific[paramDefinition.name] = paramDefinition.defaultValue;
+            });
         }
         return res.currentConfig().modulesParams;
     }

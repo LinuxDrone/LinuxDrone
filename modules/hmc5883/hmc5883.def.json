@@ -11,7 +11,8 @@
                 "ru": "Название девайса"
             },
             "type": "string",
-            "defaultValue": "/dev/i2c-1"
+            "defaultValue": "/dev/i2c-1",
+            "unitMeasured": ""
         }
     ],
     "outputs":[

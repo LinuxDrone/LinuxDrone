@@ -95,7 +95,9 @@
         <div class="panel-body">
             <div></div><span data-bind="text: viewModels.Editor.instnameSelectedModule"></span></div>
             <div><button type="button" class="btn btn-danger" data-bind="click: RemoveModule, enable: viewModels.Editor.instnameSelectedModule()!=''">Remove Module</button></div>
-            <div data-bind="template: { name: chooseTemplate4Property, foreach: moduleCommonProperties }"></div>
+            <div data-bind="template: { name: chooseTemplate4Property, foreach: instanceCommonProperties }"></div>
+            <div>Specific Properties</div>
+            <div data-bind="template: { name: chooseTemplate4Property, foreach: instanceSpecificProperties }"></div>
         </div>
     </div>
 </div>
