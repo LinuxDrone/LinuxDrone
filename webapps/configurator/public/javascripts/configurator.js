@@ -7,14 +7,16 @@ var paper = new joint.dia.Paper({
 });
 $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 
-var modulesDefs = {};
-
 var viewModels = viewModels || {};
 
 
-inputShema = [
+commonModuleParamsDefinition = [
     {
         name: "Task Priority",
+        "displayName": {
+            "en": "Task Priority",
+            "ru": "Task Priority"
+        },
         description: {ru: "Приоритет потока (задачи) xenomai"},
         defaultValue: 80,
         unitMeasured: "%",
@@ -22,6 +24,10 @@ inputShema = [
     },
     {
         name: "Task Period",
+        "displayName": {
+            "en": "Task Period",
+            "ru": "Task Period"
+        },
         type: "number",
         required: true,
         description: {ru: "время между двумя вызовами бизнес функции (микросекунд) 0  - не зависать на очереди в ожидании данных -1 - зависать навечно, до факта появления данных в очереди"},
@@ -31,6 +37,10 @@ inputShema = [
     },
     {
         name: "Notify on change",
+        "displayName": {
+            "en": "Notify on change",
+            "ru": "Notify on change"
+        },
         type: "bool",
         unitMeasured: "",
         value: true
@@ -58,6 +68,8 @@ viewModels.Editor = (function () {
         newConfigVersion: ko.observable(),
         // Принимает true, когда в схему внесено изменение
         graphChanged: ko.observable(),
+        // Текущая редактируемая конфигурация
+        currentConfig: ko.observable(),
         // Модуль выбранный на схеме
         selectedCell: ko.observable(),
         // Имя инстанса выбранного в схеме модуля
@@ -67,7 +79,7 @@ viewModels.Editor = (function () {
     };
 
 
-    inputShema.forEach(function (prop) {
+    commonModuleParamsDefinition.forEach(function (prop) {
         prop.value = ko.observable(prop.value);
         res.moduleCommonProperties.push(prop);
     });
@@ -76,8 +88,17 @@ viewModels.Editor = (function () {
     // Публичная функция загрузки конфигурации
     res.LoadConfigurations = function (_initialData) {
         allConfigs = _initialData;
+
+        if (allConfigs.length == 0) {
+            allConfigs.push({
+                    "name": "New Schema",
+                    "version": 1
+                }
+            );
+        }
+
         res.ConfigNames([]);
-        $.each(_.groupBy(allConfigs, 'name'), function (configName, listVersions) {
+        $.each(_.groupBy(allConfigs, 'name'), function (configName) {
             res.ConfigNames.push(configName);
         });
     };
@@ -174,7 +195,11 @@ viewModels.Editor = (function () {
     // Обработчик события выбора версии
     res.versionSelected.subscribe(function (version) {
         if (version) {
-            graph.fromJSON(JSON.parse(GetCurrentSchema(res.configNameSelected(), version).jsonGraph));
+            res.currentConfig(GetConfig(res.configNameSelected(), version));
+            if(res.currentConfig().jsonGraph)
+            {
+                graph.fromJSON(JSON.parse(res.currentConfig().jsonGraph));
+            }
             res.graphChanged(false);
             res.instnameSelectedModule("");
         }
@@ -185,7 +210,7 @@ viewModels.Editor = (function () {
         if (cell) {
             res.instnameSelectedModule(cell.attributes.attrs[".label"].text);
 
-            var d = GetModuleParams(res.configNameSelected(), res.versionSelected(), res.instnameSelectedModule());
+            var d = GetInstanceParams(res.instnameSelectedModule(), cell.attributes.moduleType);
 
 
             res.moduleCommonProperties().forEach(function (prop) {
@@ -203,7 +228,8 @@ viewModels.Editor = (function () {
         var data4save = {
             "name": name,
             "version": version,
-            "jsonGraph": JSON.stringify(graph.toJSON())
+            "jsonGraph": JSON.stringify(graph.toJSON()),
+            "modulesParams": res.currentConfig().modulesParams
         };
         $.post("saveconfig", data4save,
             function (data) {
@@ -246,43 +272,66 @@ viewModels.Editor = (function () {
 
 
     // Приватная функция
-    // Возвращает объект текущей отображаемой схемы (из списка всех схем allConfigs)
-    function GetCurrentSchema(schemaName, version) {
-        return _.where(allConfigs, {name: schemaName, version: version})[0];
+    // Возвращает объект текущего редактируемого конфига (из списка всех конфигов allConfigs)
+    function GetConfig(configName, version) {
+        var cfg = _.where(allConfigs, {name: configName, version: version})[0];
+        cfg.modulesParams = cfg.modulesParams || {};
+        return cfg;
+    }
+
+
+    // Приватная функция
+    // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
+    function GetInstanceCommonParams(instanceName, moduleType) {
+        return GetInstanceParams(instanceName, moduleType).common;
+    }
+
+    // Приватная функция
+    // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
+    function GetInstanceCommonParams(instanceName, moduleType) {
+        return GetInstanceParams(instanceName, moduleType).specific;
     }
 
     // Приватная функция
     // Возвращает объект - значения конфигурационных параметров инстанса модуля
-    function GetModuleParams(schemaName, version, instanceName) {
-        var vSchema = GetCurrentSchema(schemaName, version);
-        vSchema.modulesParams = vSchema.modulesParams || {};
-
-        if (!vSchema.modulesParams[instanceName]) {
+    function GetInstanceParams(instanceName, moduleType) {
+        if (!res.currentConfig().modulesParams[instanceName]) {
             // Если для указанного инстанса нет в конфигурации параметров, следует их создать на основе дефолтных
             // из метаописания модуля
-            vSchema.modulesParams[instanceName] = {};
+            res.currentConfig().modulesParams[instanceName] = {common: {}, specific: {}};
+            var moduleParams = res.currentConfig().modulesParams[instanceName];
 
-            var d = 0;
+            var moduleMeta = GetModuleMeta(moduleType);
+            // Сначала заполним дефолтные значения для общих (для всех типов модулей) свойств
+            $.each(_.pluck(commonModuleParamsDefinition, "name"), function (i, paramName) {
+                // Если дефолтное значение задано в определении модуля, то используем его
+                // Иначе (если опять же оно задано) возьмем его из общего для всех модулей определения
+                if (moduleMeta.definition()[paramName]) {
+                    moduleParams.common[paramName] = moduleMeta.definition()[paramName];
+                }
+                else {
+                    var commonParam = _.find(commonModuleParamsDefinition, function (commonParamMeta) {
+                        return commonParamMeta.name == paramName;
+                    });
+                    if (commonParam && commonParam.defaultValue) {
+                        moduleParams.common[paramName] = commonParam.defaultValue;
+                    }
+                }
+            });
+
+            // Теперь установим специфичные для модуля параметры, взяв их значения из определения типа модуля
+
+
         }
-
-        return vSchema.modulesParams;
+        return res.currentConfig().modulesParams;
     }
 
     // Приватная функция
     // Возвращает описание модуля
     function GetModuleMeta(moduleName) {
-        var vSchema = GetCurrentSchema(schemaName, version);
-        vSchema.modulesParams = vSchema.modulesParams || {};
-
-        if (!vSchema.modulesParams[instanceName]) {
-            // Если для указанного инстанса нет в конфигурации параметров, следует их создать на основе дефолтных
-            // из метаописания модуля
-            vSchema.modulesParams[instanceName] = {};
-
-            var d = 0;
-        }
-
-        return vSchema.modulesParams;
+        return _.find(res.metaModules(), function (meta) {
+            return meta.definition().name == moduleName;
+        });
     }
 
     // Приватная функция
@@ -304,7 +353,7 @@ viewModels.Editor = (function () {
             }
         };
 
-        moduleInfo.instancesCount(moduleInfo.instancesCount()+1);
+        moduleInfo.instancesCount(moduleInfo.instancesCount() + 1);
         module.attrs['.label'].text = moduleDef.name + "-" + moduleInfo.instancesCount();
 
         if (moduleDef.outputs) {
