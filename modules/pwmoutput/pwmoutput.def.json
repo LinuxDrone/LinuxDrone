@@ -2,39 +2,37 @@
     "type": "module_def",
     "name": "PwmOutput",  
     "version": 2,
-    "task_priority": 80,
-    "task_period": 200,
-    "paramsSchema":{
+    "Task Priority": 80,
+    "Task Period": 200,
+    "Notify on change": false,
+    "paramsDefinitions": [
+        {
+            "name": "I2C Device",
+            "displayName": {
+                "en": "Bus Name",
+                "ru": "Имя шины"
+            },
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "string",
+            "defaultValue": "/dev/i2c-1",
+            "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
+            "unitMeasured": ""
+        }
+    ],
+    "inputShema":{
         "type":"object",
         "id": "http://jsonschema.net",
         "properties":{
-            "bus_type": {
+            "pwm1": {
                 "type":"number",
                 "required":true
             },
-            "bus_name": {
-                "type":"string",
+            "pwm2": {
+                "type":"number",
                 "required":true
             }
         }
-    },
-    "inputs":[
-        {
-            "name": "PWM",
-            "Schema":{
-                "type":"object",
-                "id": "http://jsonschema.net",
-                "properties":{
-                    "pwm1": {
-                        "type":"number",
-                        "required":true
-                    },
-                    "pwm2": {
-                        "type":"number",
-                        "required":true
-                    }
-                }
-            }
-        }
-    ]
+    }
 }

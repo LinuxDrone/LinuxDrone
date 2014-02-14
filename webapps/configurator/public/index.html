@@ -49,7 +49,7 @@
             <h3 class="panel-title">Modules</h3>
         </div>
         <div class="panel-body">
-
+            <div data-bind="template: { name: 'listModulesButtonsTemplate', foreach: metaModules }"></div>
         </div>
     </div>
     <div id="board" class="board panel panel-primary">
@@ -59,14 +59,14 @@
                 <!--h3 class="panel-title">Schema</h3-->
                 <div id="listConfigs" class="">
                     <!-- Выпадающий список схем -->
-                    <select data-bind="options: viewModels.Editor.ConfigNames,
+                    <select style="color: #000000" data-bind="options: viewModels.Editor.ConfigNames,
                         optionsText: $data,
                         optionsValue: $data,
                         value: viewModels.Editor.configNameSelected,
                         visible: viewModels.Editor.ConfigNames().length > 0"></select>
                     <!-- -->
                     <!-- Выпадающий список версий -->
-                    <select data-bind="options: viewModels.Editor.Versions,
+                    <select style="color: #000000" data-bind="options: viewModels.Editor.Versions,
                         optionsText: $data,
                         optionsValue: $data,
                         value: viewModels.Editor.versionSelected,
@@ -93,9 +93,11 @@
             <h3 class="panel-title">Properties</h3>
         </div>
         <div class="panel-body">
-            <span data-bind="text: viewModels.Editor.instnameSelectedModule"></span>
-            <button type="button" class="btn btn-danger" data-bind="click: RemoveModule,
-                        enable: viewModels.Editor.instnameSelectedModule()!=''">Remove Module</button>
+            <div></div><span data-bind="text: viewModels.Editor.instnameSelectedModule"></span></div>
+            <div><button type="button" class="btn btn-danger" data-bind="click: RemoveModule, enable: viewModels.Editor.instnameSelectedModule()!=''">Remove Module</button></div>
+            <div data-bind="template: { name: chooseTemplate4Property, foreach: instanceCommonProperties }"></div>
+            <div>Specific Properties</div>
+            <div data-bind="template: { name: chooseTemplate4Property, foreach: instanceSpecificProperties }"></div>
         </div>
     </div>
 </div>
@@ -118,6 +120,29 @@
     </div>
 </div>
 
+
+
+<script type="text/html" id="listModulesButtonsTemplate">
+    <div>
+        <button style="margin: 2px" type="button" class="btn btn-info" data-bind="click: AddModule2Paper, text: definition().name + ' (v' + definition().version + ')'"></button>
+    </div>
+</script>
+
+<script type="text/html" id="stringTemplate">
+    <div>
+        <strong data-bind="text: name"></strong>
+        <span data-bind="if: unitMeasured">(<span data-bind="text: unitMeasured"/>)</span>
+        <input data-bind="value: value">
+    </div>
+</script>
+
+<script type="text/html" id="boolTemplate">
+    <div>
+        <strong data-bind="text: name"></strong>
+        <span data-bind="if: unitMeasured">(<span data-bind="text: unitMeasured"/>)</span>
+        <input type="checkbox" data-bind="checked: value" />
+    </div>
+</script>
 
 <script src="javascripts/configurator.js"></script>
 

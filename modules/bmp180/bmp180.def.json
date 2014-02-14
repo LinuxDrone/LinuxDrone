@@ -1,37 +1,34 @@
 {
     "type": "module_def",
-    "name": "Bmp180",  
+    "name": "Bmp180",
     "version": 3,
-    "task_priority": 80,
-    "task_period": 200,
-    "paramsSchema":{
-        "type":"object",
-        "id": "http://jsonschema.net",
-        "properties":{
-            "bus_type": {
-                "type":"number",
-                "required":true
+    "Task Priority": 66,
+    "Task Period": 150,
+    "paramsDefinitions": [
+        {
+            "name": "I2C Device",
+            "description": {
+                "ru": "Название девайса"
             },
-            "bus_name": {
-                "type":"string",
-                "required":true
-            }
+            "type": "string",
+            "defaultValue": "/dev/i2c-1",
+            "unitMeasured": ""
         }
-    },
-    "outputs":[
+    ],
+    "outputs": [
         {
             "name": "Pressure+Temp",
-            "Schema":{
-                "type":"object",
+            "Schema": {
+                "type": "object",
                 "id": "http://jsonschema.net",
-                "properties":{
+                "properties": {
                     "pressure": {
-                        "type":"number",
-                        "required":true
+                        "type": "number",
+                        "required": true
                     },
                     "temperature": {
-                        "type":"number",
-                        "required":true
+                        "type": "number",
+                        "required": true
                     }
                 }
             }
