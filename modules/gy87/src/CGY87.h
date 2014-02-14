@@ -15,7 +15,7 @@
 #include "module/CModule"
 #include "system/CBus"
 
-class CMpu6050 : public CModule
+class CGY87 : public CModule
 {
 public:
 	enum MpuRegs {
@@ -57,8 +57,8 @@ public:
 	};
 
 public:
-	CMpu6050();
-	~CMpu6050();
+	CGY87();
+	~CGY87();
 
 	virtual bool init(const mongo::BSONObj& initObject);
 	bool start();

@@ -79,7 +79,7 @@ add_subdirectory(${LIB_DIR}/sdk)
 
 # Loadable modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
-add_subdirectory(${MOD_DIR}/mpu6050)
+add_subdirectory(${MOD_DIR}/gy87)
 add_subdirectory(${MOD_DIR}/bmp180)
 add_subdirectory(${MOD_DIR}/ms5611)
 add_subdirectory(${MOD_DIR}/hmc5883)

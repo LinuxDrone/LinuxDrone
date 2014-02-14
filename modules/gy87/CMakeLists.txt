@@ -21,7 +21,7 @@ set(EXTRA_LIBS
 	core
 )
 
-add_library(mpu6050 MODULE ${INC} ${SRC})
+add_library(gy87 MODULE ${INC} ${SRC})
 
-install(TARGETS mpu6050 DESTINATION modules/mpu6050)
-install(FILES mpu6050.def.json DESTINATION modules/mpu6050)
+install(TARGETS gy87 DESTINATION modules/gy87)
+install(FILES gy87.def.json DESTINATION modules/gy87)
