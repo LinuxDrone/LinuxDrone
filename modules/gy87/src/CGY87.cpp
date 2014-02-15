@@ -272,6 +272,6 @@ void CGY87::moduleTask()
     RTIME diff = time - rt_timer_read();
     SRTIME el = rt_timer_ticks2ns(diff);
     uint64_t elapsed = abs(el) / 1000;
-    Logger() << elapsed;
-    CSystem::sleep(100);
+    //Logger() << elapsed;
+    //CSystem::sleep(100);
 }

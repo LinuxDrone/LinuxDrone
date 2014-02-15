@@ -50,6 +50,9 @@ bool CModule::init(const mongo::BSONObj& initObject)
 	if (initObject.hasElement("notifyOnChange")) {
 		m_notifyOnChange = initObject["notifyOnChange"].Bool();
 	}
+	if(m_period != -1) {
+		m_period = m_period * rt_timer_ns2ticks(1000000);
+	}
 	return true;
 }
 
@@ -253,7 +256,7 @@ void CModule::recvObjects()
 		if (m_period == -1) {
 			m_task.sleep(1000);
 		} else {
-			m_task.sleep(100);
+			m_task.sleep(1);
 		}
 		return;
 	}

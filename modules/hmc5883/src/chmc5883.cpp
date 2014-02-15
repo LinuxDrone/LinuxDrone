@@ -145,32 +145,32 @@ bool CHmc5883::initHmc5883()
 
 	uint8_t ID[4]={0};
 	readId(ID[0]);
-	printf("HMC ID: %s\n",ID);
+	printf("HMC ID: %s",ID);
 
-   uint8_t CTRLA = 0x00;
-   uint8_t MODE  = 0x00;
+	uint8_t CTRLA = 0x00;
+	uint8_t MODE  = 0x00;
 
-   CTRLB  = 0;
+	CTRLB  = 0;
 
-   CTRLA |= (uint8_t)(HMC5883_ODR_75 | HMC5883_MEASCONF_NORMAL);
-   CTRLB |= (uint8_t)(HMC5883_GAIN_1_9);
-   MODE  |= (uint8_t)(HMC5883_MODE_CONTINUOUS);
+	CTRLA |= (uint8_t)(HMC5883_ODR_75 | HMC5883_MEASCONF_NORMAL);
+	CTRLB |= (uint8_t)(HMC5883_GAIN_1_9);
+	MODE  |= (uint8_t)(HMC5883_MODE_CONTINUOUS);
 
-   // CTRL_REGA
+	// CTRL_REGA
 	while (!setReg(HMC5883_CONFIG_REG_A,CTRLA)) {
 		;
 	}
 
-   // CTRL_REGB
+	// CTRL_REGB
 	while (!setReg(HMC5883_CONFIG_REG_B,CTRLB)) {
 		;
 	}
 
-   // Mode register
+	// Mode register
 	while (!setReg(HMC5883_MODE_REG,MODE)) {
 		;
 	}
-	printf("HMC5883 init done\n");
+	Logger() << "HMC5883 init done";
 	return true;
 }
 
@@ -296,6 +296,6 @@ void CHmc5883::moduleTask()
     SRTIME el = rt_timer_ticks2ns(diff);
     uint64_t elapsed = abs(el) / 1000;
     //Logger() << elapsed;
-    printf("x:%5d,y:%5d,z:%5d\n",out[0],out[2],out[1]);
+    //printf("x:%5d,y:%5d,z:%5d\n",out[0],out[2],out[1]);
     CSystem::sleep(100);
 }

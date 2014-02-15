@@ -27,8 +27,8 @@ public:
 
 private:
 	CSystemPru m_pru;
-	uint16_t m_C[6];
-	uint8_t m_oversampling;
+	uint32_t m_pwm[12];
+	uint8_t *m_sharedMem;
 
 	bool initPwmOutput();
 	bool setOneReg(uint8_t reg);
