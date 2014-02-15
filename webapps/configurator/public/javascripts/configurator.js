@@ -109,7 +109,6 @@ viewModels.Editor = (function () {
     MetaOfModule = function () {
         var self = this;
         self.definition = ko.observable();
-        self.instancesCount = ko.observable();
         self.AddModule2Paper = function () {
             graph.addCell(MakeVisualModule(self));
         };
@@ -121,7 +120,6 @@ viewModels.Editor = (function () {
         $.each(_initialData, function (i, item) {
             res.metaModules.push(new MetaOfModule()
                     .definition(item)
-                    .instancesCount(0)
             );
         });
     };
@@ -166,6 +164,9 @@ viewModels.Editor = (function () {
 
     res.RemoveModule = function RemoveModule() {
         if (res.selectedCell()) {
+            // Следует так же удалить настройки модуля
+            delete res.currentConfig().modulesParams[res.selectedCell().attributes.attrs['.label'].text];
+
             res.selectedCell().remove();
             res.instnameSelectedModule("");
         }
@@ -388,8 +389,16 @@ viewModels.Editor = (function () {
             }
         };
 
-        moduleInfo.instancesCount(moduleInfo.instancesCount() + 1);
-        module.attrs['.label'].text = moduleDef.name + "-" + moduleInfo.instancesCount();
+        var instancesCount = 1;
+        var name4NewInstance = moduleDef.name + "-" + instancesCount;
+        // Проверим не используется ли данное имя уже в качестве имени инстанса а схеме
+        while(_.find(graph.getElements(), function(el){ return el.attributes.attrs['.label'].text == name4NewInstance; }))
+        {
+            instancesCount++;
+            name4NewInstance = moduleDef.name + "-" + instancesCount;
+        }
+
+        module.attrs['.label'].text = name4NewInstance;
 
         if (moduleDef.outputs) {
             module.outPorts = new Array();
