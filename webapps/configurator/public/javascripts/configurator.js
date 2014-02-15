@@ -73,7 +73,7 @@ viewModels.Editor = (function () {
         // Модуль выбранный на схеме
         selectedCell: ko.observable(),
         // Имя инстанса выбранного в схеме модуля
-        instnameSelectedModule: ko.observable(''),
+        instnameSelectedModule: ko.observable(),
 
         // Общие свойства выбранного в схеме инстанса модуля
         instanceCommonProperties: ko.observableArray([]),
@@ -106,7 +106,7 @@ viewModels.Editor = (function () {
         });
     };
 
-    MetaOfModule = function () {
+    var MetaOfModule = function () {
         var self = this;
         self.definition = ko.observable();
         self.AddModule2Paper = function () {
@@ -168,7 +168,7 @@ viewModels.Editor = (function () {
             delete res.currentConfig().modulesParams[res.selectedCell().attributes.attrs['.label'].text];
 
             res.selectedCell().remove();
-            res.instnameSelectedModule("");
+            res.instnameSelectedModule("Properties");
         }
     }
 
@@ -205,7 +205,7 @@ viewModels.Editor = (function () {
                 graph.fromJSON(JSON.parse(res.currentConfig().jsonGraph));
             }
             res.graphChanged(false);
-            res.instnameSelectedModule("");
+            res.instnameSelectedModule("Properties");
         }
     });
 
@@ -213,7 +213,6 @@ viewModels.Editor = (function () {
     res.selectedCell.subscribe(function (cell) {
         if (cell) {
             res.instnameSelectedModule(cell.attributes.attrs[".label"].text);
-
 
             // Определение специфичных для модуля полей, и установка их текущих значений
             // Очищаем информацию о параметрах (для визуализации) инстанса
@@ -231,11 +230,11 @@ viewModels.Editor = (function () {
                 // Подписываемся на изменения значения параметра, указывая в качестве контекста cell
                 prop.value.subscribe(function (newValue) {
                     this.params[this.propertyName]=newValue;
+                    res.graphChanged(true);
                 }, {propertyName: prop.name, params: specificParams});
 
                 res.instanceSpecificProperties.push(prop);
             });
-
 
             // Установка значений параметров (общих для всех типов модулей) инстанса
             var commonParams = GetInstanceCommonParams(res.instnameSelectedModule(), cell.attributes.moduleType);
@@ -251,10 +250,9 @@ viewModels.Editor = (function () {
                 // Подписываемся на изменения значений свойств, указывая в качестве контекста cell
                 prop.subscription = prop.value.subscribe(function (newValue) {
                     this.params[this.metaProperty.name] = newValue;
+                    res.graphChanged(true);
                 }, {metaProperty: prop, params: commonParams});
             });
-
-
         }
     });
 
@@ -443,6 +441,12 @@ viewModels.Editor = (function () {
             console.log("press " + x + " " + y);
         }
 
+    })
+
+    paper.on('blank:pointerdown', function(evt, x, y) {
+        if (evt.button == 0) {
+            res.instnameSelectedModule("Properties");
+        }
     })
 
     /*
