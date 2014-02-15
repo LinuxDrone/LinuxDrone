@@ -33,7 +33,7 @@ exports.saveconfig = function (db) {
             console.log("Save configuration " + req.body.name + " v." +req.body.version + " - OK.");
         });
 
-        var configuration = ConvertGraph2Configuration(JSON.parse(req.body.jsonGraph));
+        var configuration = ConvertGraph2Configuration(JSON.parse(req.body.jsonGraph), req.body.modulesParams);
         configuration.version = req.body.version;
         configuration.name = req.body.name;
 
@@ -74,7 +74,7 @@ exports.getconfigs = function (db) {
 };
 
 // Конвертирует визуальное представление графа в конфигурацию модулей принятую в linuxdrone
-function ConvertGraph2Configuration(graph) {
+function ConvertGraph2Configuration(graph, modulesParams) {
     var config = {
         "type": "configuration",
         "modules": new Array(),
@@ -83,13 +83,33 @@ function ConvertGraph2Configuration(graph) {
 
     graph.cells.forEach(function (cell) {
         if (cell.type == "devs.Model") {
-            config.modules.push({
-                "name": cell.attrs[".label"].text,
+
+            var module = {
+                "name": cell.moduleType,
                 /* Название instance модуля*/
                 "instance": cell.attrs[".label"].text,
-                /* Приоритет потока (задачи) xenomai */
-                "task_priority": 80
-            });
+            };
+
+            // Перенос общих (определенных для всех типов модулей) параметров
+            var commonParams =  modulesParams[module.instance].common;
+            if(commonParams)
+            {
+                Object.keys(commonParams).forEach(function(paramName){
+                    module[paramName]=commonParams[paramName];
+                });
+            }
+
+            // Перенос общих (определенных для всех типов модулей) параметров
+            var specificParams =  modulesParams[module.instance].specific;
+            if(specificParams)
+            {
+                module.params = {};
+                Object.keys(specificParams).forEach(function(paramName){
+                    module.params[paramName]=specificParams[paramName];
+                });
+            }
+
+            config.modules.push(module);
         }
 
         if (cell.type == "link") {
@@ -102,6 +122,8 @@ function ConvertGraph2Configuration(graph) {
             });
         }
     });
+
+    //
 
     //console.log(config);
     return config;

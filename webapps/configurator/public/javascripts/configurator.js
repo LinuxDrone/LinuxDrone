@@ -74,6 +74,7 @@ viewModels.Editor = (function () {
         selectedCell: ko.observable(),
         // Имя инстанса выбранного в схеме модуля
         instnameSelectedModule: ko.observable(''),
+
         // Общие свойства выбранного в схеме инстанса модуля
         instanceCommonProperties: ko.observableArray([]),
         // Специфические свойства выбранного в схеме инстанса модуля
@@ -108,7 +109,6 @@ viewModels.Editor = (function () {
     MetaOfModule = function () {
         var self = this;
         self.definition = ko.observable();
-        self.instancesCount = ko.observable();
         self.AddModule2Paper = function () {
             graph.addCell(MakeVisualModule(self));
         };
@@ -120,7 +120,6 @@ viewModels.Editor = (function () {
         $.each(_initialData, function (i, item) {
             res.metaModules.push(new MetaOfModule()
                     .definition(item)
-                    .instancesCount(0)
             );
         });
     };
@@ -165,6 +164,9 @@ viewModels.Editor = (function () {
 
     res.RemoveModule = function RemoveModule() {
         if (res.selectedCell()) {
+            // Следует так же удалить настройки модуля
+            delete res.currentConfig().modulesParams[res.selectedCell().attributes.attrs['.label'].text];
+
             res.selectedCell().remove();
             res.instnameSelectedModule("");
         }
@@ -213,22 +215,45 @@ viewModels.Editor = (function () {
             res.instnameSelectedModule(cell.attributes.attrs[".label"].text);
 
 
+            // Определение специфичных для модуля полей, и установка их текущих значений
+            // Очищаем информацию о параметрах (для визуализации) инстанса
             res.instanceSpecificProperties.removeAll();
+            // Получаем метаданные для типа инстанса
             var moduleMeta = GetModuleMeta(cell.attributes.moduleType);
-            res.instanceSpecificProperties(moduleMeta.definition().paramsDefinitions);
 
-            //var d = GetInstanceSpecificParams(res.instnameSelectedModule(), cell.attributes.moduleType);
+            // Получаем значения параметров инстанса
+            var specificParams = GetInstanceSpecificParams(res.instnameSelectedModule(), cell.attributes.moduleType);
 
+            // Присваиваем значения параметров инстанса переменным, что будут учавствовать в биндинге
+            moduleMeta.definition().paramsDefinitions.forEach(function (prop) {
+                prop.value = ko.observable(specificParams[prop.name]);
 
-            res.instanceCommonProperties().forEach(function (prop) {
-                // Подписываемся на изменения значений свойств, указывая в качестве контекста cell
+                // Подписываемся на изменения значения параметра, указывая в качестве контекста cell
                 prop.value.subscribe(function (newValue) {
+                    this.params[this.propertyName]=newValue;
+                }, {propertyName: prop.name, params: specificParams});
 
-                    cell.commonProperies = cell.commonProperies || {};
-                    cell.commonProperies[prop.name] = newValue;
-
-                }, {metaProperty: prop, cell: cell});
+                res.instanceSpecificProperties.push(prop);
             });
+
+
+            // Установка значений параметров (общих для всех типов модулей) инстанса
+            var commonParams = GetInstanceCommonParams(res.instnameSelectedModule(), cell.attributes.moduleType);
+            res.instanceCommonProperties().forEach(function (prop) {
+                // Отменим предыдущцю подписку, если таковая была
+                if(prop.subscription)
+                {
+                    prop.subscription.dispose();
+                }
+                // Установим текущее значение
+                prop.value(commonParams[prop.name]);
+
+                // Подписываемся на изменения значений свойств, указывая в качестве контекста cell
+                prop.subscription = prop.value.subscribe(function (newValue) {
+                    this.params[this.metaProperty.name] = newValue;
+                }, {metaProperty: prop, params: commonParams});
+            });
+
 
         }
     });
@@ -334,7 +359,7 @@ viewModels.Editor = (function () {
                 moduleParams.specific[paramDefinition.name] = paramDefinition.defaultValue;
             });
         }
-        return res.currentConfig().modulesParams;
+        return res.currentConfig().modulesParams[instanceName];
     }
 
     // Приватная функция
@@ -364,8 +389,16 @@ viewModels.Editor = (function () {
             }
         };
 
-        moduleInfo.instancesCount(moduleInfo.instancesCount() + 1);
-        module.attrs['.label'].text = moduleDef.name + "-" + moduleInfo.instancesCount();
+        var instancesCount = 1;
+        var name4NewInstance = moduleDef.name + "-" + instancesCount;
+        // Проверим не используется ли данное имя уже в качестве имени инстанса а схеме
+        while(_.find(graph.getElements(), function(el){ return el.attributes.attrs['.label'].text == name4NewInstance; }))
+        {
+            instancesCount++;
+            name4NewInstance = moduleDef.name + "-" + instancesCount;
+        }
+
+        module.attrs['.label'].text = name4NewInstance;
 
         if (moduleDef.outputs) {
             module.outPorts = new Array();
