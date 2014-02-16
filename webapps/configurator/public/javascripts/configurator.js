@@ -73,6 +73,9 @@ viewModels.Editor = (function () {
         self.AddModule2Paper = function () {
             graph.addCell(MakeVisualModule(self));
         };
+        self.GetModuleDescription = function(){
+            return "In the future there will be a description of the module";
+        };
     };
 
     // Публичная функция загрузки метаинформации модулей

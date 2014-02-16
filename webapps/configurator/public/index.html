@@ -37,6 +37,7 @@
 
     <script src="javascripts/bootstrap.js"></script>
     <script type='text/javascript' src='javascripts/knockout-3.0.0.js'></script>
+    <script src="javascripts/knockout-bootstrap.min.js"></script>
 
     <script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
     <script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>
@@ -162,8 +163,14 @@
 <script type="text/html" id="listModulesButtonsTemplate">
     <div>
         <button style="margin: 2px" type="button" class="btn btn-info"
-                data-bind="click: AddModule2Paper, text: definition().name + ' (v' + definition().version + ')'"></button>
+                data-bind="click: AddModule2Paper, text: definition().name + ' (v' + definition().version + ')',
+                tooltip: {title: GetModuleDescription(), placement: 'right'}"></button>
     </div>
+</script>
+
+<script type="text/html" id="popoverModuleInfoTemplate">
+    <p data-bind="text: name"></p>
+    Hey I am some content in A popover
 </script>
 
 <script type="text/html" id="stringTemplate">
