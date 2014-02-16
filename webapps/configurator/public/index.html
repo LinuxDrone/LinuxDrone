@@ -44,7 +44,7 @@
 <body class="h100">
 
 <div class="main-region clearfix">
-    <div id="ModulesPanel" class="module-panel panel panel-info h100">
+    <div class="module-panel panel panel-info h100">
         <div class="panel-heading">
             <h3 class="panel-title">Modules</h3>
         </div>
@@ -52,7 +52,7 @@
             <div data-bind="template: { name: 'listModulesButtonsTemplate', foreach: metaModules }"></div>
         </div>
     </div>
-    <div id="board" class="board panel panel-primary">
+    <div class="board panel panel-primary">
         <div class="panel-heading">
             <!--h3 class="panel-title">Schema</h3-->
             <div class="tools-region">
@@ -73,58 +73,96 @@
                         visible: viewModels.Editor.Versions().length > 0"></select>
                     <!-- -->
                     <button type="button" class="btn btn-success" data-bind="click: SaveConfig,
-                        visible: viewModels.Editor.Versions().length > 0, enable: viewModels.Editor.graphChanged()">Save</button>
+                        visible: viewModels.Editor.Versions().length > 0, enable: viewModels.Editor.graphChanged()">Save
+                    </button>
                     <button type="button" class="btn btn-success" data-toggle="modal" data-target="#saveAsModal"
-                            data-bind="enable: viewModels.Editor.graphChanged()">Save As</button>
+                            data-bind="enable: viewModels.Editor.graphChanged()">Save As
+                    </button>
                     <button type="button" class="btn btn-danger" data-bind="click: DeleteConfig,
-                        visible: viewModels.Editor.Versions().length > 0">Delete</button>
+                        visible: viewModels.Editor.Versions().length > 0">Delete
+                    </button>
                     <button type="button" class="btn btn-info" disabled title="Not Implemented">Import</button>
-                    <button type="button" class="btn btn-info" disabled data-bind="visible: viewModels.Editor.Versions().length > 0">Export</button>
+                    <button type="button" class="btn btn-info" disabled
+                            data-bind="visible: viewModels.Editor.Versions().length > 0">Export
+                    </button>
                 </div>
             </div>
         </div>
         <div class="panel-body h90">
-
             <div id="paper" class="h100"></div>
         </div>
     </div>
     <div class="properties-panel panel panel-default">
         <div class="panel-heading">
-            <h3 class="panel-title">Properties</h3>
+            <h3 class="panel-title" data-bind="text: viewModels.Editor.instnameSelectedModule"></h3>
+            <button type="button" class="btn btn-danger"
+                    data-bind="visible: instnameSelectedModule()!='Properties', click: RemoveModule, enable: viewModels.Editor.instnameSelectedModule()!=''">X
+            </button>
         </div>
         <div class="panel-body">
-            <div></div><span data-bind="text: viewModels.Editor.instnameSelectedModule"></span></div>
-            <div><button type="button" class="btn btn-danger" data-bind="click: RemoveModule, enable: viewModels.Editor.instnameSelectedModule()!=''">Remove Module</button></div>
-            <div data-bind="template: { name: chooseTemplate4Property, foreach: instanceCommonProperties }"></div>
-            <div>Specific Properties</div>
-            <div data-bind="template: { name: chooseTemplate4Property, foreach: instanceSpecificProperties }"></div>
+            <div data-bind="visible: instnameSelectedModule()!='Properties'" class="accordion" id="accordion2">
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2"
+                           href="#collapseOne">
+                            Common Properties
+                        </a>
+                    </div>
+                    <div id="collapseOne" class="accordion-body collapse in">
+                        <div class="accordion-inner"
+                             data-bind="template: { name: chooseTemplate4Property, foreach: instanceCommonProperties }"></div>
+                    </div>
+                </div>
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2"
+                           href="#collapseTwo">
+                            Specific Properties
+                        </a>
+                    </div>
+                    <div id="collapseTwo" class="accordion-body collapse in">
+                        <div class="accordion-inner"
+                             data-bind="template: { name: chooseTemplate4Property, foreach: instanceSpecificProperties }"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
 
 
 <-- Modal -->
-<div class="modal" id="saveAsModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="myModalLabel">Save current config as</h3>
-    </div>
-    <div class="modal-body">
-        <p>Config Name: <input data-bind="value: viewModels.Editor.newConfigName" /></p>
-        <p>Version: <input data-bind="value: viewModels.Editor.newConfigVersion" /></p>
-    </div>
-    <div class="modal-footer">
-        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+<div class="modal fade" id="saveAsModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Save current config as</h4>
+      </div>
+      <div class="modal-body">
+	    <div class="container">
+		  <div class="row">
+		    <div class=".col-md-4">Config Name:</div>
+		    <div class=".col-md-8"><input data-bind="value: viewModels.Editor.newConfigName"/></div>
+		  </div>
+		  <div class="row">
+		    <div class=".col-md-4">Version:</div>
+		    <div class=".col-md-8"><input data-bind="value: viewModels.Editor.newConfigVersion"/></div>
+		  </div>
+		</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button class="btn btn-primary" data-dismiss="modal" data-bind="click: SaveConfigAs">Save New Config</button>
+      </div>
     </div>
+  </div>
 </div>
-
-
 
 <script type="text/html" id="listModulesButtonsTemplate">
     <div>
-        <button style="margin: 2px" type="button" class="btn btn-info" data-bind="click: AddModule2Paper, text: definition().name + ' (v' + definition().version + ')'"></button>
+        <button style="margin: 2px" type="button" class="btn btn-info"
+                data-bind="click: AddModule2Paper, text: definition().name + ' (v' + definition().version + ')'"></button>
     </div>
 </script>
 
@@ -140,10 +178,12 @@
     <div>
         <strong data-bind="text: name"></strong>
         <span data-bind="if: unitMeasured">(<span data-bind="text: unitMeasured"/>)</span>
-        <input type="checkbox" data-bind="checked: value" />
+        <input type="checkbox" data-bind="checked: value"/>
     </div>
 </script>
 
+
+<script src="ModulesCommonParams.def.js"></script>
 <script src="javascripts/configurator.js"></script>
 
 
