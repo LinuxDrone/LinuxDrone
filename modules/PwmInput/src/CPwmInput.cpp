@@ -78,8 +78,7 @@ bool CPwmInput::start()
 bool CPwmInput::initPwmInput()
 {
 	m_pru.Init();
-	for(int i=0;i<12;i++)
-	{
+	for(int i=0;i<12;i++) {
 		m_pwm[i]=0;
 	}
 	m_sharedMem = static_cast<uint8_t *>(m_pru.GetSharedMem());
@@ -99,11 +98,9 @@ bool CPwmInput::initPwmInput()
 
 uint32_t CPwmInput::readChannel(int ch)
 {
-	if((ch >=0) && (ch < 7))
-	{
+	if((ch >=0) && (ch < 7)) {
 		uint32_t channelData = (*(unsigned long *)(m_sharedMem + 0x104 + (0x10*ch))/200);
-		if((channelData < 2100) && (channelData > 900))
-		{
+		if((channelData < 2100) && (channelData > 900)) {
 			return channelData;
 		}
 	}
@@ -115,14 +112,24 @@ void CPwmInput::moduleTask()
 {
 	RTIME time = rt_timer_read();
 
-	for(int i=0; i<7; i++)
-	{
+	for(int i=0; i<7; i++) {
 		m_pwm[i]=readChannel(i);
 	}
+
+	mongo::BSONObjBuilder builder;
+	builder << "pwm0" << m_pwm[0];
+	builder << "pwm1" << m_pwm[1];
+	builder << "pwm2" << m_pwm[2];
+	builder << "pwm3" << m_pwm[3];
+	builder << "pwm4" << m_pwm[4];
+	builder << "pwm5" << m_pwm[5];
+	builder << "pwm6" << m_pwm[6];
+	sendObject(builder.obj());
 
     RTIME diff = time - rt_timer_read();
     SRTIME el = rt_timer_ticks2ns(diff);
     uint64_t elapsed = abs(el) / 1000;
+    //printf("%5d\r",m_pwm[0]);
     //Logger() << "PwmTASK " << elapsed;
     //CSystem::sleep(10);
 }

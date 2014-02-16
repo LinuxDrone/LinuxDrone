@@ -78,67 +78,74 @@ bool CPwmOutput::start()
 bool CPwmOutput::initPwmOutput()
 {
 	m_pru.Init();
-	for(int i=0;i<12;i++)
-	{
-		m_pwm[i]=1000;
-	}
 	m_sharedMem = static_cast<uint8_t *>(m_pru.GetSharedMem());
 
-	*(unsigned long *)(m_sharedMem + 0x200) = m_pwm[0] * 200;
-	*(unsigned long *)(m_sharedMem + 0x210) = m_pwm[1] * 200;
-	*(unsigned long *)(m_sharedMem + 0x220) = m_pwm[2] * 200;
-	*(unsigned long *)(m_sharedMem + 0x230) = m_pwm[3] * 200;
-	*(unsigned long *)(m_sharedMem + 0x240) = m_pwm[4] * 200;
-	*(unsigned long *)(m_sharedMem + 0x250) = m_pwm[5] * 200;
-	*(unsigned long *)(m_sharedMem + 0x260) = m_pwm[6] * 200;
-	*(unsigned long *)(m_sharedMem + 0x270) = m_pwm[7] * 200;
-	*(unsigned long *)(m_sharedMem + 0x280) = m_pwm[8] * 200;
-	*(unsigned long *)(m_sharedMem + 0x290) = m_pwm[9] * 200;
-	*(unsigned long *)(m_sharedMem + 0x2A0) = m_pwm[10] * 200;
-	*(unsigned long *)(m_sharedMem + 0x2B0) = m_pwm[11] * 200;
+	for(int i=0;i<12;i++) {
+		m_pwm[i]=1000;
+		setChannelPulseWidth(i,m_pwm[i]);
+	}
 
-	*(unsigned long *)(m_sharedMem + 0x204) = 20000 * 200;
-	*(unsigned long *)(m_sharedMem + 0x214) = 20000 * 200;
-	*(unsigned long *)(m_sharedMem + 0x224) = 20000 * 200;
-	*(unsigned long *)(m_sharedMem + 0x234) = 20000 * 200;
-	*(unsigned long *)(m_sharedMem + 0x244) = 2500 * 200;
-	*(unsigned long *)(m_sharedMem + 0x254) = 2500 * 200;
-	*(unsigned long *)(m_sharedMem + 0x264) = 5000 * 200;
-	*(unsigned long *)(m_sharedMem + 0x274) = 5000 * 200;
-	*(unsigned long *)(m_sharedMem + 0x284) = 5000 * 200;
-	*(unsigned long *)(m_sharedMem + 0x294) = 5000 * 200;
-	*(unsigned long *)(m_sharedMem + 0x2A4) = 5000 * 200;
-	*(unsigned long *)(m_sharedMem + 0x2B4) = 5000 * 200;
-
+	for(int i=0;i<4;i++) {
+		// 50Hz
+		m_period[i]=20000;
+		setChannelPeriod(i,m_period[i]);
+	}
+	for(int i=4;i<8;i++) {
+		// 400Hz
+		m_period[i]=2500;
+		setChannelPeriod(i,m_period[i]);
+	}
+	for(int i=8;i<12;i++) {
+		// 200Hz
+		m_period[i]=5000;
+		setChannelPeriod(i,m_period[i]);
+	}
 	m_pru.RunPru();
 	return true;
+}
+
+//===================================================================
+//  setChannelPeriod: period [µs]
+//===================================================================
+void CPwmOutput::setChannelPeriod(int channel, uint32_t period)
+{
+	if((channel >=0) && (channel < 12)) {
+		*(unsigned long *)(m_sharedMem + 0x204 + (channel*0x10)) = period * 200;
+	}
+}
+
+//===================================================================
+//  setChannelPulseWidth: pw [µs]
+//===================================================================
+void CPwmOutput::setChannelPulseWidth(int channel, uint32_t pw)
+{
+	if((channel >=0) && (channel < 12)) {
+		if((pw > 200) && (pw < 2200)) {
+			*(unsigned long *)(m_sharedMem + 0x200 + (channel*0x10)) = pw * 200;
+		}
+	}
 }
 
 void CPwmOutput::moduleTask()
 {
 	RTIME time = rt_timer_read();
 
-	if(m_pwm[0]<2000)
-	{
+	if(m_pwm[0]<2000) {
 		m_pwm[0]+=20;
-		m_pwm[1]+=20;
+		//m_pwm[1]+=20;
 		m_pwm[10]+=20;
 		m_pwm[11]+=20;
 	}
-	if(m_pwm[0]>=2000)
-	{
+	if(m_pwm[0]>=2000) {
 		m_pwm[0]=1000;
-		m_pwm[1]=1000;
+		//m_pwm[1]=1000;
 		m_pwm[10]=1000;
 		m_pwm[11]=1000;
 	}
 
-	*(unsigned long *)(m_sharedMem + 0x200) = m_pwm[0] * 200;
-	*(unsigned long *)(m_sharedMem + 0x210) = m_pwm[1] * 200;
-
-	*(unsigned long *)(m_sharedMem + 0x2A0) = m_pwm[10] * 200;
-	*(unsigned long *)(m_sharedMem + 0x2B0) = m_pwm[11] * 200;
-
+	for(int i=0;i<12;i++) {
+		setChannelPulseWidth(i,m_pwm[i]);
+	}
 
     RTIME diff = time - rt_timer_read();
     SRTIME el = rt_timer_ticks2ns(diff);
@@ -146,3 +153,37 @@ void CPwmOutput::moduleTask()
     //Logger() << "PwmTASK " << elapsed;
     //CSystem::sleep(10);
 }
+
+void CPwmOutput::recievedData(const mongo::BSONObj& data)
+{
+	mongo::BSONObjIterator it(data);
+	while (it.more()) {
+		mongo::BSONElement elem = it.next();
+		if (CString("pwm0") == elem.fieldName()) {
+			m_pwm[0] = float (elem.Number());
+		} else if (CString("pwm1") == elem.fieldName()) {
+			m_pwm[1] = float (elem.Number());
+		} else if (CString("pwm2") == elem.fieldName()) {
+			m_pwm[2] = float (elem.Number());
+		} else if (CString("pwm3") == elem.fieldName()) {
+			m_pwm[3] = float (elem.Number());
+		} else if (CString("pwm4") == elem.fieldName()) {
+			m_pwm[4] = float (elem.Number());
+		} else if (CString("pwm5") == elem.fieldName()) {
+			m_pwm[5] = float (elem.Number());
+		} else if (CString("pwm6") == elem.fieldName()) {
+			m_pwm[6] = float (elem.Number());
+		} else if (CString("pwm7") == elem.fieldName()) {
+			m_pwm[7] = float (elem.Number());
+		} else if (CString("pwm8") == elem.fieldName()) {
+			m_pwm[8] = float (elem.Number());
+		} else if (CString("pwm9") == elem.fieldName()) {
+			m_pwm[9] = float (elem.Number());
+		} else if (CString("pwm10") == elem.fieldName()) {
+			m_pwm[10] = float (elem.Number());
+		} else if (CString("pwm11") == elem.fieldName()) {
+			m_pwm[11] = float (elem.Number());
+		}
+	}
+}
+
