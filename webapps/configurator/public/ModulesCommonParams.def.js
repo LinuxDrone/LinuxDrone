@@ -5,10 +5,11 @@ var commonModuleParamsDefinition = [
             "en": "Task Priority",
             "ru": "Task Priority"
         },
+        type: "number",
+        required: true,
         description: {ru: "Приоритет потока (задачи) xenomai"},
-        defaultValue: 80,
         unitMeasured: "%",
-        value: 80
+        defaultValue: 80
     },
     {
         name: "Task Period",
@@ -19,9 +20,8 @@ var commonModuleParamsDefinition = [
         type: "number",
         required: true,
         description: {ru: "время между двумя вызовами бизнес функции (микросекунд) 0  - не зависать на очереди в ожидании данных -1 - зависать навечно, до факта появления данных в очереди"},
-        defaultValue: 20,
         unitMeasured: "Ms",
-        value: 20
+        defaultValue: 20
     },
     {
         name: "Notify on change",
@@ -31,6 +31,6 @@ var commonModuleParamsDefinition = [
         },
         type: "bool",
         unitMeasured: "",
-        value: true
+        defaultValue: true
     }
 ]

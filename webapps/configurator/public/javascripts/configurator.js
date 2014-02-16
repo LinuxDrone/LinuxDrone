@@ -44,7 +44,7 @@ viewModels.Editor = (function () {
 
 
     commonModuleParamsDefinition.forEach(function (prop) {
-        prop.value = ko.observable(prop.value);
+        prop.value = ko.observable(prop.defaultValue);
         res.instanceCommonProperties.push(prop);
     });
 
