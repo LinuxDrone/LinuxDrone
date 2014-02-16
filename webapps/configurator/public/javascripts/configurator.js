@@ -9,45 +9,6 @@ $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 
 var viewModels = viewModels || {};
 
-
-commonModuleParamsDefinition = [
-    {
-        name: "Task Priority",
-        "displayName": {
-            "en": "Task Priority",
-            "ru": "Task Priority"
-        },
-        description: {ru: "Приоритет потока (задачи) xenomai"},
-        defaultValue: 80,
-        unitMeasured: "%",
-        value: 80
-    },
-    {
-        name: "Task Period",
-        "displayName": {
-            "en": "Task Period",
-            "ru": "Task Period"
-        },
-        type: "number",
-        required: true,
-        description: {ru: "время между двумя вызовами бизнес функции (микросекунд) 0  - не зависать на очереди в ожидании данных -1 - зависать навечно, до факта появления данных в очереди"},
-        defaultValue: 20,
-        unitMeasured: "Ms",
-        value: 20
-    },
-    {
-        name: "Notify on change",
-        "displayName": {
-            "en": "Notify on change",
-            "ru": "Notify on change"
-        },
-        type: "bool",
-        unitMeasured: "",
-        value: true
-    }
-]
-
-
 viewModels.Editor = (function () {
     var allConfigs = {};
 
@@ -227,7 +188,7 @@ viewModels.Editor = (function () {
             moduleMeta.definition().paramsDefinitions.forEach(function (prop) {
                 prop.value = ko.observable(specificParams[prop.name]);
 
-                // Подписываемся на изменения значения параметра, указывая в качестве контекста cell
+                // Подписываемся на изменения значения параметра, указывая в качестве контекста specificParams
                 prop.value.subscribe(function (newValue) {
                     this.params[this.propertyName]=newValue;
                     res.graphChanged(true);
@@ -247,7 +208,7 @@ viewModels.Editor = (function () {
                 // Установим текущее значение
                 prop.value(commonParams[prop.name]);
 
-                // Подписываемся на изменения значений свойств, указывая в качестве контекста cell
+                // Подписываемся на изменения значений свойств, указывая в качестве контекста commonParams
                 prop.subscription = prop.value.subscribe(function (newValue) {
                     this.params[this.metaProperty.name] = newValue;
                     res.graphChanged(true);
@@ -448,6 +409,10 @@ viewModels.Editor = (function () {
             res.instnameSelectedModule("Properties");
         }
     })
+
+    graph.on('all', function(eventName, cell) {
+        console.log(arguments);
+    });
 
     /*
      graph.on('all', function(type, param) {
