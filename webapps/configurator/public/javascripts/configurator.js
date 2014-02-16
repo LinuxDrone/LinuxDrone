@@ -43,7 +43,7 @@ viewModels.Editor = (function () {
     };
 
 
-    commonModuleParamsDefinition.forEach(function (prop) {
+    ModulesCommonParams.commonModuleParamsDefinition.forEach(function (prop) {
         prop.value = ko.observable(prop.defaultValue);
         res.instanceCommonProperties.push(prop);
     });
@@ -300,14 +300,14 @@ viewModels.Editor = (function () {
 
             var moduleMeta = GetModuleMeta(moduleType);
             // Сначала заполним дефолтные значения для общих (для всех типов модулей) свойств
-            $.each(_.pluck(commonModuleParamsDefinition, "name"), function (i, paramName) {
+            $.each(_.pluck(ModulesCommonParams.commonModuleParamsDefinition, "name"), function (i, paramName) {
                 // Если дефолтное значение задано в определении модуля, то используем его
                 // Иначе (если опять же оно задано) возьмем его из общего для всех модулей определения
                 if (moduleMeta.definition()[paramName]) {
                     moduleParams.common[paramName] = moduleMeta.definition()[paramName];
                 }
                 else {
-                    var commonParam = _.find(commonModuleParamsDefinition, function (commonParamMeta) {
+                    var commonParam = _.find(ModulesCommonParams.commonModuleParamsDefinition, function (commonParamMeta) {
                         return commonParamMeta.name == paramName;
                     });
                     if (commonParam && commonParam.defaultValue) {
