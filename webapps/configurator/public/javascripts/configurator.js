@@ -137,7 +137,7 @@ viewModels.Editor = (function () {
     }
 
     res.chooseTemplate4Property = function chooseTemplate4Property(metaProperty) {
-        if (metaProperty.type == "bool") {
+        if (metaProperty.type == "boolean") {
             return "boolTemplate";
         }
         else {

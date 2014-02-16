@@ -29,8 +29,13 @@ var commonModuleParamsDefinition = [
             "en": "Notify on change",
             "ru": "Notify on change"
         },
-        type: "bool",
+        type: "boolean",
         unitMeasured: "",
         defaultValue: true
     }
-]
+];
+
+if(this.module && this.module.exports)
+{
+    module.exports.commonModuleParamsDefinition = commonModuleParamsDefinition;
+}
