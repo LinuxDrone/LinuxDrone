@@ -25,7 +25,7 @@
             "unitMeasured": ""
         },
         {
-            "name": "Test Param",
+            "name": "Test Number Param",
             "displayName": {
                 "en": "Bus Name",
                 "ru": "Имя шины"
@@ -33,10 +33,23 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "string",
-            "defaultValue": "bla bla bla",
-            "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
-            "unitMeasured": ""
+            "type": "number",
+            "defaultValue": 123,
+            "validValues" : [56,123],
+            "unitMeasured": "int"
+        },
+        {
+            "name": "Test Boolean Param",
+            "displayName": {
+                "en": "Bus Name",
+                "ru": "Имя шины"
+            },
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "boolean",
+            "defaultValue": false,
+            "unitMeasured": "bool"
         }
     ],
     "outputs": [
