@@ -57,8 +57,7 @@ bool CPwmInput::init(const mongo::BSONObj& initObject)
 			pathToBin = objParam["Pru Binary"].String().c_str();
 		}
 		if (objParam.hasElement("Pru Device")) {
-			//pruNumber = (int)objParam["Pru Device"].Number();
-			pruNumber = (CString(objParam["Pru Device"].String().c_str()).toInt64());
+			pruNumber = (int)objParam["Pru Device"].Number();
 		}
 	}
 	m_pru = CSystemPru(pathToBin,pruNumber);

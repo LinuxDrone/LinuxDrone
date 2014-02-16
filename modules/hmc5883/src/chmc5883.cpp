@@ -114,9 +114,6 @@ bool CHmc5883::init(const mongo::BSONObj& initObject)
 		if (objParam.hasElement("I2C Device")) {
 			busName = objParam["I2C Device"].String().c_str();
 		}
-		if (objParam.hasElement("bus_type")) {
-			busType = (CSystemBus::BusType)objParam["bus_type"].Number();
-		}
 	}
 	m_bus = CBus(busType, busName, HMC5883_I2C_ADDR);
 	if (!m_bus.isOpened()) {
@@ -145,7 +142,7 @@ bool CHmc5883::initHmc5883()
 
 	uint8_t ID[4]={0};
 	readId(ID[0]);
-	printf("HMC ID: %s",ID);
+	printf("HMC ID: %s\n",ID);
 
 	uint8_t CTRLA = 0x00;
 	uint8_t MODE  = 0x00;

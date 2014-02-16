@@ -64,9 +64,6 @@ bool CMs5611::init(const mongo::BSONObj& initObject)
 		if (objParam.hasElement("I2C Device")) {
 			busName = objParam["I2C Device"].String().c_str();
 		}
-		if (objParam.hasElement("bus_type")) {
-			busType = (CSystemBus::BusType)objParam["bus_type"].Number();
-		}
 	}
 	m_bus = CBus(busType, busName, MS5611_I2C_ADDR);
 	if (!m_bus.isOpened()) {

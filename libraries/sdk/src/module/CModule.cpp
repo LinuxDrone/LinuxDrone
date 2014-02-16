@@ -42,16 +42,13 @@ bool CModule::init(const mongo::BSONObj& initObject)
 	m_instance = initObject["instance"].valuestr();
 	m_task.setTaskName(m_instance);
 	if (initObject.hasElement("Task Priority")) {
-		//m_task.setPriority(initObject["Task Priority"].Number());
-		m_task.setPriority(CString(initObject["Task Priority"].String().c_str()).toInt64());
+		m_task.setPriority(initObject["Task Priority"].Number());
 	}
 	if (initObject.hasElement("Task Period")) {
-		//m_period = int (initObject["Task Period"].Number());
-		m_period = (CString(initObject["Task Period"].String().c_str()).toInt64());
+		m_period = int (initObject["Task Period"].Number());
 	}
 	if (initObject.hasElement("Notify on change")) {
-		//m_notifyOnChange = initObject["Notify on change"].Bool();
-		m_notifyOnChange = (CString(initObject["Notify on change"].String().c_str()).toBool());
+		m_notifyOnChange = initObject["Notify on change"].Bool();
 	}
 	if(m_period != -1) {
 		m_period = m_period * rt_timer_ns2ticks(1000);
