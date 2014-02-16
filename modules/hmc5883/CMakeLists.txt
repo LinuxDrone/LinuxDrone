@@ -24,3 +24,4 @@ set(EXTRA_LIBS
 add_library(hmc5883 MODULE ${INC} ${SRC})
 
 install(TARGETS hmc5883 DESTINATION modules/hmc5883)
+install(FILES hmc5883.def.json DESTINATION modules/hmc5883)

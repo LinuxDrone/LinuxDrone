@@ -13,12 +13,16 @@
 #ifndef CSYSTEM_H
 #define CSYSTEM_H
 
+#include <unistd.h>
 class CSystem
 {
 public:
     CSystem();
 
     static void sleep( int ms );
+
+	static void* alignedAlloc(size_t size, size_t alignment = 16);
+	static void alignedFree(void* ptr);
 };
 
 #endif // CSYSTEM_H

@@ -11,6 +11,20 @@
 //--------------------------------------------------------------------
 
 #include "csensors.h"
+#include "my_memory"
+
+extern "C" {
+CModule* moduleCreator()
+{
+	return new CSensors();
+}
+
+const char* moduleName() {
+	return "Sensors";
+}
+}
+
+
 
 CSensors::CSensors() :
 	CModule("Sensors", 1024)

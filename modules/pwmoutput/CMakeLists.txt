@@ -24,3 +24,4 @@ set(EXTRA_LIBS
 add_library(pwmoutput MODULE ${INC} ${SRC})
 
 install(TARGETS pwmoutput DESTINATION modules/pwmoutput)
+install(FILES pwmoutput.def.json DESTINATION modules/pwmoutput)

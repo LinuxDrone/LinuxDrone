@@ -1,4 +1,3 @@
-
 //--------------------------------------------------------------------
 // This file was created as a part of the LinuxDrone project:
 //                http://www.linuxdrone.org
@@ -11,38 +10,28 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "cms5611meta.h"
-#include "cms5611.h"
-#include "my_memory"
-#include "system/Logger"
+#include "CAngle.h"
 
-extern "C" {
-CModuleMetainfo* moduleMetainfoCreator(const CString& pathToModule)
+CAngle::CAngle()
 {
-	CMs5611Meta* meta = new CMs5611Meta(CString("%1/configure.json").arg(pathToModule));
-	if (meta) {
-		meta->addRef();
+	m_valueRad = 0.0f;
+}
+
+CAngle::CAngle(float value, AngleUnit unit)
+{
+	if (unit == AngleUnit_Radians) {
+		m_valueRad = value;
+	} else {
+		m_valueRad = value * float (DR_PI) / 180.0f;
 	}
-	return meta;
-}
 }
 
-CMs5611Meta::CMs5611Meta(const CString& pathToModule) :
-		CModuleMetainfo(pathToModule)
+float CAngle::toRadians() const
 {
+	return m_valueRad;
 }
 
-CString CMs5611Meta::moduleName() const
+float CAngle::toDegress() const
 {
-	return "Ms5611";
-}
-
-CModule* CMs5611Meta::createModule() const
-{
-	CMs5611* module = new CMs5611();
-	if (!module) {
-		return 0;
-	}
-	module->addRef();
-	return module;
+	return m_valueRad * 180.0f / float(DR_PI);
 }

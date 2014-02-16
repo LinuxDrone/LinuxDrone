@@ -10,15 +10,4 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#pragma once
-
-#include "module/CModuleMetaInfo"
-
-class CMpu6050Meta : public CModuleMetainfo
-{
-public:
-	CMpu6050Meta(const CString& pathToModule);
-
-	virtual CString moduleName() const;
-	virtual CModule* createModule() const;
-};
+#include "../../src/math/CAngle.h"

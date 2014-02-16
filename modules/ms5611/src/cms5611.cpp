@@ -20,6 +20,19 @@
 
 #include "my_memory"
 
+extern "C" {
+CModule* moduleCreator()
+{
+	return new CMs5611();
+}
+
+const char* moduleName() {
+	return "Ms5611";
+}
+}
+
+
+
 /* MS5611 Addresses */
 #define MS5611_I2C_ADDR   0x77
 #define MS5611_RESET      0x1E

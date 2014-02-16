@@ -10,15 +10,4 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#pragma once
-
-#include "module/CModuleMetaInfo"
-
-class CPwmOutputMeta : public CModuleMetainfo
-{
-public:
-	CPwmOutputMeta(const CString& pathToModule);
-
-	virtual CString moduleName() const;
-	virtual CModule* createModule() const;
-};
+#include "CVector4f.h"

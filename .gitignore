@@ -15,9 +15,9 @@
 #--------------------------------------------------------------------
 
 # Ignore artifacts of build system
-/downloads/
-/tools/
-/build.*/
+/downloads
+/tools
+/build.*
 
 # Ignore cmake-generated files (should not be in the source tree)
 CMakeFiles/
