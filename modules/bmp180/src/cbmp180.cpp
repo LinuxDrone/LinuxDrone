@@ -52,8 +52,8 @@ bool CBmp180::init(const mongo::BSONObj& initObject)
 	if (initObject.hasElement("params")) {
 		mongo::BSONElement elemParam = initObject["params"];
 		mongo::BSONObj objParam = elemParam.Obj();
-		if (objParam.hasElement("bus_name")) {
-			busName = objParam["bus_name"].String().c_str();
+		if (objParam.hasElement("I2C Device")) {
+			busName = objParam["I2C Device"].String().c_str();
 		}
 		if (objParam.hasElement("bus_type")) {
 			busType = (CSystemBus::BusType)objParam["bus_type"].Number();

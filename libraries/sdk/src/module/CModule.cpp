@@ -23,7 +23,7 @@ CModule::CModule(int stackSize) :
 	m_queueCreated = false;
 	m_heapCreated  = false;
 
-	m_period         = (1000/50)*1000000;
+	m_period         = (1000/50);
 	m_notifyOnChange = true;
 }
 
@@ -41,17 +41,20 @@ bool CModule::init(const mongo::BSONObj& initObject)
 	m_name = initObject["name"].valuestr();
 	m_instance = initObject["instance"].valuestr();
 	m_task.setTaskName(m_instance);
-	if (initObject.hasElement("task_priority")) {
-		m_task.setPriority(initObject["task_priority"].Number());
+	if (initObject.hasElement("Task Priority")) {
+		//m_task.setPriority(initObject["Task Priority"].Number());
+		m_task.setPriority(CString(initObject["Task Priority"].String().c_str()).toInt64());
 	}
-	if (initObject.hasElement("period")) {
-		m_period = int (initObject["period"].Number());
+	if (initObject.hasElement("Task Period")) {
+		//m_period = int (initObject["Task Period"].Number());
+		m_period = (CString(initObject["Task Period"].String().c_str()).toInt64());
 	}
-	if (initObject.hasElement("notifyOnChange")) {
-		m_notifyOnChange = initObject["notifyOnChange"].Bool();
+	if (initObject.hasElement("Notify on change")) {
+		//m_notifyOnChange = initObject["Notify on change"].Bool();
+		m_notifyOnChange = (CString(initObject["Notify on change"].String().c_str()).toBool());
 	}
 	if(m_period != -1) {
-		m_period = m_period * rt_timer_ns2ticks(1000000);
+		m_period = m_period * rt_timer_ns2ticks(1000);
 	}
 	return true;
 }
@@ -172,7 +175,7 @@ void CModule::mainTask()
 
 	while (!m_terminate) {
 		if (m_period == -1 && m_notifyOnChange == false) {
-			m_task.sleep(10 * 1000000);
+			m_task.sleep(10);
 			continue;
 		}
 		RTIME current = rt_timer_read();

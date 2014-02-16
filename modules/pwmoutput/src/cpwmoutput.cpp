@@ -48,19 +48,20 @@ bool CPwmOutput::init(const mongo::BSONObj& initObject)
 	if (!CModule::init(initObject)) {
 		return false;
 	}
-	CString busName = "PwmOut.bin";
-	int busType = 1;
+	CString pathToBin = "PwmOut.bin";
+	int pruNumber = 1;
 	if (initObject.hasElement("params")) {
 		mongo::BSONElement elemParam = initObject["params"];
 		mongo::BSONObj objParam = elemParam.Obj();
-		if (objParam.hasElement("bus_name")) {
-			busName = objParam["bus_name"].String().c_str();
+		if (objParam.hasElement("Pru Binary")) {
+			pathToBin = objParam["Pru Binary"].String().c_str();
 		}
-		if (objParam.hasElement("bus_type")) {
-			busType = (int)objParam["bus_type"].Number();
+		if (objParam.hasElement("Pru Device")) {
+			//pruNumber = (int)objParam["Pru Device"].Number();
+			pruNumber = (CString(objParam["Pru Device"].String().c_str()).toInt64());
 		}
 	}
-	m_pru = CSystemPru(busName,busType);
+	m_pru = CSystemPru(pathToBin,pruNumber);
 	return initPwmOutput();
 }
 
@@ -110,21 +111,6 @@ bool CPwmOutput::initPwmOutput()
 	*(unsigned long *)(m_sharedMem + 0x2B4) = 5000 * 200;
 
 	m_pru.RunPru();
-	return true;
-}
-
-bool CPwmOutput::setOneReg(uint8_t reg)
-{
-	return true;
-}
-
-bool CPwmOutput::setReg(uint8_t reg, uint8_t data)
-{
-	return true;
-}
-
-bool CPwmOutput::getReg(uint8_t reg, uint8_t* data, size_t size /*= 1*/)
-{
 	return true;
 }
 

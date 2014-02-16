@@ -2,39 +2,41 @@
     "type": "module_def",
     "name": "SimpleTransform",  
     "version": 2,
-    "task_priority": 80,
-    "task_period": 200,
-    "paramsSchema":{
-        "type":"object",
-        "id": "http://jsonschema.net",
-        "properties":{
-            "bus_type": {
-                "type":"number",
-                "required":true
+    "Task Priority": 80,
+    "Task Period": 200,
+    "Notify on change": false,
+    "paramsDefinitions": [
+        {
+            "name": "Parameter1",
+            "displayName": {
+                "en": "Parameter1"
             },
-            "bus_name": {
-                "type":"string",
-                "required":true
-            }
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "number",
+            "defaultValue": 0,
+            "validValues" : [0,1],
+            "unitMeasured": ""
         }
-    },
-    "inputShema":{
-        "type":"object",
-        "id": "http://jsonschema.net",
-        "properties":{
-            "in_x": {
-                "type":"number",
-                "required":true
-            },
-            "in_y": {
-                "type":"number",
-                "required":true
-            },
-            "in_z": {
-                "type":"number",
-                "required":true
-            }
-        }
+    ],
+    "inputShema": {
+		"type":"object",
+		"id": "http://jsonschema.net",
+		"properties":{
+		    "in_x": {
+		        "type":"number",
+		        "required":true
+		    },
+		    "in_y": {
+		        "type":"number",
+		        "required":true
+		    },
+		    "in_z": {
+		        "type":"number",
+		        "required":true
+		    }
+		}
     },
     "outputs": [
         {

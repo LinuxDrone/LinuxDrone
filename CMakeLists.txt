@@ -84,6 +84,7 @@ add_subdirectory(${MOD_DIR}/bmp180)
 add_subdirectory(${MOD_DIR}/ms5611)
 add_subdirectory(${MOD_DIR}/hmc5883)
 add_subdirectory(${MOD_DIR}/pwmoutput)
+add_subdirectory(${MOD_DIR}/PwmInput)
 add_subdirectory(${MOD_DIR}/SimpleTransform)
 
 # Main project target

@@ -12,6 +12,7 @@
             },
             "type": "string",
             "defaultValue": "/dev/i2c-1",
+            "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
             "unitMeasured": ""
         }
     ],

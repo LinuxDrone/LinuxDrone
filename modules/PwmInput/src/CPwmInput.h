@@ -16,11 +16,11 @@
 #include "system/CBus"
 #include "system/CSystemPru"
 
-class CPwmOutput : public CModule
+class CPwmInput : public CModule
 {
 public:
-	CPwmOutput();
-	~CPwmOutput();
+	CPwmInput();
+	~CPwmInput();
 
 	virtual bool init(const mongo::BSONObj& initObject);
 	bool start();
@@ -30,6 +30,7 @@ private:
 	uint32_t m_pwm[12];
 	uint8_t *m_sharedMem;
 
-	bool initPwmOutput();
+	bool initPwmInput();
+	uint32_t readChannel(int ch);
 	void moduleTask();
 };
