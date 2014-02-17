@@ -89,7 +89,7 @@ function ConvertGraph2Configuration(graph, modulesParams, metaModules) {
             var module = {
                 "name": cell.moduleType,
                 /* Название instance модуля*/
-                "instance": cell.attrs[".label"].text,
+                "instance": cell.attrs[".label"].text
             };
 
             var metaModule = _.find(metaModules, function (meta) {
@@ -140,7 +140,7 @@ function ConvertGraph2Configuration(graph, modulesParams, metaModules) {
 
         if (cell.type == "link") {
             config.links.push({
-                "type": "pipe",
+                "type": cell.mode,
                 "outInst": GetInstanceName(graph, cell.source.id),
                 "inInst": GetInstanceName(graph, cell.target.id),
                 "outPin": cell.source.port,
