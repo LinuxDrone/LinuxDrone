@@ -12,22 +12,25 @@
 
 #pragma once
 
-class CVector4f
+#include "module/CModule"
+#include "system/CBus"
+#include "system/CSystemPru"
+
+class CPwmInput : public CModule
 {
 public:
-	CVector4f() {
-		v[0] = v[1] = v[2] = v[3] = 0.0f;
-	}
-	CVector4f(const float x, const float y, const float z, const float w) {
-		v[0] = x; v[1] = y; v[2] = z; v[3] = w;
-	}
-	CVector4f(const float* array) {
-		v[0] = array[0]; v[1] = array[1]; v[2] = array[2]; v[3] = array[3];
-	}
+	CPwmInput();
+	~CPwmInput();
 
-	void operator +=(const CVector4f& other) { v[0] = other.v[0]; v[1] = other.v[1]; v[2] = other.v[2]; v[3] = other.v[3]; }
-	void operator +=(const float val) { v[0] = val; v[1] = val; v[2] = val; v[3] = val; }
+	virtual bool init(const mongo::BSONObj& initObject);
+	bool start();
 
-public:
-	float v[4] __attribute__((aligned(16)));
+private:
+	CSystemPru m_pru;
+	uint32_t m_pwm[12];
+	uint8_t *m_sharedMem;
+
+	bool initPwmInput();
+	uint32_t readChannel(int ch);
+	void moduleTask();
 };

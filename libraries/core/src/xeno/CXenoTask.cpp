@@ -118,7 +118,7 @@ bool CXenoTask::resume()
 
 void CXenoTask::sleep(int miliseconds)
 {
-	RTIME delay = miliseconds*1000000;
+	RTIME delay = miliseconds*rt_timer_ns2ticks(1000000);
 	rt_task_sleep(delay);
 }
 

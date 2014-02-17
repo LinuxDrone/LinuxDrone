@@ -11,6 +11,7 @@
 //--------------------------------------------------------------------
 
 #include "CSystemPru.h"
+#include "system/Logger"
 
 #define PRUSS_MAX_IRAM_SIZE	0x2000
 
@@ -31,7 +32,7 @@ CSystemPru::CSystemPru(const CString& pathToBin, int pruNumber)
 
 CSystemPru::~CSystemPru()
 {
-	printf("~CSystemPru");
+	Logger() << "~CSystemPru";
 	if(mem_fd >= 0)
 	{
 		munmap(m_sharedMem, 0x400);
@@ -55,7 +56,7 @@ bool CSystemPru::Init()
 		// map the device and init the varible before use it
 		mem_fd = open("/dev/mem", O_RDWR);
 		if (mem_fd < 0) {
-			printf("Failed to open /dev/mem (%s)\n", strerror(errno));
+			Logger() << "Failed to open /dev/mem (" << strerror(errno) <<")";
 			return false;
 		}
 
@@ -64,7 +65,7 @@ bool CSystemPru::Init()
 		/* map the shared memory */
 		m_sharedMem = mmap(0, 0x400, PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, 0x4a310000);
 		if (m_sharedMem == NULL) {
-			printf("Failed to map the device (%s)\n", strerror(errno));
+			Logger() << "Failed to map the device (" << strerror(errno) <<")";
 			close(mem_fd);
 			return false;
 		}
@@ -85,7 +86,7 @@ bool CSystemPru::LoadImageToPru(const CString& filename)
 	{
 		if(!ResetPru())
 		{
-			printf("fail to reset pru%d\n", m_pru);
+			Logger() << "Failed to reset pru" << m_pru;
 			return false;
 		}
 		return LoadImage(0x4a334000+(0x4000*m_pru), filename);	// 0x4a334000 is address of instruction in Pru0
@@ -96,14 +97,14 @@ bool CSystemPru::LoadImageToPru(const CString& filename)
 // Run image on Pru
 bool CSystemPru::RunPru()
 {
-	printf("Run Pru%d\n", m_pru);
+	Logger() << "Run Pru" << m_pru;
 	return WriteUInt32(0x4a322000+(0x2000*m_pru), 0xa);
 }
 
 // Reset Pru,the image won't run
 bool CSystemPru::ResetPru()
 {
-	printf("Reset Pru%d\n", m_pru);
+	Logger() << "Reset Pru" << m_pru;
 	return WriteUInt32(0x4a322000+(0x2000*m_pru), 0x10a);
 }
 
@@ -117,12 +118,12 @@ bool CSystemPru::WriteUInt32(unsigned long addr, unsigned long data)
 		void * pMem = mmap(0, 0x2000, PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, addr);
 		if (pMem == NULL)
 		{
-			printf("Failed to map the device (%s)\n", strerror(errno));
+			Logger() << "Failed to map the device (" << strerror(errno) <<")";
 			close(mem_fd);
 			return false;
 		}
 		*(unsigned long *)(pMem) = data;
-		printf("write data to memory\n");
+		Logger() << "write data to memory";
 		munmap(pMem, 0x2000);
 		return true;
 
@@ -140,12 +141,12 @@ bool CSystemPru::ReadUInt32(unsigned long addr, unsigned long & data)
 		void * pMem = mmap(0, 0x4, PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, addr);
 		if (pMem == NULL)
 		{
-			printf("Failed to map the device (%s)\n", strerror(errno));
+			Logger() << "Failed to map the device (" << strerror(errno) <<")";
 			close(mem_fd);
 			return false;
 		}
 		data = *(unsigned long *)(pMem);
-		printf("read data from memory\n");
+		Logger() << "read data from memory";
 		munmap(pMem, 0x4);
 		return true;
 	}
@@ -162,9 +163,9 @@ bool CSystemPru::LoadImage(unsigned long addr, const CString& filename)
 		// Open an File from the hard drive
 		fPtr = fopen(filename.data(), "rb");
 		if (fPtr == NULL) {
-			printf("Image File %s open failed\n", filename.data());
+			Logger() << "Image File" << filename.data() << "open failed";
 		} else {
-			printf("Image File %s open passed\n", filename.data());
+			Logger() << "Image File" << filename.data() << "open passed";
 		}
 		// Read file size
 		fseek(fPtr, 0, SEEK_END);
@@ -174,7 +175,7 @@ bool CSystemPru::LoadImage(unsigned long addr, const CString& filename)
 		fileSize = ftell(fPtr);
 
 		if (fileSize == 0) {
-			printf("File read failed.. Closing program\n");
+			Logger() << "File read failed.. Closing program";
 			fclose(fPtr);
 			return -1;
 		}
@@ -183,14 +184,14 @@ bool CSystemPru::LoadImage(unsigned long addr, const CString& filename)
 
 		if (fileSize !=
 			fread((unsigned char *) fileDataArray, 1, fileSize, fPtr)) {
-			printf("WARNING: File Size mismatch\n");
+			Logger() << "WARNING: File Size mismatch";
 		}
 		fclose(fPtr);
 		/* Initialize example */
 		/* map the shared memory */
 		void * pMem = mmap(0, 0x2000, PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, addr);
 		if (pMem == NULL) {
-			printf("Failed to map the device (%s)\n", strerror(errno));
+			Logger() << "Failed to map the device (" << strerror(errno) <<")";
 			close(mem_fd);
 			return false;
 		}
@@ -199,7 +200,7 @@ bool CSystemPru::LoadImage(unsigned long addr, const CString& filename)
 		{
 			*(p + i) = fileDataArray[i];
 		}
-		printf("write file to memory\n");
+		Logger() << "write file to memory";
 		munmap(pMem, 0x2000);
 		return true;
 

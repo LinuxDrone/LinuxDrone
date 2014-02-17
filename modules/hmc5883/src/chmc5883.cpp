@@ -93,7 +93,7 @@ const char* moduleName() {
 
 
 CHmc5883::CHmc5883() :
-	CModule("Hmc5883", 1024)
+	CModule(1024)
 {
 }
 
@@ -111,11 +111,8 @@ bool CHmc5883::init(const mongo::BSONObj& initObject)
 	if (initObject.hasElement("params")) {
 		mongo::BSONElement elemParam = initObject["params"];
 		mongo::BSONObj objParam = elemParam.Obj();
-		if (objParam.hasElement("bus_name")) {
-			busName = objParam["bus_name"].String().c_str();
-		}
-		if (objParam.hasElement("bus_type")) {
-			busType = (CSystemBus::BusType)objParam["bus_type"].Number();
+		if (objParam.hasElement("I2C Device")) {
+			busName = objParam["I2C Device"].String().c_str();
 		}
 	}
 	m_bus = CBus(busType, busName, HMC5883_I2C_ADDR);
@@ -147,30 +144,30 @@ bool CHmc5883::initHmc5883()
 	readId(ID[0]);
 	printf("HMC ID: %s\n",ID);
 
-   uint8_t CTRLA = 0x00;
-   uint8_t MODE  = 0x00;
+	uint8_t CTRLA = 0x00;
+	uint8_t MODE  = 0x00;
 
-   CTRLB  = 0;
+	CTRLB  = 0;
 
-   CTRLA |= (uint8_t)(HMC5883_ODR_75 | HMC5883_MEASCONF_NORMAL);
-   CTRLB |= (uint8_t)(HMC5883_GAIN_1_9);
-   MODE  |= (uint8_t)(HMC5883_MODE_CONTINUOUS);
+	CTRLA |= (uint8_t)(HMC5883_ODR_75 | HMC5883_MEASCONF_NORMAL);
+	CTRLB |= (uint8_t)(HMC5883_GAIN_1_9);
+	MODE  |= (uint8_t)(HMC5883_MODE_CONTINUOUS);
 
-   // CTRL_REGA
+	// CTRL_REGA
 	while (!setReg(HMC5883_CONFIG_REG_A,CTRLA)) {
 		;
 	}
 
-   // CTRL_REGB
+	// CTRL_REGB
 	while (!setReg(HMC5883_CONFIG_REG_B,CTRLB)) {
 		;
 	}
 
-   // Mode register
+	// Mode register
 	while (!setReg(HMC5883_MODE_REG,MODE)) {
 		;
 	}
-	printf("HMC5883 init done\n");
+	Logger() << "HMC5883 init done";
 	return true;
 }
 
@@ -296,6 +293,6 @@ void CHmc5883::moduleTask()
     SRTIME el = rt_timer_ticks2ns(diff);
     uint64_t elapsed = abs(el) / 1000;
     //Logger() << elapsed;
-    printf("x:%5d,y:%5d,z:%5d\n",out[0],out[2],out[1]);
+    //printf("x:%5d,y:%5d,z:%5d\n",out[0],out[2],out[1]);
     CSystem::sleep(100);
 }
