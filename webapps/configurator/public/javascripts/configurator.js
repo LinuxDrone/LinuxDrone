@@ -38,6 +38,8 @@ viewModels.Editor = (function () {
         currentConfig: ko.observable(),
         // Модуль выбранный на схеме
         selectedCell: ko.observable(),
+        // Связь выбранная на схеме
+        selectedLink: ko.observable(),
         // Имя инстанса выбранного в схеме модуля
         instnameSelectedModule: ko.observable(),
 
@@ -178,6 +180,11 @@ viewModels.Editor = (function () {
             res.graphChanged(false);
             res.instnameSelectedModule("Properties");
         }
+    });
+
+    // Обработчик события выбора связи
+    res.selectedLink.subscribe(function (link) {
+        res.instnameSelectedModule(link.attributes.source.port + " => " + link.attributes.target.port);
     });
 
     // Обработчик события выбора модуля
@@ -405,18 +412,24 @@ viewModels.Editor = (function () {
     });
 
     paper.on('cell:pointerdown', function (cellView, evt, x, y) {
-
-        res.selectedCell(graph.findModelsFromPoint({x: x, y: y})[0]);
-
-        // Вызов контекстного меню по правой кнопке мыши
-        if (evt.button == 2) {
-            console.log("press " + x + " " + y);
-            var paperPosition=$("#paper").position();
-            $("#contextMenu").css({
-                display: "block",
-                left: x + paperPosition.left,
-                top: y + paperPosition.top
-            });
+        if(cellView.model.attributes.type=="devs.Model") {
+            res.selectedCell(cellView.model);
+            // Вызов контекстного меню по правой кнопке мыши
+            if (evt.button == 2) {
+                console.log("press " + x + " " + y);
+                var paperPosition=$("#paper").position();
+                $("#contextMenu").css({
+                    display: "block",
+                    left: x + paperPosition.left,
+                    top: y + paperPosition.top
+                });
+            }
+        }
+        else
+        {
+            if(cellView.model.attributes.type=="link") {
+                res.selectedLink(cellView.model);
+            }
         }
     })
 
