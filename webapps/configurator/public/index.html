@@ -96,9 +96,6 @@
     <div class="properties-panel panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title" data-bind="text: viewModels.Editor.instnameSelectedModule"></h3>
-            <button type="button" class="btn btn-danger"
-                    data-bind="visible: instnameSelectedModule()!='Properties', click: RemoveModule, enable: viewModels.Editor.instnameSelectedModule()!=''">X
-            </button>
         </div>
         <div class="panel-body" data-bind="visible: instnameSelectedModule()!='Properties'">
             <div class="panel-group" id="accordion">
@@ -135,7 +132,7 @@
 </div>
 
 
-<-- Modal -->
+<!-- Modal -->
 <div class="modal fade" id="saveAsModal">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -163,6 +160,8 @@
   </div>
 </div>
 
+
+
 <script type="text/html" id="listModulesButtonsTemplate">
     <div>
         <button style="margin: 2px" type="button" class="btn btn-info"
@@ -189,10 +188,17 @@
         <strong data-bind="text: name"></strong>
         <span data-bind="if: unitMeasured">(<span data-bind="text: unitMeasured"/>)</span>
         <input type="checkbox" data-bind="checked: value"/>
-        <input data-bind="value: value()">
+        <!--input data-bind="value: value()"-->
     </div>
 </script>
 
+
+
+<div id="contextMenu" class="dropdown clearfix">
+    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu" style="display:block;position:static;margin-bottom:5px;">
+        <li><a tabindex="-1" href="#" data-bind="click: RemoveModule">Delete</a></li>
+    </ul>
+</div>
 
 <script src="ModulesCommonParams.def.js"></script>
 <script src="javascripts/configurator.js"></script>

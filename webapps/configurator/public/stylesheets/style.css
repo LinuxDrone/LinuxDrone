@@ -25,3 +25,8 @@
 .tools-region {
     padding: 5px;
 }
+
+#contextMenu {
+    position: absolute;
+    display:none;
+}

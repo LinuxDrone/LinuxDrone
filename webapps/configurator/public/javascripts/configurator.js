@@ -1,3 +1,8 @@
+document.addEventListener("contextmenu", function(e){
+    e.preventDefault();
+}, false);
+
+
 var graph = new joint.dia.Graph;
 
 var paper = new joint.dia.Paper({
@@ -133,6 +138,8 @@ viewModels.Editor = (function () {
 
             res.selectedCell().remove();
             res.instnameSelectedModule("Properties");
+            $("#contextMenu").hide();
+            res.graphChanged(true);
         }
     }
 
@@ -401,20 +408,27 @@ viewModels.Editor = (function () {
 
         res.selectedCell(graph.findModelsFromPoint({x: x, y: y})[0]);
 
+        // Вызов контекстного меню по правой кнопке мыши
         if (evt.button == 2) {
             console.log("press " + x + " " + y);
+            var paperPosition=$("#paper").position();
+            $("#contextMenu").css({
+                display: "block",
+                left: x + paperPosition.left,
+                top: y + paperPosition.top
+            });
         }
-
     })
 
     paper.on('blank:pointerdown', function(evt, x, y) {
         if (evt.button == 0) {
             res.instnameSelectedModule("Properties");
+            $("#contextMenu").hide();
         }
     })
 
     graph.on('all', function(eventName, cell) {
-        console.log(arguments);
+        //console.log(arguments);
     });
 
     /*
