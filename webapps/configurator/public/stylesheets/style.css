@@ -26,7 +26,12 @@
     padding: 5px;
 }
 
-#contextMenu {
+#moduleContextMenu {
+    position: absolute;
+    display:none;
+}
+
+#linkContextMenu {
     position: absolute;
     display:none;
 }

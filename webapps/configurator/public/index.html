@@ -194,9 +194,16 @@
 
 
 
-<div id="contextMenu" class="dropdown clearfix">
+<div id="moduleContextMenu" class="dropdown clearfix">
     <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu" style="display:block;position:static;margin-bottom:5px;">
         <li><a tabindex="-1" href="#" data-bind="click: RemoveModule">Delete</a></li>
+    </ul>
+</div>
+
+<div id="linkContextMenu" class="dropdown clearfix">
+    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu" style="display:block;position:static;margin-bottom:5px;">
+        <li><a tabindex="-1" href="#" data-bind="click: SetLinkAsPipe">Push delivery</a></li>
+        <li><a tabindex="-1" href="#" data-bind="click: SetLinkAsSharedMemory">Pull delivery</a></li>
     </ul>
 </div>
 

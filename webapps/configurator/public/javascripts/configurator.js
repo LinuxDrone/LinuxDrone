@@ -1,7 +1,7 @@
+// Запрет показа стандартного меню, вызываемого по правой кнопке мыши
 document.addEventListener("contextmenu", function(e){
     e.preventDefault();
 }, false);
-
 
 var graph = new joint.dia.Graph;
 
@@ -49,12 +49,10 @@ viewModels.Editor = (function () {
         instanceSpecificProperties: ko.observableArray([])
     };
 
-
     ModulesCommonParams.commonModuleParamsDefinition.forEach(function (prop) {
         prop.value = ko.observable(prop.defaultValue);
         res.instanceCommonProperties.push(prop);
     });
-
 
     // Публичная функция загрузки конфигурации
     res.LoadConfigurations = function (_initialData) {
@@ -94,7 +92,6 @@ viewModels.Editor = (function () {
             );
         });
     };
-
 
     // Публичная функция сохранения текущей конфигурации
     // Название и версия берутся из комбобоксов имени и версий
@@ -140,7 +137,31 @@ viewModels.Editor = (function () {
 
             res.selectedCell().remove();
             res.instnameSelectedModule("Properties");
-            $("#contextMenu").hide();
+            $("#moduleContextMenu").hide();
+            res.graphChanged(true);
+        }
+    }
+
+    res.SetLinkAsPipe = function SetLinkAsPipe() {
+        var selectedLink = res.selectedLink().model;
+        if (selectedLink) {
+            selectedLink.attributes["mode"] = "queue";
+            res.selectedLink().model.attributes.attrs[".connection"] = { stroke: 'red' };
+            res.selectedLink().update();
+
+            $("#linkContextMenu").hide();
+            res.graphChanged(true);
+        }
+    }
+
+    res.SetLinkAsSharedMemory = function SetLinkAsSharedMemory() {
+        var selectedLink = res.selectedLink().model;
+        if (selectedLink) {
+            selectedLink.attributes["mode"] = "memory";
+            res.selectedLink().model.attributes.attrs[".connection"] = { stroke: 'blue' };
+            res.selectedLink().update();
+
+            $("#linkContextMenu").hide();
             res.graphChanged(true);
         }
     }
@@ -180,11 +201,6 @@ viewModels.Editor = (function () {
             res.graphChanged(false);
             res.instnameSelectedModule("Properties");
         }
-    });
-
-    // Обработчик события выбора связи
-    res.selectedLink.subscribe(function (link) {
-        res.instnameSelectedModule(link.attributes.source.port + " => " + link.attributes.target.port);
     });
 
     // Обработчик события выбора модуля
@@ -287,6 +303,7 @@ viewModels.Editor = (function () {
     function GetConfig(configName, version) {
         var cfg = _.where(allConfigs, {name: configName, version: version})[0];
         cfg.modulesParams = cfg.modulesParams || {};
+        //cfg.linksParams = cfg.linksParams || {};
         return cfg;
     }
 
@@ -416,9 +433,9 @@ viewModels.Editor = (function () {
             res.selectedCell(cellView.model);
             // Вызов контекстного меню по правой кнопке мыши
             if (evt.button == 2) {
-                console.log("press " + x + " " + y);
+                //console.log("press " + x + " " + y);
                 var paperPosition=$("#paper").position();
-                $("#contextMenu").css({
+                $("#moduleContextMenu").css({
                     display: "block",
                     left: x + paperPosition.left,
                     top: y + paperPosition.top
@@ -428,7 +445,15 @@ viewModels.Editor = (function () {
         else
         {
             if(cellView.model.attributes.type=="link") {
-                res.selectedLink(cellView.model);
+                if (evt.button == 2) {
+                    var paperPosition=$("#paper").position();
+                    $("#linkContextMenu").css({
+                        display: "block",
+                        left: x + paperPosition.left,
+                        top: y + paperPosition.top
+                    });
+                }
+                res.selectedLink(cellView);
             }
         }
     })
@@ -436,13 +461,22 @@ viewModels.Editor = (function () {
     paper.on('blank:pointerdown', function(evt, x, y) {
         if (evt.button == 0) {
             res.instnameSelectedModule("Properties");
-            $("#contextMenu").hide();
+            $("#moduleContextMenu").hide();
+            $("#linkContextMenu").hide();
         }
     })
 
     graph.on('all', function(eventName, cell) {
         //console.log(arguments);
     });
+
+    graph.on('add', function(cell) {
+        if(cell.attributes.type=="link") {
+            // При создании нового линка, ему по умолчанию устанавливается тип и цвет.
+            cell.attributes["mode"] = "queue";
+            cell.attr().attributes.attrs[".connection"] = { stroke: 'red' };
+        }
+    })
 
     /*
      graph.on('all', function(type, param) {
