@@ -160,13 +160,13 @@
   </div>
 </div>
 
-
+<div id="portTooltip"></div>
 
 <script type="text/html" id="listModulesButtonsTemplate">
     <div>
         <button style="margin: 2px" type="button" class="btn btn-info"
                 data-bind="click: AddModule2Paper, text: definition().name + ' (v' + definition().version + ')',
-                tooltip: {title: GetModuleDescription(), placement: 'right'}"></button>
+                tooltip: {html:true, title: GetModuleDescription(), placement: 'right'}"></button>
     </div>
 </script>
 

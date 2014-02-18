@@ -38,11 +38,19 @@
         "properties":{
             "pwm0": {
                 "type":"number",
-                "required":true
+                "required":true,
+                "description": {
+                    "en": "pwm0 output",
+                    "ru": "Вход 0 PWM"
+                }
             },
             "pwm1": {
                 "type":"number",
-                "required":true
+                "required":true,
+                "description": {
+                    "en": "pwm1 output",
+                    "ru": "Вход 1 PWM"
+                }
             },
             "pwm2": {
                 "type":"number",

@@ -28,13 +28,13 @@ var paper = new joint.dia.Paper({
         return magnetT && magnetT.attributes.fill.value === inPortsFillColor;
     }
     /*
-    ,
-    validateMagnet: function (cellView, magnet) {
-        // Note that this is the default behaviour. Just showing it here for reference.
-        // Disable linking interaction for magnets marked as passive (see below `.inPorts circle`).
-        return magnet.getAttribute('magnet') !== 'passive';
-    }
-    */
+     ,
+     validateMagnet: function (cellView, magnet) {
+     // Note that this is the default behaviour. Just showing it here for reference.
+     // Disable linking interaction for magnets marked as passive (see below `.inPorts circle`).
+     return magnet.getAttribute('magnet') !== 'passive';
+     }
+     */
 });
 $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 
@@ -105,7 +105,10 @@ viewModels.Editor = (function () {
             graph.addCell(MakeVisualModule(self));
         };
         self.GetModuleDescription = function () {
-            return "In the future there will be a description of the module";
+
+            return Geti18nProperty(this.definition(), "description");
+
+            //return "In the future there will be a description of the module";
         };
     };
 
@@ -175,7 +178,6 @@ viewModels.Editor = (function () {
             res.selectedLink().model.attributes.attrs[".connection"] = { stroke: 'red' };
             res.selectedLink().model.attributes.attrs[".marker-target"].fill = 'red';
             res.selectedLink().update();
-            res.selectedLink().update();
 
             $("#linkContextMenu").hide();
             res.graphChanged(true);
@@ -225,11 +227,102 @@ viewModels.Editor = (function () {
             res.currentConfig(GetConfig(res.configNameSelected(), version));
             if (res.currentConfig().jsonGraph) {
                 graph.fromJSON(JSON.parse(res.currentConfig().jsonGraph));
+
+                // Инициализация портов на модулях, с целью показа их описания в тултипе
+                var elements = graph.getElements();
+                $.each(elements, function (i, element) {
+                    var view = paper.findViewByModel(element);
+
+                    $.each([2, 3], function (i, s) {
+                        $.each(view.el.childNodes[0].childNodes[s].childNodes, function (k, port) {
+                            port.childNodes[0].onmouseenter = function (e) {
+                                $("#portTooltip").css({
+                                    display: "block",
+                                    left: e.x,
+                                    top: e.y
+                                });
+                                var groupsPorts = new Array();
+                                var moduleType = element.attributes.moduleType;
+                                var portName = port.textContent;
+
+                                var meta = GetModuleMeta(moduleType);
+                                if(s==2)
+                                {
+                                    groupsPorts.push(meta.definition().inputShema.properties);
+                                }
+                                else
+                                {
+                                    $.each(meta.definition().outputs, function (i, m) {
+                                        groupsPorts.push(m.Schema.properties);
+                                    });
+                                }
+
+                                $.each(groupsPorts, function (i, gp) {
+                                    var propsObj = gp;
+                                    if(propsObj.hasOwnProperty(portName))
+                                    {
+                                        var portMeta = propsObj[portName];
+
+                                        var text = portMeta.type;
+
+                                        text += "<br>" + Geti18nProperty(portMeta, "description");
+
+                                        /*
+                                        if(portMeta.hasOwnProperty("description"))
+                                        {
+                                            if(portMeta.description.hasOwnProperty(GetLocale()))
+                                            {
+                                                text += "<br>" + portMeta.description[GetLocale()];
+                                            }
+                                            else
+                                            {
+                                                if(portMeta.description.hasOwnProperty("en"))
+                                                {
+                                                    text += "<br>" + portMeta.description.en;
+                                                }
+                                            }
+                                        }
+                                        */
+
+                                        var options = {placement: "left", html: true, title: text};
+                                        $("#portTooltip").tooltip('destroy');
+                                        $("#portTooltip").tooltip(options);
+                                        $("#portTooltip").tooltip('show');
+                                    }
+                                });
+                            };
+
+                            port.childNodes[0].onmouseleave = function (e) {
+                                $("#portTooltip").tooltip('hide');
+                            }
+                        });
+                    });
+                });
             }
             res.graphChanged(false);
             res.instnameSelectedModule("Properties");
         }
     });
+
+    // Пытается вернуть текстовое свойство объекта в локали браузера
+    function Geti18nProperty(obj, propName)
+    {
+        if(obj.hasOwnProperty(propName))
+        {
+            if(obj[propName].hasOwnProperty(GetLocale()))
+            {
+                return obj[propName][GetLocale()];
+            }
+            else
+            {
+                if(obj[propName].hasOwnProperty("en"))
+                {
+                    return obj.description.en;
+                }
+            }
+        }
+        return "";
+    }
 
     // Обработчик события выбора модуля
     res.selectedCell.subscribe(function (cell) {
@@ -449,6 +542,17 @@ viewModels.Editor = (function () {
         return new joint.shapes.devs.Model(module);
     }
 
+    function GetLocale()
+    {
+        var l_lang;
+        if (navigator.userLanguage) // Explorer
+            l_lang = navigator.userLanguage;
+        else if (navigator.language) // FF
+            l_lang = navigator.language;
+        else
+            l_lang = "en";
+        return l_lang;
+    }
 
     graph.on('change', function () {
         res.graphChanged(true);
