@@ -8,7 +8,13 @@ var graph = new joint.dia.Graph;
 var paper = new joint.dia.Paper({
     el: $('#paper'),
     gridSize: 20,
-    model: graph
+    model: graph,
+    defaultLink: new joint.dia.Link({
+        attrs: {
+            '.marker-target': {fill: 'red', d: 'M 10 0 L 0 5 L 10 10 z' },
+            '.connection': {stroke: 'red', 'stroke-width':2}
+        }
+    })
 });
 $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 
@@ -147,6 +153,8 @@ viewModels.Editor = (function () {
         if (selectedLink) {
             selectedLink.attributes["mode"] = "queue";
             res.selectedLink().model.attributes.attrs[".connection"] = { stroke: 'red' };
+            res.selectedLink().model.attributes.attrs[".marker-target"].fill = 'red';
+            res.selectedLink().update();
             res.selectedLink().update();
 
             $("#linkContextMenu").hide();
@@ -159,6 +167,7 @@ viewModels.Editor = (function () {
         if (selectedLink) {
             selectedLink.attributes["mode"] = "memory";
             res.selectedLink().model.attributes.attrs[".connection"] = { stroke: 'blue' };
+            res.selectedLink().model.attributes.attrs[".marker-target"].fill = 'blue';
             res.selectedLink().update();
 
             $("#linkContextMenu").hide();
@@ -297,7 +306,6 @@ viewModels.Editor = (function () {
             });
     }
 
-
     // Приватная функция
     // Возвращает объект текущего редактируемого конфига (из списка всех конфигов allConfigs)
     function GetConfig(configName, version) {
@@ -306,7 +314,6 @@ viewModels.Editor = (function () {
         //cfg.linksParams = cfg.linksParams || {};
         return cfg;
     }
-
 
     // Приватная функция
     // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
@@ -474,7 +481,6 @@ viewModels.Editor = (function () {
         if(cell.attributes.type=="link") {
             // При создании нового линка, ему по умолчанию устанавливается тип и цвет.
             cell.attributes["mode"] = "queue";
-            cell.attr().attributes.attrs[".connection"] = { stroke: 'red' };
         }
     })
 
