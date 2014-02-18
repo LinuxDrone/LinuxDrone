@@ -3,28 +3,43 @@
     "name": "PwmOutput",  
     "version": 2,
     "Task Priority": 80,
-    "Task Period": 200,
+    "Task Period": 20000,
     "Notify on change": false,
     "paramsDefinitions": [
         {
-            "name": "I2C Device",
+            "name": "Pru Device",
             "displayName": {
-                "en": "Bus Name",
-                "ru": "Имя шины"
+                "en": "Pru Device"
+            },
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "number",
+            "defaultValue": 1,
+            "validValues" : [0,1],
+            "unitMeasured": ""
+        },
+        {
+            "name": "Pru Binary",
+            "displayName": {
+                "en": "Pru Binary"
             },
             "description": {
                 "ru": "Название девайса"
             },
             "type": "string",
-            "defaultValue": "/dev/i2c-1",
-            "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
+            "defaultValue": "/root/PwmOut.bin",
             "unitMeasured": ""
         }
     ],
-    "inputShema":{
+    "inputShema": {
         "type":"object",
         "id": "http://jsonschema.net",
         "properties":{
+            "pwm0": {
+                "type":"number",
+                "required":true
+            },
             "pwm1": {
                 "type":"number",
                 "required":true
@@ -32,7 +47,43 @@
             "pwm2": {
                 "type":"number",
                 "required":true
+            },
+            "pwm3": {
+                "type":"number",
+                "required":true
+            },
+            "pwm4": {
+                "type":"number",
+                "required":true
+            },
+            "pwm5": {
+                "type":"number",
+                "required":true
+            },
+            "pwm6": {
+                "type":"number",
+                "required":true
+            },
+            "pwm7": {
+                "type":"number",
+                "required":true
+            },
+            "pwm8": {
+                "type":"number",
+                "required":true
+            },
+            "pwm9": {
+                "type":"number",
+                "required":true
+            },
+            "pwm10": {
+                "type":"number",
+                "required":true
+            },
+            "pwm11": {
+                "type":"number",
+                "required":true
             }
-        }
+	}
     }
 }

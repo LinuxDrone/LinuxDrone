@@ -1,0 +1,64 @@
+{
+    "type": "module_def",
+    "name": "SimpleTransform",  
+    "version": 2,
+    "Task Priority": 80,
+    "Task Period": 200,
+    "Notify on change": false,
+    "paramsDefinitions": [
+        {
+            "name": "Parameter1",
+            "displayName": {
+                "en": "Parameter1"
+            },
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "number",
+            "defaultValue": 0,
+            "validValues" : [0,1],
+            "unitMeasured": ""
+        }
+    ],
+    "inputShema": {
+		"type":"object",
+		"id": "http://jsonschema.net",
+		"properties":{
+		    "in_x": {
+		        "type":"number",
+		        "required":true
+		    },
+		    "in_y": {
+		        "type":"number",
+		        "required":true
+		    },
+		    "in_z": {
+		        "type":"number",
+		        "required":true
+		    }
+		}
+    },
+    "outputs": [
+        {
+            "name": "out_data",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "out_x": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "out_y": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "out_z": {
+                        "type": "number",
+                        "required": true
+                    }
+                }
+            }
+        }
+    ]
+}

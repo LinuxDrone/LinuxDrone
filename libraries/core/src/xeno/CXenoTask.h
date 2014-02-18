@@ -16,6 +16,7 @@
 #include "../text/CString.h"
 #include "../thread/CRunnable.h"
 #include <native/task.h>
+#include <native/timer.h>
 
 class CXenoTask
 {
