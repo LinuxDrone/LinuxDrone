@@ -15,15 +15,15 @@
 #include "system/Logger"
 #include <native/timer.h>
 
-CModule::CModule(const CString& taskName, int stackSize) :
-	m_task(taskName, 50, stackSize)
+CModule::CModule(int stackSize) :
+	m_task("", 50, stackSize)
 {
 	m_runnable     = 0;
 	m_terminate    = false;
 	m_queueCreated = false;
 	m_heapCreated  = false;
 
-	m_period         = (1000/50)*1000000;
+	m_period         = (1000/50);
 	m_notifyOnChange = true;
 }
 
@@ -40,31 +40,18 @@ bool CModule::init(const mongo::BSONObj& initObject)
 {
 	m_name = initObject["name"].valuestr();
 	m_instance = initObject["instance"].valuestr();
-	bool existMetainfo = initObject.hasElement("metaInfo");
-	mongo::BSONObj metaInfo;
-	if (existMetainfo) {
-		metaInfo = initObject["metaInfo"].Obj();
+	m_task.setTaskName(m_instance);
+	if (initObject.hasElement("Task Priority")) {
+		m_task.setPriority(initObject["Task Priority"].Number());
 	}
-	if (initObject.hasElement("task_priority")) {
-		m_task.setPriority(initObject["task_priority"].Number());
-	} else if (existMetainfo) {
-		if (metaInfo.hasElement("task_priority")) {
-			m_task.setPriority(metaInfo["task_priority"].Number());
-		}
+	if (initObject.hasElement("Task Period")) {
+		m_period = int (initObject["Task Period"].Number());
 	}
-	if (initObject.hasElement("period")) {
-		m_period = int (initObject["period"].Number());
-	} else if (existMetainfo) {
-		if (metaInfo.hasElement("period")) {
-			m_period = int (metaInfo["period"].Number());
-		}
+	if (initObject.hasElement("Notify on change")) {
+		m_notifyOnChange = initObject["Notify on change"].Bool();
 	}
-	if (initObject.hasElement("notifyOnChange")) {
-		m_notifyOnChange = initObject["notifyOnChange"].Bool();
-	} else if (existMetainfo) {
-		if (metaInfo.hasElement("notifyOnChange")) {
-			m_notifyOnChange = metaInfo["notifyOnChange"].Bool();
-		}
+	if(m_period != -1) {
+		m_period = m_period * rt_timer_ns2ticks(1000);
 	}
 	return true;
 }
@@ -110,7 +97,8 @@ bool CModule::link(const mongo::BSONObj& link)
 
 bool CModule::start()
 {
-	return false;
+	startTask();
+	return true;
 }
 
 void CModule::stop()
@@ -184,7 +172,7 @@ void CModule::mainTask()
 
 	while (!m_terminate) {
 		if (m_period == -1 && m_notifyOnChange == false) {
-			m_task.sleep(10 * 1000000);
+			m_task.sleep(10);
 			continue;
 		}
 		RTIME current = rt_timer_read();
@@ -196,8 +184,6 @@ void CModule::mainTask()
 			}
 		}
 		recvObjects();
-
-		m_task.sleep(100);
 	}
 	SAFE_RELEASE(m_runnable);
 }
@@ -211,6 +197,8 @@ void CModule::sendObject(const mongo::BSONObj& object)
 	if (object.isEmpty()) {
 		return;
 	}
+//	Logger() << object.toString(false, true).c_str();
+
 	std::map<CString, mongo::BSONElement> objElements;
 	{
 		mongo::BSONObjIterator objIt(object);
@@ -231,6 +219,7 @@ void CModule::sendObject(const mongo::BSONObj& object)
 		mongo::BSONObjBuilder builder;
 		for (auto it = link_data.links.begin();it<link_data.links.end();it++) {
 			mongo::BSONObj& link = *it;
+//			Logger() << link.toString(false, true).c_str();
 			CString outPin = link["outPin"].String().c_str();
 			if (objElements.count(outPin) == 0) {
 				continue;
@@ -264,10 +253,19 @@ void CModule::sendObject(const mongo::BSONObj& object)
 void CModule::recvObjects()
 {
 	if (!m_queueCreated) {
+		if (m_period == -1) {
+			m_task.sleep(1000);
+		} else {
+			m_task.sleep(1);
+		}
 		return;
 	}
 	void* ptr = 0;
-	int readed = rt_queue_receive(&m_inputQueue, &ptr, TM_NONBLOCK);
+	unsigned long long timeout = TM_NONBLOCK;
+	if (m_period == -1) {
+		timeout = 1000;
+	}
+	int readed = rt_queue_receive(&m_inputQueue, &ptr, timeout);
 	if (readed < 0) {
 		CSystem::sleep(2);
 		return;

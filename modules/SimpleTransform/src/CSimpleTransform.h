@@ -13,28 +13,21 @@
 #pragma once
 
 #include "module/CModule"
+#include "math/CMatrix4f"
 
-class CSensors : public CModule
+class CSimpleTransform : public CModule
 {
 public:
-	CSensors();
-	~CSensors();
+	CSimpleTransform();
+	~CSimpleTransform();
 
-	bool init();
-	bool start();
+	virtual bool init(const mongo::BSONObj& initObject);
 
 private:
-	float m_gyroScale[3];
-	float m_gyroBias[3];
-	float m_accelScale[3];
-	float m_accelBias[3];
-
-	void moduleTask();
-//	void recievedMpuObject(CUAVObject* object);
-	void calcSensor(float* sensorValues, const float* sensorScale, const float* sensorBias, int numVals) const;
+	CMatrix4f m_matrix;
 
 protected:
 
 // notify
-//	virtual void recievedData(CUAVObject* data);
+	virtual void recievedData(const mongo::BSONObj& data);
 };

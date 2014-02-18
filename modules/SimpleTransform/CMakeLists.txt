@@ -10,25 +10,17 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-#--------------------------------------------------------------------
-# .gitignore file, see http://git-scm.com/docs/gitignore for details
-#--------------------------------------------------------------------
+file(GLOB_RECURSE SRC "src/*.cpp")
 
-# Ignore artifacts of build system
-/downloads
-/tools
-/build.*
+include_directories(${LIB_DIR}/core/include)
+include_directories(${LIB_DIR}/sdk/include)
 
-# Ignore cmake-generated files (should not be in the source tree)
-CMakeFiles/
-CMakeCache.txt
-Makefile
-cmake_install.cmake
+set(EXTRA_LIBS
+	sdk
+	core
+)
 
-# Ignore patch-related files
-*.rej
-*.orig
-*.diff~
+add_library(simpletransform MODULE ${INC} ${SRC})
 
-# Ignore Idea files
-*.idea
+install(TARGETS simpletransform DESTINATION modules/simpletransform)
+install(FILES simpletransform.def.json DESTINATION modules/simpletransform)

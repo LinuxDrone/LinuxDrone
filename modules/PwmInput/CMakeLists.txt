@@ -21,7 +21,7 @@ set(EXTRA_LIBS
 	core
 )
 
-add_library(mpu6050 MODULE ${INC} ${SRC})
+add_library(pwminput MODULE ${INC} ${SRC})
 
-install(TARGETS mpu6050 DESTINATION modules/mpu6050)
-install(FILES mpu6050.def.json DESTINATION modules/mpu6050)
+install(TARGETS pwminput DESTINATION modules/pwminput)
+install(FILES pwminput.def.json DESTINATION modules/pwminput)

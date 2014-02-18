@@ -10,25 +10,18 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-#--------------------------------------------------------------------
-# .gitignore file, see http://git-scm.com/docs/gitignore for details
-#--------------------------------------------------------------------
+file(GLOB_RECURSE INC "include/*")
+file(GLOB_RECURSE SRC "src/*.cpp")
 
-# Ignore artifacts of build system
-/downloads
-/tools
-/build.*
+include_directories(${LIB_DIR}/core/include)
+include_directories(${LIB_DIR}/sdk/include)
 
-# Ignore cmake-generated files (should not be in the source tree)
-CMakeFiles/
-CMakeCache.txt
-Makefile
-cmake_install.cmake
+set(EXTRA_LIBS
+	sdk
+	core
+)
 
-# Ignore patch-related files
-*.rej
-*.orig
-*.diff~
+add_library(gy87 MODULE ${INC} ${SRC})
 
-# Ignore Idea files
-*.idea
+install(TARGETS gy87 DESTINATION modules/gy87)
+install(FILES gy87.def.json DESTINATION modules/gy87)
