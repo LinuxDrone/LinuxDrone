@@ -20,10 +20,12 @@
 #define TM_NONBLOCK -1
 #endif
 
+#include "../text/CString.h"
+
 class CMutex
 {
 public:
-	CMutex();
+	CMutex(const CString& name = CString(), bool bind = false);
 	~CMutex();
     
 	void lock();
@@ -33,6 +35,7 @@ public:
 private:
 #ifdef XENO_SERVICES
 	RT_MUTEX m_handle;
+	bool     m_bind;
 #endif
 };
 

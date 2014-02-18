@@ -37,4 +37,5 @@ protected:
 };
 
 #define SAFE_RELEASE(x) if(x) {x->release();x=0;}
+#define SAFE_DELETE(x) if (x) {delete x;x=0;}
 #endif /* defined(__core__cobject__) */
