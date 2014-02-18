@@ -14,14 +14,17 @@
 #include "system/CSystem"
 #include "system/Logger"
 #include <native/timer.h>
+#include <native/heap.h>
 
 CModule::CModule(int stackSize) :
 	m_task("", 50, stackSize)
 {
-	m_runnable     = 0;
-	m_terminate    = false;
-	m_queueCreated = false;
-	m_heapCreated  = false;
+	m_runnable        = 0;
+	m_terminate       = false;
+	m_queueCreated    = false;
+	m_heapCreated     = false;
+	m_outputHeapSize  = 512;
+	m_mutexOutputHeap = 0;
 
 	m_period         = (1000/50);
 	m_notifyOnChange = true;
@@ -34,6 +37,11 @@ CModule::~CModule()
 		m_task.sleep(100);
 	}
 	SAFE_RELEASE(m_runnable);
+
+	SAFE_DELETE(m_mutexOutputHeap);
+	if (m_heapCreated) {
+		rt_heap_delete(&m_outputHeap);
+	}
 }
 
 bool CModule::init(const mongo::BSONObj& initObject)
@@ -53,6 +61,22 @@ bool CModule::init(const mongo::BSONObj& initObject)
 	if(m_period != -1) {
 		m_period = m_period * rt_timer_ns2ticks(1000);
 	}
+	CString name;
+	name = CString("%1.shm").arg(m_instance);
+	int err = rt_heap_create(&m_outputHeap, name.data(), m_outputHeapSize, H_FIFO | H_MAPPABLE | H_SHARED);
+	if (err) {
+		Logger() << __PRETTY_FUNCTION__ << ": error creating heap for output data. err = " << err;
+		return false;
+	}
+	err = rt_heap_alloc(&m_outputHeap, 0, TM_NONBLOCK, &m_heapPtr);
+	if (err) {
+		Logger() << "error allocation memory from output heap. error = " << err;
+		return false;
+	}
+
+	m_heapCreated = true;
+	name = CString("%1.mt").arg(m_instance);
+	m_mutexOutputHeap = new CMutex(name);
 	return true;
 }
 
@@ -61,9 +85,10 @@ bool CModule::link(const mongo::BSONObj& link)
 	if (link.isEmpty()) {
 		return false;
 	}
-	if (instance() != link["inInst"].String().c_str()) {
-		CString moduleName = link["inInst"].String().c_str();
+	if (instance() == link["outInst"].String().c_str() &&
+		CString("queue") == link["type"].String().c_str()) {
 		// 'out' link
+		CString moduleName = link["inInst"].String().c_str();
 		CMutexSection locker(&m_mutexLinks);
 		if (m_linksOut.count(moduleName) == 0) {
 			LINK link;
@@ -75,7 +100,7 @@ bool CModule::link(const mongo::BSONObj& link)
 		// 'in' link
 		CString moduleName = link["outInst"].String().c_str();
 		// create pipe
-		if (!m_queueCreated && CString("pipe") == link["type"].String().c_str()) {
+		if (!m_queueCreated && CString("queue") == link["type"].String().c_str()) {
 			CString name = m_instance + CString("inputQueue");
 			int err = rt_queue_create(&m_inputQueue, name.data(), 8096, Q_UNLIMITED, Q_FIFO);
 			if (err) {
@@ -83,14 +108,18 @@ bool CModule::link(const mongo::BSONObj& link)
 				return false;
 			}
 			m_queueCreated = true;
-		}
-		CMutexSection locker(&m_mutexLinks);
+		}		CMutexSection locker(&m_mutexLinks);
 		if (m_linksIn.count(moduleName) == 0) {
 			LINK link;
 			m_linksIn[moduleName] = link;
 		}
 		LINK& link_data = m_linksIn[moduleName];
 		link_data.links.push_back(link.copy());
+		if (CString("memory") == link["type"].String().c_str()) {
+			if (link_data.mutexHeap == 0) {
+				link_data.mutexHeap = new CMutex(moduleName, true);
+			}
+		}
 	}
 	return true;
 }
@@ -189,6 +218,111 @@ void CModule::mainTask()
 }
 
 //-------------------------------------------------------------------
+//  s h a r e d   h e a p
+//-------------------------------------------------------------------
+
+void CModule::outBsonToHeap(const mongo::BSONObj& object)
+{
+	CMutexSection locker(m_mutexOutputHeap);
+	size_t size = object.objsize();
+	if (!m_heapCreated || m_outputHeapSize <= size) {
+		if (m_heapCreated) {
+			rt_heap_free(&m_outputHeap, m_heapPtr);
+			rt_heap_delete(&m_outputHeap);
+			m_heapCreated = false;
+		}
+		m_outputHeapSize = size+1;
+		CString name;
+		name = CString("%1.sh").arg(m_instance);
+		int err = rt_heap_create(&m_outputHeap, name.data(), m_outputHeapSize, H_FIFO);
+		if (err) {
+			Logger() << __PRETTY_FUNCTION__ << ": error creating heap for output data. err = " << err;
+			return;
+		}
+		err = rt_heap_alloc(&m_outputHeap, 0, TM_NONBLOCK, &m_heapPtr);
+		if (err) {
+			Logger() << "error allocation memory from output heap. error = " << err;
+			return;
+		}
+	}
+	memcpy(m_heapPtr, object.objdata(), size);
+}
+
+mongo::BSONObj CModule::recvBsonFromHeap(const CString& name)
+{// name: module instance name
+	if (name.isEmpty()) {
+		return mongo::BSONObj();
+	}
+	bool needUnbind = false;
+	void* ptr = 0;
+	RT_HEAP heap;
+	CMutex* mutex;
+
+	if (m_linksIn.count(name)) {
+		LINK& link = m_linksIn[name];
+		if (link.heapCreated) {
+			RT_HEAP_INFO info;
+			int err = rt_heap_inquire(&link.heap, &info);
+			if (err) {
+				link.heapCreated = false;
+				link.heapPtr = 0;
+				SAFE_DELETE(link.mutexHeap);
+			} else {
+				ptr = link.heapPtr;
+				mutex = link.mutexHeap;
+			}
+		}
+		if (!link.heapCreated) {
+			bool ret = bindHeap(name, &link.heap, &link.heapPtr, &link.mutexHeap);
+			if (ret == false) {
+				return mongo::BSONObj();
+			}
+			link.heapCreated = true;
+			ptr = link.heapPtr;
+			mutex = link.mutexHeap;
+		}
+	} else {
+		bool ret = bindHeap(name, &heap, &ptr, &mutex);
+		if (ret == false) {
+			return mongo::BSONObj();
+		}
+		needUnbind = true;
+	}
+
+	mongo::BSONObj obj;
+	{
+		CMutexSection locker(mutex);
+		obj = mongo::BSONObj(static_cast<const char*>(ptr)).copy();
+	}
+	if (needUnbind) {
+		SAFE_DELETE(mutex);
+		rt_heap_unbind(&heap);
+	}
+	return obj;
+}
+
+bool CModule::bindHeap(const CString& name, RT_HEAP* heap, void** ptr, CMutex** mutex)
+{
+	CString heapName = CString("%1.shm").arg(name);
+	int err = rt_heap_bind(heap, heapName.data(), TM_NONBLOCK);
+	if (err) {
+		Logger() << __PRETTY_FUNCTION__ << ": error bind heap with name(" << heapName << "). error = " << err;
+		return false;
+	}
+	err = rt_heap_alloc(heap, 0, TM_NONBLOCK, ptr);
+	if (err) {
+		Logger() << __PRETTY_FUNCTION__ << ": error mapping heap memory. error = " << err;
+		rt_heap_unbind(heap);
+		return false;
+	}
+	heapName = CString("%1.mt").arg(name);
+	if (mutex != 0) {
+		*mutex = new CMutex(heapName, true);
+	}
+	return true;
+}
+
+//-------------------------------------------------------------------
 //  q u e u e   o b j e c t s
 //-------------------------------------------------------------------
 
@@ -197,6 +331,7 @@ void CModule::sendObject(const mongo::BSONObj& object)
 	if (object.isEmpty()) {
 		return;
 	}
+	outBsonToHeap(object);
 //	Logger() << object.toString(false, true).c_str();
 
 	std::map<CString, mongo::BSONElement> objElements;
@@ -236,7 +371,7 @@ void CModule::sendObject(const mongo::BSONObj& object)
 			link_data.queueCreated = true;
 		}
 		mongo::BSONObj objForSend = builder.obj();
-		;
+
 		void* ptr = rt_queue_alloc(&link_data.queue, objForSend.objsize());
 		if (!ptr) {
 			continue;
@@ -299,6 +434,7 @@ void CModule::recvObjects()
 	for (auto it = elements.begin();it!=elements.end();it++) {
 		builder.append((*it).second);
 	}
+
 	m_data = builder.obj();
 	if (m_notifyOnChange) {
 		recievedData(m_data);
