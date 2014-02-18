@@ -1,0 +1,42 @@
+{
+    "type": "module_def",
+    "name": "Hmc5883",  
+    "version": 2,
+    "Task Priority": 45,
+    "Task Period": 220,
+    "paramsDefinitions": [
+        {
+            "name": "I2C Device",
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "string",
+            "defaultValue": "/dev/i2c-1",
+            "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
+            "unitMeasured": ""
+        }
+    ],
+    "outputs":[
+        {
+            "name": "Mag",
+            "Schema":{
+                "type":"object",
+                "id": "http://jsonschema.net",
+                "properties":{
+                    "magX": {
+                        "type":"number",
+                        "required":true
+                    },
+                    "magY": {
+                        "type":"number",
+                        "required":true
+                    },
+                    "magZ": {
+                        "type":"number",
+                        "required":true
+                    }
+                }
+            }
+        }
+    ]
+}

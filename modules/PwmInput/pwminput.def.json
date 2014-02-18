@@ -1,0 +1,74 @@
+{
+    "type": "module_def",
+    "name": "PwmInput",  
+    "version": 2,
+    "Task Priority": 80,
+    "Task Period": 20000,
+    "Notify on change": false,
+    "paramsDefinitions": [
+        {
+            "name": "Pru Device",
+            "displayName": {
+                "en": "Pru Device"
+            },
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "number",
+            "defaultValue": 0,
+            "validValues" : [0,1],
+            "unitMeasured": ""
+        },
+        {
+            "name": "Pru Binary",
+            "displayName": {
+                "en": "Pru Binary"
+            },
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "string",
+            "defaultValue": "/root/PwmIn.bin",
+            "unitMeasured": ""
+        }
+    ],
+    "outputs": [
+        {
+            "name": "PWM Input[0-6]",
+            "Schema":{
+                "type":"object",
+                "id": "http://jsonschema.net",
+                "properties":{
+                    "pwm0": {
+                        "type":"number",
+                        "required":true
+                    },
+                    "pwm1": {
+                        "type":"number",
+                        "required":true
+                    },
+                    "pwm2": {
+                        "type":"number",
+                        "required":true
+                    },
+                    "pwm3": {
+                        "type":"number",
+                        "required":true
+                    },
+                    "pwm4": {
+                        "type":"number",
+                        "required":true
+                    },
+                    "pwm5": {
+                        "type":"number",
+                        "required":true
+                    },
+                    "pwm6": {
+                        "type":"number",
+                        "required":true
+                    }
+                }
+            }
+        }
+    ]
+}

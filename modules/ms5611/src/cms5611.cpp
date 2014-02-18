@@ -20,6 +20,19 @@
 
 #include "my_memory"
 
+extern "C" {
+CModule* moduleCreator()
+{
+	return new CMs5611();
+}
+
+const char* moduleName() {
+	return "Ms5611";
+}
+}
+
+
+
 /* MS5611 Addresses */
 #define MS5611_I2C_ADDR   0x77
 #define MS5611_RESET      0x1E
@@ -30,7 +43,7 @@
 
 
 CMs5611::CMs5611() :
-	CModule("Ms5611", 1024)
+	CModule(1024)
 {
 }
 
@@ -48,11 +61,8 @@ bool CMs5611::init(const mongo::BSONObj& initObject)
 	if (initObject.hasElement("params")) {
 		mongo::BSONElement elemParam = initObject["params"];
 		mongo::BSONObj objParam = elemParam.Obj();
-		if (objParam.hasElement("bus_name")) {
-			busName = objParam["bus_name"].String().c_str();
-		}
-		if (objParam.hasElement("bus_type")) {
-			busType = (CSystemBus::BusType)objParam["bus_type"].Number();
+		if (objParam.hasElement("I2C Device")) {
+			busName = objParam["I2C Device"].String().c_str();
 		}
 	}
 	m_bus = CBus(busType, busName, MS5611_I2C_ADDR);
@@ -215,6 +225,6 @@ void CMs5611::moduleTask()
     SRTIME el = rt_timer_ticks2ns(diff);
     uint64_t elapsed = abs(el) / 1000;
     //Logger() << elapsed;
-    printf("Temp=%f, Pres=%f\n",Temperature/100.0,Pressure/1000.0);
+    //printf("Temp=%f, Pres=%f\n",Temperature/100.0,Pressure/1000.0);
     CSystem::sleep(100);
 }

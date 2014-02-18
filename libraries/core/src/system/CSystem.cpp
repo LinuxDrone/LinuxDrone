@@ -43,3 +43,24 @@ void CSystem::sleep( int ms )
     usleep( ms * 1000 );
 #endif
 }
+
+void* CSystem::alignedAlloc(size_t size, size_t alignment /*= 16*/)
+{
+	void *ptr;
+	// posix_memalign required alignment to be a min of sizeof(void *)
+	if (alignment < sizeof(void *)) {
+		alignment = sizeof(void *);
+	}
+
+	if (posix_memalign((void **) &ptr, alignment, size)) {
+		return 0; // Out of memory
+	}
+	return ptr;
+}
+
+void CSystem::alignedFree(void* ptr)
+{
+	if (ptr) {
+		free(ptr);
+	}
+}

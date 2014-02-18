@@ -12,26 +12,28 @@
 
 #--------------------------------------------------------------------
 # TODO:
-#  - native cross-toolchain for OSX
 #  - automatic download for toolchains and utilities (apart from git and cmake)
 #  - automatic target environment download (for distributed rootfs image)
+#  - compiler options (debug/release and others)
 #  - configure: board type options (target)
 #  - configure: debug/release options
-#  - configure: toolchain finding using environment variables
+#  - add javascript code install target
 #--------------------------------------------------------------------
 
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 project(linuxdrone)
 
-# Project root and custom cmake modules path
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
+# Extra cmake modules path (must be set by toolchain file passed from command line)
+#set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
 
 # Install path for relocatable copy (uner the build directory)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME})
 
 # Compiler options
-add_definitions(-std=c++11 ${XENOMAI_DEFINITIONS})
+add_definitions(-std=c++11 -mfpu=neon ${XENOMAI_DEFINITIONS})
 
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
@@ -51,7 +53,6 @@ include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 # Libraries: ${Boost_LIBRARIES}
 find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
 include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
-#link_directories(${LINK_DIRECTORIES} ${Boost_LIBRARY_DIRS})
 
 # Xenomai libraries
 # Libraries: ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
@@ -59,28 +60,33 @@ include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
 find_package(Xenomai REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
 
-# Link-only system libraries (do not check headers, just link shared objects)
-set(CMAKE_THREAD_LIBS_INIT pthread)
-#find_library( CMAKE_THREAD_LIBS_INIT pthread )
-find_library( ZLIB_LIBRARIES z )
-find_library( OPENSSL_LIBRARIES ssl )
-find_library( CRYPTO_LIBRARIES crypto )
+# Threads
+find_package(Threads)
 
-# RPATH handling to use relative paths in the install tree like above
+# Link-only libraries (do not check headers, just link shared objects)
+find_library(ZLIB_LIBRARIES z)
+find_library(OPENSSL_LIBRARIES ssl)
+find_library(CRYPTO_LIBRARIES crypto)
+
+# RPATH handling to use relative paths in the install tree
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
 # Project libraries
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 add_subdirectory(${LIB_DIR}/core)
 add_subdirectory(${LIB_DIR}/sdk)
-#add_subdirectory(${LIB_DIR}/gcs)
 
-add_subdirectory(${MOD_DIR}/mpu6050)
+# Loadable modules (one level deeper than apps or libs)
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
+add_subdirectory(${MOD_DIR}/gy87)
 add_subdirectory(${MOD_DIR}/bmp180)
 add_subdirectory(${MOD_DIR}/ms5611)
 add_subdirectory(${MOD_DIR}/hmc5883)
 add_subdirectory(${MOD_DIR}/pwmoutput)
+add_subdirectory(${MOD_DIR}/PwmInput)
+add_subdirectory(${MOD_DIR}/SimpleTransform)
 
 # Main project target
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 add_subdirectory(${TGT_DIR}/beaglebone) 

@@ -1,0 +1,43 @@
+{
+    "type": "module_def",
+    "name": "Ms5611",  
+    "version": 2,
+    "Task Priority": 80,
+    "Task Period": 200,
+    "Notify on change": false,
+    "paramsDefinitions": [
+        {
+            "name": "I2C Device",
+            "displayName": {
+                "en": "Bus Name",
+                "ru": "Имя шины"
+            },
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "string",
+            "defaultValue": "/dev/i2c-1",
+            "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
+            "unitMeasured": ""
+        }
+    ],
+    "outputs":[
+        {
+            "name": "Pressure+Temp",
+            "Schema":{
+                "type":"object",
+                "id": "http://jsonschema.net",
+                "properties":{
+                    "pressure": {
+                        "type":"number",
+                        "required":true
+                    },
+                    "temperature": {
+                        "type":"number",
+                        "required":true
+                    }
+                }
+            }
+        }
+    ]
+}

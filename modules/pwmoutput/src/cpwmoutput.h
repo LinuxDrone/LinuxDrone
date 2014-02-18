@@ -27,12 +27,14 @@ public:
 
 private:
 	CSystemPru m_pru;
-	uint16_t m_C[6];
-	uint8_t m_oversampling;
+	uint32_t m_pwm[12];
+	uint32_t m_period[12];
+	uint8_t *m_sharedMem;
 
 	bool initPwmOutput();
-	bool setOneReg(uint8_t reg);
-	bool setReg(uint8_t reg, uint8_t data);
-	bool getReg(uint8_t reg, uint8_t* data, size_t size = 1);
 	void moduleTask();
+	void setChannelPeriod(int channel, uint32_t period);
+	void setChannelPulseWidth(int channel, uint32_t pw);
+// notify
+	virtual void recievedData(const mongo::BSONObj& data);
 };

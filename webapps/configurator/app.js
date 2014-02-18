@@ -33,7 +33,8 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-app.get('/', routes.index);
+app.get('/', function (req, res) { res.redirect(302, '/index.html'); });
+app.get('/', function(req,res){res.redirect("/index.html")});
 app.get('/droneconfig', routes.droneconfig);
 app.get('/metamodules', routes.metamodules(db));
 app.post('/saveconfig', routes.saveconfig(db));
@@ -51,7 +52,7 @@ function loadModuleDefs (dir, done) {
             var fullFile = dir + '/' + file;
             fs.stat(fullFile, function(err, stat) {
                 if (stat && stat.isDirectory()) {
-                    var configFile = fullFile + '/' + file + '.def.js';
+                    var configFile = fullFile + '/' + file + '.def.json';
                     fs.readFile(configFile, 'utf8', function (err,data) {
                         if (err) {
                             console.log("Not found definition file " + configFile + " for module '" + file + "'");

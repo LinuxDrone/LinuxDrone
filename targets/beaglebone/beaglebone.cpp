@@ -26,19 +26,25 @@
 
 #include "my_memory"
 
-int main()
+int main(int argc, char* argv[])
 {
+	if (0 == argc) {
+		return -1;
+	}
+	char appPath[PATH_MAX];
+
+	if (realpath(argv[0], appPath) == 0) {
+		fprintf (stderr, "realpath failed: %s\n", strerror (errno));
+		return -1;
+	}
 	CSettings settings;
 	settings.Init();
 	mongo::BSONObj modules = settings.getModules();
 	mongo::BSONObj links = settings.getLinks();
 
 	CModuleSystem* system = CModuleSystem::instance();
-//	system->registerModuleMetainformation(new CSensorsMeta());
-//	system->registerModuleMetainformation(new CHmc5883Meta());
-//	system->registerModuleMetainformation(new CMs5611Meta());
 
-	system->readAllModules();
+	system->readAllModules(appPath);
 	system->createModules(modules);
 	system->linkObjects(links);
 	system->start();

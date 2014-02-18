@@ -17,19 +17,33 @@
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_VERSION 1)
 
-# Specify the cross compiler
+# Extra cmake modules path (must be here since this is the first file which
+# is processed by cmake, but it also uses custom modules)
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
+
+# Get downloads and tools directories (read the module source for details)
+include(FindProjectDirectories)
+
+# Define the cross compiler details (as extracted from distribution)
 if(CMAKE_HOST_WIN32)
+    set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-4.8-2013.10_win32")
     set(CMAKE_HOST_EXECUTABLE_SUFFIX ".exe")
+elseif(CMAKE_HOST_APPLE)
+    set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-4.8-2013.10_osx")
+    set(CMAKE_HOST_EXECUTABLE_SUFFIX "")
 else()
+    set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-4.8-2013.10_linux")
     set(CMAKE_HOST_EXECUTABLE_SUFFIX "")
 endif()
+set(CROSS_TOOLCHAIN_PREFIX arm-linux-gnueabihf-)
 
-set(TOOLCHAIN_PREFIX   ${PROJECT_SOURCE_DIR}/tools/gcc-linaro-arm-linux-gnueabihf-4.8-2013.10/bin/arm-linux-gnueabihf-)
+# Define compilers
+set(TOOLCHAIN_PREFIX   ${TOOLS_DIR}/${TOOLCHAIN_SUBDIR}/bin/${CROSS_TOOLCHAIN_PREFIX})
 set(CMAKE_C_COMPILER   ${TOOLCHAIN_PREFIX}gcc${CMAKE_HOST_EXECUTABLE_SUFFIX})
 set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}g++${CMAKE_HOST_EXECUTABLE_SUFFIX})
 
 # Where is the target environment
-set(BOARD_ROOTFS ${PROJECT_SOURCE_DIR}/tools/rootfs/beaglebone)
+set(BOARD_ROOTFS ${ROOTFS_DIR}/beaglebone)
 set(CMAKE_FIND_ROOT_PATH  ${BOARD_ROOTFS})
 
 # Search for programs in the build host directories
