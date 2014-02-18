@@ -105,7 +105,10 @@ viewModels.Editor = (function () {
             graph.addCell(MakeVisualModule(self));
         };
         self.GetModuleDescription = function () {
-            return "In the future there will be a description of the module";
+
+            return Geti18nProperty(this.definition(), "description");
+
+            //return "In the future there will be a description of the module";
         };
     };
 
@@ -225,6 +228,7 @@ viewModels.Editor = (function () {
             if (res.currentConfig().jsonGraph) {
                 graph.fromJSON(JSON.parse(res.currentConfig().jsonGraph));
 
+                // Инициализация портов на модулях, с целью показа их описания в тултипе
                 var elements = graph.getElements();
                 $.each(elements, function (i, element) {
                     var view = paper.findViewByModel(element);
@@ -261,6 +265,9 @@ viewModels.Editor = (function () {
 
                                         var text = portMeta.type;
 
+                                        text += "<br>" + Geti18nProperty(portMeta, "description");
+
+                                        /*
                                         if(portMeta.hasOwnProperty("description"))
                                         {
                                             if(portMeta.description.hasOwnProperty(GetLocale()))
@@ -275,6 +282,7 @@ viewModels.Editor = (function () {
                                                 }
                                             }
                                         }
+                                        */
 
                                         var options = {placement: "left", html: true, title: text};
                                         $("#portTooltip").tooltip('destroy');
@@ -295,6 +303,26 @@ viewModels.Editor = (function () {
             res.instnameSelectedModule("Properties");
         }
     });
+
+    // Пытается вернуть текстовое свойство объекта в локали браузера
+    function Geti18nProperty(obj, propName)
+    {
+        if(obj.hasOwnProperty(propName))
+        {
+            if(obj[propName].hasOwnProperty(GetLocale()))
+            {
+                return obj[propName][GetLocale()];
+            }
+            else
+            {
+                if(obj[propName].hasOwnProperty("en"))
+                {
+                    return obj.description.en;
+                }
+            }
+        }
+        return "";
+    }
 
     // Обработчик события выбора модуля
     res.selectedCell.subscribe(function (cell) {

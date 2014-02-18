@@ -41,7 +41,7 @@
                 "required":true,
                 "description": {
                     "en": "pwm0 output",
-                    "ru": "Выход 0 PWM"
+                    "ru": "Вход 0 PWM"
                 }
             },
             "pwm1": {
@@ -49,7 +49,7 @@
                 "required":true,
                 "description": {
                     "en": "pwm1 output",
-                    "ru": "Выход 1 PWM"
+                    "ru": "Вход 1 PWM"
                 }
             },
             "pwm2": {
