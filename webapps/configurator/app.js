@@ -18,7 +18,7 @@ var app = express();
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-app.use(express.favicon());
+app.use(express.favicon(path.join(__dirname, 'public/favicon.ico')));
 app.use(express.logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded());
@@ -33,7 +33,8 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-app.get('/', routes.index);
+app.get('/', function (req, res) { res.redirect(302, '/index.html'); });
+app.get('/', function(req,res){res.redirect("/index.html")});
 app.get('/droneconfig', routes.droneconfig);
 app.get('/metamodules', routes.metamodules(db));
 app.post('/saveconfig', routes.saveconfig(db));

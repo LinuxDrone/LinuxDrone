@@ -29,3 +29,6 @@ cmake_install.cmake
 *.rej
 *.orig
 *.diff~
+
+# Ignore Idea files
+*.idea

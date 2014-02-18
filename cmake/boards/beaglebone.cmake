@@ -10,6 +10,12 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
+# Include guard
+if(__BEAGLEBONE_CMAKE)
+    return()
+endif()
+set(__BEAGLEBONE_CMAKE 1)
+
 #
 # BeagleBone Black, Ubuntu 13.10, gcc-linaro-arm-linux-gnueabihf-4.8-2013.10
 #
