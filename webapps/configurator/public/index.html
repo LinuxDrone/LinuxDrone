@@ -10,14 +10,6 @@
     <link rel="stylesheet" type="text/css" href="stylesheets/bootstrap-theme.min.css"/>
     <link rel="stylesheet" type="text/css" href="stylesheets/style.css"/>
 
-    <style>
-        #paper {
-            border: 1px solid gray;
-            box-sizing: border-box;
-            overflow: auto;
-        }
-    </style>
-
     <script src="javascripts/joint/lib/jquery.js"></script>
     <script src="javascripts/joint/lib/jquery.sortElements.js"></script>
     <script src="javascripts/joint/lib/lodash.js"></script>
@@ -54,25 +46,34 @@
         </div>
     </div>
     <div class="board panel panel-primary">
-        <div class="panel-heading">
+        <div class="panel-heading h10">
             <!--h3 class="panel-title">Schema</h3-->
             <div class="tools-region">
                 <!--h3 class="panel-title">Schema</h3-->
-                <div id="listConfigs" class="">
+                <form id="listConfigs" class="form-inline">
                     <!-- Выпадающий список схем -->
-                    <select style="color: #000000" data-bind="options: viewModels.Editor.ConfigNames,
+                    <div class="form-group">
+                        <label data-bind="attr: {for: 'schemas'}">Схема:</label>
+                        <select class="form-control" data-bind="options: viewModels.Editor.ConfigNames,
                         optionsText: $data,
                         optionsValue: $data,
                         value: viewModels.Editor.configNameSelected,
+                        attr: {id: 'schemas'},
                         visible: viewModels.Editor.ConfigNames().length > 0"></select>
+                    </div>
                     <!-- -->
                     <!-- Выпадающий список версий -->
-                    <select style="color: #000000" data-bind="options: viewModels.Editor.Versions,
+                    <div class="form-group">
+                        <label data-bind="attr: {for: 'versions'}">Версия:</label>
+                        <select class="form-control" data-bind="options: viewModels.Editor.Versions,
                         optionsText: $data,
                         optionsValue: $data,
                         value: viewModels.Editor.versionSelected,
+                        attr: {id: 'versions'},
                         visible: viewModels.Editor.Versions().length > 0"></select>
+                    </div>
                     <!-- -->
+                    <i class="glyphicon glyphicon-info-sign" rel="tooltip" title="Супер схема!"></i>
                     <button type="button" class="btn btn-success" data-bind="click: SaveConfig,
                         visible: viewModels.Editor.Versions().length > 0, enable: viewModels.Editor.graphChanged()">Save
                     </button>
@@ -86,7 +87,7 @@
                     <button type="button" class="btn btn-info" disabled
                             data-bind="visible: viewModels.Editor.Versions().length > 0">Export
                     </button>
-                </div>
+                </form>
             </div>
         </div>
         <div class="panel-body h90">

@@ -1,4 +1,4 @@
-.h100 {height: 100%;} .h99 {height: 99%;} .h95 {height: 95%;} .h90 {height: 90%;}
+.h100 {height: 100%;} .h99 {height: 99%;} .h95 {height: 95%;} .h90 {height: 90%;} .h10 {height: 10%;}
 
 .module-panel, .properties-panel {
     width: 15%;
@@ -34,6 +34,12 @@
 #linkContextMenu {
     position: absolute;
     display:none;
+}
+
+#paper {
+    border: 1px solid gray;
+    box-sizing: border-box;
+    overflow: auto;
 }
 
 #portTooltip {
