@@ -11,18 +11,41 @@
 //--------------------------------------------------------------------
 
 #include "CMutex.h"
+#include "../system/Logger.h"
 
-CMutex::CMutex()
+CMutex::CMutex(const CString& name /*= CString()*/, bool bind /*= false*/)
 {
+	m_bind = false;
 #ifdef XENO_SERVICES
-	rt_mutex_create(&m_handle, 0);
+	int err = 0;
+	if (name.isEmpty()) {
+		err = rt_mutex_create(&m_handle, 0);
+	} else {
+		if (!bind) {
+			err = rt_mutex_create(&m_handle, name.data());
+		} else {
+			err = rt_mutex_bind(&m_handle, name.data(), TM_NONBLOCK);
+			m_bind = true;
+		}
+	}
+	if (err) {
+		if (!bind) {
+			Logger() << "error creating mutex with name = " << name << ". err = " << err;
+		} else {
+			Logger() << "error binding mutex with name = " << name << ". err = " << err;
+		}
+	}
 #endif
 }
 
 CMutex::~CMutex()
 {
 #ifdef XENO_SERVICES
-	rt_mutex_delete(&m_handle);
+	if (!m_bind) {
+		rt_mutex_delete(&m_handle);
+	} else {
+		rt_mutex_unbind(&m_handle);
+	}
 #endif
 }
 

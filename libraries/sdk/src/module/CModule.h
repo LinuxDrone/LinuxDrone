@@ -17,6 +17,7 @@
 #include "thread/CMutex"
 #include <native/queue.h>
 #include <native/heap.h>
+#include <native/mutex.h>
 
 #include <mongo/bson/bson.h>
 #include <map>
@@ -30,12 +31,26 @@ public:
 		tagLink() {
 			queueCreated = false;
 			heapCreated  = false;
+			mutexHeap    = 0;
+			heapPtr      = 0;
+		}
+		~tagLink() {
+			if (mutexHeap) {
+				delete mutexHeap;
+				mutexHeap = 0;
+			}
+			if (heapCreated) {
+				rt_heap_unbind(&heap);
+			}
 		}
 		std::vector<mongo::BSONObj> links;
-		RT_HEAP  heap;
 		RT_QUEUE queue;
 		bool     queueCreated;
+
+		RT_HEAP  heap;
 		bool     heapCreated;
+		void   * heapPtr;
+		CMutex * mutexHeap;
 
 	} LINK, *PLINK;
 
@@ -81,19 +96,29 @@ protected:
 
 	RT_QUEUE m_inputQueue;
 	bool     m_queueCreated;
-	RT_HEAP  m_outputHeap;
-	bool     m_heapCreated;
+
+	RT_HEAP   m_outputHeap;
+	bool      m_heapCreated;
+	size_t    m_outputHeapSize;
+	CMutex  * m_mutexOutputHeap;
+	void    * m_heapPtr;
 
 	std::map<CString, LINK> m_linksIn;
 	std::map<CString, LINK> m_linksOut;
 	CMutex                  m_mutexLinks;
 
 	mongo::BSONObj m_data;
+	std::map<CString, mongo::BSONElement> m_elements;
 	CMutex         m_mutexData;
 
 	void startTask();
 	void stopTask();
 	void mainTask();
+
+// shared heap
+	void outBsonToHeap(const mongo::BSONObj& object);
+	mongo::BSONObj recvBsonFromHeap(const CString& name);		// name: module instance name
+	bool bindHeap(const CString& name, RT_HEAP* heap, void** ptr, CMutex** mutex);
 
 // queue objects
 	void sendObject(const mongo::BSONObj& obj);
