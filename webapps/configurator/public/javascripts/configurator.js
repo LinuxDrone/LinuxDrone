@@ -3,9 +3,6 @@ document.addEventListener("contextmenu", function (e) {
     e.preventDefault();
 }, false);
 
-inPortsFillColor = '#16A085';
-outPortsFillColor = '#E74C3C';
-
 var graph = new joint.dia.Graph;
 
 var paper = new joint.dia.Paper({
@@ -18,7 +15,7 @@ var paper = new joint.dia.Paper({
             '.connection': {stroke: 'red', 'stroke-width': "2"}
         }
     }),
-    validateConnection: function (cellViewS, magnetS, cellViewT, magnetT, end, linkView) {
+    validateConnection: function (cellViewS, magnetS, cellViewT, magnetT) {
         //return true;
         // Prevent linking from input ports.
         if (magnetS && magnetS.attributes.fill.value === inPortsFillColor) return false;
@@ -41,6 +38,8 @@ $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 var viewModels = viewModels || {};
 
 viewModels.Editor = (function () {
+    var inPortsFillColor = '#16A085';
+    var outPortsFillColor = '#E74C3C';
     var allConfigs = {};
 
     var res = {
@@ -74,11 +73,6 @@ viewModels.Editor = (function () {
         // Специфические свойства выбранного в схеме инстанса модуля
         instanceSpecificProperties: ko.observableArray([])
     };
-
-    ModulesCommonParams.commonModuleParamsDefinition.forEach(function (prop) {
-        prop.value = ko.observable(prop.defaultValue);
-        res.instanceCommonProperties.push(prop);
-    });
 
     // Публичная функция загрузки конфигурации
     res.LoadConfigurations = function (_initialData) {
@@ -204,7 +198,215 @@ viewModels.Editor = (function () {
         else {
             return "stringTemplate";
         }
-    }
+    };
+
+    // Пытается вернуть текстовое свойство объекта в локали браузера
+    var Geti18nProperty = function (obj, propName){
+        if(obj.hasOwnProperty(propName))
+        {
+            if(obj[propName].hasOwnProperty(GetLocale()))
+            {
+                return obj[propName][GetLocale()];
+            }
+            else
+            {
+                if(obj[propName].hasOwnProperty("en"))
+                {
+                    return obj.description.en;
+                }
+            }
+        }
+        return "";
+    };
+
+    // Приватная функция сохранения конфигурации (текущего графа) с именем и версией
+    var SaveCurrentConfig = function (name, version, isNew) {
+        var data4save = {
+            "name": name,
+            "version": version,
+            "jsonGraph": JSON.stringify(graph.toJSON()),
+            "modulesParams": res.currentConfig().modulesParams
+        };
+        $.post("saveconfig", data4save,
+            function (data) {
+                if (data != "OK") {
+                    alert(data);
+                }
+                else {
+                    if (isNew) {
+                        allConfigs.push(data4save);
+                        // Если была записана новая конфигурация, добавим ее в комбобоксы
+                        // Если была записана новая версия, а имя конфигурации не изменилось, то добавим новую строку только
+                        // в комбобокс версий.
+                        // Иначе добавим новые строки в оба комбобокса. И установим как выбранные значения в комбобоксах,
+                        // соответсвующие имени и версии новой конфигурации
+                        if (_.contains(res.ConfigNames(), name)) {
+                            if (res.configNameSelected() == name) {
+                                // Добавим контент конфигурации к списку версий выбранной конфигурации
+                                res.Versions.push(version);
+                            }
+                            else {
+                                res.configNameSelected(name);
+                            }
+                            res.versionSelected(version);
+                        }
+                        else {
+                            res.ConfigNames.push(name);
+                            res.configNameSelected(name);
+                        }
+                    }
+                    else {
+                        allConfigs = _.reject(allConfigs, function (cfg) {
+                            return cfg.name == name && cfg.version == version;
+                        });
+                        allConfigs.push(data4save);
+                    }
+                    res.graphChanged(false);
+                }
+            });
+    };
+
+    // Приватная функция
+    // Возвращает объект текущего редактируемого конфига (из списка всех конфигов allConfigs)
+    var GetConfig = function (configName, version) {
+        var cfg = _.where(allConfigs, {name: configName, version: version})[0];
+        cfg.modulesParams = cfg.modulesParams || {};
+        //cfg.linksParams = cfg.linksParams || {};
+        return cfg;
+    };
+
+    // Приватная функция
+    // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
+    var GetInstanceCommonParams = function GetInstanceCommonParams(instanceName, moduleType) {
+        return GetInstanceParams(instanceName, moduleType).common;
+    };
+
+    // Приватная функция
+    // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
+    var GetInstanceSpecificParams = function GetInstanceSpecificParams(instanceName, moduleType) {
+        return GetInstanceParams(instanceName, moduleType).specific;
+    };
+
+    // Приватная функция
+    // Возвращает объект - значения конфигурационных параметров инстанса модуля
+    var GetInstanceParams = function GetInstanceParams(instanceName, moduleType) {
+        if (!res.currentConfig().modulesParams[instanceName]) {
+            // Если для указанного инстанса нет в конфигурации параметров, следует их создать на основе дефолтных
+            // из метаописания модуля
+            res.currentConfig().modulesParams[instanceName] = {common: {}, specific: {}};
+            var moduleParams = res.currentConfig().modulesParams[instanceName];
+
+            var moduleMeta = GetModuleMeta(moduleType);
+            // Сначала заполним дефолтные значения для общих (для всех типов модулей) свойств
+            $.each(_.pluck(ModulesCommonParams.commonModuleParamsDefinition, "name"), function (i, paramName) {
+                // Если дефолтное значение задано в определении модуля, то используем его
+                // Иначе (если опять же оно задано) возьмем его из общего для всех модулей определения
+                if (moduleMeta.definition()[paramName]) {
+                    moduleParams.common[paramName] = moduleMeta.definition()[paramName];
+                }
+                else {
+                    var commonParam = _.find(ModulesCommonParams.commonModuleParamsDefinition, function (commonParamMeta) {
+                        return commonParamMeta.name == paramName;
+                    });
+                    if (commonParam && commonParam.defaultValue) {
+                        moduleParams.common[paramName] = commonParam.defaultValue;
+                    }
+                }
+            });
+
+            // Теперь установим специфичные для модуля параметры, взяв их значения из определения типа модуля
+            $.each(moduleMeta.definition().paramsDefinitions, function (i, paramDefinition) {
+                moduleParams.specific[paramDefinition.name] = paramDefinition.defaultValue;
+            });
+        }
+        return res.currentConfig().modulesParams[instanceName];
+    };
+
+    // Приватная функция
+    // Возвращает описание модуля
+    var GetModuleMeta = function GetModuleMeta(moduleName) {
+        return _.find(res.metaModules(), function (meta) {
+            return meta.definition().name == moduleName;
+        });
+    };
+
+    // Приватная функция
+    // Создает экзмепляр визуального модуля библиотеки joint, из описания модуля в формате linuxdrone
+    var MakeVisualModule = function MakeVisualModule(moduleInfo) {
+        var moduleDef = moduleInfo.definition();
+
+        var maxPins = 0;
+
+        var module = {
+            moduleType: moduleDef.name,
+            position: { x: 10, y: 20 },
+            size: { width: 90},
+            attrs: {
+                '.label': {'ref-x': .2, 'ref-y': -2 },
+                rect: { fill: '#2ECC71' },
+                '.inPorts circle': { fill: inPortsFillColor },
+                '.outPorts circle': { fill: outPortsFillColor }
+            }
+        };
+
+        var instancesCount = 1;
+        var name4NewInstance = moduleDef.name + "-" + instancesCount;
+        // Проверим не используется ли данное имя уже в качестве имени инстанса а схеме
+        while (_.find(graph.getElements(), function (el) {
+            return el.attributes.attrs['.label'].text == name4NewInstance;
+        })) {
+            instancesCount++;
+            name4NewInstance = moduleDef.name + "-" + instancesCount;
+        }
+
+        module.attrs['.label'].text = name4NewInstance;
+
+        if (moduleDef.outputs) {
+            module.outPorts = new Array();
+            $.each(moduleDef.outputs, function (i, output) {
+                var propsCount = Object.keys(output.Schema.properties).length;
+                if (maxPins < propsCount) {
+                    maxPins = propsCount;
+                }
+                $.each(output.Schema.properties, function (i, pin) {
+                    module.outPorts.push(i);
+                });
+            });
+        }
+
+        if (moduleDef.inputShema) {
+            module.inPorts = new Array();
+            var propsCount = Object.keys(moduleDef.inputShema.properties).length;
+            if (maxPins < propsCount) {
+                maxPins = propsCount;
+            }
+            $.each(moduleDef.inputShema.properties, function (i, pin) {
+                module.inPorts.push(i);
+            });
+        }
+
+        module.size.height = maxPins * 30;
+
+        // Добавление параметров, со значениями по умолчанию
+        return new joint.shapes.devs.Model(module);
+    };
+
+    var GetLocale = function (){
+        var l_lang;
+        if (navigator.userLanguage) // Explorer
+            l_lang = navigator.userLanguage;
+        else if (navigator.language) // FF
+            l_lang = navigator.language;
+        else
+            l_lang = "en";
+        return l_lang;
+    };
+
+    // Загрузка метаданных общих свойств модулей в observable переменную
+    ModulesCommonParams.commonModuleParamsDefinition.forEach(function (prop) {
+        prop.value = ko.observable(prop.defaultValue);
+        res.instanceCommonProperties.push(prop);
+    });
 
     // Обработчик события выбора имени конфигурации
     res.configNameSelected.subscribe(function (selectedName) {
@@ -267,23 +469,6 @@ viewModels.Editor = (function () {
 
                                         text += "<br>" + Geti18nProperty(portMeta, "description");
 
-                                        /*
-                                        if(portMeta.hasOwnProperty("description"))
-                                        {
-                                            if(portMeta.description.hasOwnProperty(GetLocale()))
-                                            {
-                                                text += "<br>" + portMeta.description[GetLocale()];
-                                            }
-                                            else
-                                            {
-                                                if(portMeta.description.hasOwnProperty("en"))
-                                                {
-                                                    text += "<br>" + portMeta.description.en;
-                                                }
-                                            }
-                                        }
-                                        */
-
                                         var options = {placement: "left", html: true, title: text};
                                         $("#portTooltip").tooltip('destroy');
                                         $("#portTooltip").tooltip(options);
@@ -303,26 +488,6 @@ viewModels.Editor = (function () {
             res.instnameSelectedModule("Properties");
         }
     });
-
-    // Пытается вернуть текстовое свойство объекта в локали браузера
-    function Geti18nProperty(obj, propName)
-    {
-        if(obj.hasOwnProperty(propName))
-        {
-            if(obj[propName].hasOwnProperty(GetLocale()))
-            {
-                return obj[propName][GetLocale()];
-            }
-            else
-            {
-                if(obj[propName].hasOwnProperty("en"))
-                {
-                    return obj.description.en;
-                }
-            }
-        }
-        return "";
-    }
 
     // Обработчик события выбора модуля
     res.selectedCell.subscribe(function (cell) {
@@ -369,190 +534,6 @@ viewModels.Editor = (function () {
             });
         }
     });
-
-    // Приватная функция сохранения конфигурации (текущего графа) с именем и версией
-    function SaveCurrentConfig(name, version, isNew) {
-        var data4save = {
-            "name": name,
-            "version": version,
-            "jsonGraph": JSON.stringify(graph.toJSON()),
-            "modulesParams": res.currentConfig().modulesParams
-        };
-        $.post("saveconfig", data4save,
-            function (data) {
-                if (data != "OK") {
-                    alert(data);
-                }
-                else {
-                    if (isNew) {
-                        allConfigs.push(data4save);
-                        // Если была записана новая конфигурация, добавим ее в комбобоксы
-                        // Если была записана новая версия, а имя конфигурации не изменилось, то добавим новую строку только
-                        // в комбобокс версий.
-                        // Иначе добавим новые строки в оба комбобокса. И установим как выбранные значения в комбобоксах,
-                        // соответсвующие имени и версии новой конфигурации
-                        if (_.contains(res.ConfigNames(), name)) {
-                            if (res.configNameSelected() == name) {
-                                // Добавим контент конфигурации к списку версий выбранной конфигурации
-                                res.Versions.push(version);
-                            }
-                            else {
-                                res.configNameSelected(name);
-                            }
-                            res.versionSelected(version);
-                        }
-                        else {
-                            res.ConfigNames.push(name);
-                            res.configNameSelected(name);
-                        }
-                    }
-                    else {
-                        allConfigs = _.reject(allConfigs, function (cfg) {
-                            return cfg.name == name && cfg.version == version;
-                        });
-                        allConfigs.push(data4save);
-                    }
-                    res.graphChanged(false);
-                }
-            });
-    }
-
-    // Приватная функция
-    // Возвращает объект текущего редактируемого конфига (из списка всех конфигов allConfigs)
-    function GetConfig(configName, version) {
-        var cfg = _.where(allConfigs, {name: configName, version: version})[0];
-        cfg.modulesParams = cfg.modulesParams || {};
-        //cfg.linksParams = cfg.linksParams || {};
-        return cfg;
-    }
-
-    // Приватная функция
-    // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
-    function GetInstanceCommonParams(instanceName, moduleType) {
-        return GetInstanceParams(instanceName, moduleType).common;
-    }
-
-    // Приватная функция
-    // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
-    function GetInstanceSpecificParams(instanceName, moduleType) {
-        return GetInstanceParams(instanceName, moduleType).specific;
-    }
-
-    // Приватная функция
-    // Возвращает объект - значения конфигурационных параметров инстанса модуля
-    function GetInstanceParams(instanceName, moduleType) {
-        if (!res.currentConfig().modulesParams[instanceName]) {
-            // Если для указанного инстанса нет в конфигурации параметров, следует их создать на основе дефолтных
-            // из метаописания модуля
-            res.currentConfig().modulesParams[instanceName] = {common: {}, specific: {}};
-            var moduleParams = res.currentConfig().modulesParams[instanceName];
-
-            var moduleMeta = GetModuleMeta(moduleType);
-            // Сначала заполним дефолтные значения для общих (для всех типов модулей) свойств
-            $.each(_.pluck(ModulesCommonParams.commonModuleParamsDefinition, "name"), function (i, paramName) {
-                // Если дефолтное значение задано в определении модуля, то используем его
-                // Иначе (если опять же оно задано) возьмем его из общего для всех модулей определения
-                if (moduleMeta.definition()[paramName]) {
-                    moduleParams.common[paramName] = moduleMeta.definition()[paramName];
-                }
-                else {
-                    var commonParam = _.find(ModulesCommonParams.commonModuleParamsDefinition, function (commonParamMeta) {
-                        return commonParamMeta.name == paramName;
-                    });
-                    if (commonParam && commonParam.defaultValue) {
-                        moduleParams.common[paramName] = commonParam.defaultValue;
-                    }
-                }
-            });
-
-            // Теперь установим специфичные для модуля параметры, взяв их значения из определения типа модуля
-            $.each(moduleMeta.definition().paramsDefinitions, function (i, paramDefinition) {
-                moduleParams.specific[paramDefinition.name] = paramDefinition.defaultValue;
-            });
-        }
-        return res.currentConfig().modulesParams[instanceName];
-    }
-
-    // Приватная функция
-    // Возвращает описание модуля
-    function GetModuleMeta(moduleName) {
-        return _.find(res.metaModules(), function (meta) {
-            return meta.definition().name == moduleName;
-        });
-    }
-
-    // Приватная функция
-    // Создает экзмепляр визуального модуля библиотеки joint, из описания модуля в формате linuxdrone
-    function MakeVisualModule(moduleInfo) {
-        var moduleDef = moduleInfo.definition();
-
-        var maxPins = 0;
-
-        var module = {
-            moduleType: moduleDef.name,
-            position: { x: 10, y: 20 },
-            size: { width: 90},
-            attrs: {
-                '.label': {'ref-x': .2, 'ref-y': -2 },
-                rect: { fill: '#2ECC71' },
-                '.inPorts circle': { fill: inPortsFillColor },
-                '.outPorts circle': { fill: outPortsFillColor }
-            }
-        };
-
-        var instancesCount = 1;
-        var name4NewInstance = moduleDef.name + "-" + instancesCount;
-        // Проверим не используется ли данное имя уже в качестве имени инстанса а схеме
-        while (_.find(graph.getElements(), function (el) {
-            return el.attributes.attrs['.label'].text == name4NewInstance;
-        })) {
-            instancesCount++;
-            name4NewInstance = moduleDef.name + "-" + instancesCount;
-        }
-
-        module.attrs['.label'].text = name4NewInstance;
-
-        if (moduleDef.outputs) {
-            module.outPorts = new Array();
-            $.each(moduleDef.outputs, function (i, output) {
-                var propsCount = Object.keys(output.Schema.properties).length;
-                if (maxPins < propsCount) {
-                    maxPins = propsCount;
-                }
-                $.each(output.Schema.properties, function (i, pin) {
-                    module.outPorts.push(i);
-                });
-            });
-        }
-
-        if (moduleDef.inputShema) {
-            module.inPorts = new Array();
-            var propsCount = Object.keys(moduleDef.inputShema.properties).length;
-            if (maxPins < propsCount) {
-                maxPins = propsCount;
-            }
-            $.each(moduleDef.inputShema.properties, function (i, pin) {
-                module.inPorts.push(i);
-            });
-        }
-
-        module.size.height = maxPins * 30;
-
-        // Добавление параметров, со значениями по умолчанию
-        return new joint.shapes.devs.Model(module);
-    }
-
-    function GetLocale()
-    {
-        var l_lang;
-        if (navigator.userLanguage) // Explorer
-            l_lang = navigator.userLanguage;
-        else if (navigator.language) // FF
-            l_lang = navigator.language;
-        else
-            l_lang = "en";
-        return l_lang;
-    }
 
     graph.on('change', function () {
         res.graphChanged(true);
