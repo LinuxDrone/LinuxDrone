@@ -1,42 +1,27 @@
 {
     "type": "module_def",
-    "name": "SimpleTransform",  
-    "version": 2,
+    "name": "SimpleTransform",
+    "version": 4,
     "Task Priority": 80,
     "Task Period": 200,
     "Notify on change": false,
-    "paramsDefinitions": [
-        {
-            "name": "Parameter1",
-            "displayName": {
-                "en": "Parameter1"
-            },
-            "description": {
-                "ru": "Название девайса"
-            },
-            "type": "number",
-            "defaultValue": 0,
-            "validValues" : [0,1],
-            "unitMeasured": ""
-        }
-    ],
     "inputShema": {
-		"type":"object",
-		"id": "http://jsonschema.net",
-		"properties":{
-		    "in_x": {
-		        "type":"number",
-		        "required":true
-		    },
-		    "in_y": {
-		        "type":"number",
-		        "required":true
-		    },
-		    "in_z": {
-		        "type":"number",
-		        "required":true
-		    }
-		}
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+            "in_x": {
+                "type": "number",
+                "required": true
+            },
+            "in_y": {
+                "type": "number",
+                "required": true
+            },
+            "in_z": {
+                "type": "number",
+                "required": true
+            }
+        }
     },
     "outputs": [
         {
@@ -60,5 +45,292 @@
                 }
             }
         }
-    ]
+    ],
+    "subSchema": {
+        "blocksDefinitions": [
+            {
+                "name": "rotate",
+                "type": "block_def",
+                "version": 1,
+                "paramsDefinitions": [
+                    {
+                        "name": "x",
+                        "displayName": {
+                            "en": "x"
+                        },
+                        "description": {
+                            "ru": "ось x"
+                        },
+                        "type": "number",
+                        "defaultValue": 0,
+                        "validValues": [0, 360],
+                        "unitMeasured": "градусы"
+                    },
+                    {
+                        "name": "y",
+                        "displayName": {
+                            "en": "y"
+                        },
+                        "description": {
+                            "ru": "ось y"
+                        },
+                        "type": "number",
+                        "defaultValue": 0,
+                        "validValues": [0, 360],
+                        "unitMeasured": "градусы"
+                    },
+                    {
+                        "name": "z",
+                        "displayName": {
+                            "en": "z"
+                        },
+                        "description": {
+                            "ru": "ось z"
+                        },
+                        "type": "number",
+                        "defaultValue": 0,
+                        "validValues": [0, 360],
+                        "unitMeasured": "градусы"
+                    }
+                ],
+                "inputShema": {
+                    "type": "object",
+                    "id": "http://jsonschema.net",
+                    "properties": {
+                        "x": {
+                            "type": "number",
+                            "required": true,
+                            "description": {
+                                "en": "x input",
+                                "ru": "Вход x"
+                            }
+                        },
+                        "y": {
+                            "type": "number",
+                            "required": true
+                        },
+                        "z": {
+                            "type": "number",
+                            "required": true
+                        }
+                    }
+                },
+                "outputs": [
+                    {
+                        "name": "out_data",
+                        "Schema": {
+                            "type": "object",
+                            "id": "http://jsonschema.net",
+                            "properties": {
+                                "x": {
+                                    "type": "number",
+                                    "required": true,
+                                    "description": {
+                                        "en": "x output",
+                                        "ru": "Выход x"
+                                    }
+                                },
+                                "y": {
+                                    "type": "number",
+                                    "required": true
+                                },
+                                "z": {
+                                    "type": "number",
+                                    "required": true
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "translate",
+                "type": "block_def",
+                "version": 1,
+                "paramsDefinitions": [
+                    {
+                        "name": "x",
+                        "displayName": {
+                            "en": "x"
+                        },
+                        "description": {
+                            "ru": "ось x"
+                        },
+                        "type": "number",
+                        "defaultValue": 0,
+                        "unitMeasured": "parrot"
+                    },
+                    {
+                        "name": "y",
+                        "displayName": {
+                            "en": "y"
+                        },
+                        "description": {
+                            "ru": "ось y"
+                        },
+                        "type": "number",
+                        "defaultValue": 0,
+                        "unitMeasured": "parrot"
+                    },
+                    {
+                        "name": "z",
+                        "displayName": {
+                            "en": "z"
+                        },
+                        "description": {
+                            "ru": "ось z"
+                        },
+                        "type": "number",
+                        "defaultValue": 0,
+                        "unitMeasured": "parrot"
+                    }
+                ],
+                "inputShema": {
+                    "type": "object",
+                    "id": "http://jsonschema.net",
+                    "properties": {
+                        "x": {
+                            "type": "number",
+                            "required": true,
+                            "description": {
+                                "en": "x input",
+                                "ru": "Вход x"
+                            }
+                        },
+                        "y": {
+                            "type": "number",
+                            "required": true
+                        },
+                        "z": {
+                            "type": "number",
+                            "required": true
+                        }
+                    }
+                },
+                "outputs": [
+                    {
+                        "name": "out_data",
+                        "Schema": {
+                            "type": "object",
+                            "id": "http://jsonschema.net",
+                            "properties": {
+                                "x": {
+                                    "type": "number",
+                                    "required": true,
+                                    "description": {
+                                        "en": "x output",
+                                        "ru": "Выход x"
+                                    }
+                                },
+                                "y": {
+                                    "type": "number",
+                                    "required": true
+                                },
+                                "z": {
+                                    "type": "number",
+                                    "required": true
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "scale",
+                "type": "block_def",
+                "version": 1,
+                "paramsDefinitions": [
+                    {
+                        "name": "x",
+                        "displayName": {
+                            "en": "x"
+                        },
+                        "description": {
+                            "ru": "ось x"
+                        },
+                        "type": "number",
+                        "defaultValue": 0,
+                        "validValues": [0, 360],
+                        "unitMeasured": "%"
+                    },
+                    {
+                        "name": "y",
+                        "displayName": {
+                            "en": "y"
+                        },
+                        "description": {
+                            "ru": "ось y"
+                        },
+                        "type": "number",
+                        "defaultValue": 0,
+                        "validValues": [0, 360],
+                        "unitMeasured": "%"
+                    },
+                    {
+                        "name": "z",
+                        "displayName": {
+                            "en": "z"
+                        },
+                        "description": {
+                            "ru": "ось z"
+                        },
+                        "type": "number",
+                        "defaultValue": 0,
+                        "validValues": [0, 360],
+                        "unitMeasured": "%"
+                    }
+                ],
+                "inputShema": {
+                    "type": "object",
+                    "id": "http://jsonschema.net",
+                    "properties": {
+                        "x": {
+                            "type": "number",
+                            "required": true,
+                            "description": {
+                                "en": "x input",
+                                "ru": "Вход x"
+                            }
+                        },
+                        "y": {
+                            "type": "number",
+                            "required": true
+                        },
+                        "z": {
+                            "type": "number",
+                            "required": true
+                        }
+                    }
+                },
+                "outputs": [
+                    {
+                        "name": "out_data",
+                        "Schema": {
+                            "type": "object",
+                            "id": "http://jsonschema.net",
+                            "properties": {
+                                "x": {
+                                    "type": "number",
+                                    "required": true,
+                                    "description": {
+                                        "en": "x output",
+                                        "ru": "Выход x"
+                                    }
+                                },
+                                "y": {
+                                    "type": "number",
+                                    "required": true
+                                },
+                                "z": {
+                                    "type": "number",
+                                    "required": true
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        ]
+    }
 }
+
