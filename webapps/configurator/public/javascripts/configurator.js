@@ -1,8 +1,3 @@
-// Запрет показа стандартного меню, вызываемого по правой кнопке мыши
-document.addEventListener("contextmenu", function (e) {
-    e.preventDefault();
-}, false);
-
 var graph = new joint.dia.Graph;
 
 var paper = new joint.dia.Paper({
@@ -18,11 +13,11 @@ var paper = new joint.dia.Paper({
     validateConnection: function (cellViewS, magnetS, cellViewT, magnetT) {
         //return true;
         // Prevent linking from input ports.
-        if (magnetS && magnetS.attributes.fill.value === inPortsFillColor) return false;
+        if (magnetS && magnetS.attributes.fill.value === viewModels.Editor.inPortsFillColor) return false;
         // Prevent linking from output ports to input ports within one element.
         if (cellViewS === cellViewT) return false;
         // Prevent linking to input ports.
-        return magnetT && magnetT.attributes.fill.value === inPortsFillColor;
+        return magnetT && magnetT.attributes.fill.value === viewModels.Editor.inPortsFillColor;
     }
     /*
      ,
@@ -35,14 +30,18 @@ var paper = new joint.dia.Paper({
 });
 $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 
+
 var viewModels = viewModels || {};
 
 viewModels.Editor = (function () {
-    var inPortsFillColor = '#16A085';
     var outPortsFillColor = '#E74C3C';
+    var normalModuleColor = '#2ECC71';
+    var blockModuleColor = '#CCCC71';
+
     var allConfigs = {};
 
     var res = {
+        inPortsFillColor: '#16A085',
         // Метаинформация модулей
         metaModules: ko.observableArray([]),
         // Список имен конфигураций
@@ -111,7 +110,7 @@ viewModels.Editor = (function () {
         res.metaModules([]);
         $.each(_initialData, function (i, item) {
             res.metaModules.push(new MetaOfModule()
-                    .definition(item)
+                .definition(item)
             );
         });
     };
@@ -201,17 +200,13 @@ viewModels.Editor = (function () {
     };
 
     // Пытается вернуть текстовое свойство объекта в локали браузера
-    var Geti18nProperty = function (obj, propName){
-        if(obj.hasOwnProperty(propName))
-        {
-            if(obj[propName].hasOwnProperty(GetLocale()))
-            {
+    var Geti18nProperty = function (obj, propName) {
+        if (obj.hasOwnProperty(propName)) {
+            if (obj[propName].hasOwnProperty(GetLocale())) {
                 return obj[propName][GetLocale()];
             }
-            else
-            {
-                if(obj[propName].hasOwnProperty("en"))
-                {
+            else {
+                if (obj[propName].hasOwnProperty("en")) {
                     return obj.description.en;
                 }
             }
@@ -315,9 +310,11 @@ viewModels.Editor = (function () {
             });
 
             // Теперь установим специфичные для модуля параметры, взяв их значения из определения типа модуля
-            $.each(moduleMeta.definition().paramsDefinitions, function (i, paramDefinition) {
-                moduleParams.specific[paramDefinition.name] = paramDefinition.defaultValue;
-            });
+            if (moduleMeta.definition().paramsDefinitions) {
+                $.each(moduleMeta.definition().paramsDefinitions, function (i, paramDefinition) {
+                    moduleParams.specific[paramDefinition.name] = paramDefinition.defaultValue;
+                });
+            }
         }
         return res.currentConfig().modulesParams[instanceName];
     };
@@ -343,11 +340,15 @@ viewModels.Editor = (function () {
             size: { width: 90},
             attrs: {
                 '.label': {'ref-x': .2, 'ref-y': -2 },
-                rect: { fill: '#2ECC71' },
-                '.inPorts circle': { fill: inPortsFillColor },
+                rect: {fill: normalModuleColor},
+                '.inPorts circle': { fill: res.inPortsFillColor },
                 '.outPorts circle': { fill: outPortsFillColor }
             }
         };
+
+        if (moduleDef.subSchema) {
+            module.attrs.rect.fill = blockModuleColor;
+        }
 
         var instancesCount = 1;
         var name4NewInstance = moduleDef.name + "-" + instancesCount;
@@ -391,7 +392,7 @@ viewModels.Editor = (function () {
         return new joint.shapes.devs.Model(module);
     };
 
-    var GetLocale = function (){
+    var GetLocale = function () {
         var l_lang;
         if (navigator.userLanguage) // Explorer
             l_lang = navigator.userLanguage;
@@ -448,12 +449,10 @@ viewModels.Editor = (function () {
                                 var portName = port.textContent;
 
                                 var meta = GetModuleMeta(moduleType);
-                                if(s==2)
-                                {
+                                if (s == 2) {
                                     groupsPorts.push(meta.definition().inputShema.properties);
                                 }
-                                else
-                                {
+                                else {
                                     $.each(meta.definition().outputs, function (i, m) {
                                         groupsPorts.push(m.Schema.properties);
                                     });
@@ -461,8 +460,7 @@ viewModels.Editor = (function () {
 
                                 $.each(groupsPorts, function (i, gp) {
                                     var propsObj = gp;
-                                    if(propsObj.hasOwnProperty(portName))
-                                    {
+                                    if (propsObj.hasOwnProperty(portName)) {
                                         var portMeta = propsObj[portName];
 
                                         var text = portMeta.type;
@@ -504,17 +502,19 @@ viewModels.Editor = (function () {
             var specificParams = GetInstanceSpecificParams(res.instnameSelectedModule(), cell.attributes.moduleType);
 
             // Присваиваем значения параметров инстанса переменным, что будут учавствовать в биндинге
-            moduleMeta.definition().paramsDefinitions.forEach(function (prop) {
-                prop.value = ko.observable(specificParams[prop.name]);
+            if (moduleMeta.definition().paramsDefinitions) {
+                moduleMeta.definition().paramsDefinitions.forEach(function (prop) {
+                    prop.value = ko.observable(specificParams[prop.name]);
 
-                // Подписываемся на изменения значения параметра, указывая в качестве контекста specificParams
-                prop.value.subscribe(function (newValue) {
-                    this.params[this.propertyName] = newValue;
-                    res.graphChanged(true);
-                }, {propertyName: prop.name, params: specificParams});
+                    // Подписываемся на изменения значения параметра, указывая в качестве контекста specificParams
+                    prop.value.subscribe(function (newValue) {
+                        this.params[this.propertyName] = newValue;
+                        res.graphChanged(true);
+                    }, {propertyName: prop.name, params: specificParams});
 
-                res.instanceSpecificProperties.push(prop);
-            });
+                    res.instanceSpecificProperties.push(prop);
+                });
+            }
 
             // Установка значений параметров (общих для всех типов модулей) инстанса
             var commonParams = GetInstanceCommonParams(res.instnameSelectedModule(), cell.attributes.moduleType);
@@ -594,16 +594,16 @@ viewModels.Editor = (function () {
 $(document).ready(function () {
 
     $.when(
-        $.getJSON("metamodules",
-            function (data) {
-                viewModels.Editor.LoadMetaModules(data);
-            }),
+            $.getJSON("metamodules",
+                function (data) {
+                    viewModels.Editor.LoadMetaModules(data);
+                }),
 
-        $.getJSON("getconfigs",
-            function (data) {
-                viewModels.Editor.LoadConfigurations(data);
-            })
-    ).then(function (a1, a2) {
+            $.getJSON("getconfigs",
+                function (data) {
+                    viewModels.Editor.LoadConfigurations(data);
+                })
+        ).then(function (a1, a2) {
             //Request OK
             ko.applyBindings(viewModels.Editor);
         }, function (err1, err2) {
@@ -611,5 +611,11 @@ $(document).ready(function () {
         });
 
 });
+
+// Запрет показа стандартного меню, вызываемого по правой кнопке мыши
+document.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+}, false);
+
 
 
