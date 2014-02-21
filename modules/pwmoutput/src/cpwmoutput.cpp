@@ -153,35 +153,12 @@ void CPwmOutput::moduleTask()
     //CSystem::sleep(10);
 }
 
-void CPwmOutput::recievedData(const mongo::BSONObj& data)
+void CPwmOutput::recievedData()
 {
-	mongo::BSONObjIterator it(data);
-	while (it.more()) {
-		mongo::BSONElement elem = it.next();
-		if (CString("pwm0") == elem.fieldName()) {
-			m_pwm[0] = float (elem.Number());
-		} else if (CString("pwm1") == elem.fieldName()) {
-			m_pwm[1] = float (elem.Number());
-		} else if (CString("pwm2") == elem.fieldName()) {
-			m_pwm[2] = float (elem.Number());
-		} else if (CString("pwm3") == elem.fieldName()) {
-			m_pwm[3] = float (elem.Number());
-		} else if (CString("pwm4") == elem.fieldName()) {
-			m_pwm[4] = float (elem.Number());
-		} else if (CString("pwm5") == elem.fieldName()) {
-			m_pwm[5] = float (elem.Number());
-		} else if (CString("pwm6") == elem.fieldName()) {
-			m_pwm[6] = float (elem.Number());
-		} else if (CString("pwm7") == elem.fieldName()) {
-			m_pwm[7] = float (elem.Number());
-		} else if (CString("pwm8") == elem.fieldName()) {
-			m_pwm[8] = float (elem.Number());
-		} else if (CString("pwm9") == elem.fieldName()) {
-			m_pwm[9] = float (elem.Number());
-		} else if (CString("pwm10") == elem.fieldName()) {
-			m_pwm[10] = float (elem.Number());
-		} else if (CString("pwm11") == elem.fieldName()) {
-			m_pwm[11] = float (elem.Number());
+	for (int i = 0;i<12;i++) {
+		CString pwm = CString("pwm%1").arg(i);
+		if (hasElement(pwm)) {
+			m_pwm[i] = float (valueNumber(pwm));
 		}
 	}
 }

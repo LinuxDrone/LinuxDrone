@@ -36,5 +36,5 @@ private:
 	void setChannelPeriod(int channel, uint32_t period);
 	void setChannelPulseWidth(int channel, uint32_t pw);
 // notify
-	virtual void recievedData(const mongo::BSONObj& data);
+	virtual void recievedData() override;
 };

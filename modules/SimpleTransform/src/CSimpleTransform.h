@@ -29,5 +29,5 @@ private:
 protected:
 
 // notify
-	virtual void recievedData(const mongo::BSONObj& data);
+	virtual void recievedData() override;
 };

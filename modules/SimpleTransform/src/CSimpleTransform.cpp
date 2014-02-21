@@ -53,22 +53,20 @@ bool CSimpleTransform::init(const mongo::BSONObj& initObject)
 //  n o t i f y
 //-------------------------------------------------------------------
 
-void CSimpleTransform::recievedData(const mongo::BSONObj& data)
+void CSimpleTransform::recievedData()
 {
-	float x = 0.0f, y = 0.0f, z = 0.0f;
-	mongo::BSONObjIterator it(data);
-	while (it.more()) {
-		mongo::BSONElement elem = it.next();
-		if (CString("in_x") == elem.fieldName()) {
-			x = float (elem.Number());
-		} else if (CString("in_y") == elem.fieldName()) {
-			y = elem.Number();
-		} else if (CString("in_z") == elem.fieldName()) {
-			z = elem.Number();
+	const char* names[] = { "in_x", "in_y", "in_z" };
+	float values[4];
+	for (int i = 0;i<3;i++) {
+		CString name(names[i]);
+		if (hasElement(name)) {
+			values[i] = float (valueNumber(name));
 		}
 	}
-	CVector4f v(x, y, z, 1.0f);
+	values[3] = 1.0f;
+	CVector4f v(values);
 	v = v * m_matrix;
+
 	mongo::BSONObjBuilder builder;
 	builder << "out_x" << v.v[0];
 	builder << "out_y" << v.v[1];
