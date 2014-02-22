@@ -97,46 +97,30 @@
                     "type": "object",
                     "id": "http://jsonschema.net",
                     "properties": {
-                        "x": {
+                        "in": {
                             "type": "number",
-                            "required": true,
+                            "required": false,
                             "description": {
-                                "en": "x input",
-                                "ru": "Вход x"
+                                "en": "input",
+                                "ru": "Вход"
                             }
-                        },
-                        "y": {
-                            "type": "number",
-                            "required": true
-                        },
-                        "z": {
-                            "type": "number",
-                            "required": true
                         }
                     }
                 },
                 "outputs": [
                     {
-                        "name": "out_data",
+                        "name": "output",
                         "Schema": {
                             "type": "object",
                             "id": "http://jsonschema.net",
                             "properties": {
-                                "x": {
+                                "out": {
                                     "type": "number",
-                                    "required": true,
+                                    "required": false,
                                     "description": {
-                                        "en": "x output",
-                                        "ru": "Выход x"
+                                        "en": "out",
+                                        "ru": "Выход"
                                     }
-                                },
-                                "y": {
-                                    "type": "number",
-                                    "required": true
-                                },
-                                "z": {
-                                    "type": "number",
-                                    "required": true
                                 }
                             }
                         }
@@ -189,46 +173,30 @@
                     "type": "object",
                     "id": "http://jsonschema.net",
                     "properties": {
-                        "x": {
+                        "in": {
                             "type": "number",
-                            "required": true,
+                            "required": false,
                             "description": {
-                                "en": "x input",
-                                "ru": "Вход x"
+                                "en": "input",
+                                "ru": "Вход"
                             }
-                        },
-                        "y": {
-                            "type": "number",
-                            "required": true
-                        },
-                        "z": {
-                            "type": "number",
-                            "required": true
                         }
                     }
                 },
                 "outputs": [
                     {
-                        "name": "out_data",
+                        "name": "output",
                         "Schema": {
                             "type": "object",
                             "id": "http://jsonschema.net",
                             "properties": {
-                                "x": {
+                                "out": {
                                     "type": "number",
-                                    "required": true,
+                                    "required": false,
                                     "description": {
-                                        "en": "x output",
-                                        "ru": "Выход x"
+                                        "en": "out",
+                                        "ru": "Выход"
                                     }
-                                },
-                                "y": {
-                                    "type": "number",
-                                    "required": true
-                                },
-                                "z": {
-                                    "type": "number",
-                                    "required": true
                                 }
                             }
                         }
@@ -284,46 +252,30 @@
                     "type": "object",
                     "id": "http://jsonschema.net",
                     "properties": {
-                        "x": {
+                        "in": {
                             "type": "number",
-                            "required": true,
+                            "required": false,
                             "description": {
-                                "en": "x input",
-                                "ru": "Вход x"
+                                "en": "input",
+                                "ru": "Вход"
                             }
-                        },
-                        "y": {
-                            "type": "number",
-                            "required": true
-                        },
-                        "z": {
-                            "type": "number",
-                            "required": true
                         }
                     }
                 },
                 "outputs": [
                     {
-                        "name": "out_data",
+                        "name": "output",
                         "Schema": {
                             "type": "object",
                             "id": "http://jsonschema.net",
                             "properties": {
-                                "x": {
+                                "out": {
                                     "type": "number",
-                                    "required": true,
+                                    "required": false,
                                     "description": {
-                                        "en": "x output",
-                                        "ru": "Выход x"
+                                        "en": "out",
+                                        "ru": "Выход"
                                     }
-                                },
-                                "y": {
-                                    "type": "number",
-                                    "required": true
-                                },
-                                "z": {
-                                    "type": "number",
-                                    "required": true
                                 }
                             }
                         }

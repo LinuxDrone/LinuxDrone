@@ -36,7 +36,8 @@ var viewModels = viewModels || {};
 viewModels.Editor = (function () {
     var outPortsFillColor = '#E74C3C';
     var normalModuleColor = '#2ECC71';
-    var blockModuleColor = '#CCCC71';
+    var smartModuleColor = '#CCCC71';
+    var blockColor = '#CC4C71';
 
     var allConfigs = {};
 
@@ -44,6 +45,8 @@ viewModels.Editor = (function () {
         inPortsFillColor: '#16A085',
         // Метаинформация модулей
         metaModules: ko.observableArray([]),
+        // Список модулей модулей
+        listModules: ko.observableArray([]),
         // Список имен конфигураций
         ConfigNames: ko.observableArray([]),
         // Выбранное имя конфигурации
@@ -109,9 +112,10 @@ viewModels.Editor = (function () {
     res.LoadMetaModules = function (_initialData) {
         res.metaModules([]);
         $.each(_initialData, function (i, item) {
-            res.metaModules.push(new MetaOfModule()
-                .definition(item)
-            );
+            var el = new MetaOfModule()
+                .definition(item);
+            res.metaModules.push(el);
+            res.listModules.push(el);
         });
     };
 
@@ -292,6 +296,7 @@ viewModels.Editor = (function () {
             var moduleParams = res.currentConfig().modulesParams[instanceName];
 
             var moduleMeta = GetModuleMeta(moduleType);
+            //if (moduleMeta) {
             // Сначала заполним дефолтные значения для общих (для всех типов модулей) свойств
             $.each(_.pluck(ModulesCommonParams.commonModuleParamsDefinition, "name"), function (i, paramName) {
                 // Если дефолтное значение задано в определении модуля, то используем его
@@ -315,6 +320,7 @@ viewModels.Editor = (function () {
                     moduleParams.specific[paramDefinition.name] = paramDefinition.defaultValue;
                 });
             }
+            //}
         }
         return res.currentConfig().modulesParams[instanceName];
     };
@@ -322,9 +328,22 @@ viewModels.Editor = (function () {
     // Приватная функция
     // Возвращает описание модуля
     var GetModuleMeta = function GetModuleMeta(moduleName) {
-        return _.find(res.metaModules(), function (meta) {
+        var result = _.find(res.metaModules(), function (meta) {
             return meta.definition().name == moduleName;
         });
+        if (result) {
+            return result;
+        }
+
+        result = _.find(res.listModules(), function (meta) {
+            return meta.definition().name == moduleName;
+        });
+
+        if (!result) {
+            alert("Not found module type " + moduleName);
+        }
+
+        return result;
     };
 
     // Приватная функция
@@ -346,9 +365,22 @@ viewModels.Editor = (function () {
             }
         };
 
-        if (moduleDef.subSchema) {
-            module.attrs.rect.fill = blockModuleColor;
+
+        switch (moduleDef.type) {
+            case "module_def":
+                if (moduleDef.subSchema) {
+                    // Если это модуль сложноконфигурируемый и содержащий собственную подсхему
+                    module.attrs.rect.fill = smartModuleColor;
+                    var graphBlocks = new joint.dia.Graph;
+                    module.blocksJSON = graphBlocks.toJSON();
+                }
+                break;
+
+            case "block_def":
+                module.attrs.rect.fill = blockColor;
+                break;
         }
+
 
         var instancesCount = 1;
         var name4NewInstance = moduleDef.name + "-" + instancesCount;
@@ -573,6 +605,24 @@ viewModels.Editor = (function () {
             res.instnameSelectedModule("Properties");
             $("#moduleContextMenu").hide();
             $("#linkContextMenu").hide();
+        }
+    })
+
+    paper.on('cell:pointerdblclick', function (cellView, x, y) {
+        if (cellView.model.attributes.blocksJSON) {
+            // Это модуль, имеющий сложную конфигурации в виде подсхемы с блоками
+            graph.fromJSON(cellView.model.attributes.blocksJSON);
+            res.listModules.removeAll();
+
+            var metaModule = GetModuleMeta(cellView.model.attributes.moduleType);
+
+            $.each(metaModule.definition().subSchema.blocksDefinitions, function (i, item) {
+                var el = new MetaOfModule()
+                    .definition(item)
+                res.listModules.push(el);
+            });
+
+
         }
     })
 
