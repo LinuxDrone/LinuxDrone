@@ -1,11 +1,3 @@
-// Запрет показа стандартного меню, вызываемого по правой кнопке мыши
-document.addEventListener("contextmenu", function (e) {
-    e.preventDefault();
-}, false);
-
-inPortsFillColor = '#16A085';
-outPortsFillColor = '#E74C3C';
-
 var graph = new joint.dia.Graph;
 
 var paper = new joint.dia.Paper({
@@ -18,14 +10,14 @@ var paper = new joint.dia.Paper({
             '.connection': {stroke: 'red', 'stroke-width': "2"}
         }
     }),
-    validateConnection: function (cellViewS, magnetS, cellViewT, magnetT, end, linkView) {
+    validateConnection: function (cellViewS, magnetS, cellViewT, magnetT) {
         //return true;
         // Prevent linking from input ports.
-        if (magnetS && magnetS.attributes.fill.value === inPortsFillColor) return false;
+        if (magnetS && magnetS.attributes.fill.value === viewModels.Editor.inPortsFillColor) return false;
         // Prevent linking from output ports to input ports within one element.
         if (cellViewS === cellViewT) return false;
         // Prevent linking to input ports.
-        return magnetT && magnetT.attributes.fill.value === inPortsFillColor;
+        return magnetT && magnetT.attributes.fill.value === viewModels.Editor.inPortsFillColor;
     }
     /*
      ,
@@ -38,12 +30,18 @@ var paper = new joint.dia.Paper({
 });
 $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
 
+
 var viewModels = viewModels || {};
 
 viewModels.Editor = (function () {
+    var outPortsFillColor = '#E74C3C';
+    var normalModuleColor = '#2ECC71';
+    var blockModuleColor = '#CCCC71';
+
     var allConfigs = {};
 
     var res = {
+        inPortsFillColor: '#16A085',
         // Метаинформация модулей
         metaModules: ko.observableArray([]),
         // Список имен конфигураций
@@ -74,11 +72,6 @@ viewModels.Editor = (function () {
         // Специфические свойства выбранного в схеме инстанса модуля
         instanceSpecificProperties: ko.observableArray([])
     };
-
-    ModulesCommonParams.commonModuleParamsDefinition.forEach(function (prop) {
-        prop.value = ko.observable(prop.defaultValue);
-        res.instanceCommonProperties.push(prop);
-    });
 
     // Публичная функция загрузки конфигурации
     res.LoadConfigurations = function (_initialData) {
@@ -117,7 +110,7 @@ viewModels.Editor = (function () {
         res.metaModules([]);
         $.each(_initialData, function (i, item) {
             res.metaModules.push(new MetaOfModule()
-                    .definition(item)
+                .definition(item)
             );
         });
     };
@@ -204,174 +197,25 @@ viewModels.Editor = (function () {
         else {
             return "stringTemplate";
         }
-    }
-
-    // Обработчик события выбора имени конфигурации
-    res.configNameSelected.subscribe(function (selectedName) {
-        res.Versions([]);
-        if (selectedName) {
-            $.each(_.where(allConfigs, {name: selectedName}), function (i, config) {
-                res.Versions.push(config.version);
-            });
-            res.newConfigName(selectedName);
-        }
-        else {
-            graph.clear();
-            res.graphChanged(false);
-        }
-    });
-
-    // Обработчик события выбора версии
-    res.versionSelected.subscribe(function (version) {
-        if (version) {
-            res.currentConfig(GetConfig(res.configNameSelected(), version));
-            if (res.currentConfig().jsonGraph) {
-                graph.fromJSON(JSON.parse(res.currentConfig().jsonGraph));
-
-                // Инициализация портов на модулях, с целью показа их описания в тултипе
-                var elements = graph.getElements();
-                $.each(elements, function (i, element) {
-                    var view = paper.findViewByModel(element);
-
-                    $.each([2, 3], function (i, s) {
-                        $.each(view.el.childNodes[0].childNodes[s].childNodes, function (k, port) {
-                            port.childNodes[0].onmouseenter = function (e) {
-                                $("#portTooltip").css({
-                                    display: "block",
-                                    left: e.x,
-                                    top: e.y
-                                });
-                                var groupsPorts = new Array();
-                                var moduleType = element.attributes.moduleType;
-                                var portName = port.textContent;
-
-                                var meta = GetModuleMeta(moduleType);
-                                if(s==2)
-                                {
-                                    groupsPorts.push(meta.definition().inputShema.properties);
-                                }
-                                else
-                                {
-                                    $.each(meta.definition().outputs, function (i, m) {
-                                        groupsPorts.push(m.Schema.properties);
-                                    });
-                                }
-
-                                $.each(groupsPorts, function (i, gp) {
-                                    var propsObj = gp;
-                                    if(propsObj.hasOwnProperty(portName))
-                                    {
-                                        var portMeta = propsObj[portName];
-
-                                        var text = portMeta.type;
-
-                                        text += "<br>" + Geti18nProperty(portMeta, "description");
-
-                                        /*
-                                        if(portMeta.hasOwnProperty("description"))
-                                        {
-                                            if(portMeta.description.hasOwnProperty(GetLocale()))
-                                            {
-                                                text += "<br>" + portMeta.description[GetLocale()];
-                                            }
-                                            else
-                                            {
-                                                if(portMeta.description.hasOwnProperty("en"))
-                                                {
-                                                    text += "<br>" + portMeta.description.en;
-                                                }
-                                            }
-                                        }
-                                        */
-
-                                        var options = {placement: "left", html: true, title: text};
-                                        $("#portTooltip").tooltip('destroy');
-                                        $("#portTooltip").tooltip(options);
-                                        $("#portTooltip").tooltip('show');
-                                    }
-                                });
-                            };
-
-                            port.childNodes[0].onmouseleave = function (e) {
-                                $("#portTooltip").tooltip('hide');
-                            }
-                        });
-                    });
-                });
-            }
-            res.graphChanged(false);
-            res.instnameSelectedModule("Properties");
-        }
-    });
+    };
 
     // Пытается вернуть текстовое свойство объекта в локали браузера
-    function Geti18nProperty(obj, propName)
-    {
-        if(obj.hasOwnProperty(propName))
-        {
-            if(obj[propName].hasOwnProperty(GetLocale()))
-            {
+    var Geti18nProperty = function (obj, propName) {
+        if (obj.hasOwnProperty(propName)) {
+            if (obj[propName].hasOwnProperty(GetLocale())) {
                 return obj[propName][GetLocale()];
             }
-            else
-            {
-                if(obj[propName].hasOwnProperty("en"))
-                {
+            else {
+                if (obj[propName].hasOwnProperty("en")) {
                     return obj.description.en;
                 }
             }
         }
         return "";
-    }
-
-    // Обработчик события выбора модуля
-    res.selectedCell.subscribe(function (cell) {
-        if (cell) {
-            res.instnameSelectedModule(cell.attributes.attrs[".label"].text);
-
-            // Определение специфичных для модуля полей, и установка их текущих значений
-            // Очищаем информацию о параметрах (для визуализации) инстанса
-            res.instanceSpecificProperties.removeAll();
-            // Получаем метаданные для типа инстанса
-            var moduleMeta = GetModuleMeta(cell.attributes.moduleType);
-
-            // Получаем значения параметров инстанса
-            var specificParams = GetInstanceSpecificParams(res.instnameSelectedModule(), cell.attributes.moduleType);
-
-            // Присваиваем значения параметров инстанса переменным, что будут учавствовать в биндинге
-            moduleMeta.definition().paramsDefinitions.forEach(function (prop) {
-                prop.value = ko.observable(specificParams[prop.name]);
-
-                // Подписываемся на изменения значения параметра, указывая в качестве контекста specificParams
-                prop.value.subscribe(function (newValue) {
-                    this.params[this.propertyName] = newValue;
-                    res.graphChanged(true);
-                }, {propertyName: prop.name, params: specificParams});
-
-                res.instanceSpecificProperties.push(prop);
-            });
-
-            // Установка значений параметров (общих для всех типов модулей) инстанса
-            var commonParams = GetInstanceCommonParams(res.instnameSelectedModule(), cell.attributes.moduleType);
-            res.instanceCommonProperties().forEach(function (prop) {
-                // Отменим предыдущцю подписку, если таковая была
-                if (prop.subscription) {
-                    prop.subscription.dispose();
-                }
-                // Установим текущее значение
-                prop.value(commonParams[prop.name]);
-
-                // Подписываемся на изменения значений свойств, указывая в качестве контекста commonParams
-                prop.subscription = prop.value.subscribe(function (newValue) {
-                    this.params[this.metaProperty.name] = newValue;
-                    res.graphChanged(true);
-                }, {metaProperty: prop, params: commonParams});
-            });
-        }
-    });
+    };
 
     // Приватная функция сохранения конфигурации (текущего графа) с именем и версией
-    function SaveCurrentConfig(name, version, isNew) {
+    var SaveCurrentConfig = function (name, version, isNew) {
         var data4save = {
             "name": name,
             "version": version,
@@ -415,32 +259,32 @@ viewModels.Editor = (function () {
                     res.graphChanged(false);
                 }
             });
-    }
+    };
 
     // Приватная функция
     // Возвращает объект текущего редактируемого конфига (из списка всех конфигов allConfigs)
-    function GetConfig(configName, version) {
+    var GetConfig = function (configName, version) {
         var cfg = _.where(allConfigs, {name: configName, version: version})[0];
         cfg.modulesParams = cfg.modulesParams || {};
         //cfg.linksParams = cfg.linksParams || {};
         return cfg;
-    }
+    };
 
     // Приватная функция
     // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
-    function GetInstanceCommonParams(instanceName, moduleType) {
+    var GetInstanceCommonParams = function GetInstanceCommonParams(instanceName, moduleType) {
         return GetInstanceParams(instanceName, moduleType).common;
-    }
+    };
 
     // Приватная функция
     // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
-    function GetInstanceSpecificParams(instanceName, moduleType) {
+    var GetInstanceSpecificParams = function GetInstanceSpecificParams(instanceName, moduleType) {
         return GetInstanceParams(instanceName, moduleType).specific;
-    }
+    };
 
     // Приватная функция
     // Возвращает объект - значения конфигурационных параметров инстанса модуля
-    function GetInstanceParams(instanceName, moduleType) {
+    var GetInstanceParams = function GetInstanceParams(instanceName, moduleType) {
         if (!res.currentConfig().modulesParams[instanceName]) {
             // Если для указанного инстанса нет в конфигурации параметров, следует их создать на основе дефолтных
             // из метаописания модуля
@@ -466,24 +310,26 @@ viewModels.Editor = (function () {
             });
 
             // Теперь установим специфичные для модуля параметры, взяв их значения из определения типа модуля
-            $.each(moduleMeta.definition().paramsDefinitions, function (i, paramDefinition) {
-                moduleParams.specific[paramDefinition.name] = paramDefinition.defaultValue;
-            });
+            if (moduleMeta.definition().paramsDefinitions) {
+                $.each(moduleMeta.definition().paramsDefinitions, function (i, paramDefinition) {
+                    moduleParams.specific[paramDefinition.name] = paramDefinition.defaultValue;
+                });
+            }
         }
         return res.currentConfig().modulesParams[instanceName];
-    }
+    };
 
     // Приватная функция
     // Возвращает описание модуля
-    function GetModuleMeta(moduleName) {
+    var GetModuleMeta = function GetModuleMeta(moduleName) {
         return _.find(res.metaModules(), function (meta) {
             return meta.definition().name == moduleName;
         });
-    }
+    };
 
     // Приватная функция
     // Создает экзмепляр визуального модуля библиотеки joint, из описания модуля в формате linuxdrone
-    function MakeVisualModule(moduleInfo) {
+    var MakeVisualModule = function MakeVisualModule(moduleInfo) {
         var moduleDef = moduleInfo.definition();
 
         var maxPins = 0;
@@ -494,11 +340,15 @@ viewModels.Editor = (function () {
             size: { width: 90},
             attrs: {
                 '.label': {'ref-x': .2, 'ref-y': -2 },
-                rect: { fill: '#2ECC71' },
-                '.inPorts circle': { fill: inPortsFillColor },
+                rect: {fill: normalModuleColor},
+                '.inPorts circle': { fill: res.inPortsFillColor },
                 '.outPorts circle': { fill: outPortsFillColor }
             }
         };
+
+        if (moduleDef.subSchema) {
+            module.attrs.rect.fill = blockModuleColor;
+        }
 
         var instancesCount = 1;
         var name4NewInstance = moduleDef.name + "-" + instancesCount;
@@ -540,10 +390,9 @@ viewModels.Editor = (function () {
 
         // Добавление параметров, со значениями по умолчанию
         return new joint.shapes.devs.Model(module);
-    }
+    };
 
-    function GetLocale()
-    {
+    var GetLocale = function () {
         var l_lang;
         if (navigator.userLanguage) // Explorer
             l_lang = navigator.userLanguage;
@@ -552,7 +401,139 @@ viewModels.Editor = (function () {
         else
             l_lang = "en";
         return l_lang;
-    }
+    };
+
+    // Загрузка метаданных общих свойств модулей в observable переменную
+    ModulesCommonParams.commonModuleParamsDefinition.forEach(function (prop) {
+        prop.value = ko.observable(prop.defaultValue);
+        res.instanceCommonProperties.push(prop);
+    });
+
+    // Обработчик события выбора имени конфигурации
+    res.configNameSelected.subscribe(function (selectedName) {
+        res.Versions([]);
+        if (selectedName) {
+            $.each(_.where(allConfigs, {name: selectedName}), function (i, config) {
+                res.Versions.push(config.version);
+            });
+            res.newConfigName(selectedName);
+        }
+        else {
+            graph.clear();
+            res.graphChanged(false);
+        }
+    });
+
+    // Обработчик события выбора версии
+    res.versionSelected.subscribe(function (version) {
+        if (version) {
+            res.currentConfig(GetConfig(res.configNameSelected(), version));
+            if (res.currentConfig().jsonGraph) {
+                graph.fromJSON(JSON.parse(res.currentConfig().jsonGraph));
+
+                // Инициализация портов на модулях, с целью показа их описания в тултипе
+                var elements = graph.getElements();
+                $.each(elements, function (i, element) {
+                    var view = paper.findViewByModel(element);
+
+                    $.each([2, 3], function (i, s) {
+                        $.each(view.el.childNodes[0].childNodes[s].childNodes, function (k, port) {
+                            port.childNodes[0].onmouseenter = function (e) {
+                                $("#portTooltip").css({
+                                    display: "block",
+                                    left: e.x,
+                                    top: e.y
+                                });
+                                var groupsPorts = new Array();
+                                var moduleType = element.attributes.moduleType;
+                                var portName = port.textContent;
+
+                                var meta = GetModuleMeta(moduleType);
+                                if (s == 2) {
+                                    groupsPorts.push(meta.definition().inputShema.properties);
+                                }
+                                else {
+                                    $.each(meta.definition().outputs, function (i, m) {
+                                        groupsPorts.push(m.Schema.properties);
+                                    });
+                                }
+
+                                $.each(groupsPorts, function (i, gp) {
+                                    var propsObj = gp;
+                                    if (propsObj.hasOwnProperty(portName)) {
+                                        var portMeta = propsObj[portName];
+
+                                        var text = portMeta.type;
+
+                                        text += "<br>" + Geti18nProperty(portMeta, "description");
+
+                                        var options = {placement: "left", html: true, title: text};
+                                        $("#portTooltip").tooltip('destroy');
+                                        $("#portTooltip").tooltip(options);
+                                        $("#portTooltip").tooltip('show');
+                                    }
+                                });
+                            };
+
+                            port.childNodes[0].onmouseleave = function (e) {
+                                $("#portTooltip").tooltip('hide');
+                            }
+                        });
+                    });
+                });
+            }
+            res.graphChanged(false);
+            res.instnameSelectedModule("Properties");
+        }
+    });
+
+    // Обработчик события выбора модуля
+    res.selectedCell.subscribe(function (cell) {
+        if (cell) {
+            res.instnameSelectedModule(cell.attributes.attrs[".label"].text);
+
+            // Определение специфичных для модуля полей, и установка их текущих значений
+            // Очищаем информацию о параметрах (для визуализации) инстанса
+            res.instanceSpecificProperties.removeAll();
+            // Получаем метаданные для типа инстанса
+            var moduleMeta = GetModuleMeta(cell.attributes.moduleType);
+
+            // Получаем значения параметров инстанса
+            var specificParams = GetInstanceSpecificParams(res.instnameSelectedModule(), cell.attributes.moduleType);
+
+            // Присваиваем значения параметров инстанса переменным, что будут учавствовать в биндинге
+            if (moduleMeta.definition().paramsDefinitions) {
+                moduleMeta.definition().paramsDefinitions.forEach(function (prop) {
+                    prop.value = ko.observable(specificParams[prop.name]);
+
+                    // Подписываемся на изменения значения параметра, указывая в качестве контекста specificParams
+                    prop.value.subscribe(function (newValue) {
+                        this.params[this.propertyName] = newValue;
+                        res.graphChanged(true);
+                    }, {propertyName: prop.name, params: specificParams});
+
+                    res.instanceSpecificProperties.push(prop);
+                });
+            }
+
+            // Установка значений параметров (общих для всех типов модулей) инстанса
+            var commonParams = GetInstanceCommonParams(res.instnameSelectedModule(), cell.attributes.moduleType);
+            res.instanceCommonProperties().forEach(function (prop) {
+                // Отменим предыдущцю подписку, если таковая была
+                if (prop.subscription) {
+                    prop.subscription.dispose();
+                }
+                // Установим текущее значение
+                prop.value(commonParams[prop.name]);
+
+                // Подписываемся на изменения значений свойств, указывая в качестве контекста commonParams
+                prop.subscription = prop.value.subscribe(function (newValue) {
+                    this.params[this.metaProperty.name] = newValue;
+                    res.graphChanged(true);
+                }, {metaProperty: prop, params: commonParams});
+            });
+        }
+    });
 
     graph.on('change', function () {
         res.graphChanged(true);
@@ -613,16 +594,16 @@ viewModels.Editor = (function () {
 $(document).ready(function () {
 
     $.when(
-        $.getJSON("metamodules",
-            function (data) {
-                viewModels.Editor.LoadMetaModules(data);
-            }),
+            $.getJSON("metamodules",
+                function (data) {
+                    viewModels.Editor.LoadMetaModules(data);
+                }),
 
-        $.getJSON("getconfigs",
-            function (data) {
-                viewModels.Editor.LoadConfigurations(data);
-            })
-    ).then(function (a1, a2) {
+            $.getJSON("getconfigs",
+                function (data) {
+                    viewModels.Editor.LoadConfigurations(data);
+                })
+        ).then(function (a1, a2) {
             //Request OK
             ko.applyBindings(viewModels.Editor);
         }, function (err1, err2) {
@@ -630,5 +611,11 @@ $(document).ready(function () {
         });
 
 });
+
+// Запрет показа стандартного меню, вызываемого по правой кнопке мыши
+document.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+}, false);
+
 
 
