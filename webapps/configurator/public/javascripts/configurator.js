@@ -43,6 +43,9 @@ viewModels.Editor = (function () {
 
     var res = {
         inPortsFillColor: '#16A085',
+        // Режим отображения схем. Два варианта - "main" для рисования схем верхнего уровня, и "sub" для
+        // рисования подсхем конфигурации сложных модулей
+        editSchemaMode: ko.observable("main"),
         // Метаинформация модулей
         metaModules: ko.observableArray([]),
         // Список модулей модулей
@@ -75,6 +78,9 @@ viewModels.Editor = (function () {
         // Специфические свойства выбранного в схеме инстанса модуля
         instanceSpecificProperties: ko.observableArray([])
     };
+
+    // служит для хранения ссылки на model сложноконфигурируемого модуля при переходе к редактированию его схемы
+    var selectedSuperModule;
 
     // Публичная функция загрузки конфигурации
     res.LoadConfigurations = function (_initialData) {
@@ -202,6 +208,31 @@ viewModels.Editor = (function () {
             return "stringTemplate";
         }
     };
+
+    // Возврат к редактированию основной схемы, из экрана конфигурирования сложного модуля
+    res.ReturnToMainScheme = function () {
+        res.listModules.removeAll();
+        res.editSchemaMode("main");
+        res.instnameSelectedModule("Properties");
+
+        $.each(res.metaModules(), function (i, el) {
+            res.listModules.push(el);
+        });
+        ShowMainSchema(res.versionSelected());
+
+        var modelSuperModule = _.find(graph.attributes.cells.models, function (model) {
+            return model.id == selectedSuperModule.id;
+        });
+
+        if (selectedSuperModule.attributes.blocksJSON.cells) {
+            modelSuperModule.attributes.blocksJSON = selectedSuperModule.attributes.blocksJSON;
+        }
+        selectedSuperModule = undefined;
+    }
+
+    res.SaveSubSchema = function () {
+        selectedSuperModule.attributes.blocksJSON = graph.toJSON();
+    }
 
     // Пытается вернуть текстовое свойство объекта в локали браузера
     var Geti18nProperty = function (obj, propName) {
@@ -435,29 +466,7 @@ viewModels.Editor = (function () {
         return l_lang;
     };
 
-    // Загрузка метаданных общих свойств модулей в observable переменную
-    ModulesCommonParams.commonModuleParamsDefinition.forEach(function (prop) {
-        prop.value = ko.observable(prop.defaultValue);
-        res.instanceCommonProperties.push(prop);
-    });
-
-    // Обработчик события выбора имени конфигурации
-    res.configNameSelected.subscribe(function (selectedName) {
-        res.Versions([]);
-        if (selectedName) {
-            $.each(_.where(allConfigs, {name: selectedName}), function (i, config) {
-                res.Versions.push(config.version);
-            });
-            res.newConfigName(selectedName);
-        }
-        else {
-            graph.clear();
-            res.graphChanged(false);
-        }
-    });
-
-    // Обработчик события выбора версии
-    res.versionSelected.subscribe(function (version) {
+    var ShowMainSchema = function (version) {
         if (version) {
             res.currentConfig(GetConfig(res.configNameSelected(), version));
             if (res.currentConfig().jsonGraph) {
@@ -517,6 +526,32 @@ viewModels.Editor = (function () {
             res.graphChanged(false);
             res.instnameSelectedModule("Properties");
         }
+    }
+
+    // Загрузка метаданных общих свойств модулей в observable переменную
+    ModulesCommonParams.commonModuleParamsDefinition.forEach(function (prop) {
+        prop.value = ko.observable(prop.defaultValue);
+        res.instanceCommonProperties.push(prop);
+    });
+
+    // Обработчик события выбора имени конфигурации
+    res.configNameSelected.subscribe(function (selectedName) {
+        res.Versions([]);
+        if (selectedName) {
+            $.each(_.where(allConfigs, {name: selectedName}), function (i, config) {
+                res.Versions.push(config.version);
+            });
+            res.newConfigName(selectedName);
+        }
+        else {
+            graph.clear();
+            res.graphChanged(false);
+        }
+    });
+
+    // Обработчик события выбора версии
+    res.versionSelected.subscribe(function (version) {
+        ShowMainSchema(version);
     });
 
     // Обработчик события выбора модуля
@@ -613,6 +648,8 @@ viewModels.Editor = (function () {
             // Это модуль, имеющий сложную конфигурации в виде подсхемы с блоками
             graph.fromJSON(cellView.model.attributes.blocksJSON);
             res.listModules.removeAll();
+            res.editSchemaMode("sub");
+            res.instnameSelectedModule("Properties");
 
             var metaModule = GetModuleMeta(cellView.model.attributes.moduleType);
 
@@ -622,7 +659,7 @@ viewModels.Editor = (function () {
                 res.listModules.push(el);
             });
 
-
+            selectedSuperModule = cellView.model;
         }
     })
 
