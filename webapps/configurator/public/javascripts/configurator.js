@@ -226,6 +226,8 @@ viewModels.Editor = (function () {
 
         if (selectedSuperModule.attributes.blocksJSON.cells) {
             modelSuperModule.attributes.blocksJSON = selectedSuperModule.attributes.blocksJSON;
+            res.currentConfig().jsonGraph = JSON.stringify(graph.toJSON());
+            res.graphChanged(true);
         }
         selectedSuperModule = undefined;
     }
@@ -646,6 +648,9 @@ viewModels.Editor = (function () {
     paper.on('cell:pointerdblclick', function (cellView, x, y) {
         if (cellView.model.attributes.blocksJSON) {
             // Это модуль, имеющий сложную конфигурации в виде подсхемы с блоками
+            // Сохраним текущее положение дел в объекте конфигурации
+            res.currentConfig().jsonGraph = JSON.stringify(graph.toJSON());
+            // Подгрузим визуальную схему подмодуля
             graph.fromJSON(cellView.model.attributes.blocksJSON);
             res.listModules.removeAll();
             res.editSchemaMode("sub");
