@@ -72,6 +72,8 @@ viewModels.Editor = (function () {
         selectedLink: ko.observable(),
         // Имя инстанса выбранного в схеме модуля
         instnameSelectedModule: ko.observable(),
+        // служит для хранения ссылки на model сложноконфигурируемого модуля при переходе к редактированию его схемы
+        selectedSuperModule: ko.observable(),
 
         // Общие свойства выбранного в схеме инстанса модуля
         instanceCommonProperties: ko.observableArray([]),
@@ -79,8 +81,6 @@ viewModels.Editor = (function () {
         instanceSpecificProperties: ko.observableArray([])
     };
 
-    // служит для хранения ссылки на model сложноконфигурируемого модуля при переходе к редактированию его схемы
-    var selectedSuperModule;
 
     // Публичная функция загрузки конфигурации
     res.LoadConfigurations = function (_initialData) {
@@ -221,19 +221,19 @@ viewModels.Editor = (function () {
         ShowMainSchema(res.versionSelected());
 
         var modelSuperModule = _.find(graph.attributes.cells.models, function (model) {
-            return model.id == selectedSuperModule.id;
+            return model.id == res.selectedSuperModule().id;
         });
 
-        if (selectedSuperModule.attributes.blocksJSON.cells) {
-            modelSuperModule.attributes.blocksJSON = selectedSuperModule.attributes.blocksJSON;
+        if (res.selectedSuperModule().attributes.blocksJSON.cells) {
+            modelSuperModule.attributes.blocksJSON = res.selectedSuperModule().attributes.blocksJSON;
             res.currentConfig().jsonGraph = JSON.stringify(graph.toJSON());
             res.graphChanged(true);
         }
-        selectedSuperModule = undefined;
+        res.selectedSuperModule(undefined);
     }
 
     res.SaveSubSchema = function () {
-        selectedSuperModule.attributes.blocksJSON = graph.toJSON();
+        res.selectedSuperModule().attributes.blocksJSON = graph.toJSON();
     }
 
     // Пытается вернуть текстовое свойство объекта в локали браузера
@@ -309,26 +309,25 @@ viewModels.Editor = (function () {
 
     // Приватная функция
     // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
-    var GetInstanceCommonParams = function GetInstanceCommonParams(instanceName, moduleType) {
-        return GetInstanceParams(instanceName, moduleType).common;
+    var GetInstanceCommonParams = function GetInstanceCommonParams(instanceName, moduleMeta) {
+        return GetInstanceParams(instanceName, moduleMeta).common;
     };
 
     // Приватная функция
     // Возвращает объект - значения общих конфигурационных параметров инстанса модуля
-    var GetInstanceSpecificParams = function GetInstanceSpecificParams(instanceName, moduleType) {
-        return GetInstanceParams(instanceName, moduleType).specific;
+    var GetInstanceSpecificParams = function GetInstanceSpecificParams(instanceName, moduleMeta) {
+        return GetInstanceParams(instanceName, moduleMeta).specific;
     };
 
     // Приватная функция
     // Возвращает объект - значения конфигурационных параметров инстанса модуля
-    var GetInstanceParams = function GetInstanceParams(instanceName, moduleType) {
+    var GetInstanceParams = function GetInstanceParams(instanceName, moduleMeta) {
         if (!res.currentConfig().modulesParams[instanceName]) {
             // Если для указанного инстанса нет в конфигурации параметров, следует их создать на основе дефолтных
             // из метаописания модуля
             res.currentConfig().modulesParams[instanceName] = {common: {}, specific: {}};
             var moduleParams = res.currentConfig().modulesParams[instanceName];
 
-            var moduleMeta = GetModuleMeta(moduleType);
             //if (moduleMeta) {
             // Сначала заполним дефолтные значения для общих (для всех типов модулей) свойств
             $.each(_.pluck(ModulesCommonParams.commonModuleParamsDefinition, "name"), function (i, paramName) {
@@ -568,7 +567,7 @@ viewModels.Editor = (function () {
             var moduleMeta = GetModuleMeta(cell.attributes.moduleType);
 
             // Получаем значения параметров инстанса
-            var specificParams = GetInstanceSpecificParams(res.instnameSelectedModule(), cell.attributes.moduleType);
+            var specificParams = GetInstanceSpecificParams(res.instnameSelectedModule(), moduleMeta);
 
             // Присваиваем значения параметров инстанса переменным, что будут учавствовать в биндинге
             if (moduleMeta.definition().paramsDefinitions) {
@@ -586,7 +585,7 @@ viewModels.Editor = (function () {
             }
 
             // Установка значений параметров (общих для всех типов модулей) инстанса
-            var commonParams = GetInstanceCommonParams(res.instnameSelectedModule(), cell.attributes.moduleType);
+            var commonParams = GetInstanceCommonParams(res.instnameSelectedModule(), moduleMeta);
             res.instanceCommonProperties().forEach(function (prop) {
                 // Отменим предыдущцю подписку, если таковая была
                 if (prop.subscription) {
@@ -664,7 +663,7 @@ viewModels.Editor = (function () {
                 res.listModules.push(el);
             });
 
-            selectedSuperModule = cellView.model;
+            res.selectedSuperModule(cellView.model);
         }
     })
 
