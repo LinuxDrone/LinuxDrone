@@ -165,7 +165,14 @@ viewModels.Editor = (function () {
     res.RemoveModule = function RemoveModule() {
         if (res.selectedCell()) {
             // Следует так же удалить настройки модуля
-            delete res.currentConfig().modulesParams[res.selectedCell().attributes.attrs['.label'].text];
+            // Если это блок, то и удалять будем хитрее
+            if (res.selectedSuperModule()) {
+                var parentSuperModuleName = res.selectedSuperModule().attributes.attrs[".label"].text;
+                delete res.currentConfig().modulesParams[parentSuperModuleName].blocksConfig[res.selectedCell().attributes.attrs['.label'].text];
+            }
+            else {
+                delete res.currentConfig().modulesParams[res.selectedCell().attributes.attrs['.label'].text];
+            }
 
             res.selectedCell().remove();
             res.instnameSelectedModule("Properties");
@@ -322,29 +329,56 @@ viewModels.Editor = (function () {
     // Приватная функция
     // Возвращает объект - значения конфигурационных параметров инстанса модуля
     var GetInstanceParams = function GetInstanceParams(instanceName, moduleMeta) {
-        if (!res.currentConfig().modulesParams[instanceName]) {
+        var moduleParams;
+        var requireMakeDefaults = false;
+        switch (moduleMeta.definition().type) {
+            case "module_def":
+                if (!res.currentConfig().modulesParams[instanceName]) {
+                    requireMakeDefaults = true;
+                    res.currentConfig().modulesParams[instanceName] = {common: {}, specific: {}};
+                }
+                moduleParams = res.currentConfig().modulesParams[instanceName];
+                break;
+
+            case "block_def":
+                // Если это не модуль а блок, поместим его параметры в иерархию соответсвующего родительского инстанса модуля
+                var parentSuperModuleName = res.selectedSuperModule().attributes.attrs[".label"].text;
+                if (!res.currentConfig().modulesParams[parentSuperModuleName].blocksConfig) {
+                    res.currentConfig().modulesParams[parentSuperModuleName].blocksConfig = {};
+                }
+
+                if (!res.currentConfig().modulesParams[parentSuperModuleName].blocksConfig[instanceName]) {
+                    requireMakeDefaults = true;
+                    res.currentConfig().modulesParams[parentSuperModuleName].blocksConfig[instanceName] = {specific: {}};
+                }
+                moduleParams = res.currentConfig().modulesParams[parentSuperModuleName].blocksConfig[instanceName];
+                break;
+
+            default:
+                alert("Unknown module object type '" + moduleMeta.definition().type + "'");
+        }
+
+        if (requireMakeDefaults) {
             // Если для указанного инстанса нет в конфигурации параметров, следует их создать на основе дефолтных
             // из метаописания модуля
-            res.currentConfig().modulesParams[instanceName] = {common: {}, specific: {}};
-            var moduleParams = res.currentConfig().modulesParams[instanceName];
-
-            //if (moduleMeta) {
-            // Сначала заполним дефолтные значения для общих (для всех типов модулей) свойств
-            $.each(_.pluck(ModulesCommonParams.commonModuleParamsDefinition, "name"), function (i, paramName) {
-                // Если дефолтное значение задано в определении модуля, то используем его
-                // Иначе (если опять же оно задано) возьмем его из общего для всех модулей определения
-                if (moduleMeta.definition()[paramName]) {
-                    moduleParams.common[paramName] = moduleMeta.definition()[paramName];
-                }
-                else {
-                    var commonParam = _.find(ModulesCommonParams.commonModuleParamsDefinition, function (commonParamMeta) {
-                        return commonParamMeta.name == paramName;
-                    });
-                    if (commonParam && commonParam.defaultValue) {
-                        moduleParams.common[paramName] = commonParam.defaultValue;
+            if (moduleMeta.definition().type == "module_def") {
+                // Сначала заполним дефолтные значения для общих (для всех типов модулей) свойств
+                $.each(_.pluck(ModulesCommonParams.commonModuleParamsDefinition, "name"), function (i, paramName) {
+                    // Если дефолтное значение задано в определении модуля, то используем его
+                    // Иначе (если опять же оно задано) возьмем его из общего для всех модулей определения
+                    if (moduleMeta.definition()[paramName]) {
+                        moduleParams.common[paramName] = moduleMeta.definition()[paramName];
                     }
-                }
-            });
+                    else {
+                        var commonParam = _.find(ModulesCommonParams.commonModuleParamsDefinition, function (commonParamMeta) {
+                            return commonParamMeta.name == paramName;
+                        });
+                        if (commonParam && commonParam.defaultValue) {
+                            moduleParams.common[paramName] = commonParam.defaultValue;
+                        }
+                    }
+                });
+            }
 
             // Теперь установим специфичные для модуля параметры, взяв их значения из определения типа модуля
             if (moduleMeta.definition().paramsDefinitions) {
@@ -352,9 +386,8 @@ viewModels.Editor = (function () {
                     moduleParams.specific[paramDefinition.name] = paramDefinition.defaultValue;
                 });
             }
-            //}
         }
-        return res.currentConfig().modulesParams[instanceName];
+        return moduleParams;
     };
 
     // Приватная функция
@@ -586,20 +619,22 @@ viewModels.Editor = (function () {
 
             // Установка значений параметров (общих для всех типов модулей) инстанса
             var commonParams = GetInstanceCommonParams(res.instnameSelectedModule(), moduleMeta);
-            res.instanceCommonProperties().forEach(function (prop) {
-                // Отменим предыдущцю подписку, если таковая была
-                if (prop.subscription) {
-                    prop.subscription.dispose();
-                }
-                // Установим текущее значение
-                prop.value(commonParams[prop.name]);
+            if (commonParams) {
+                res.instanceCommonProperties().forEach(function (prop) {
+                    // Отменим предыдущцю подписку, если таковая была
+                    if (prop.subscription) {
+                        prop.subscription.dispose();
+                    }
+                    // Установим текущее значение
+                    prop.value(commonParams[prop.name]);
 
-                // Подписываемся на изменения значений свойств, указывая в качестве контекста commonParams
-                prop.subscription = prop.value.subscribe(function (newValue) {
-                    this.params[this.metaProperty.name] = newValue;
-                    res.graphChanged(true);
-                }, {metaProperty: prop, params: commonParams});
-            });
+                    // Подписываемся на изменения значений свойств, указывая в качестве контекста commonParams
+                    prop.subscription = prop.value.subscribe(function (newValue) {
+                        this.params[this.metaProperty.name] = newValue;
+                        res.graphChanged(true);
+                    }, {metaProperty: prop, params: commonParams});
+                });
+            }
         }
     });
 
