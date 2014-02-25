@@ -485,6 +485,9 @@ viewModels.Editor = (function () {
 
         module.size.height = maxPins * 30;
 
+        // Этот вывзов обеспечит установку значений по умолчанию для свойств
+        GetInstanceParams(name4NewInstance, moduleInfo);
+
         // Добавление параметров, со значениями по умолчанию
         return new joint.shapes.devs.Model(module);
     };
