@@ -11,19 +11,8 @@
 //--------------------------------------------------------------------
 
 #include "system/CSystem"
-#include "text/CString"
-#include "system/Logger"
-
 #include "module/CModuleSystem"
-
-//#include "../../modules/mpu6050/cmpu6050meta.h"
-//#include "../../modules/sensors/csensorsmeta.h"
-//#include "../../modules/bmp180/cbmp180meta.h"
-//#include "../../modules/hmc5883/chmc5883meta.h"
-//#include "../../modules/ms5611/cms5611meta.h"
-
 #include "system/CSettings"
-
 #include "my_memory"
 
 int main(int argc, char* argv[])

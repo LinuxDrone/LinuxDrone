@@ -560,7 +560,7 @@ void CModule::recvObjects()
 		CSystem::sleep(2);
 		return;
 	}
-	Logger() << "readed =" << readed;
+//	Logger() << "readed =" << readed;
 	mongo::BSONObj obj = mongo::BSONObj((char*)ptr).copy();
 	rt_queue_free(&m_inputQueue, ptr);
 
