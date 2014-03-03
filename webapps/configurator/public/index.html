@@ -27,7 +27,7 @@
     <script src="javascripts/joint/src/joint.dia.link.js"></script>
     <script src="javascripts/joint/src/joint.dia.paper.js"></script>
 
-    <script src="javascripts/bootstrap.js"></script>
+    <script src="javascripts/bootstrap/bootstrap.js"></script>
     <script type='text/javascript' src='javascripts/knockout-3.0.0.js'></script>
     <script src="javascripts/knockout-bootstrap.min.js"></script>
 
@@ -38,11 +38,11 @@
 
 <div class="main-region clearfix">
     <div class="module-panel panel panel-info h100">
-        <div class="panel-heading">
+        <div class="panel-heading tools-region">
             <h3 class="panel-title">Modules</h3>
         </div>
         <div class="panel-body">
-            <div data-bind="template: { name: 'listModulesButtonsTemplate', foreach: metaModules }"></div>
+            <div data-bind="template: { name: 'listModulesButtonsTemplate', foreach: listModules }"></div>
         </div>
     </div>
     <div class="board panel panel-primary">
@@ -50,10 +50,10 @@
             <!--h3 class="panel-title">Schema</h3-->
             <div class="tools-region">
                 <!--h3 class="panel-title">Schema</h3-->
-                <form id="listConfigs" class="form-inline">
+                <form data-bind="visible: viewModels.Editor.editSchemaMode()=='main'" class="form-inline">
                     <!-- Выпадающий список схем -->
                     <div class="form-group">
-                        <label data-bind="attr: {for: 'schemas'}">Схема:</label>
+                        <label data-bind="attr: {for: 'schemas'}">Schema:</label>
                         <select class="form-control" data-bind="options: viewModels.Editor.ConfigNames,
                         optionsText: $data,
                         optionsValue: $data,
@@ -64,7 +64,7 @@
                     <!-- -->
                     <!-- Выпадающий список версий -->
                     <div class="form-group">
-                        <label data-bind="attr: {for: 'versions'}">Версия:</label>
+                        <label data-bind="attr: {for: 'versions'}">Version:</label>
                         <select class="form-control" data-bind="options: viewModels.Editor.Versions,
                         optionsText: $data,
                         optionsValue: $data,
@@ -73,7 +73,7 @@
                         visible: viewModels.Editor.Versions().length > 0"></select>
                     </div>
                     <!-- -->
-                    <i class="glyphicon glyphicon-info-sign" rel="tooltip" title="Супер схема!"></i>
+                    <i class="glyphicon glyphicon-info-sign" rel="tooltip" title="Info"></i>
                     <button type="button" class="btn btn-success" data-bind="click: SaveConfig,
                         visible: viewModels.Editor.Versions().length > 0, enable: viewModels.Editor.graphChanged()">Save
                     </button>
@@ -88,6 +88,19 @@
                             data-bind="visible: viewModels.Editor.Versions().length > 0">Export
                     </button>
                 </form>
+
+                <form data-bind="visible: viewModels.Editor.editSchemaMode()=='sub'" class="form-inline">
+                    <div class="form-group">
+                        <h3 class="panel-title" data-bind="text: function(){ if(viewModels.Editor.selectedSuperModule()) {return viewModels.Editor.selectedSuperModule().attributes.attrs['.label'].text;} else return'';}();"></h3>
+                    </div>
+
+                    <button type="button" class="btn btn-success" data-bind="click: SaveSubSchema">Save
+                    </button>
+                    <button type="button" class="btn btn-info"
+                            data-bind="visible: viewModels.Editor.Versions().length > 0, click: ReturnToMainScheme">
+                        Return to main scheme
+                    </button>
+                </form>
             </div>
         </div>
         <div class="panel-body h90">
@@ -95,12 +108,12 @@
         </div>
     </div>
     <div class="properties-panel panel panel-default">
-        <div class="panel-heading">
+        <div class="panel-heading  tools-region">
             <h3 class="panel-title" data-bind="text: viewModels.Editor.instnameSelectedModule"></h3>
         </div>
         <div class="panel-body" data-bind="visible: instnameSelectedModule()!='Properties'">
             <div class="panel-group" id="accordion">
-                <div class="panel panel-default">
+                <div class="panel panel-default" data-bind="visible: viewModels.Editor.editSchemaMode()=='main'">
                     <div class="panel-heading">
                         <h4 class="panel-title">
                             <a data-toggle="collapse" href="#collapseOne">
@@ -110,11 +123,12 @@
                     </div>
                     <div id="collapseOne" class="panel-collapse collapse in">
                         <div class="panel-body"
-                                 data-bind="template: { name: chooseTemplate4Property, foreach: instanceCommonProperties }">
+                             data-bind="template: { name: chooseTemplate4Property, foreach: instanceCommonProperties }">
                         </div>
                     </div>
                 </div>
-                <div class="panel panel-default">
+                <div class="panel panel-default"
+                     data-bind="visible: viewModels.Editor.instanceSpecificProperties().length != 0">
                     <div class="panel-heading">
                         <h4 class="panel-title">
                             <a data-toggle="collapse" href="#collapseTwo">
@@ -123,7 +137,8 @@
                         </h4>
                     </div>
                     <div id="collapseTwo" class="panel-collapse collapse in">
-                        <div class="panel-body" data-bind="template: { name: chooseTemplate4Property, foreach: instanceSpecificProperties }">
+                        <div class="panel-body"
+                             data-bind="template: { name: chooseTemplate4Property, foreach: instanceSpecificProperties }">
                         </div>
                     </div>
                 </div>
@@ -135,30 +150,31 @@
 
 <!-- Modal -->
 <div class="modal fade" id="saveAsModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title">Save current config as</h4>
-      </div>
-      <div class="modal-body">
-	    <div class="container">
-		  <div class="row">
-		    <div class=".col-md-4">Config Name:</div>
-		    <div class=".col-md-8"><input data-bind="value: viewModels.Editor.newConfigName"/></div>
-		  </div>
-		  <div class="row">
-		    <div class=".col-md-4">Version:</div>
-		    <div class=".col-md-8"><input data-bind="value: viewModels.Editor.newConfigVersion"/></div>
-		  </div>
-		</div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button class="btn btn-primary" data-dismiss="modal" data-bind="click: SaveConfigAs">Save New Config</button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Save current config as</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="row">
+                        <div class=".col-md-4">Config Name:</div>
+                        <div class=".col-md-8"><input data-bind="value: viewModels.Editor.newConfigName"/></div>
+                    </div>
+                    <div class="row">
+                        <div class=".col-md-4">Version:</div>
+                        <div class=".col-md-8"><input data-bind="value: viewModels.Editor.newConfigVersion"/></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button class="btn btn-primary" data-dismiss="modal" data-bind="click: SaveConfigAs">Save New Config
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <div id="portTooltip"></div>
@@ -194,15 +210,16 @@
 </script>
 
 
-
 <div id="moduleContextMenu" class="dropdown clearfix">
-    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu" style="display:block;position:static;margin-bottom:5px;">
+    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu"
+        style="display:block;position:static;margin-bottom:5px;">
         <li><a tabindex="-1" href="#" data-bind="click: RemoveModule">Delete</a></li>
     </ul>
 </div>
 
 <div id="linkContextMenu" class="dropdown clearfix">
-    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu" style="display:block;position:static;margin-bottom:5px;">
+    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu"
+        style="display:block;position:static;margin-bottom:5px;">
         <li><a tabindex="-1" href="#" data-bind="click: SetLinkAsPipe">Push delivery</a></li>
         <li><a tabindex="-1" href="#" data-bind="click: SetLinkAsSharedMemory">Pull delivery</a></li>
     </ul>
