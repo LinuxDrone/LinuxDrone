@@ -17,8 +17,8 @@
 #include <mongo/bson/bsontypes.h>
 
 #define TELEMETRY_COMMAND "command"
-#define TELEMETRY_COMMAND_ADD_QUERY "addQuery"
-#define TELEMETRY_COMMAND_REMOVE_QUERY "removeQuery"
+#define TELEMETRY_COMMAND_ADD_QUERY "Subscribe"
+#define TELEMETRY_COMMAND_REMOVE_QUERY "Unsubscribe"
 
 #define TELEMETRY_INSTANCENAME "instanceName"
 #define TELEMETRY_IDNAME "idName"
