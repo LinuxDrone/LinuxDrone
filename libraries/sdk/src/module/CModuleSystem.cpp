@@ -21,7 +21,8 @@
 
 CModuleSystem::CModuleSystem()
 {
-
+	m_telemetry.init(mongo::BSONObj());
+	m_telemetry.start();
 }
 
 CModuleSystem::~CModuleSystem()
@@ -64,12 +65,14 @@ void CModuleSystem::readAllModules(const CString& path)
 			Logger() << modulePath;
 			void* handle = dlopen(modulePath.data(), RTLD_NOW);
 			if (handle == 0) {
+				Logger() << __PRETTY_FUNCTION__ << ": error loading of module";
 				continue;
 			}
 			MODULEINFO info;
 			info.creator = (ptr_moduleCreator)dlsym(handle, "moduleCreator");
 			info.name = (ptr_moduleName)dlsym(handle, "moduleName");
 			if (info.creator == 0 || info.name == 0) {
+				Logger() << __PRETTY_FUNCTION__ << ": error fetch functions from module";
 				dlclose(handle);
 				continue;
 			}
@@ -77,6 +80,7 @@ void CModuleSystem::readAllModules(const CString& path)
 				CString name = info.name();
 				CMutexSection locker(&m_mutexInfo);
 				if (m_metaInfo.count(name) != 0) {
+					Logger() << "duplicate module metainformation. skip it";
 					dlclose(handle);
 					continue;
 				} else {
@@ -99,6 +103,9 @@ void CModuleSystem::removeAllInformation()
 
 bool CModuleSystem::createModules(const mongo::BSONObj& info)
 {
+	for (auto it:m_metaInfo) {
+		Logger() << it.first;
+	}
 	if (info.isEmpty()) {
 		return false;
 	}
