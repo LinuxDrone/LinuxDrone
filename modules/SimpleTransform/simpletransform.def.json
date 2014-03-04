@@ -54,6 +54,19 @@
                 "version": 1,
                 "paramsDefinitions": [
                     {
+                        "name": "angle",
+                        "displayName": {
+                            "en": "angle"
+                        },
+                        "description": {
+                            "ru": "угол"
+                        },
+                        "type": "number",
+                        "defaultValue": 0,
+                        "validValues": [0, 360],
+                        "unitMeasured": "градусы"
+                    },
+                    {
                         "name": "x",
                         "displayName": {
                             "en": "x"
@@ -61,10 +74,9 @@
                         "description": {
                             "ru": "ось x"
                         },
-                        "type": "number",
-                        "defaultValue": 0,
-                        "validValues": [0, 360],
-                        "unitMeasured": "градусы"
+                        "type": "boolean",
+                        "defaultValue": false,
+                        "unitMeasured": "факт"
                     },
                     {
                         "name": "y",
@@ -74,10 +86,9 @@
                         "description": {
                             "ru": "ось y"
                         },
-                        "type": "number",
-                        "defaultValue": 0,
-                        "validValues": [0, 360],
-                        "unitMeasured": "градусы"
+                        "type": "boolean",
+                        "defaultValue": false,
+                        "unitMeasured": "факт"
                     },
                     {
                         "name": "z",
@@ -87,10 +98,9 @@
                         "description": {
                             "ru": "ось z"
                         },
-                        "type": "number",
-                        "defaultValue": 0,
-                        "validValues": [0, 360],
-                        "unitMeasured": "градусы"
+                        "type": "boolean",
+                        "defaultValue": false,
+                        "unitMeasured": "факт"
                     }
                 ],
                 "inputShema": {
