@@ -99,6 +99,7 @@ protected:
 	RT_QUEUE m_inputQueue;
 	bool     m_queueCreated;
 
+	mongo::BSONObj m_dataOut;
 	RT_HEAP   m_outputHeap;
 	bool      m_heapCreated;
 	size_t    m_outputHeapSize;

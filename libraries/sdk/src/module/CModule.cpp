@@ -486,8 +486,9 @@ void CModule::sendObject(const mongo::BSONObj& object)
 	if (object.isEmpty()) {
 		return;
 	}
-//	Logger() << object.toString(false, true).c_str();
-	sendBsonToHeap(object);
+	m_dataOut = mergeObjects(m_dataOut, object);
+//	Logger() << m_dataOut.toString(false, true).c_str();
+	sendBsonToHeap(m_dataOut);
 
 	std::map<CString, mongo::BSONElement> objElements;
 	{
