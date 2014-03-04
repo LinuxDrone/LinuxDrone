@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "../module/cmodule.h"
+#include "../module/CModule.h"
 #include "network/CSocketSelect"
 #include <thread>
 
