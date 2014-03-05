@@ -43,6 +43,7 @@ bool CSystemI2C::open(const CString& busName)
 	if (isOpened()) {
 		return false;
 	}
+   
 	m_file = ::open(busName.data(), O_RDWR);
 	if (m_file < 0) {
 		Logger() << "Failed to open the bus (" << busName << ")";
