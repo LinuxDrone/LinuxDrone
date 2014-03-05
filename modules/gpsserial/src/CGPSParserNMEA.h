@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// This file was created as a part of the LinuxDrone project:
+// This file was created as a part of the LinuxDro*ne project:
 //                http://www.linuxdrone.org
 //
 // Distributed under the Creative Commons Attribution-ShareAlike 4.0
@@ -11,28 +11,26 @@
 //--------------------------------------------------------------------
 
 #pragma once
+#include "text/CString"
+#include "system/Logger"
+#include "CGPSParser.h"
 
-#include "CAbstractSerial.h"
-#include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <errno.h>
-#include <termios.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-
-class CImplSerialRegular : public CAbstractSerial
+class CGPSParserNMEA : public CGPSParser
 {
+	
 public:
-    
-    int serial_write(const void* data, size_t size);
-    int serial_read(void* data, size_t size);
-        
-    bool portOpen();
-    bool portClose();        
-    
-    private:
-        int m_fhandler;
+
+	CGPSParserNMEA();        
+	CGPSParserNMEA(CString sentence);        
+	~CGPSParserNMEA();
+
+	bool parseSentence() override;
+	CString getFullSentence(CString newsentence) override;
+
+private:	
+	
+	bool m_validChecksum; //If checksum is valid	
+	bool validade_checksum(CString sentence);
+	int hex2dec(char hexdigit); 
 };

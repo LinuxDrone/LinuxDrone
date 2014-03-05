@@ -1,0 +1,95 @@
+{
+    "type": "module_def",
+    "name": "GpsSerial",
+    "version": 1,
+    "Task Priority": 66,
+    "Task Period": 150,
+    "paramsDefinitions": [
+        {
+            "name": "Device Name",
+            "description": {
+                "ru": "Название девайса",
+		"en": "GPS Serial Device"
+            },
+            "type": "string",
+            "defaultValue": "GPS Serial",
+            "validValues" : ["GPS Serial"],
+            "unitMeasured": ""
+        },
+        {
+            "name": "Serial Port",
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "string",
+            "defaultValue": "/dev/ttyO2",
+            "validValues" : ["/dev/ttyO2","/dev/ttyO4","/dev/ttyO5"],
+            "unitMeasured": ""
+        },
+        {
+            "name": "Serial Type",
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "string",
+            "defaultValue": "UART",
+            "validValues" : ["UART","RTDM"],
+            "unitMeasured": ""
+        },
+        {
+            "name": "Serial Speed",
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "number",
+            "defaultValue": 115200,
+            "validValues" : [4800,9600,19200,38400,57600,115200],
+            "unitMeasured": "int"
+        },
+        {
+            "name": "GPS Protocol",
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "string",
+            "defaultValue": "NMEA uBlox",
+            "validValues" : ["NMEA","NMEA SiRF","NMEA uBlox","Binary SiRF","Binary uBlox"],
+            "unitMeasured": ""
+        }
+    ],
+    "outputs": [
+        {
+            "name": "Coordinates",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "latitude": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "longitude": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "altitude": {
+                        "type": "number",
+                        "required": true
+		    },
+                    "time": {
+                        "type": "string",
+                        "required": true
+		    },
+                    "fix": {
+                        "type": "number",
+                        "required": true
+		    },
+                    "satellites": {
+                        "type": "number",
+                        "required": true
+		    }			
+                }
+            }
+        }
+    ]
+}

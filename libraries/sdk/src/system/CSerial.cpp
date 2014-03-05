@@ -10,55 +10,46 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "CAbstractSerial.h"
+#include "CSerial.h"
 
-CAbstractSerial::CAbstractSerial()
+CSerial::CSerial()
 {
     
 }
-
-CAbstractSerial::CAbstractSerial(CString portFile, int portSpeed,CString portName)
-{
-    m_portName = portName;
-    m_portSpeed = portSpeed;    
-    m_portFile = portFile;
-    m_Opened = false;
-}
-
-CAbstractSerial::~CAbstractSerial()
+CSerial::~CSerial()
 {
 
 }
 	
-bool CAbstractSerial::isOpened()
+bool CSerial::isOpened()
 {
     return m_Opened;
 }
 
-CString CAbstractSerial::getPortName()
+CString CSerial::getPortName()
 {
     return m_portName;
 }
 
-int CAbstractSerial::getPortSpeed()
+int CSerial::getPortSpeed()
 {
     return m_portSpeed;
 }
 
-CString CAbstractSerial::getPortFile()
+CString CSerial::getPortFile()
 {
     return m_portFile;
 }
         
-bool CAbstractSerial::setPortFile(CString portFile)
+bool CSerial::setPortFile(CString portFile)
 {
     m_portFile = portFile;
 }
-bool CAbstractSerial::setPortSpeed(int portSpeed)
+bool CSerial::setPortSpeed(int portSpeed)
 {
     m_portSpeed = portSpeed;
 }
-bool CAbstractSerial::setPortName(CString portName)
+bool CSerial::setPortName(CString portName)
 {
     m_portName = portName;
 }

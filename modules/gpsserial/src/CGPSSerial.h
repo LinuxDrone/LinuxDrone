@@ -16,35 +16,39 @@
 #include "system/CSystem"
 #include "system/Logger"
 #include "system/CSerialBus"
-#include "system/CAbstractSerial"
-#include "system/CSerialFactory"
-
 #include <native/timer.h>
+#include "CGPSProtocolFactory.h"
+#include "CGPSParserFactory.h"
+#include "CGPSProtocol.h"
+#include "CGPSParser.h"
 
 
-class CSerialGps : public CModule
+
+class CGpsSerial : public CModule
 {
 public:
-	CSerialGps();
-	~CSerialGps();
+	CGpsSerial();
+	~CGpsSerial();
 
 	virtual bool init(const mongo::BSONObj& initObject);
 	bool start();
 
 private:
     //Methods
-    bool initSerialGps();
+    bool initGpsSerial();
     void moduleTask();
     uint32_t readSentence();
     
     //Variables
-    CAbstractSerial *m_serialbus;    
+    CSerial* m_serialbus;
     CString m_serialPort;
     CString m_sentence;
     CString m_portName;
     int m_serialSpeed;
     CString m_gpsProtocol;
-    CSerialFactory* csf = new CSerialBus;    
-    //CString m_serialType;
-    CSerialFactory::SerialType m_serialType;
+
+    CSerialBus::SerialType m_serialType;
+    CGPSProtocol* gpsProtocol;
+    CGPSParser* gpsProtocolParser;
+    typedef std::vector<CString> initCommands;
 };

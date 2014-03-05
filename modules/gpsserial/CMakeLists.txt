@@ -21,7 +21,7 @@ set(EXTRA_LIBS
 	core
 )
 
-add_library(serialgps MODULE ${INC} ${SRC})
+add_library(gpsserial MODULE ${INC} ${SRC})
 
-install(TARGETS serialgps DESTINATION modules/serialgps)
-install(FILES serialgps.def.json DESTINATION modules/serialgps)
+install(TARGETS gpsserial DESTINATION modules/gpsserial)
+install(FILES gpsserial.def.json DESTINATION modules/gpsserial)

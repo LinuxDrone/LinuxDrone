@@ -11,18 +11,24 @@
 //--------------------------------------------------------------------
 
 #pragma once
-#include "CAbstractSerial.h"
+#include "text/CString"
 
-class CSerialFactory
+#include "CGPSParser.h"
+#include "CGPSParserNMEA.h"
+
+class CGPSParserFactory
 {
 public:
-    enum SerialType
+	//"validValues" : ["NMEA","NMEA SiRF","NMEA uBlox","Binary SiRF","Binary uBlox"],
+   	static CGPSParser* createGPSParser(CString parserType)
     {
-        SerialType_Unknown,
-        SerialType_RTDM,
-        SerialType_Regular
-    };
-    CSerialFactory();
-    ~CSerialFactory();
-    virtual CAbstractSerial *createSerial(SerialType type) = 0;
+        if(parserType == "NMEA SiRF")
+        {
+            return new CGPSParserNMEA;
+        }
+        else if(parserType == "NMEA uBlox")
+        {
+            return new CGPSParserNMEA;
+        }
+    }
 };

@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// This file was created as a part of the LinuxDrone project:
+// This file was created as a part of the LinuxDro*ne project:
 //                http://www.linuxdrone.org
 //
 // Distributed under the Creative Commons Attribution-ShareAlike 4.0
@@ -10,16 +10,17 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-//#include "CSerialBus.h"
-
-//CAbstractSerial CSerialBus::*createSerial(int *type)
-//{
-    //if(serialType == "RTDM")
-    //{
-//        return new CImplSerialRegular;
+#include "CSerialBus.h"
+/*
+static CSerialAbstract CSerialBus::*createSerial(CSerialBus::SerialType &type)
+{
+    /*if(type == CSerialBus::SerialType_RT)
+    {
+        return new CSerialRegular;
+    }
+    else
+    {
+        return new CSerialRegular;
     //}
-    //else
-    //{
-    //    return new CImplSerialRegular();
-    //}
-//}
+}
+*/

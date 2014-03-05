@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// This file was created as a part of the LinuxDro*ne project:
+// This file was created as a part of the LinuxDrone project:
 //                http://www.linuxdrone.org
 //
 // Distributed under the Creative Commons Attribution-ShareAlike 4.0
@@ -11,28 +11,17 @@
 //--------------------------------------------------------------------
 
 #pragma once
-#include "CSerial.h"
-#include "CSerialUART.h"
+#include "text/CString"
+#include <vector>
+#include "CGPSProtocol.h"
 
-class CSerialBus
+class CGPSProtocolNMEASirf : public CGPSProtocol
 {
 public:
-    enum SerialType
-    {
-        SerialType_UART,
-        SerialType_RT,
-        SerialType_Unknown,
-    };
-    
-    static CSerial* createSerial(SerialType type)
-    {
-        if(type == SerialType_RT)
-        {
-            return new CSerialUART;
-        }
-        else
-        {
-            return new CSerialUART;
-        }
-    }
+	CGPSProtocolNMEASirf();	
+	~CGPSProtocolNMEASirf();
+	
+	std::vector<CString> getInitCommands() override;
+	CString	getQueryCommand() override;
+	int getEndSentence() override;
 };

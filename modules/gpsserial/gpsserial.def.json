@@ -1,10 +1,21 @@
 {
     "type": "module_def",
-    "name": "SerialGps",
+    "name": "GpsSerial",
     "version": 1,
     "Task Priority": 66,
     "Task Period": 150,
     "paramsDefinitions": [
+        {
+            "name": "Device Name",
+            "description": {
+                "ru": "Название девайса",
+		"en": "GPS Serial Device"
+            },
+            "type": "string",
+            "defaultValue": "GPS Serial",
+            "validValues" : ["GPS Serial"],
+            "unitMeasured": ""
+        },
         {
             "name": "Serial Port",
             "description": {
@@ -21,8 +32,8 @@
                 "ru": "Название девайса"
             },
             "type": "string",
-            "defaultValue": "Regular",
-            "validValues" : ["Regular","RTDM"],
+            "defaultValue": "UART",
+            "validValues" : ["UART","RTDM"],
             "unitMeasured": ""
         },
         {
@@ -31,7 +42,7 @@
                 "ru": "Название девайса"
             },
             "type": "number",
-            "defaultValue": 115200,
+            "defaultValue": 57600,
             "validValues" : [4800,9600,19200,38400,57600,115200],
             "unitMeasured": "int"
         },
@@ -41,19 +52,8 @@
                 "ru": "Название девайса"
             },
             "type": "string",
-            "defaultValue": "NMEA",
-            "validValues" : ["NMEA","SiRF"],
-            "unitMeasured": ""
-        }
-        ,
-        {
-            "name": "Port Name",
-            "description": {
-                "ru": "Название девайса"
-            },
-            "type": "string",
-            "defaultValue": "GPS Serial",
-            "validValues" : ["GPS Serial","GPS SiRF", "GPS uBlox"],
+            "defaultValue": "NMEA SiRF",
+            "validValues" : ["NMEA","NMEA SiRF","NMEA uBlox","Binary SiRF","Binary uBlox"],
             "unitMeasured": ""
         }
     ],

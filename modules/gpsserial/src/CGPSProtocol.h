@@ -10,4 +10,16 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "../../src/system/CSerialFactory.h"
+#pragma once
+
+#include "text/CString"
+#include <vector>
+#include "CGPSParser.h"
+
+class CGPSProtocol
+{
+public:
+	virtual std::vector<CString> getInitCommands() = 0;
+	virtual CString	getQueryCommand() = 0;
+	virtual int getEndSentence() = 0;	
+};

@@ -15,22 +15,20 @@
 #include "text/CString"
 #include <stddef.h>
 #include <stdint.h>
-#include "system/Logger"
 
-class CAbstractSerial
+class CSerial
 {
 public:
-	CAbstractSerial();	
-        CAbstractSerial(CString portFile, int portSpeed,CString portName);
-	~CAbstractSerial();
+	CSerial();        
+	~CSerial();
     	
-	virtual int serial_write(const void* data, size_t size) = 0;
-	virtual int serial_read(void* data, size_t size) = 0;
+	virtual int serial_write(CString &ata) = 0;
+	virtual int serial_read(CString &data, size_t size) = 0;
         
         CString getPortName();
-        int getPortSpeed();
+        int getPortSpeed();        
         CString getPortFile();
-                
+        
         bool setPortFile(CString portFile);
         bool setPortSpeed(int portSpeed);
         bool setPortName(CString portName);
@@ -41,8 +39,8 @@ public:
         virtual bool portClose() = 0;
 
 protected:
-    CString m_portName;
-    int m_portSpeed;    
-    CString m_portFile;
-    bool m_Opened;    
+    CString m_portName = "";
+    int m_portSpeed = 0;    
+    CString m_portFile = "";
+    bool m_Opened = false;    
 };

@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// This file was created as a part of the LinuxDrone project:
+// This file was created as a part of the LinuxDro*ne project:
 //                http://www.linuxdrone.org
 //
 // Distributed under the Creative Commons Attribution-ShareAlike 4.0
@@ -10,24 +10,26 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "text/CString"
+#pragma once
 
-class CNMEAParser  
+#include "text/CString"
+#include "CGPSProtocolNMEASirf.h"
+#include "CGPSProtocolNMEAuBlox.h"
+
+
+class CGPSProtocolFactory
 {
 public:
-	CNMEAParser();
-        ~CNMEAParser();
-        bool parseNMEA(CString sentence);
-        
-private:
-    long m_latitude;
-    long m_longitude;
-    long m_altitude;
-    CString m_time;
-    long m_fix;
-    int m_satellites;
-    long m_qualitysignal;
-
-    int calc_checksum(CString sentence);
+	//"validValues" : ["NMEA","NMEA SiRF","NMEA uBlox","Binary SiRF","Binary uBlox"],
+   	static CGPSProtocol* createGPSProtocol(CString protocolType)
+    {
+        if(protocolType == "NMEA SiRF")
+        {
+            return new CGPSProtocolNMEASirf;
+        }
+        else if(protocolType == "NMEA uBlox")
+        {
+            return new CGPSProtocolNMEAuBlox;
+        }
+    }
 };
-        
