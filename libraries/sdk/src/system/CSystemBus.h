@@ -21,33 +21,35 @@
 class CSystemBus : public CObject
 {
 public:
-	enum BusType {
-		BusType_Unknown,
-		BusType_I2C
-	};
+    enum BusType 
+    {
+        BusType_Unknown,
+        BusType_Serial,
+        BusType_I2C
+    };
 
 public:
-	CSystemBus();
-	virtual ~CSystemBus();
+    CSystemBus();
+    virtual ~CSystemBus();
 
-	virtual BusType type() const;
+    virtual BusType type() const;
 
-	void lock();
-	void unlock();
-	CMutex* mutex();
+    void lock();
+    void unlock();
+    CMutex* mutex();
 
-	virtual bool open(const CString& busName) = 0;
-	virtual void close() = 0;
-	virtual bool isOpened() const = 0;
-	virtual CString busName() const;
+    virtual bool open(const CString& busName) = 0;
+    virtual void close() = 0;
+    virtual bool isOpened() const = 0;
+    virtual CString busName() const;
 
-	virtual bool setSlave(uint32_t slave) = 0;
-	virtual uint32_t slave() const = 0;
+    virtual bool setSlave(uint32_t slave) = 0;
+    virtual uint32_t slave() const = 0;
 
-	virtual int write(const void* data, size_t size) = 0;
-	virtual int read(void* data, size_t size) = 0;
+    virtual int write(const void* data, size_t size) = 0;
+    virtual int read(void* data, size_t size) = 0;
 
 protected:
-	CString m_busName;
-	CMutex  m_mutex;
+    CString m_busName;
+    CMutex  m_mutex;
 };

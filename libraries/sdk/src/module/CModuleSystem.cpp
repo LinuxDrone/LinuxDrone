@@ -135,7 +135,8 @@ bool CModuleSystem::createModule(const mongo::BSONObj& moduleInfo)
 	MODULEINFO info;
 	{
 		CMutexSection locker(&m_mutexInfo);
-		if (m_metaInfo.count(name) == 0) {
+		if (m_metaInfo.count(name) == 0)
+		{
 			Logger() << "error creating module (name=" << name << "). can`t find meta information";
 			return false;
 		}
