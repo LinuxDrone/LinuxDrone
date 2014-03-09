@@ -29,5 +29,5 @@ private:
 protected:
 
 // notify
-	virtual void recievedData() override;
+	virtual void receivedData() override;
 };

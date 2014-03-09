@@ -153,7 +153,7 @@ void CPwmOutput::moduleTask()
     //CSystem::sleep(10);
 }
 
-void CPwmOutput::recievedData()
+void CPwmOutput::receivedData()
 {
 	for (int i = 0;i<12;i++) {
 		CString pwm = CString("pwm%1").arg(i);

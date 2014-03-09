@@ -170,7 +170,7 @@ bool CSimpleTransform::init(const mongo::BSONObj& initObject)
 //  n o t i f y
 //-------------------------------------------------------------------
 
-void CSimpleTransform::recievedData()
+void CSimpleTransform::receivedData()
 {
 	const char* names[] = { "in_x", "in_y", "in_z" };
 	float values[4];

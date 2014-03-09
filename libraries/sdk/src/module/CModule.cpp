@@ -13,8 +13,6 @@
 #include "CModule.h"
 #include "system/CSystem"
 #include "system/Logger"
-#include <native/timer.h>
-#include <native/heap.h>
 
 CModule::CModule(int stackSize) :
 	m_task("", 50, stackSize)
@@ -50,7 +48,7 @@ bool CModule::init(const mongo::BSONObj& initObject)
 	m_instance = initObject["instance"].valuestr();
 	m_task.setTaskName(m_instance);
 	if (initObject.hasElement("Task Priority")) {
-		m_task.setPriority(initObject["Task Priority"].Number());
+		m_task.setPriority((int) initObject["Task Priority"].Number());
 	}
 	if (initObject.hasElement("Task Period")) {
 		m_period = int (initObject["Task Period"].Number());
@@ -59,7 +57,7 @@ bool CModule::init(const mongo::BSONObj& initObject)
 		m_notifyOnChange = initObject["Notify on change"].Bool();
 	}
 	if(m_period != -1) {
-		m_period = m_period * rt_timer_ns2ticks(1000);
+		m_period = (uint32_t) (m_period * rt_timer_ns2ticks(1000));
 	}
 	CString name;
 	name = CString("%1.shm").arg(m_instance);
@@ -93,8 +91,8 @@ bool CModule::link(const mongo::BSONObj& link)
 		CString moduleName = link["inInst"].String().c_str();
 		CMutexSection locker(&m_mutexLinks);
 		if (m_linksOut.count(moduleName) == 0) {
-			LINK link;
-			m_linksOut[moduleName] = link;
+			LINK tmp;
+			m_linksOut[moduleName] = tmp;
 		}
 		LINK& link_data = m_linksOut[moduleName];
 		link_data.links.push_back(link.copy());
@@ -113,8 +111,8 @@ bool CModule::link(const mongo::BSONObj& link)
 		}
 		CMutexSection locker(&m_mutexLinks);
 		if (m_linksIn.count(moduleName) == 0) {
-			LINK link;
-			m_linksIn[moduleName] = link;
+			LINK tmp;
+			m_linksIn[moduleName] = tmp;
 		}
 		LINK& link_data = m_linksIn[moduleName];
 		link_data.links.push_back(link.copy());
@@ -175,7 +173,7 @@ void CModule::addData(const mongo::BSONObj& object)
 
 mongo::BSONObj CModule::data() const
 {
-	return m_data;
+	return m_dataIn;
 }
 
 //===================================================================
@@ -202,7 +200,7 @@ void CModule::mainTask()
 	RTIME startTime = rt_timer_read();
 
 	while (!m_terminate) {
-		if (m_period == -1 && m_notifyOnChange == false) {
+		if (m_period == -1 && !m_notifyOnChange) {
 			m_task.sleep(10);
 			continue;
 		}
@@ -229,7 +227,7 @@ void CModule::mainTask()
 void CModule::sendBsonToHeap(const mongo::BSONObj& object)
 {
 	CMutexSection locker(m_mutexOutputHeap);
-	size_t size = object.objsize();
+	size_t size = (size_t) object.objsize();
 	if (!m_heapCreated || m_outputHeapSize <= size) {
 		if (m_heapCreated) {
 			rt_heap_free(&m_outputHeap, m_heapPtr);
@@ -261,7 +259,7 @@ mongo::BSONObj CModule::recvBsonFromHeap(const CString& name)
 	bool needUnbind = false;
 	void* ptr = 0;
 	RT_HEAP heap;
-	CMutex* mutex;
+	CMutex* mutex = 0;
 
 	if (m_linksIn.count(name)) {
 		LINK& link = m_linksIn[name];
@@ -279,7 +277,7 @@ mongo::BSONObj CModule::recvBsonFromHeap(const CString& name)
 		}
 		if (!link.heapCreated) {
 			bool ret = bindHeap(name, &link.heap, &link.heapPtr, &link.mutexHeap);
-			if (ret == false) {
+			if (!ret) {
 				return mongo::BSONObj();
 			}
 			link.heapCreated = true;
@@ -288,7 +286,7 @@ mongo::BSONObj CModule::recvBsonFromHeap(const CString& name)
 		}
 	} else {
 		bool ret = bindHeap(name, &heap, &ptr, &mutex);
-		if (ret == false) {
+		if (!ret) {
 			return mongo::BSONObj();
 		}
 		needUnbind = true;
@@ -337,9 +335,9 @@ bool CModule::syncSharedMemoryLink(const CString& name)
 		return true;
 	}
 	std::set<CString> pins;
-	for (auto it = link.links.begin();it<link.links.end();it++) {
-		if (CString("memory") == (*it)["type"].String().c_str()) {
-			pins.insert((*it)["inPin"].String().c_str());
+	for (const mongo::BSONObj& it:link.links) {
+		if (CString("memory") == it["type"].String().c_str()) {
+			pins.insert(it["inPin"].String().c_str());
 		}
 	}
 	if (!pins.size()) {
@@ -349,14 +347,14 @@ bool CModule::syncSharedMemoryLink(const CString& name)
 	if (obj.isEmpty()) {
 		return false;
 	}
-	mongo::BSONObj result = mergeObjects(m_data, obj, &pins, &m_sharedPinMaping);
-	m_data = result.copy();
+	mongo::BSONObj result = mergeObjects(m_dataIn, obj, &pins, &m_sharedPinMaping);
+	m_dataIn = result.copy();
 	{
-		m_elements.clear();
-		mongo::BSONObjIterator it(m_data);
+		m_elementsIn.clear();
+		mongo::BSONObjIterator it(m_dataIn);
 		while (it.more()) {
 			mongo::BSONElement elem = it.next();
-			m_elements[elem.fieldName()] = elem;
+			m_elementsIn[elem.fieldName()] = elem;
 		}
 	}
 	link.heapSynchronized = true;
@@ -368,7 +366,7 @@ bool CModule::syncSharedMemoryLink(const CString& name)
 //-------------------------------------------------------------------
 
 mongo::BSONObj CModule::mergeObjects(const mongo::BSONObj& dst, const mongo::BSONObj& src,
-		const std::set<CString>* elementsSrc /*= 0*/, const std::map<CString, CString>* pinMaping /*= 0*/)
+		const std::set<CString>* elementsSrc /*= 0*/, const std::map<CString, CString>*pinMapping /*= 0*/)
 {
 	mongo::BSONObj result;
 
@@ -384,8 +382,8 @@ mongo::BSONObj CModule::mergeObjects(const mongo::BSONObj& dst, const mongo::BSO
 	while (it.more()) {
 		mongo::BSONElement elem = it.next();
 		CString pinName = elem.fieldName();
-		if (pinMaping && pinMaping->count(pinName)) {
-			pinName = pinMaping->at(pinName);
+		if (pinMapping && pinMapping->count(pinName)) {
+			pinName = pinMapping->at(pinName);
 		}
 		if (elementsSrc) {
 			if (elementsSrc->count(pinName)) {
@@ -396,8 +394,9 @@ mongo::BSONObj CModule::mergeObjects(const mongo::BSONObj& dst, const mongo::BSO
 		allElements[pinName] = elem;
 	}
 	mongo::BSONObjBuilder builder;
-	for (auto it = allElements.begin();it!=allElements.end();it++) {
-		builder << (*it).first.data() << (*it).second;
+	for (auto obj:allElements) {
+		builder << obj.first.data();
+		builder << obj.second;
 	}
 	result = builder.obj();
 	return result.copy();
@@ -413,10 +412,7 @@ bool CModule::hasElement(const CString& name) const
 		CModule* module = const_cast<CModule*>(this);
 		module->syncSharedMemoryLink(name);
 	}
-	if (m_elements.count(name) != 0) {
-		return true;
-	}
-	return false;
+	return m_elementsIn.count(name) != 0;
 }
 
 mongo::BSONElement CModule::element(const CString& name) const
@@ -429,7 +425,7 @@ mongo::BSONElement CModule::element(const CString& name) const
 	if (!hasElement(name)) {
 		return mongo::BSONElement();
 	}
-	return m_elements.at(name);
+	return m_elementsIn.at(name);
 }
 
 CString CModule::valueString(const CString& elemName) const
@@ -462,10 +458,7 @@ int CModule::valueInt(const CString& elemName) const
 bool CModule::valueBool(const CString& elemName) const
 {
 	mongo::BSONElement elem = element(elemName);
-	if (elem.isNull()) {
-		return false;
-	}
-	return elem.Bool();
+	return !elem.isNull() && elem.Bool();
 }
 
 double CModule::valueNumber(const CString& elemName) const
@@ -528,12 +521,12 @@ void CModule::sendObject(const mongo::BSONObj& object)
 		}
 		mongo::BSONObj objForSend = builder.obj();
 
-		void* ptr = rt_queue_alloc(&link_data.queue, objForSend.objsize());
+		void* ptr = rt_queue_alloc(&link_data.queue, (size_t) objForSend.objsize());
 		if (!ptr) {
 			continue;
 		}
-		memcpy(ptr, objForSend.objdata(), objForSend.objsize());
-		int err = rt_queue_send(&link_data.queue, ptr, objForSend.objsize(), Q_NORMAL);
+		memcpy(ptr, objForSend.objdata(), (size_t) objForSend.objsize());
+		int err = rt_queue_send(&link_data.queue, ptr, (size_t) objForSend.objsize(), Q_NORMAL);
 		if (err < 0) {
 			rt_queue_free(&link_data.queue, ptr);
 			Logger() << "error writing in queue. err =" << err;
@@ -556,12 +549,12 @@ void CModule::recvObjects()
 	if (m_period == -1) {
 		timeout = 1000;
 	}
-	int readed = rt_queue_receive(&m_inputQueue, &ptr, timeout);
-	if (readed < 0) {
+	int read = rt_queue_receive(&m_inputQueue, &ptr, timeout);
+	if (read < 0) {
 		CSystem::sleep(2);
 		return;
 	}
-//	Logger() << "readed =" << readed;
+//	Logger() << "read =" << read;
 	mongo::BSONObj obj = mongo::BSONObj((char*)ptr).copy();
 	rt_queue_free(&m_inputQueue, ptr);
 
@@ -569,7 +562,7 @@ void CModule::recvObjects()
 	// merge new data object with our
 	std::map<CString, mongo::BSONElement> elements;
 	{
-		mongo::BSONObjIterator objIt(m_data);
+		mongo::BSONObjIterator objIt(m_dataIn);
 		while (objIt.more()) {
 			mongo::BSONElement elem = objIt.next();
 			if (elem.isNull()) {
@@ -591,17 +584,17 @@ void CModule::recvObjects()
 		builder.append((*it).second);
 	}
 
-	m_data = builder.obj();
+	m_dataIn = builder.obj();
 	{
-		m_elements.clear();
-		mongo::BSONObjIterator it(m_data);
+		m_elementsIn.clear();
+		mongo::BSONObjIterator it(m_dataIn);
 		while (it.more()) {
 			mongo::BSONElement elem = it.next();
-			m_elements[elem.fieldName()] = elem;
+			m_elementsIn[elem.fieldName()] = elem;
 		}
 	}
 	if (m_notifyOnChange) {
-		recievedData();
+		receivedData();
 	}
 }
 
@@ -609,6 +602,6 @@ void CModule::recvObjects()
 //  n o t i f y
 //-------------------------------------------------------------------
 
-void CModule::recievedData()
+void CModule::receivedData()
 {
 }

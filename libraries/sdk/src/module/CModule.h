@@ -54,7 +54,7 @@ public:
 		CMutex * mutexHeap;
 		bool     heapSynchronized;
 
-	} LINK, *PLINK;
+	} LINK;
 
 public:
 	CModule(int stackSize);
@@ -112,8 +112,8 @@ protected:
 	std::map<CString, CString> m_sharedPinMaping;
 	CMutex                  m_mutexLinks;
 
-	mongo::BSONObj m_data;
-	std::map<CString, mongo::BSONElement> m_elements;
+	mongo::BSONObj m_dataIn;
+	std::map<CString, mongo::BSONElement> m_elementsIn;
 	CMutex         m_mutexData;
 
 	void startTask();
@@ -128,7 +128,7 @@ protected:
 
 // common
 	static mongo::BSONObj mergeObjects(const mongo::BSONObj& dst, const mongo::BSONObj& src,
-			const std::set<CString>* elementsSrc = 0, const std::map<CString, CString>* pinMaping = 0);
+			const std::set<CString>* elementsSrc = 0, const std::map<CString, CString>*pinMapping = 0);
 
 // input values
 	bool hasElement(const CString& name) const;
@@ -144,5 +144,5 @@ protected:
 	void recvObjects();
 
 // notify
-	virtual void recievedData();
+	virtual void receivedData();
 };
