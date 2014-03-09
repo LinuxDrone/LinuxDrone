@@ -395,8 +395,7 @@ mongo::BSONObj CModule::mergeObjects(const mongo::BSONObj& dst, const mongo::BSO
 	}
 	mongo::BSONObjBuilder builder;
 	for (auto obj:allElements) {
-		builder << obj.first.data();
-		builder << obj.second;
+		builder << obj.first.data() << obj.second;
 	}
 	result = builder.obj();
 	return result.copy();
@@ -410,7 +409,8 @@ bool CModule::hasElement(const CString& name) const
 {
 	if (m_sharedLinks.count(name)) {
 		CModule* module = const_cast<CModule*>(this);
-		module->syncSharedMemoryLink(name);
+        CString moduleName = m_sharedLinks.at(name);
+		module->syncSharedMemoryLink(moduleName);
 	}
 	return m_elementsIn.count(name) != 0;
 }
