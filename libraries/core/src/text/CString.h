@@ -14,6 +14,7 @@
 #define __core__cstring__
 
 #include <stdint.h>
+#include <string>
 #include "../core/CByteArray.h"
 
 class CStringPrivate;
@@ -22,6 +23,7 @@ class CString
 {
 public:
     CString();
+    CString(const std::string& str);
     CString(const CString& other);
     CString(const char* str, int len = -1);
     CString(char ch);
@@ -73,6 +75,7 @@ public:
     bool operator==(const CString& str) const;
     bool operator!=(const CString& str) const;
     bool operator<(const CString& str) const;
+    bool operator<(const char* str) const;
 
     CString& prepend(const CString& str);
     CString& prepend(const char* str);
