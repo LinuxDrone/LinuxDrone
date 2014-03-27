@@ -175,9 +175,8 @@ void CSimpleTransform::receivedData()
 	const char* names[] = { "in_x", "in_y", "in_z" };
 	float values[4];
 	for (int i = 0;i<3;i++) {
-		CString name(names[i]);
-		if (hasElement(name)) {
-			values[i] = float (valueNumber(name));
+		if (hasElement(names[i])) {
+			values[i] = float (valueNumber(names[i]));
 		}
 	}
 	values[3] = 1.0f;

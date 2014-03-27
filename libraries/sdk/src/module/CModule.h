@@ -15,6 +15,7 @@
 #include "thread/CRunnable"
 #include "xeno/CXenoTask"
 #include "thread/CMutex"
+#include "text/CStringAnsi"
 #include <native/queue.h>
 #include <native/heap.h>
 #include <native/mutex.h>
@@ -44,9 +45,10 @@ public:
 				rt_heap_unbind(&heap);
 			}
 		}
-		std::vector<mongo::BSONObj> links;
-		RT_QUEUE queue;
-		bool     queueCreated;
+		std::vector<std::pair<CStringAnsi, CStringAnsi>> links;
+        CStringAnsi   inInstance;
+		RT_QUEUE      queue;
+		bool          queueCreated;
 
 		RT_HEAP  heap;
 		bool     heapCreated;
@@ -66,9 +68,9 @@ public:
 	virtual void stop();
 
 	// module name
-	virtual CString name() const;
+	virtual CStringAnsi name() const;
 	// instance name
-	virtual CString instance() const;
+	virtual CStringAnsi instance() const;
 
 	void setTaskName(const CString& name);
 	CString taskName() const;
@@ -87,8 +89,8 @@ public:
 	mongo::BSONObj data() const;
 
 protected:
-	CString       m_name;
-	CString       m_instance;
+	CStringAnsi   m_name;
+	CStringAnsi   m_instance;
 	uint32_t      m_period;
 	bool          m_notifyOnChange;
 
@@ -106,15 +108,18 @@ protected:
 	CMutex  * m_mutexOutputHeap;
 	void    * m_heapPtr;
 
-	std::map<CString, LINK> m_linksIn;
-	std::map<CString, LINK> m_linksOut;
-	std::map<CString, CString> m_sharedLinks;
-	std::map<CString, CString> m_sharedPinMaping;
+	std::map<CStringAnsi, LINK> m_linksIn;
+	std::vector<std::pair<CStringAnsi, LINK>> m_linksOut;
+	std::map<CStringAnsi, CStringAnsi> m_sharedLinks;
+	std::map<CStringAnsi, CStringAnsi> m_sharedPinMaping;
 	CMutex                  m_mutexLinks;
 
 	mongo::BSONObj m_dataIn;
-	std::map<CString, mongo::BSONElement> m_elementsIn;
+	std::map<CStringAnsi, mongo::BSONElement> m_elementsIn;
 	CMutex         m_mutexData;
+
+    std::vector<mongo::BSONElement> m_tmpObjElements;
+
 
 	void startTask();
 	void stopTask();
@@ -122,22 +127,22 @@ protected:
 
 // shared heap
 	void sendBsonToHeap(const mongo::BSONObj& object);
-	mongo::BSONObj recvBsonFromHeap(const CString& name);		// name: module instance name
-	bool bindHeap(const CString& name, RT_HEAP* heap, void** ptr, CMutex** mutex);
-	bool syncSharedMemoryLink(const CString& name);
+	mongo::BSONObj recvBsonFromHeap(CStringAnsi const &name);		// name: module instance name
+	bool bindHeap(CStringAnsi const &name, RT_HEAP *heap, void **ptr, CMutex **mutex);
+	bool syncSharedMemoryLink(CStringAnsi const &name);
 
 // common
 	static mongo::BSONObj mergeObjects(const mongo::BSONObj& dst, const mongo::BSONObj& src,
-			const std::set<CString>* elementsSrc = 0, const std::map<CString, CString>*pinMapping = 0);
+			std::set<CStringAnsi> * const elementsSrc = nullptr, std::map<CStringAnsi, CStringAnsi>* const pinMapping = nullptr);
 
 // input values
-	bool hasElement(const CString& name) const;
-	mongo::BSONElement element(const CString& name) const;
-	CString valueString(const CString& elemName) const;
-	double valueDouble(const CString& elemName) const;
-	int valueInt(const CString& elemName) const;
-	bool valueBool(const CString& elemName) const;
-	double valueNumber(const CString& elemName) const;
+	bool hasElement(char const *name) const;
+	mongo::BSONElement element(char const *name) const;
+	CString valueString(char const *elemName) const;
+	double valueDouble(char const *elemName) const;
+	int valueInt(char const *elemName) const;
+	bool valueBool(char const *elemName) const;
+	double valueNumber(char const *elemName) const;
 
 // queue objects
 	void sendObject(const mongo::BSONObj& obj);

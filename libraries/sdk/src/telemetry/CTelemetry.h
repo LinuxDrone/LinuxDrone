@@ -31,15 +31,15 @@ private:
 		tagQuery() {
 			elapsedTime = 0;
 		}
-		CString instanceName;
-		CString idName;
-		std::set<CString> outs;
+		CStringAnsi instanceName;
+		CStringAnsi idName;
+		std::set<CStringAnsi> outs;
 		void * device;
 
 		RTIME updateTime;
 		RTIME elapsedTime;
 
-	} QUERY, *PQUERY;
+	} QUERY;
 
 public:
 	CTelemetry();
@@ -54,7 +54,7 @@ public:
 // queries
 	bool addQuery(const mongo::BSONObj& queryObj, void* device);
 	void removeAllQueries();
-	void removeQuery(void* device, const CString& idName);
+	void removeQuery(void* device, const CStringAnsi& idName);
 
 protected:
 	CModuleSystem * m_moduleSystem;

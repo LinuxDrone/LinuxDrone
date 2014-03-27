@@ -54,14 +54,14 @@ void CModuleSystem::readAllModules(const CString& path)
 		if (!dir.isFolder(i)) {
 			continue;
 		}
-		CString path = CString("%1/%2").arg(dir.absolutePath()).arg(dir[i]);
-		Logger() << path;
+		CString newPath = CString("%1/%2").arg(dir.absolutePath()).arg(dir[i]);
+		Logger() << newPath;
 		// try load module
-		CDir moduleDir(path, "*.so");
+		CDir moduleDir(newPath, "*.so");
 		if (moduleDir.count() == 0) {
 			continue;
 		} else {
-			CString modulePath = CString("%1/%2").arg(path).arg(moduleDir[0]);
+			CString modulePath = CString("%1/%2").arg(newPath).arg(moduleDir[0]);
 			Logger() << modulePath;
 			void* handle = dlopen(modulePath.data(), RTLD_NOW);
 			if (handle == 0) {
@@ -177,14 +177,14 @@ void CModuleSystem::linkObjects(const mongo::BSONObj& linksInfo)
 		// verify link
 		if (!link.hasField("type") || !link.hasField("outInst") || !link.hasField("inInst") ||
 			!link.hasField("outPin") || !link.hasField("inPin")) {
-			Logger() << "failed link (" << link.toString(false, true).c_str() << "). Verify failed";
+			Logger() << "failed link (" << link.toString(false, true) << "). Verify failed";
 			continue;
 		}
-		CModule* module = moduleByName(link["inInst"].String().c_str());
+		CModule* module = moduleByName(link["inInst"].valuestr());
 		if (module) {
 			module->link(link);
 		}
-		module = moduleByName(link["outInst"].String().c_str());
+		module = moduleByName(link["outInst"].valuestr());
 		if (module) {
 			module->link(link);
 		}

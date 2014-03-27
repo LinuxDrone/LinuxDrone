@@ -224,7 +224,7 @@ bool CGY87::readId(uint8_t& mpuId)
 
 void CGY87::moduleTask()
 {
-	RTIME time = rt_timer_read();
+//	RTIME time = rt_timer_read();
 
 	static const size_t size = CGY87_GYRO_Z_OUT_LSB - CGY87_ACCEL_X_OUT_MSB + 1;
 	uint8_t data[size];
@@ -269,9 +269,8 @@ void CGY87::moduleTask()
     mongo::BSONObj obj = builder.obj();
     addData(obj);
 
-    RTIME diff = time - rt_timer_read();
-    SRTIME el = rt_timer_ticks2ns(diff);
-    uint64_t elapsed = abs(el) / 1000;
-    //Logger() << elapsed;
-    //CSystem::sleep(100);
+//    RTIME diff = time - rt_timer_read();
+//    SRTIME el = rt_timer_ticks2ns(diff);
+//    double elapsed = double (abs(el)) / 1000000.0;
+//    Logger() << elapsed;
 }

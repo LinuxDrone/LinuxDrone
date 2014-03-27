@@ -91,9 +91,9 @@ bool CTelemetry::addQuery(const mongo::BSONObj& queryObj, void* device)
 	while (it.more()) {
 		mongo::BSONElement elem = it.next();
 		if (CString(TELEMETRY_INSTANCENAME) == elem.fieldName()) {
-			query.instanceName = elem.String().c_str();
+			query.instanceName = elem.valuestr();
 		} else if (CString(TELEMETRY_IDNAME) == elem.fieldName()) {
-			query.idName = elem.String().c_str();
+			query.idName = elem.valuestr();
 		} else if (CString(TELEMETRY_UPDATETIME) == elem.fieldName()) {
 			query.updateTime = float (elem.Number())*1000000;
 		} else if (CString(TELEMETRY_OUTS) == elem.fieldName()) {
@@ -101,7 +101,7 @@ bool CTelemetry::addQuery(const mongo::BSONObj& queryObj, void* device)
 			mongo::BSONObjIterator it(outs);
 			while (it.more()) {
 				mongo::BSONElement elem = it.next();
-				query.outs.insert(elem.String().c_str());
+				query.outs.insert(elem.valuestr());
 			}
 		}
 	}
@@ -116,7 +116,7 @@ void CTelemetry::removeAllQueries()
 	m_queries.clear();
 }
 
-void CTelemetry::removeQuery(void* device, const CString& idName)
+void CTelemetry::removeQuery(void* device, const CStringAnsi& idName)
 {
 	CMutexSection locker(&m_mutexQueries);
 	for (auto it = m_queries.begin();it<m_queries.end();it++) {
@@ -137,7 +137,7 @@ void CTelemetry::funcMainTask()
 	RTIME currentTime = rt_timer_read();
 	RTIME r_elapsed = currentTime - m_lastTime;
 	m_lastTime = currentTime;
-	std::map<CString, mongo::BSONObj> objects;
+	std::map<CStringAnsi, mongo::BSONObj> objects;
 
 	if (m_queries.empty()) {
 		m_task.sleep(100);
@@ -209,7 +209,7 @@ void CTelemetry::sendToDevice(const mongo::BSONObj& obj, void* device)
 	if (!transport) {
 		return;
 	}
-	transport->dataSend(device, CByteArray(obj.objdata(), obj.objsize(), true));
+	transport->dataSend(device, CByteArray(obj.objdata(), (uint32_t) obj.objsize(), true));
 }
 
 //-------------------------------------------------------------------
@@ -258,6 +258,6 @@ void CTelemetry::receivedData(void* device, const mongo::BSONObj& obj)
 		if (!obj.hasElement(TELEMETRY_IDNAME)) {
 			return;
 		}
-		removeQuery(device, obj[TELEMETRY_IDNAME].String().c_str());
+		removeQuery(device, obj[TELEMETRY_IDNAME].valuestr());
 	}
 }

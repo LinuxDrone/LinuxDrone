@@ -155,10 +155,11 @@ void CPwmOutput::moduleTask()
 
 void CPwmOutput::receivedData()
 {
+	char str[16];
 	for (int i = 0;i<12;i++) {
-		CString pwm = CString("pwm%1").arg(i);
-		if (hasElement(pwm)) {
-			m_pwm[i] = float (valueNumber(pwm));
+		sprintf(str, "pwm%d", i);
+		if (hasElement(str)) {
+			m_pwm[i] = float (valueNumber(str));
 		}
 	}
 }
