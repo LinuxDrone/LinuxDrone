@@ -5,29 +5,38 @@ namespace TestDonNet
 {
 	class MainClass
 	{
-		[DllImport ("libc")]
-		private static extern int getpid ();
+		delegate int MyCallback1 (int a, int b);
+ 
+		[DllImport ("libdotnet-sdk")]
+		extern static void RegisterCallback (MyCallback1 callback1);
 
-		[DllImport ("libnative")]
-		private static extern long 	rt_timer_read();
+		[DllImport ("libdotnet-sdk")]
+		extern static int Start();
+ 
+		[DllImport ("libdotnet-sdk")]
+		extern static int Stop();
 
-		[DllImport ("libxenomai")]
-		private static extern int rt_print_init(int buffer_size, string name);
 
-		[DllImport ("libnative")]
-		private static extern long rt_timer_ticks2ns(long ns);
-
-		[DllImport ("libdotnet-sdk")] //, EntryPoint="_Z3addv", CallingConvention=CallingConvention.Cdecl
-		private static extern int add(int a);
+		static int Add (int a, int b) 
+		{
+			Console.WriteLine ("A = {0} B = {1}", a,b);
+			return a + b; 
+		}
 
 
 		public static void Main (string[] args)
 		{
-			rt_print_init(10, "md");
+			RegisterCallback(Add);
 
-			Console.WriteLine ("rt_timer_ticks2ns() = {0}", rt_timer_ticks2ns(rt_timer_read()));
-			//add();
-			Console.WriteLine ("add = {0}", add(14));
+			Console.WriteLine ("Start = {0}", Start());
+
+			Console.ReadLine();
+
+			Console.WriteLine ("Stop = {0}", Stop());
+
+//scp -P 1234 /home/vrubel/Projects/LinuxDrone/build.Debug/libraries/dotnet-sdk/libdotnet-sdk.so root@voha-bbb.linuxdrone.org:/root/vrubel/libdotnet-sdk.so
+//scp -P 1234 /home/vrubel/Projects/TestDonNet/TestDonNet/bin/Debug/TestDonNet.exe root@voha-bbb.linuxdrone.org:/root/vrubel/TestDonNet.exe
+
 		}
 	}
 }
