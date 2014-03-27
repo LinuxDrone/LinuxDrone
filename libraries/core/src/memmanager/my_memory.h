@@ -37,14 +37,14 @@ void my_free_dbg(void* ptr, const char* file, const char* func, long line);
 
 inline void* operator new( size_t s )
 {
-	return malloc(s);
-//	return my_malloc_dbg( s, __FILE__, __FUNCTION__, __LINE__ );
+//	return malloc(s);
+	return my_malloc_dbg( s, __FILE__, __FUNCTION__, __LINE__ );
 }
 
 inline void operator delete(void* p)
 {
-	free(p);
-//	my_free(p);
+//    free(p);
+	my_free(p);
 }
 
 inline void* my_malloc_dbg(size_t len, const char* file, const char* func, long line )
