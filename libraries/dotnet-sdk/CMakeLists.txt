@@ -16,14 +16,16 @@ file(GLOB_RECURSE SRC "src/*.cpp")
 include_directories(${LIB_DIR}/core/include)
 include_directories(${LIB_DIR}/sdk/include)
 
+#set(BUILD_SHARED_LIBS TRUE)
+
 add_library(dotnet-sdk ${INC} ${SRC})
 
 set(EXTRA_LIBS
-	sdk
-	core
-	${MongoDB_LIBRARIES}
+	#sdk
+	#core
+	#${MongoDB_LIBRARIES}
 	#${Boost_LIBRARIES}
-	#${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
+	${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
 	#${CRYPTO_LIBRARIES}
 	#${OPENSSL_LIBRARIES}
 	#${ZLIB_LIBRARIES}
