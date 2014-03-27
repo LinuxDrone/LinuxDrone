@@ -14,6 +14,7 @@
 #define __core__logger__
 
 #include "../text/CString.h"
+#include "../text/CStringAnsi.h"
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -34,6 +35,7 @@ public:
 
     Logger& operator<<(const char* str);
     Logger& operator<<(const CString& str);
+    Logger& operator<<(const CStringAnsi& str);
     Logger& operator<<(const CByteArray& data);
 //    Logger& operator<<(const CStringList& list);
     template<typename T>
