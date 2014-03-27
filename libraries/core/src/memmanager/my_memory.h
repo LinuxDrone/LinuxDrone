@@ -49,7 +49,7 @@ inline void operator delete(void* p)
 
 inline void* my_malloc_dbg(size_t len, const char* file, const char* func, long line )
 {
-	return malloc(len);
+//	return malloc(len);
 	CMemManager* mm = CMemManager::instance();
 	if (!mm) {
 		return 0;
@@ -59,7 +59,7 @@ inline void* my_malloc_dbg(size_t len, const char* file, const char* func, long 
 
 inline void* my_realloc_dbg(void* ptr, size_t len, const char* file, const char* func, long line)
 {
-	return realloc(ptr, len);
+//	return realloc(ptr, len);
 	CMemManager* mm = CMemManager::instance();
 	if (!mm) {
 		return 0;
@@ -69,8 +69,8 @@ inline void* my_realloc_dbg(void* ptr, size_t len, const char* file, const char*
 
 inline void my_free_dbg( void* ptr, const char* file, const char* func, long line)
 {
-	free(ptr);
-	return;
+//	free(ptr);
+//	return;
 	CMemManager* mm = CMemManager::instance();
 	if (!mm) {
 		return;

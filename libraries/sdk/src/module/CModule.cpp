@@ -514,7 +514,7 @@ void CModule::sendObject(const mongo::BSONObj& object)
 		}
 	}
 	CMutexSection locker(&m_mutexLinks);
-	for (auto it_links:m_linksOut) {
+	for (std::pair<CStringAnsi, LINK>& it_links:m_linksOut) {
 		LINK& link_data = it_links.second;
 		if (link_data.links.size() == 0) {
 			continue;
