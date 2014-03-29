@@ -10,4 +10,30 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "../../src/module/CModuleMetaInfo.h"
+#pragma once
+
+#include "CSerial.h"
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <errno.h>
+#include <termios.h>
+#include <system/Logger>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <string.h>
+
+class CSerialUART : public CSerial
+{
+public:
+
+    int serial_write(CString &data) override;
+    int serial_read(CString &data, size_t size) override;
+        
+    bool portOpen() override;
+    bool portClose() override;        
+    
+    private:
+        int m_fhandler;
+};

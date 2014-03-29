@@ -224,7 +224,7 @@ bool CGY87::readId(uint8_t& mpuId)
 
 void CGY87::moduleTask()
 {
-	RTIME time = rt_timer_read();
+//	RTIME time = rt_timer_read();
 
 	static const size_t size = CGY87_GYRO_Z_OUT_LSB - CGY87_ACCEL_X_OUT_MSB + 1;
 	uint8_t data[size];
@@ -254,21 +254,23 @@ void CGY87::moduleTask()
     builder.append("name", "Mpu6050");
 
 	const char* names[] = {"X", "Y", "Z"};
+    char tmp[256];
 
 	for (int i = 0;i<3;i++) {
 		float gyro  = float (gyros[i]) * (1.0f / 16.4f);
 		float accel = float (accels[i]) * (9.81f / 4096.0f);
-		builder << CString("gyro%1").arg(names[i]).data() << gyro;
-		builder << CString("accel%1").arg(names[i]).data() << accel;
+        sprintf(tmp, "gyro%s", names[i]);
+        builder << tmp << gyro;
+        sprintf(tmp, "accel%s", names[i]);
+        builder << tmp << accel;
 	}
 	builder.append("temperature", 35.0f + ((float)temp + 512.0f) / 340.0f);		// it`s magic! :)
 
     mongo::BSONObj obj = builder.obj();
     addData(obj);
 
-    RTIME diff = time - rt_timer_read();
-    SRTIME el = rt_timer_ticks2ns(diff);
-    uint64_t elapsed = abs(el) / 1000;
-    //Logger() << elapsed;
-    //CSystem::sleep(100);
+//    RTIME diff = time - rt_timer_read();
+//    SRTIME el = rt_timer_ticks2ns(diff);
+//    double elapsed = double (abs(el)) / 1000000.0;
+//    Logger() << elapsed;
 }

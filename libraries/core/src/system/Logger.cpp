@@ -39,6 +39,11 @@ Logger& Logger::operator<<(const CString& str)
     return *this;
 }
 
+Logger& Logger::operator<<(const CStringAnsi& str) {
+    m_text << " " << str.data();
+    return *this;
+}
+
 Logger& Logger::operator<<(const CByteArray& data)
 {
     if (data.isEmpty())

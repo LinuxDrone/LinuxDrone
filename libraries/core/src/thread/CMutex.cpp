@@ -13,18 +13,18 @@
 #include "CMutex.h"
 #include "../system/Logger.h"
 
-CMutex::CMutex(const CString& name /*= CString()*/, bool bind /*= false*/)
+CMutex::CMutex(char const *name /*= nullptr*/, bool bind /*= false*/)
 {
-	m_bind = false;
 #ifdef XENO_SERVICES
+	m_bind = false;
 	int err = 0;
-	if (name.isEmpty()) {
+	if (name == nullptr) {
 		err = rt_mutex_create(&m_handle, 0);
 	} else {
 		if (!bind) {
-			err = rt_mutex_create(&m_handle, name.data());
+			err = rt_mutex_create(&m_handle, name);
 		} else {
-			err = rt_mutex_bind(&m_handle, name.data(), TM_NONBLOCK);
+			err = rt_mutex_bind(&m_handle, name, TM_NONBLOCK);
 			m_bind = true;
 		}
 	}

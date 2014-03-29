@@ -21,7 +21,8 @@
 
 CModuleSystem::CModuleSystem()
 {
-
+	m_telemetry.init(mongo::BSONObj());
+	m_telemetry.start();
 }
 
 CModuleSystem::~CModuleSystem()
@@ -53,23 +54,25 @@ void CModuleSystem::readAllModules(const CString& path)
 		if (!dir.isFolder(i)) {
 			continue;
 		}
-		CString path = CString("%1/%2").arg(dir.absolutePath()).arg(dir[i]);
-		Logger() << path;
+		CString newPath = CString("%1/%2").arg(dir.absolutePath()).arg(dir[i]);
+		Logger() << newPath;
 		// try load module
-		CDir moduleDir(path, "*.so");
+		CDir moduleDir(newPath, "*.so");
 		if (moduleDir.count() == 0) {
 			continue;
 		} else {
-			CString modulePath = CString("%1/%2").arg(path).arg(moduleDir[0]);
+			CString modulePath = CString("%1/%2").arg(newPath).arg(moduleDir[0]);
 			Logger() << modulePath;
 			void* handle = dlopen(modulePath.data(), RTLD_NOW);
 			if (handle == 0) {
+				Logger() << __PRETTY_FUNCTION__ << ": error loading of module";
 				continue;
 			}
 			MODULEINFO info;
 			info.creator = (ptr_moduleCreator)dlsym(handle, "moduleCreator");
 			info.name = (ptr_moduleName)dlsym(handle, "moduleName");
 			if (info.creator == 0 || info.name == 0) {
+				Logger() << __PRETTY_FUNCTION__ << ": error fetch functions from module";
 				dlclose(handle);
 				continue;
 			}
@@ -77,6 +80,7 @@ void CModuleSystem::readAllModules(const CString& path)
 				CString name = info.name();
 				CMutexSection locker(&m_mutexInfo);
 				if (m_metaInfo.count(name) != 0) {
+					Logger() << "duplicate module metainformation. skip it";
 					dlclose(handle);
 					continue;
 				} else {
@@ -99,6 +103,9 @@ void CModuleSystem::removeAllInformation()
 
 bool CModuleSystem::createModules(const mongo::BSONObj& info)
 {
+	for (auto it:m_metaInfo) {
+		Logger() << it.first;
+	}
 	if (info.isEmpty()) {
 		return false;
 	}
@@ -128,7 +135,8 @@ bool CModuleSystem::createModule(const mongo::BSONObj& moduleInfo)
 	MODULEINFO info;
 	{
 		CMutexSection locker(&m_mutexInfo);
-		if (m_metaInfo.count(name) == 0) {
+		if (m_metaInfo.count(name) == 0)
+		{
 			Logger() << "error creating module (name=" << name << "). can`t find meta information";
 			return false;
 		}
@@ -169,14 +177,14 @@ void CModuleSystem::linkObjects(const mongo::BSONObj& linksInfo)
 		// verify link
 		if (!link.hasField("type") || !link.hasField("outInst") || !link.hasField("inInst") ||
 			!link.hasField("outPin") || !link.hasField("inPin")) {
-			Logger() << "failed link (" << link.toString(false, true).c_str() << "). Verify failed";
+			Logger() << "failed link (" << link.toString(false, true) << "). Verify failed";
 			continue;
 		}
-		CModule* module = moduleByName(link["inInst"].String().c_str());
+		CModule* module = moduleByName(link["inInst"].valuestr());
 		if (module) {
 			module->link(link);
 		}
-		module = moduleByName(link["outInst"].String().c_str());
+		module = moduleByName(link["outInst"].valuestr());
 		if (module) {
 			module->link(link);
 		}

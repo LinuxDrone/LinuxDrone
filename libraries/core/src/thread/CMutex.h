@@ -25,7 +25,7 @@
 class CMutex
 {
 public:
-	CMutex(const CString& name = CString(), bool bind = false);
+	CMutex(char const *name = nullptr, bool bind = false);
 	~CMutex();
     
 	void lock();

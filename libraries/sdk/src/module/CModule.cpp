@@ -13,8 +13,6 @@
 #include "CModule.h"
 #include "system/CSystem"
 #include "system/Logger"
-#include <native/timer.h>
-#include <native/heap.h>
 
 CModule::CModule(int stackSize) :
 	m_task("", 50, stackSize)
@@ -48,9 +46,10 @@ bool CModule::init(const mongo::BSONObj& initObject)
 {
 	m_name = initObject["name"].valuestr();
 	m_instance = initObject["instance"].valuestr();
-	m_task.setTaskName(m_instance);
+
+	m_task.setTaskName(CString(m_instance.data()));
 	if (initObject.hasElement("Task Priority")) {
-		m_task.setPriority(initObject["Task Priority"].Number());
+		m_task.setPriority((int) initObject["Task Priority"].Number());
 	}
 	if (initObject.hasElement("Task Period")) {
 		m_period = int (initObject["Task Period"].Number());
@@ -59,10 +58,10 @@ bool CModule::init(const mongo::BSONObj& initObject)
 		m_notifyOnChange = initObject["Notify on change"].Bool();
 	}
 	if(m_period != -1) {
-		m_period = m_period * rt_timer_ns2ticks(1000);
+		m_period = (uint32_t) (m_period * rt_timer_ns2ticks(1000));
 	}
-	CString name;
-	name = CString("%1.shm").arg(m_instance);
+	CStringAnsi name;
+	name = m_instance + ".shm";
 	int err = rt_heap_create(&m_outputHeap, name.data(), m_outputHeapSize, H_FIFO | H_MAPPABLE | H_SHARED);
 	if (err) {
 		Logger() << __PRETTY_FUNCTION__ << ": error creating heap for output data. err = " << err;
@@ -75,8 +74,8 @@ bool CModule::init(const mongo::BSONObj& initObject)
 	}
 
 	m_heapCreated = true;
-	name = CString("%1.mt").arg(m_instance);
-	m_mutexOutputHeap = new CMutex(name);
+	name = m_instance + ".mt";
+	m_mutexOutputHeap = new CMutex(name.data());
 	return true;
 }
 
@@ -85,40 +84,54 @@ bool CModule::link(const mongo::BSONObj& link)
 	if (link.isEmpty()) {
 		return false;
 	}
-	if (instance() == link["outInst"].String().c_str() &&
-		CString("queue") == link["type"].String().c_str()) {
-		// 'out' link
-		CString moduleName = link["inInst"].String().c_str();
-		CMutexSection locker(&m_mutexLinks);
-		if (m_linksOut.count(moduleName) == 0) {
-			LINK link;
-			m_linksOut[moduleName] = link;
+	if (instance() == link["outInst"].valuestr()) {
+		if (CStringAnsi("queue", (size_t) -1, true) != link["type"].valuestr()) {
+			return true;
 		}
-		LINK& link_data = m_linksOut[moduleName];
-		link_data.links.push_back(link.copy());
+		// 'out' link
+		CStringAnsi moduleName(link["inInst"].valuestr(), (size_t) -1, true);
+//		CMutexSection locker(&m_mutexLinks);
+        bool exist = false;
+        CStringAnsi inPin = link["inPin"].valuestr();
+        CStringAnsi outPin = link["outPin"].valuestr();
+        for (std::pair<CStringAnsi, LINK>& it:m_linksOut) {
+            if (it.first == moduleName) {
+                exist = true;
+                it.second.links.push_back(std::make_pair(outPin, inPin));
+                break;
+            }
+        }
+		if (!exist) {
+			LINK tmp;
+            tmp.inInstance = moduleName.copy();
+            tmp.links.push_back(std::make_pair(outPin, inPin));
+            m_linksOut.push_back(std::make_pair(moduleName, tmp));
+		}
 	} else {
 		// 'in' link
-		CString moduleName = link["outInst"].String().c_str();
+		CStringAnsi moduleName(link["outInst"].valuestr(), (size_t) -1, true);
 		// create pipe
-		if (!m_queueCreated && CString("queue") == link["type"].String().c_str()) {
-			CString name = m_instance + CString("inputQueue");
+		if (!m_queueCreated && CStringAnsi("queue", (size_t) -1, true) == link["type"].valuestr()) {
+			CStringAnsi name = m_instance + CStringAnsi("inputQueue", (size_t)-1, true);
 			int err = rt_queue_create(&m_inputQueue, name.data(), 8096, Q_UNLIMITED, Q_FIFO);
 			if (err) {
 				Logger() << "error creating queue with name = " << name << ". error =" << err;
 				return false;
 			}
 			m_queueCreated = true;
-		}		CMutexSection locker(&m_mutexLinks);
+		}
+//		CMutexSection locker(&m_mutexLinks);
 		if (m_linksIn.count(moduleName) == 0) {
-			LINK link;
-			m_linksIn[moduleName] = link;
+			LINK tmp;
+			m_linksIn[moduleName.copy()] = tmp;
 		}
 		LINK& link_data = m_linksIn[moduleName];
-		link_data.links.push_back(link.copy());
-		if (CString("memory") == link["type"].String().c_str()) {
-			if (link_data.mutexHeap == 0) {
-				link_data.mutexHeap = new CMutex(moduleName, true);
-			}
+		if (CStringAnsi("memory", (size_t)-1, true) == link["type"].valuestr()) {
+			CStringAnsi inPin = link["inPin"].valuestr();
+			CStringAnsi outPin = link["outPin"].valuestr();
+            link_data.links.push_back(std::make_pair(outPin, inPin));
+			m_sharedLinks[inPin] = CStringAnsi(link["outInst"].valuestr());
+			m_sharedPinMaping[outPin] = inPin;
 		}
 	}
 	return true;
@@ -135,13 +148,13 @@ void CModule::stop()
 }
 
 // module name
-CString CModule::name() const
+CStringAnsi CModule::name() const
 {
 	return m_name;
 }
 
 // instance name
-CString CModule::instance() const
+CStringAnsi CModule::instance() const
 {
 	return m_instance;
 }
@@ -173,7 +186,7 @@ void CModule::addData(const mongo::BSONObj& object)
 
 mongo::BSONObj CModule::data() const
 {
-	return m_data;
+	return m_dataIn;
 }
 
 //===================================================================
@@ -200,9 +213,12 @@ void CModule::mainTask()
 	RTIME startTime = rt_timer_read();
 
 	while (!m_terminate) {
-		if (m_period == -1 && m_notifyOnChange == false) {
+		if (m_period == -1 && !m_notifyOnChange) {
 			m_task.sleep(10);
 			continue;
+		}
+		for (auto it = m_linksIn.begin();it!=m_linksIn.end();it++) {
+			(*it).second.heapSynchronized = false;
 		}
 		RTIME current = rt_timer_read();
 		if (m_period != -1 && m_runnable) {
@@ -221,10 +237,10 @@ void CModule::mainTask()
 //  s h a r e d   h e a p
 //-------------------------------------------------------------------
 
-void CModule::outBsonToHeap(const mongo::BSONObj& object)
+void CModule::sendBsonToHeap(const mongo::BSONObj& object)
 {
 	CMutexSection locker(m_mutexOutputHeap);
-	size_t size = object.objsize();
+	size_t size = (size_t) object.objsize();
 	if (!m_heapCreated || m_outputHeapSize <= size) {
 		if (m_heapCreated) {
 			rt_heap_free(&m_outputHeap, m_heapPtr);
@@ -232,8 +248,7 @@ void CModule::outBsonToHeap(const mongo::BSONObj& object)
 			m_heapCreated = false;
 		}
 		m_outputHeapSize = size+1;
-		CString name;
-		name = CString("%1.sh").arg(m_instance);
+        CStringAnsi name = m_instance + CStringAnsi(".sh", (size_t) -1, true);
 		int err = rt_heap_create(&m_outputHeap, name.data(), m_outputHeapSize, H_FIFO);
 		if (err) {
 			Logger() << __PRETTY_FUNCTION__ << ": error creating heap for output data. err = " << err;
@@ -248,7 +263,7 @@ void CModule::outBsonToHeap(const mongo::BSONObj& object)
 	memcpy(m_heapPtr, object.objdata(), size);
 }
 
-mongo::BSONObj CModule::recvBsonFromHeap(const CString& name)
+mongo::BSONObj CModule::recvBsonFromHeap(CStringAnsi const &name)
 {// name: module instance name
 	if (name.isEmpty()) {
 		return mongo::BSONObj();
@@ -256,7 +271,7 @@ mongo::BSONObj CModule::recvBsonFromHeap(const CString& name)
 	bool needUnbind = false;
 	void* ptr = 0;
 	RT_HEAP heap;
-	CMutex* mutex;
+	CMutex* mutex = 0;
 
 	if (m_linksIn.count(name)) {
 		LINK& link = m_linksIn[name];
@@ -274,7 +289,7 @@ mongo::BSONObj CModule::recvBsonFromHeap(const CString& name)
 		}
 		if (!link.heapCreated) {
 			bool ret = bindHeap(name, &link.heap, &link.heapPtr, &link.mutexHeap);
-			if (ret == false) {
+			if (!ret) {
 				return mongo::BSONObj();
 			}
 			link.heapCreated = true;
@@ -283,7 +298,7 @@ mongo::BSONObj CModule::recvBsonFromHeap(const CString& name)
 		}
 	} else {
 		bool ret = bindHeap(name, &heap, &ptr, &mutex);
-		if (ret == false) {
+		if (!ret) {
 			return mongo::BSONObj();
 		}
 		needUnbind = true;
@@ -301,9 +316,9 @@ mongo::BSONObj CModule::recvBsonFromHeap(const CString& name)
 	return obj;
 }
 
-bool CModule::bindHeap(const CString& name, RT_HEAP* heap, void** ptr, CMutex** mutex)
+bool CModule::bindHeap(CStringAnsi const &name, RT_HEAP *heap, void **ptr, CMutex **mutex)
 {
-	CString heapName = CString("%1.shm").arg(name);
+	CStringAnsi heapName = name + CStringAnsi(".shm", (size_t) -1, true);
 	int err = rt_heap_bind(heap, heapName.data(), TM_NONBLOCK);
 	if (err) {
 		Logger() << __PRETTY_FUNCTION__ << ": error bind heap with name(" << heapName << "). error = " << err;
@@ -315,11 +330,163 @@ bool CModule::bindHeap(const CString& name, RT_HEAP* heap, void** ptr, CMutex** 
 		rt_heap_unbind(heap);
 		return false;
 	}
-	heapName = CString("%1.mt").arg(name);
+	heapName = name + ".mt";
 	if (mutex != 0) {
-		*mutex = new CMutex(heapName, true);
+		*mutex = new CMutex(heapName.data(), true);
 	}
 	return true;
+}
+
+bool CModule::syncSharedMemoryLink(CStringAnsi const &name)
+{
+	if (m_linksIn.count(name) == 0) {
+		return false;
+	}
+	LINK& link = m_linksIn.at(name);
+	if (link.heapSynchronized) {
+		return true;
+	}
+	std::set<CStringAnsi> pins;
+	for (const std::pair<CStringAnsi, CStringAnsi>& it:link.links) {
+		pins.insert(it.second);
+	}
+	if (!pins.size()) {
+		return false;
+	}
+	mongo::BSONObj obj = recvBsonFromHeap(name);
+	if (obj.isEmpty()) {
+		return false;
+	}
+	mongo::BSONObj result = mergeObjects(m_dataIn, obj, &pins, &m_sharedPinMaping);
+	m_dataIn = result.copy();
+	{
+		m_elementsIn.clear();
+		mongo::BSONObjIterator it(m_dataIn);
+		while (it.more()) {
+			mongo::BSONElement elem = it.next();
+			m_elementsIn[elem.fieldName()] = elem;
+		}
+	}
+	link.heapSynchronized = true;
+	return true;
+}
+
+//-------------------------------------------------------------------
+//  c o m m o n
+//-------------------------------------------------------------------
+
+mongo::BSONObj CModule::mergeObjects(const mongo::BSONObj& dst, const mongo::BSONObj& src,
+		std::set<CStringAnsi> * const elementsSrc /*= 0*/, std::map<CStringAnsi, CStringAnsi> * const pinMapping /*= 0*/)
+{
+    // TODO: needed refactor of function (slowly)
+	mongo::BSONObj result;
+
+	std::map<CStringAnsi, mongo::BSONElement> allElements;
+	{
+		mongo::BSONObjIterator it(dst);
+		while(it.more()) {
+			mongo::BSONElement elem = it.next();
+			allElements[CStringAnsi(elem.fieldName(), (size_t) -1, true)] = elem;
+		}
+	}
+	mongo::BSONObjIterator it(src);
+	while (it.more()) {
+		mongo::BSONElement elem = it.next();
+		CStringAnsi pinName;
+
+        CStringAnsi fieldName(elem.fieldName(), (size_t) -1, true);
+        if (pinMapping && pinMapping->count(fieldName)) {
+			pinName = pinMapping->at(fieldName);
+		} else {
+            pinName = fieldName;
+        }
+		if (elementsSrc) {
+			if (elementsSrc->count(pinName)) {
+				allElements[pinName] = elem;
+			}
+			continue;
+		}
+		allElements[pinName] = elem;
+	}
+	mongo::BSONObjBuilder builder;
+	for (auto obj:allElements) {
+		builder << obj.first.data() << obj.second;
+	}
+	result = builder.obj();
+	return result.copy();
+}
+
+//-------------------------------------------------------------------
+//  i n p u t   v a l u e s
+//-------------------------------------------------------------------
+
+bool CModule::hasElement(char const *name) const
+{
+	if (name == nullptr) {
+		return false;
+	}
+	CStringAnsi cname(name, (size_t) -1, true);
+	if (m_sharedLinks.count(cname)) {
+		CModule* module = const_cast<CModule*>(this);
+        CStringAnsi moduleName = m_sharedLinks.at(cname);
+		module->syncSharedMemoryLink(moduleName);
+	}
+	return m_elementsIn.count(cname) != 0;
+}
+
+mongo::BSONElement CModule::element(char const *name) const
+{
+	if (m_sharedLinks.count(name)) {
+		CModule* module = const_cast<CModule*>(this);
+		CStringAnsi moduleName = m_sharedLinks.at(name);
+		module->syncSharedMemoryLink(moduleName);
+	}
+	if (!hasElement(name)) {
+		return mongo::BSONElement();
+	}
+	return m_elementsIn.at(CStringAnsi(name, (size_t) -1, true));
+}
+
+CString CModule::valueString(char const *elemName) const
+{
+	mongo::BSONElement elem = element(elemName);
+	if (elem.isNull()) {
+		return CString();
+	}
+	return CString(elem.String().c_str());
+}
+
+double CModule::valueDouble(char const *elemName) const
+{
+	mongo::BSONElement elem = element(elemName);
+	if (elem.isNull()) {
+		return 0.0;
+	}
+	return elem.Double();
+}
+
+int CModule::valueInt(char const *elemName) const
+{
+	mongo::BSONElement elem = element(elemName);
+	if (elem.isNull()) {
+		return 0;
+	}
+	return elem.Int();
+}
+
+bool CModule::valueBool(char const *elemName) const
+{
+	mongo::BSONElement elem = element(elemName);
+	return !elem.isNull() && elem.Bool();
+}
+
+double CModule::valueNumber(char const *elemName) const
+{
+	mongo::BSONElement elem = element(elemName);
+	if (elem.isNull()) {
+		return 0.0f;
+	}
+	return elem.Number();
 }
 
 //-------------------------------------------------------------------
@@ -331,10 +498,11 @@ void CModule::sendObject(const mongo::BSONObj& object)
 	if (object.isEmpty()) {
 		return;
 	}
-	outBsonToHeap(object);
-//	Logger() << object.toString(false, true).c_str();
+	m_dataOut = mergeObjects(m_dataOut, object);
+//	Logger() << m_dataOut.toString(false, true).c_str();
+	sendBsonToHeap(m_dataOut);
 
-	std::map<CString, mongo::BSONElement> objElements;
+    m_tmpObjElements.clear();
 	{
 		mongo::BSONObjIterator objIt(object);
 		while (objIt.more()) {
@@ -342,27 +510,27 @@ void CModule::sendObject(const mongo::BSONObj& object)
 			if (elem.isNull()) {
 				continue;
 			}
-			objElements[elem.fieldName()] = elem;
+            m_tmpObjElements.push_back(elem);
 		}
 	}
 	CMutexSection locker(&m_mutexLinks);
-	for (auto it_links = m_linksOut.begin();it_links!=m_linksOut.end();it_links++) {
-		LINK& link_data = (*it_links).second;
+	for (std::pair<CStringAnsi, LINK>& it_links:m_linksOut) {
+		LINK& link_data = it_links.second;
 		if (link_data.links.size() == 0) {
 			continue;
 		}
 		mongo::BSONObjBuilder builder;
-		for (auto it = link_data.links.begin();it<link_data.links.end();it++) {
-			mongo::BSONObj& link = *it;
-//			Logger() << link.toString(false, true).c_str();
-			CString outPin = link["outPin"].String().c_str();
-			if (objElements.count(outPin) == 0) {
-				continue;
-			}
-			builder << link["inPin"].String() << objElements[outPin];
+		for (const std::pair<CStringAnsi, CStringAnsi>& it:link_data.links) {
+			CStringAnsi outPin = it.first;
+            for (const mongo::BSONElement& elem:m_tmpObjElements) {
+                if (outPin == elem.fieldName()) {
+                    builder << it.second.data() << elem;
+                    break;
+                }
+            }
 		}
 		if (!link_data.queueCreated) {
-			CString name = CString((link_data.links[0])["inInst"].String().c_str()) + CString("inputQueue");
+			CStringAnsi name = link_data.inInstance + CStringAnsi("inputQueue", (size_t) -1, true);
 			int err = rt_queue_bind(&link_data.queue, name.data(), TM_NONBLOCK);
 			if (err != 0) {
 				Logger() << "error binding queue for send data to module. err =" << err;
@@ -372,17 +540,18 @@ void CModule::sendObject(const mongo::BSONObj& object)
 		}
 		mongo::BSONObj objForSend = builder.obj();
 
-		void* ptr = rt_queue_alloc(&link_data.queue, objForSend.objsize());
+		void* ptr = rt_queue_alloc(&link_data.queue, (size_t) objForSend.objsize());
 		if (!ptr) {
 			continue;
 		}
-		memcpy(ptr, objForSend.objdata(), objForSend.objsize());
-		int err = rt_queue_send(&link_data.queue, ptr, objForSend.objsize(), Q_NORMAL);
+		memcpy(ptr, objForSend.objdata(), (size_t) objForSend.objsize());
+		int err = rt_queue_send(&link_data.queue, ptr, (size_t) objForSend.objsize(), Q_NORMAL);
 		if (err < 0) {
 			rt_queue_free(&link_data.queue, ptr);
 			Logger() << "error writing in queue. err =" << err;
 		}
 	}
+    m_tmpObjElements.clear();
 }
 
 void CModule::recvObjects()
@@ -400,33 +569,34 @@ void CModule::recvObjects()
 	if (m_period == -1) {
 		timeout = 1000;
 	}
-	int readed = rt_queue_receive(&m_inputQueue, &ptr, timeout);
-	if (readed < 0) {
+	int read = rt_queue_receive(&m_inputQueue, &ptr, timeout);
+	if (read < 0) {
 		CSystem::sleep(2);
 		return;
 	}
-	Logger() << "readed =" << readed;
-	mongo::BSONObj obj = mongo::BSONObj((char*)ptr).copy();
-	rt_queue_free(&m_inputQueue, ptr);
+//	Logger() << "read =" << read;
+	mongo::BSONObj obj = mongo::BSONObj((char*)ptr);
+	// it will be removed later
+//	rt_queue_free(&m_inputQueue, ptr);
 
-	CMutexSection locker(&m_mutexData);
+//	CMutexSection locker(&m_mutexData);
 	// merge new data object with our
-	std::map<CString, mongo::BSONElement> elements;
+	std::map<CStringAnsi, mongo::BSONElement> elements;
 	{
-		mongo::BSONObjIterator objIt(m_data);
+		mongo::BSONObjIterator objIt(m_dataIn);
 		while (objIt.more()) {
 			mongo::BSONElement elem = objIt.next();
 			if (elem.isNull()) {
 				continue;
 			}
-			elements[elem.fieldName()] = elem;
+			elements[CStringAnsi(elem.fieldName(), (size_t) -1, true)] = elem;
 		}
 	}
 	{
 		mongo::BSONObjIterator objIt(obj);
 		while (objIt.more()) {
 			mongo::BSONElement elem = objIt.next();
-			CString name = elem.fieldName();
+			CStringAnsi name(elem.fieldName(), (size_t) -1, true);
 			elements[name] = elem;
 		}
 	}
@@ -435,9 +605,21 @@ void CModule::recvObjects()
 		builder.append((*it).second);
 	}
 
-	m_data = builder.obj();
+	m_dataIn = builder.obj();
+
+	// remove memory retrieved from queue
+	rt_queue_free(&m_inputQueue, ptr);
+
+	{
+		m_elementsIn.clear();
+		mongo::BSONObjIterator it(m_dataIn);
+		while (it.more()) {
+			mongo::BSONElement elem = it.next();
+			m_elementsIn[CStringAnsi(elem.fieldName(), (size_t) -1, true)] = elem;
+		}
+	}
 	if (m_notifyOnChange) {
-		recievedData(m_data);
+		receivedData();
 	}
 }
 
@@ -445,6 +627,6 @@ void CModule::recvObjects()
 //  n o t i f y
 //-------------------------------------------------------------------
 
-void CModule::recievedData(const mongo::BSONObj& /*obj*/)
+void CModule::receivedData()
 {
 }

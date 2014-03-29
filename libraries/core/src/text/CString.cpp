@@ -26,6 +26,12 @@ CString::CString()
 	d = 0;
 }
 
+CString::CString(const std::string& str)
+{
+    d = 0;
+    operator=(str.c_str());
+}
+
 CString::CString(const CString& other)
 {
 	d = 0;
@@ -440,6 +446,24 @@ bool CString::operator<(const CString& str) const
 	if( 0 > strcmp(d->m_data, str.d->m_data) )
 		return true;
 	return false;
+}
+
+bool CString::operator<(const char* str) const
+{
+    const char* data = this->data();
+    const char* data1 = str;
+
+    if (!data && !data1)
+        return false;
+    else if (!data && data1)
+        return true;
+    else if (data && !data1)
+        return false;
+    else if (!data || !data1)
+        return false;
+    if (0 > strcmp(d->m_data, str) )
+        return true;
+    return false;
 }
 
 CString& CString::prepend(const CString& str)

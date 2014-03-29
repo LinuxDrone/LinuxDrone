@@ -12,28 +12,14 @@
 
 #pragma once
 
-#include "core/CObject"
 #include "text/CString"
-#include <mongo/bson/bson.h>
+#include <vector>
+#include "CGPSParser.h"
 
-class CModule;
-class CModuleMetainfo;
-
-// main function of module 'CModuleMetainfo* moduleMetainfoCreator(void)'
-typedef CModuleMetainfo* (*ptr_moduleMetainfoCreator)(const CString& pathToModule);
-
-class CModuleMetainfo : public CObject
+class CGPSProtocol
 {
 public:
-	CModuleMetainfo(const CString& pathToConfig);
-	virtual ~CModuleMetainfo();
-
-	virtual CString moduleName() const;
-	virtual mongo::BSONObj metainformation() const;
-	virtual CModule* createModule() const;
-
-protected:
-	mongo::BSONObj m_metaObject;
-
-	void setMetaObject(const mongo::BSONObj& metaObject);
+	virtual std::vector<CString> getInitCommands() = 0;
+	virtual CString	getQueryCommand() = 0;
+	virtual int getEndSentence() = 0;	
 };

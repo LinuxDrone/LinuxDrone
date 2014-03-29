@@ -14,6 +14,7 @@
 
 #include "text/CString"
 #include "thread/CMutex"
+#include "../telemetry/CTelemetry.h"
 #include <map>
 #include <mongo/bson/bson.h>
 
@@ -61,4 +62,5 @@ private:
 	std::map<CString, CModule*> m_modules;
 	CMutex m_mutexModules;
 
+	CTelemetry m_telemetry;
 };
