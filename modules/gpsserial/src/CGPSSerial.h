@@ -21,7 +21,7 @@
 #include "CGPSParserFactory.h"
 #include "CGPSProtocol.h"
 #include "CGPSParser.h"
-
+#include "core/CByteArray"
 
 
 class CGpsSerial : public CModule
