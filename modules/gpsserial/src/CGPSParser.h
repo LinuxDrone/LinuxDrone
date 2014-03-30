@@ -12,6 +12,8 @@
 
 #pragma once
 #include "text/CString"
+#include "system/Logger"
+#include "core/CByteArray"
 
 class CGPSParser
 {
@@ -25,12 +27,12 @@ public:
 	CString	getnumberofSatellities();
 	CString	getGpsFix();
 	CString	getTime();
+	//CString getFullSentence();
 
-	void	setSentence(CString sentence);
+	void setSentence(CByteArray sentence);
 	bool	getValidParser();
 
 	virtual bool parseSentence() = 0;
-	virtual CString getFullSentence(CString newsentence) = 0;
 
 protected:	
 	
@@ -44,5 +46,5 @@ protected:
 	CString m_numberofSatellities;
 	CString	m_gpsFix;
 	CString m_Time;	
-	CString	m_Sentence;
+	CByteArray	m_Sentence;
 };

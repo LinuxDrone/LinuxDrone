@@ -26,11 +26,11 @@ public:
 	~CGPSParserNMEA();
 
 	bool parseSentence() override;
-	CString getFullSentence(CString newsentence) override;
 
 private:	
 	
 	bool m_validChecksum; //If checksum is valid	
 	bool validade_checksum(CString sentence);
 	int hex2dec(char hexdigit); 
+	CString l_sentence;
 };

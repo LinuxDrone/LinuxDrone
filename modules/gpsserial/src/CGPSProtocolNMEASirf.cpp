@@ -15,36 +15,60 @@
 
 CGPSProtocolNMEASirf::CGPSProtocolNMEASirf()
 {
-
+	m_ProtocolType = "A";
 }
+
 CGPSProtocolNMEASirf::~CGPSProtocolNMEASirf()
 {
 
 }
 
-std::vector<CString> CGPSProtocolNMEASirf::getInitCommands()
+std::vector<CByteArray> CGPSProtocolNMEASirf::getInitCommands()
 {
-	std::vector<CString> l_retcommands;
+	std::vector<CByteArray> l_retcommands;
+	CString l_cmd;
 	//l_retcommands.push_back("$PSRF100,1,####,8,1,0*05\r\n"); //return NMEA Protocol - #### will be replaced with current velocity
-	l_retcommands.push_back("$PSRF103,00,00,00,01*24\r\n"); //Off GGA
-	l_retcommands.push_back("$PSRF103,01,00,00,01*25\r\n"); //Off GGL
-	l_retcommands.push_back("$PSRF103,02,00,00,01*26\r\n"); //Off GSA
-	l_retcommands.push_back("$PSRF103,03,00,00,01*27\r\n"); //Off GSV
-	l_retcommands.push_back("$PSRF103,04,00,00,01*20\r\n"); //Off RMC
-	l_retcommands.push_back("$PSRF103,05,00,00,01*21\r\n"); //Off VTG
-	l_retcommands.push_back("$PSRF103,06,00,00,01*22\r\n"); //Off MSS
-	l_retcommands.push_back("$PSRF103,08,00,00,01*2C\r\n"); //Off ZDA
-	return l_retcommands;
+	//l_retcommands.push_back("$PSRF103,00,00,00,01*24\r\n"); //Off GGA
+	l_cmd = "$PSRF103,00,00,00,01*24\r\n";
+	l_retcommands.push_back(CByteArray(l_cmd.data(),l_cmd.size(),false));
+
+	//l_retcommands.push_back("$PSRF103,01,00,00,01*25\r\n"); //Off GGL
+	l_cmd = "$PSRF103,01,00,00,01*25\r\n";
+	l_retcommands.push_back(CByteArray(l_cmd.data(),l_cmd.size(),false));	
+
+	//l_retcommands.push_back("$PSRF103,02,00,00,01*26\r\n"); //Off GSA
+	l_cmd = "$PSRF103,02,00,00,01*26\r\n";
+	l_retcommands.push_back(CByteArray(l_cmd.data(),l_cmd.size(),false));
+
+	//l_retcommands.push_back("$PSRF103,03,00,00,01*27\r\n"); //Off GSV
+	l_cmd = "$PSRF103,03,00,00,01*27\r\n";
+	l_retcommands.push_back(CByteArray(l_cmd.data(),l_cmd.size(),false));
+
+	//l_retcommands.push_back("$PSRF103,04,00,00,01*20\r\n"); //Off RMC
+	l_cmd = "$PSRF103,04,00,00,01*20\r\n";
+	l_retcommands.push_back(CByteArray(l_cmd.data(),l_cmd.size(),false));
+
+	//l_retcommands.push_back("$PSRF103,05,00,00,01*21\r\n"); //Off VTG
+	l_cmd = "$PSRF103,05,00,00,01*21\r\n";
+	l_retcommands.push_back(CByteArray(l_cmd.data(),l_cmd.size(),false));
+
+	//l_retcommands.push_back("$PSRF103,06,00,00,01*22\r\n"); //Off MSS
+	l_cmd = "$PSRF103,06,00,00,01*22\r\n";
+	l_retcommands.push_back(CByteArray(l_cmd.data(),l_cmd.size(),false));
+
+	//l_retcommands.push_back("$PSRF103,08,00,00,01*2C\r\n"); //Off ZDA
+	l_cmd = "$PSRF103,08,00,00,01*2C\r\n";
+	l_retcommands.push_back(CByteArray(l_cmd.data(),l_cmd.size(),false));
+
+	return l_retcommands; 
+
 }
 
-CString	CGPSProtocolNMEASirf::getQueryCommand()
+CByteArray	CGPSProtocolNMEASirf::getQueryCommand()
 {
-	return "$PSRF103,00,01,00,01*25\r\n"; // returning query gga
-}
-
-int CGPSProtocolNMEASirf::getEndSentence()
-{
-	return 10;
+	CString ltmp = "$PSRF103,00,01,00,01*25\r\n";
+	CByteArray l_cmd = CByteArray(ltmp.data(),ltmp.size(),false);
+	return l_cmd; // returning query gga
 }
 
 /*
