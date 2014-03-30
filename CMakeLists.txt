@@ -51,6 +51,7 @@ include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 
 # Boost
 # Libraries: ${Boost_LIBRARIES}
+set(Boost_USE_STATIC_LIBS OFF) 
 find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
 include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
 

@@ -43,6 +43,20 @@ int init(const uint8_t * data, uint32_t length)
 	char* str = bson_as_json(&bson, NULL);
 	fprintf(stdout, "%s\n", str);
 	bson_free(str);
+
+	bson_iter_t iter;
+	if(!bson_iter_init_find (&iter, &bson, "name"))
+	{
+		printf("Not found property \"name\"");
+		return -1;
+	}
+
+	if(!BSON_ITER_HOLDS_UTF8(&iter))
+	{
+		printf("Property \"name\" not UTF8 type");
+		return -1;
+	}
+
 }
 
 void task_main_body (void *cookie)
