@@ -1,4 +1,5 @@
 #include <native/task.h>
+#include <bson.h>
 
 /**
  * \enum Reason4callback
@@ -31,6 +32,6 @@ typedef void (*t_callback_business)(Reason4callback reason);
  */
 void register_business_callback(t_callback_business callback);
 
-int init();
+int init(const uint8_t * data, uint32_t length);
 
 int start();

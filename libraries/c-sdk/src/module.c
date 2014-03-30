@@ -1,4 +1,5 @@
 #include "../include/module.h"
+#include <stdio.h>
 
 #define TASK_PRIO  99 /* Highest RT priority */
 #define TASK_MODE  0  /* No flags */
@@ -33,9 +34,15 @@ void register_business_callback(t_callback_business callback)
 		m_business_callback = callback;
 }
 
-int init()
+int init(const uint8_t * data, uint32_t length)
 {
+	bson_t bson;
 
+	bson_init_static (&bson, data, length);
+
+	char* str = bson_as_json(&bson, NULL);
+	fprintf(stdout, "%s\n", str);
+	bson_free(str);
 }
 
 void task_main_body (void *cookie)

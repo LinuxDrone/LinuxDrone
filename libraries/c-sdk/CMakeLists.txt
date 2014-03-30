@@ -13,6 +13,8 @@
 file(GLOB_RECURSE INC "include/*")
 file(GLOB_RECURSE SRC "src/*.c")
 
+include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
+
 add_library(c-sdk ${INC} ${SRC})
 
 #set_property(TARGET c-sdk PROPERTY
@@ -20,6 +22,7 @@ add_library(c-sdk ${INC} ${SRC})
 
 set(EXTRA_LIBS
 	${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
+	bson_shared
 )
 
 target_link_libraries(c-sdk ${EXTRA_LIBS})
