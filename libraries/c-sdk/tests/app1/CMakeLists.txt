@@ -13,20 +13,21 @@
 file(GLOB_RECURSE INC "include/*")
 file(GLOB_RECURSE SRC "src/*.c")
 
-include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
+include_directories(../../../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
 
-add_library(c-sdk ${INC} ${SRC})
-#add_executable(c-sdk ${INC} ${SRC})
+add_executable(app1 ${INC} ${SRC})
 
 set(EXTRA_LIBS
+	/Users/vrubel/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
 	${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
 	bson_shared
+	rt
 )
 
-target_link_libraries(c-sdk ${EXTRA_LIBS})
+target_link_libraries(app1 ${EXTRA_LIBS})
 
-ADD_CUSTOM_TARGET(delivery
-        COMMAND scp libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
+ADD_CUSTOM_TARGET(app1copy
+        COMMAND scp app1 root@osen73.dyndns-home.com:/root/app1
 )
 
-install(TARGETS c-sdk DESTINATION lib)
+install(TARGETS app1 DESTINATION lib)
