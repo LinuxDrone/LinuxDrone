@@ -15,10 +15,8 @@ file(GLOB_RECURSE SRC "src/*.c")
 
 include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
 
-add_library(c-sdk ${INC} ${SRC})
-
-#set_property(TARGET c-sdk PROPERTY
-#                IMPORTED_LOCATION /Users/vrubel/LinuxDrone/tools/rootfs/usr/local/xenomai/lib/libnative.a)
+#add_library(c-sdk ${INC} ${SRC})
+add_executable(c-sdk ${INC} ${SRC})
 
 set(EXTRA_LIBS
 	${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
@@ -26,5 +24,9 @@ set(EXTRA_LIBS
 )
 
 target_link_libraries(c-sdk ${EXTRA_LIBS})
+
+ADD_CUSTOM_TARGET(delivery
+        COMMAND scp -P 777 c-sdk root@osen73.dyndns-home.com:/root/c-sdk
+)
 
 install(TARGETS c-sdk DESTINATION lib)

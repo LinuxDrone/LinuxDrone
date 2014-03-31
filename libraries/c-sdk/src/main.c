@@ -5,7 +5,7 @@
 #include "../include/module.h"
 
 typedef int (*tcallback) (int a, int b);
-static tcallback my_callback;
+static tcallback my_callback = NULL;
 
 void RegisterCallback (tcallback cb)
 {
@@ -15,8 +15,8 @@ void RegisterCallback (tcallback cb)
 int InvokeManagedCode (int a, int b)
 {
     if (my_callback == NULL){
-         printf ("Managed code has not initialized this library yet");
-         //abort ();
+         printf ("Managed code has not initialized this library yet\n");
+         return -1;
     }
     return (*my_callback) (a, b);
 }
@@ -34,7 +34,7 @@ void work(Reason4callback reason)
 }
 
 
-int run ()
+int main ()
 {
 	register_business_callback(&work);
 
@@ -70,5 +70,7 @@ int run ()
 	bson_destroy(&bson);
 
 	start();
+
+	getchar();
 }
 
