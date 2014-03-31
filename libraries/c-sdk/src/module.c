@@ -15,9 +15,7 @@ RT_TASK task_main;
  * \~english Name Main thread
  * \~russian ��� ������ �������� ������ ������
  */
-char* name_task_main;
-
-char* name_module;
+const char* name_module;
 
 
 /**
@@ -59,7 +57,9 @@ int init(const uint8_t * data, uint32_t length)
 		return -1;
 	}
 
-	fprintf(stdout, "module name=%s\n", bson_iter_utf8(&iter, NULL));
+
+	name_module=bson_iter_utf8(&iter, NULL);
+	fprintf(stdout, "module name=%s\n", name_module);
 
 }
 
@@ -77,6 +77,12 @@ int start()
 		printf("m_business_callback is NULL\n");
 		return -1;
 	}
+
+	char name_task_main[64] = "";
+	strcat(name_task_main, name_module);
+	strcat(name_task_main, "_task");
+
+	fprintf(stdout, "task name=%s\n", name_task_main);
 
     int err = rt_task_create(&task_main,
     					name_task_main,

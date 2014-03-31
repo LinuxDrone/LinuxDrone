@@ -34,7 +34,7 @@ void work(Reason4callback reason)
 }
 
 
-int main ()
+int main3 ()
 {
 	register_business_callback(&work);
 

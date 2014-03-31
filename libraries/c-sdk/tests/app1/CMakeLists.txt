@@ -30,4 +30,10 @@ ADD_CUSTOM_TARGET(app1copy
         COMMAND scp app1 root@osen73.dyndns-home.com:/root/app1
 )
 
+add_custom_command(
+	TARGET app1
+	POST_BUILD
+	COMMAND scp app1 root@osen73.dyndns-home.com:/root/app1
+)
+
 install(TARGETS app1 DESTINATION lib)

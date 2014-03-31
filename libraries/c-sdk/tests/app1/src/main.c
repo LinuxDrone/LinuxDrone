@@ -5,7 +5,7 @@ void work(Reason4callback reason)
 {
 	int s=10;
     for (;;) {
-    	int res = InvokeManagedCode (s++, 5);
+    	int res = 0;//InvokeManagedCode (s++, 5);
     	rt_task_sleep(1000000000);
     	printf("step %i\n", res);
     }
@@ -33,7 +33,7 @@ int main ()
 
 	bson_append_document_begin(&bson, "foo", -1, &foo);
 
-	         bson_append_document_begin(&foo, "bar", -1, &bar);
+	bson_append_document_begin(&foo, "bar", -1, &bar);
 	         bson_append_array_begin(&bar, "baz", -1, &baz);
 	         bson_append_int32(&baz, "0", -1, 1);
 	         bson_append_int32(&baz, "1", -1, 2);

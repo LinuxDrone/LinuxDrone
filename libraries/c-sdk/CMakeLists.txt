@@ -16,7 +16,6 @@ file(GLOB_RECURSE SRC "src/*.c")
 include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
 
 add_library(c-sdk ${INC} ${SRC})
-#add_executable(c-sdk ${INC} ${SRC})
 
 set(EXTRA_LIBS
 	${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
@@ -28,5 +27,12 @@ target_link_libraries(c-sdk ${EXTRA_LIBS})
 ADD_CUSTOM_TARGET(delivery
         COMMAND scp libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
 )
+
+add_custom_command(
+	TARGET c-sdk
+	POST_BUILD
+	COMMAND scp libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
+)
+
 
 install(TARGETS c-sdk DESTINATION lib)
