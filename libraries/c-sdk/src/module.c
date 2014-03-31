@@ -7,25 +7,27 @@
 
 /**
  * \~english Main thread
- * \~russian ѓлавный поток модулЯ, в котором выполнЯетсЯ бизнес-функциЯ
+ * \~russian пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
  */
 RT_TASK task_main;
 
 /**
  * \~english Name Main thread
- * \~russian €мЯ задачи главного потока модулЯ
+ * \~russian пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
  */
 char* name_task_main;
+
+char* name_module;
 
 
 /**
  * \~english Transfer thread
- * \~russian Џоток подготовки и передачи bson объектов
+ * \~russian пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ bson пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
  */
 RT_TASK task_transfer;
 
 
-static t_callback_business m_business_callback;
+static t_callback_business m_business_callback = NULL;
 
 
 void register_business_callback(t_callback_business callback)
@@ -57,6 +59,8 @@ int init(const uint8_t * data, uint32_t length)
 		return -1;
 	}
 
+	fprintf(stdout, "module name=%s\n", bson_iter_utf8(&iter, NULL));
+
 }
 
 void task_main_body (void *cookie)
@@ -68,6 +72,12 @@ void task_main_body (void *cookie)
 
 int start()
 {
+	if(!m_business_callback)
+	{
+		printf("m_business_callback is NULL\n");
+		return -1;
+	}
+
     int err = rt_task_create(&task_main,
     					name_task_main,
                          TASK_STKSZ,
