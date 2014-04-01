@@ -18,7 +18,8 @@ include_directories(../../../../tools/rootfs/beaglebone/usr/local/include/libbso
 add_executable(app1 ${INC} ${SRC})
 
 set(EXTRA_LIBS
-	/Users/vrubel/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
+	#/Users/vrubel/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
+	/home/vrubel/Projects/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
 	${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
 	bson_shared
 	rt
@@ -26,14 +27,10 @@ set(EXTRA_LIBS
 
 target_link_libraries(app1 ${EXTRA_LIBS})
 
-ADD_CUSTOM_TARGET(app1copy
-        COMMAND scp app1 root@osen73.dyndns-home.com:/root/app1
-)
-
 add_custom_command(
 	TARGET app1
 	POST_BUILD
-	COMMAND scp app1 root@osen73.dyndns-home.com:/root/app1
+	COMMAND scp -P 777 app1 root@osen73.dyndns-home.com:/root/app1
 )
 
 install(TARGETS app1 DESTINATION lib)

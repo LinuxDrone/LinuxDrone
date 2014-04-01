@@ -24,15 +24,10 @@ set(EXTRA_LIBS
 
 target_link_libraries(c-sdk ${EXTRA_LIBS})
 
-ADD_CUSTOM_TARGET(delivery
-        COMMAND scp libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
-)
-
 add_custom_command(
 	TARGET c-sdk
 	POST_BUILD
-	COMMAND scp libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
+	COMMAND scp -P 777 libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
 )
-
 
 install(TARGETS c-sdk DESTINATION lib)
