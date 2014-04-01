@@ -1,0 +1,54 @@
+{
+    "_id" : "533af8a7ce96e04edace0313",
+    "type" : "configuration",
+    "modules" : [ 
+        {
+            "name" : "GY-87",
+            "instance" : "GY-87-1",
+            "Task Priority" : 80,
+            "Task Period" : 200,
+            "Notify on change" : true,
+            "params" : {
+                "I2C Device" : "/dev/i2c-1",
+                "Test Number Param" : 123,
+                "Test Boolean Param" : false
+            }
+        }, 
+        {
+            "name" : "PwmOutput",
+            "instance" : "PwmOutput-1",
+            "Task Priority" : 80,
+            "Task Period" : 20000,
+            "Notify on change" : true,
+            "params" : {
+                "Pru Device" : 1,
+                "Pru Binary" : "/root/PwmOut.bin"
+            }
+        }
+    ],
+    "links" : [ 
+        {
+            "type" : "queue",
+            "outInst" : "GY-87-1",
+            "inInst" : "PwmOutput-1",
+            "outPin" : "accelX",
+            "inPin" : "pwm0"
+        }, 
+        {
+            "type" : "queue",
+            "outInst" : "GY-87-1",
+            "inInst" : "PwmOutput-1",
+            "outPin" : "accelY",
+            "inPin" : "pwm1"
+        }, 
+        {
+            "type" : "memory",
+            "outInst" : "GY-87-1",
+            "inInst" : "PwmOutput-1",
+            "outPin" : "accelZ",
+            "inPin" : "pwm2"
+        }
+    ],
+    "version" : "1",
+    "name" : "New Schema"
+}

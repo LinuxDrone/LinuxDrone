@@ -1,4 +1,7 @@
 #include "../include/module.h"
+#include <native/queue.h>
+#include <native/heap.h>
+#include <native/event.h>
 #include <stdio.h>
 
 #define TASK_PRIO  99 /* Highest RT priority */
@@ -7,20 +10,32 @@
 
 /**
  * \~english Main thread
- * \~russian ������� ����� ������, � ������� ����������� ������-�������
+ * \~russian
  */
 RT_TASK task_main;
 
 /**
- * \~english Name Main thread
- * \~russian ��� ������ �������� ������ ������
+ * \~english input queue
  */
-const char* name_module;
+RT_QUEUE in_queue;
+
+/**
+ * \~english Shared memory
+ */
+RT_HEAP shmem;
+
+RT_EVENT eflags;
+
+/**
+ * \~english Name Main thread
+ * \~russian
+ */
+const char* instance_name;
 
 
 /**
  * \~english Transfer thread
- * \~russian ����� ���������� � �������� bson ��������
+ * \~russian
  */
 RT_TASK task_transfer;
 
@@ -45,7 +60,7 @@ int init(const uint8_t * data, uint32_t length)
 	bson_free(str);
 
 	bson_iter_t iter;
-	if(!bson_iter_init_find (&iter, &bson, "name"))
+	if(!bson_iter_init_find (&iter, &bson, "type"))
 	{
 		printf("Not found property \"name\"");
 		return -1;
@@ -58,8 +73,8 @@ int init(const uint8_t * data, uint32_t length)
 	}
 
 
-	name_module=bson_iter_utf8(&iter, NULL);
-	fprintf(stdout, "module name=%s\n", name_module);
+	instance_name=bson_iter_utf8(&iter, NULL);
+	fprintf(stdout, "module name=%s\n", instance_name);
 
 }
 
@@ -78,13 +93,49 @@ int start()
 		return -1;
 	}
 
+	// Create input queue
+	char name_queue[64] = "";
+	strcat(name_queue, instance_name);
+	strcat(name_queue, "_queue");
+	int err = rt_queue_create	(&in_queue, name_queue, 200, 10, Q_FIFO);
+	if(err!=0)
+	{
+		fprintf(stdout, "Error create queue \"%s\"\n", name_queue);
+		return err;
+	}
+
+	// Create shared memory
+	char name_shmem[64] = "";
+	strcat(name_shmem, instance_name);
+	strcat(name_shmem, "_shmem");
+	err = rt_heap_create(&shmem, name_shmem, 200, H_SINGLE | H_PRIO);
+	if(err!=0)
+	{
+		fprintf(stdout, "Error create shared memory \"%s\"\n", name_shmem);
+		return err;
+	}
+
+	// Create event service
+	char name_eflags[64] = "";
+	strcat(name_eflags, instance_name);
+	strcat(name_eflags, "_flags");
+	err = rt_event_create(&eflags, name_eflags, ULONG_MAX, EV_PRIO);
+	if(err!=0)
+	{
+		fprintf(stdout, "Error create event service \"%s\"\n", name_eflags);
+		return err;
+	}
+
+
+
+	// Create task
 	char name_task_main[64] = "";
-	strcat(name_task_main, name_module);
+	strcat(name_task_main, instance_name);
 	strcat(name_task_main, "_task");
 
 	fprintf(stdout, "task name=%s\n", name_task_main);
 
-    int err = rt_task_create(&task_main,
+    err = rt_task_create(&task_main,
     					name_task_main,
                          TASK_STKSZ,
                          TASK_PRIO,
