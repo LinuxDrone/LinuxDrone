@@ -55,9 +55,11 @@ int init(const uint8_t * data, uint32_t length)
 
 	bson_init_static (&bson, data, length);
 
+	/*
 	char* str = bson_as_json(&bson, NULL);
 	fprintf(stdout, "%s\n", str);
 	bson_free(str);
+	*/
 
 	bson_iter_t iter;
 	if(!bson_iter_init_find (&iter, &bson, "type"))
@@ -76,6 +78,13 @@ int init(const uint8_t * data, uint32_t length)
 	instance_name=bson_iter_utf8(&iter, NULL);
 	fprintf(stdout, "module name=%s\n", instance_name);
 
+
+	int err = create_xenomai_services();
+	if(err!=0)
+	{
+		printf("Error create xenomai services\n");
+		return err;
+	}
 }
 
 void task_main_body (void *cookie)
@@ -87,12 +96,23 @@ void task_main_body (void *cookie)
 
 int start()
 {
-	if(!m_business_callback)
+	if(m_business_callback==NULL)
 	{
 		printf("m_business_callback is NULL\n");
 		return -1;
 	}
 
+
+    int err = rt_task_start(&task_main, &task_main_body, NULL);
+    if (err!=0)
+    	printf("m_business_callback is NULL\n");
+
+    return err;
+}
+
+
+int create_xenomai_services()
+{
 	// Create input queue
 	char name_queue[64] = "";
 	strcat(name_queue, instance_name);
@@ -126,22 +146,14 @@ int start()
 		return err;
 	}
 
-
-
 	// Create task
 	char name_task_main[64] = "";
 	strcat(name_task_main, instance_name);
 	strcat(name_task_main, "_task");
-
-	fprintf(stdout, "task name=%s\n", name_task_main);
-
-    err = rt_task_create(&task_main,
-    					name_task_main,
-                         TASK_STKSZ,
-                         TASK_PRIO,
-                         TASK_MODE);
-    if (!err)
-        err = rt_task_start(&task_main, &task_main_body, NULL);
-
-    return err;
+    err = rt_task_create(&task_main, name_task_main, TASK_STKSZ, TASK_PRIO, TASK_MODE);
+	if(err!=0)
+	{
+		fprintf(stdout, "Error create work task \"%s\"\n", name_task_main);
+		return err;
+	}
 }

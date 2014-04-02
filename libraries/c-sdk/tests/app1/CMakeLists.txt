@@ -18,8 +18,8 @@ include_directories(../../../../tools/rootfs/beaglebone/usr/local/include/libbso
 add_executable(app1 ${INC} ${SRC})
 
 set(EXTRA_LIBS
-	/Users/vrubel/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
-	#/home/vrubel/Projects/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
+	#/Users/vrubel/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
+	/home/vrubel/Projects/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
 	${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
 	bson_shared
 	rt
