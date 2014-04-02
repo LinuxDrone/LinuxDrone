@@ -6,7 +6,7 @@
             "name" : "GY-87",
             "instance" : "GY-87-1",
             "Task Priority" : 80,
-            "Task Period" : 200,
+            "Task Period" : 200000,
             "Notify on change" : true,
             "params" : {
                 "I2C Device" : "/dev/i2c-1",
@@ -18,7 +18,7 @@
             "name" : "PwmOutput",
             "instance" : "PwmOutput-1",
             "Task Priority" : 80,
-            "Task Period" : 20000,
+            "Task Period" : 200000,
             "Notify on change" : true,
             "params" : {
                 "Pru Device" : 1,

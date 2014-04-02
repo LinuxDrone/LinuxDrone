@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include "../../../include/module.h"
+#include "../../../include/module-fuctions.h"
+
+module_t module_info;
 
 bson_t* get_bson_from_file() {
 	bson_json_reader_t *reader;
@@ -41,26 +43,18 @@ bson_t* get_bson_from_file() {
 	return NULL ;
 }
 
-void work(Reason4callback reason) {
-	int s = 10;
-	for (;;) {
-		int res = 0; //InvokeManagedCode (s++, 5);
-		rt_task_sleep(1000000000);
-		printf("step %i\n", res);
-	}
-}
 
 void task_main_body (void *cookie)
 {
+	int i=0;
     for (;;) {
-    	Reason4callback res = get_input_data();
+    	Reason4callback res = get_input_data(&module_info);
+    	printf("%i\n", i++);
     }
 }
 
 
 int main() {
-	register_business_callback(&work);
-
 	bson_t* bson1 = get_bson_from_file();
 
 	bson_iter_t iter_m;
@@ -98,7 +92,6 @@ int main() {
 	bson_destroy(bson1);
 
 
-	module_t module_info;
 	module_info.func = &task_main_body;
 
 	init(&module_info, docbuf, doclen);
@@ -107,6 +100,7 @@ int main() {
 	if (start(&module_info) != 0)
 		return -1;
 
+	printf("END\n");
 	getchar();
 
 	return 0;
