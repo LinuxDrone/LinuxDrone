@@ -50,6 +50,14 @@ void work(Reason4callback reason) {
 	}
 }
 
+void task_main_body (void *cookie)
+{
+    for (;;) {
+    	Reason4callback res = get_input_data();
+    }
+}
+
+
 int main() {
 	register_business_callback(&work);
 
@@ -74,32 +82,37 @@ int main() {
 		return -1;
 	}
 
-	while(bson_iter_next(&iter_modules))
+	if(bson_iter_next(&iter_modules))
 	{
 		if(!BSON_ITER_HOLDS_DOCUMENT(&iter_modules))
 		{
 			fprintf(stderr, "Error: Not document\n");
-			continue;
+			//continue;
+			return -1;
 		}
 
 		bson_t bson_module;
 		bson_iter_document(&iter_modules, &doclen, &docbuf);
-		bson_init_static(&bson_module, docbuf, doclen);
 
 
-		char* str = bson_as_json(&bson_module, NULL);
-		fprintf(stdout, "%s\n", str);
-		bson_free(str);
+		init(docbuf, doclen);
+
+		//bson_init_static(&bson_module, docbuf, doclen);
+
+
+		//char* str = bson_as_json(&bson_module, NULL);
+		//fprintf(stdout, "%s\n", str);
+		//bson_free(str);
 	}
-
 
 	//init(bson_get_data(&bson_modules), bson_modules.len);
 
 
+
 	bson_destroy(bson1);
 
-	//if (start() != 0)
-		//return -1;
+	if (start(&task_main_body) != 0)
+		return -1;
 
 	getchar();
 

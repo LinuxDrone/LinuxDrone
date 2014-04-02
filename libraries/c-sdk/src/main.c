@@ -69,7 +69,7 @@ int main3 ()
 
 	bson_destroy(&bson);
 
-	start();
+	//start();
 
 	getchar();
 }

@@ -3,16 +3,16 @@
 
 /**
  * \enum Reason4callback
- * \~russian Џричина вызова калбека бизнес-функции
+ * \~russian пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
  */
 typedef enum {
 	/**
-	 * \~russian ‚ышел таймаут ожиданиЯ новых данных во входной очереди
+	 * \~russian
 	 */
 	timeout,
 
 	/**
-	 * \~russian Џолучены новые данные
+	 * \~russian
 	 */
 	obtained_data
 } Reason4callback;
@@ -20,18 +20,20 @@ typedef enum {
 
 /**
  * \typedef t_callback_business
- * \~russian ’ип калбэка бизнес-функции
+ * \~russian
  */
 typedef void (*t_callback_business)(Reason4callback reason);
+
+typedef void (*t_cycle_function)(void *cookie);
 
 
 /**
  * \fn void register_business_callback(t_callback_business callback)
- * \brief \~russian ђегистрациЯ калбэка бизнес-функции
- * \param \~russian “казатель на калбэк-функцию
+ * \brief \~russian
+ * \param \~russian
  */
 void register_business_callback(t_callback_business callback);
 
 int init(const uint8_t * data, uint32_t length);
 
-int start();
+int start(t_cycle_function func);
