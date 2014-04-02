@@ -13,9 +13,9 @@
 file(GLOB_RECURSE INC "include/*")
 file(GLOB_RECURSE SRC "src/*.c")
 
-include_directories(../../../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
+include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
 
-add_executable(app1 ${INC} ${SRC})
+add_executable(c-host ${INC} ${SRC})
 
 set(EXTRA_LIBS
 	/Users/vrubel/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
@@ -25,12 +25,12 @@ set(EXTRA_LIBS
 	rt
 )
 
-target_link_libraries(app1 ${EXTRA_LIBS})
+target_link_libraries(c-host ${EXTRA_LIBS})
 
 add_custom_command(
-	TARGET app1
+	TARGET c-host
 	POST_BUILD
-	COMMAND scp app1 root@osen73.dyndns-home.com:/root/app1
+	COMMAND scp c-host root@osen73.dyndns-home.com:/root/c-host
 )
 
-install(TARGETS app1 DESTINATION lib)
+install(TARGETS c-host DESTINATION bin)

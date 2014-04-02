@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "../../../include/module-fuctions.h"
+#include "module-fuctions.h"
 
 module_t module_info;
 
