@@ -65,7 +65,7 @@ int main3 ()
 	         bson_append_document_end(&foo, &bar);
 	         bson_append_document_end(&bson, &foo);
 
-	init(bson_get_data(&bson), bson.len);
+	//init(bson_get_data(&bson), bson.len);
 
 	bson_destroy(&bson);
 

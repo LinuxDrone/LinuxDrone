@@ -1,5 +1,8 @@
 #include <native/task.h>
 #include <bson.h>
+#include <native/queue.h>
+#include <native/heap.h>
+#include <native/event.h>
 
 /**
  * \enum Reason4callback
@@ -17,6 +20,46 @@ typedef enum {
 	obtained_data
 } Reason4callback;
 
+typedef void (*t_cycle_function)(void *cookie);
+
+typedef struct
+{
+	/**
+	 * \~english Main thread
+	 * \~russian
+	 */
+	RT_TASK task_main;
+
+	/**
+	 * \~english input queue
+	 */
+	RT_QUEUE in_queue;
+	RTIME queue_timeout;
+
+	/**
+	 * \~english Shared memory
+	 */
+	RT_HEAP shmem;
+
+	RT_EVENT eflags;
+
+	/**
+	 * \~english Name Main thread
+	 * \~russian
+	 */
+	const char* instance_name;
+
+	int32_t task_priority;
+
+	/**
+	 * \~english Transfer thread
+	 * \~russian
+	 */
+	RT_TASK task_transfer;
+
+	t_cycle_function func;
+
+} module_t;
 
 /**
  * \typedef t_callback_business
@@ -24,7 +67,7 @@ typedef enum {
  */
 typedef void (*t_callback_business)(Reason4callback reason);
 
-typedef void (*t_cycle_function)(void *cookie);
+
 
 
 /**
@@ -34,6 +77,6 @@ typedef void (*t_cycle_function)(void *cookie);
  */
 void register_business_callback(t_callback_business callback);
 
-int init(const uint8_t * data, uint32_t length);
+int init(module_t* module, const uint8_t * data, uint32_t length);
 
-int start(t_cycle_function func);
+int start(module_t* module);
