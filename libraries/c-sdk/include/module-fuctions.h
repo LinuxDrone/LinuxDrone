@@ -6,6 +6,7 @@
 #include <native/queue.h>
 #include <native/heap.h>
 #include <native/event.h>
+#include <native/mutex.h>
 
 /**
  * \enum Reason4callback
@@ -38,7 +39,7 @@ typedef struct
 	 * \~russian
 	 */
 	RT_TASK task_transmit;
-	RTIME transfer_task_period;
+	RTIME transmit_task_period;
 
 	/**
 	 * \~english input queue
@@ -51,6 +52,7 @@ typedef struct
 	 */
 	RT_HEAP h_shmem;
 	void* shmem;
+	int shmem_len;
 
 	RT_EVENT eflags;
 
@@ -60,13 +62,9 @@ typedef struct
 	 */
 	const char* instance_name;
 
-	int32_t task_priority;
+	int task_priority;
 
-	/**
-	 * \~english Transfer thread
-	 * \~russian
-	 */
-	RT_TASK task_transfer;
+	RT_MUTEX mutex_read_shmem;
 
 	t_cycle_function func;
 

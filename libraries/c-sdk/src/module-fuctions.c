@@ -102,9 +102,9 @@ int init(module_t* module, const uint8_t * data, uint32_t length) {
 		printf("Property \"Main task Period\" not INT32 type");
 		return -1;
 	}
-	module->transfer_task_period = rt_timer_ns2ticks(
+	module->transmit_task_period = rt_timer_ns2ticks(
 			bson_iter_int32(&iter) * 1000);
-	fprintf(stdout, "transfer_task_period=%i\n", module->transfer_task_period);
+	fprintf(stdout, "transmit_task_period=%i\n", module->transmit_task_period);
 
 	/**
 	 * Create required xenomai services
@@ -121,18 +121,6 @@ int init(module_t* module, const uint8_t * data, uint32_t length) {
 	return 0;
 }
 
-Reason4callback get_input_data(module_t* module) {
-	char buf[256];
-
-	int res_read = rt_queue_read(&module->in_queue, buf, 256,
-			module->queue_timeout);
-	if (res_read > 0)
-		printf("ofiget' ne vstat'\n");
-
-	return obtained_data;
-}
-
-
 void write_shmem(module_t* module, const char* data, int datalen) {
 	unsigned long after_mask;
 	int res = rt_event_clear(&module->eflags, ~SHMEM_WRITER_MASK, &after_mask);
@@ -141,7 +129,7 @@ void write_shmem(module_t* module, const char* data, int datalen) {
 		return;
 	}
 
-	printf("was mask = 0x%08X\n", after_mask);
+	//printf("was mask = 0x%08X\n", after_mask);
 
 	/**
 	 * \~russian Подождем, пока все читающие потоки выйдут из функции чтения и обнулят счетчик читающих потоков
@@ -163,16 +151,130 @@ void write_shmem(module_t* module, const char* data, int datalen) {
 	}
 }
 
+void read_shmem(module_t* module, void* data, int* datalen) {
+	unsigned long after_mask;
+	/**
+	 * \~russian Подождем, если пишущий поток выставил флаг, что он занят записью
+	 */
+	int res = rt_event_wait(&module->eflags, ~SHMEM_WRITER_MASK, &after_mask,
+	EV_ALL,
+	TM_INFINITE);
+	if (res != 0) {
+		printf("error read_shmem: rt_event_wait\n");
+		return;
+	}
+
+	/**
+	 * Залочим мьютекс
+	 */
+	res = rt_mutex_acquire(&module->mutex_read_shmem, TM_INFINITE);
+	if (res != 0) {
+		printf("error read_shmem: rt_mutex_acquire1\n");
+		return;
+	}
+
+	/**
+	 * Считываем показания счетчика (младших битов флагов)
+	 */
+	RT_EVENT_INFO info;
+	res = rt_event_inquire(&module->eflags, &info);
+	if (res != 0) {
+		printf("error read_shmem: rt_event_inquire1\n");
+		return;
+	}
+	//printf("read raw mask = 0x%08X\n", info.value);
+
+	// инкрементируем показания счетчика
+	unsigned long count = (~(info.value & SHMEM_WRITER_MASK))& SHMEM_WRITER_MASK;
+	//printf("masked raw mask = 0x%08X\n", count);
+	if(count==0)
+		count=1;
+	else
+		count=count << 1;
+
+	//printf("clear mask = 0x%08X\n", count);
+
+	// Сбросим флаги в соответствии со значением счетчика
+	res = rt_event_clear(&module->eflags, count, &after_mask);
+	if (res != 0) {
+		printf("error read_shmem: rt_event_clear\n");
+		return;
+	}
+
+	res = rt_mutex_release(&module->mutex_read_shmem);
+	if (res != 0) {
+		printf("error read_shmem:  rt_mutex_release1\n");
+		return;
+	}
+
+	memcpy(data, module->shmem, module->shmem_len);
+	*datalen = module->shmem_len;
+
+	/**
+	 * Залочим мьютекс
+	 */
+	res = rt_mutex_acquire(&module->mutex_read_shmem, TM_INFINITE);
+	if (res != 0) {
+		printf("error read_shmem: rt_mutex_acquire2\n");
+		return;
+	}
+
+	/**
+	 * Считываем показания счетчика (младших битов флагов)
+	 */
+	res = rt_event_inquire(&module->eflags, &info);
+	if (res != 0) {
+		printf("error read_shmem: rt_event_inquire1\n");
+		return;
+	}
+	// декрементируем показания счетчика
+	count = (~(info.value & SHMEM_WRITER_MASK));
+
+	count = count ^ (count>>1);
+
+	//printf("set mask = 0x%08X\n", count);
+
+	// Установим флаги в соответствии со значением счетчика
+	res = rt_event_signal(&module->eflags, count);
+	if (res != 0) {
+		printf("error read_shmem: rt_event_signal\n");
+		return;
+	}
+
+	res = rt_mutex_release(&module->mutex_read_shmem);
+	if (res != 0) {
+		printf("error read_shmem:  rt_mutex_release2\n");
+		return;
+	}
+
+}
+
+Reason4callback get_input_data(module_t* module) {
+	char buf[256];
+
+	int res_read = rt_queue_read(&module->in_queue, buf, 256,
+			module->queue_timeout);
+	if (res_read > 0)
+		printf("ofiget' ne vstat'\n");
+
+	int retlen;
+	read_shmem(module, module->shmem, &retlen);
+
+	//printf("retlen=%i\n", retlen);
+
+	return obtained_data;
+}
+
 
 void task_transmit_body(void *cookie) {
 	module_t* module = cookie;
 	int i = 0;
 	for (;;) {
-		rt_task_sleep(module->transfer_task_period);
+		rt_task_sleep(module->transmit_task_period);
 
 		write_shmem(module, module->obj1_data, module->obj1_length);
 
-		printf("task_transmit %i\n", i++);
+		//printf("task_transmit %i\n", i++);
 	}
 }
 
@@ -187,9 +289,11 @@ int start(module_t* module) {
 		return -1;
 	}
 
+	module->shmem_len = SHMEM_BLOCK1_SIZE;
+
 	int err = rt_heap_alloc(&module->h_shmem,
-	SHMEM_BLOCK1_SIZE,
-	TM_INFINITE, &module->shmem);
+			module->shmem_len,
+			TM_INFINITE, &module->shmem);
 	if (err != 0)
 		printf("Error rt_heap_alloc for block1\n");
 
@@ -246,6 +350,16 @@ int create_xenomai_services(module_t* module) {
 		return err;
 	}
 
+	// Create mutex for read shared memory
+	char name_rmutex[64] = "";
+	strcat(name_rmutex, module->instance_name);
+	strcat(name_rmutex, "_rmutex");
+	err = rt_mutex_create(&module->mutex_read_shmem, name_rmutex);
+	if (err != 0) {
+		fprintf(stdout, "Error create mutex_read_shmem \"%s\"\n", name_rmutex);
+		return err;
+	}
+
 	// Create main task
 	char name_task_main[64] = "";
 	strcat(name_task_main, module->instance_name);
@@ -273,6 +387,3 @@ int create_xenomai_services(module_t* module) {
 	return 0;
 }
 
-void read_shmem(module_t* module, char* data, int* datalen) {
-
-}

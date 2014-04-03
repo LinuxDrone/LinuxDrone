@@ -24,6 +24,7 @@ bson_t* get_bson_from_file() {
 		}
 	}
 
+
 	/*
 	 * Convert incoming document to JSON.
 	 */
