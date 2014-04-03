@@ -49,7 +49,8 @@ typedef struct
 	/**
 	 * \~english Shared memory
 	 */
-	RT_HEAP shmem;
+	RT_HEAP h_shmem;
+	void* shmem;
 
 	RT_EVENT eflags;
 
@@ -69,12 +70,17 @@ typedef struct
 
 	t_cycle_function func;
 
+	const uint8_t * obj1_data;
+	uint32_t obj1_length;
+
 } module_t;
 
 
 int init(module_t* module, const uint8_t * data, uint32_t length);
 
 int start(module_t* module);
+
+int stop(module_t* module);
 
 Reason4callback get_input_data(module_t* module);
 
