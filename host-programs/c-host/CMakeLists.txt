@@ -14,17 +14,20 @@ file(GLOB_RECURSE INC "include/*")
 file(GLOB_RECURSE SRC "src/*.c")
 
 include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
+include_directories(../../modules/c-gy87/include)
 
-add_executable(c-host ${INC} ${SRC})
 
 set(EXTRA_LIBS
-	/Users/vrubel/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
-	#/home/vrubel/Projects/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
+	#/Users/vrubel/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
+	/home/vrubel/Projects/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
+	/home/vrubel/Projects/LinuxDrone/build.Debug/modules/c-gy87/libc-gy87.so
+	#c-gy87
 	${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
 	bson_shared
 	rt
 )
 
+add_executable(c-host ${INC} ${SRC})
 target_link_libraries(c-host ${EXTRA_LIBS})
 
 add_custom_command(

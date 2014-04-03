@@ -1,3 +1,6 @@
+#ifndef MODULE_FUNCTIONS_H_
+#define MODULE_FUNCTIONS_H_
+
 #include <native/task.h>
 #include <bson.h>
 #include <native/queue.h>
@@ -67,3 +70,5 @@ int init(module_t* module, const uint8_t * data, uint32_t length);
 int start(module_t* module);
 
 Reason4callback get_input_data(module_t* module);
+
+#endif

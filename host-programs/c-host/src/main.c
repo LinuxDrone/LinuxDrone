@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <bson.h>
+#include "c-gy87.h"
 
 bson_t* get_bson_from_file() {
 	bson_json_reader_t *reader;
@@ -79,11 +80,12 @@ int main() {
 	bson_destroy(bson1);
 
 
-	//init(&module_info, docbuf, doclen);
 
+	if (c_gy87_init(docbuf, doclen) != 0)
+		return -1;
 
-	//if (start(&module_info) != 0)
-		//return -1;
+	if (c_gy87_start() != 0)
+		return -1;
 
 	printf("END\n");
 	getchar();
