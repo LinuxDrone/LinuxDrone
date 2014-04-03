@@ -157,7 +157,7 @@ void CBmp180::moduleTask()
 
 	/* Start temperature conversion */
 	while (!setReg(BMP180_CTRL_ADDR, BMP180_TEMP_ADDR)){};
-    CSystem::sleep(5);
+    m_task.sleep(5);
 
     /* Read the temperature conversion */
     while (!getReg(BMP180_ADC_MSB, Data, 2)){};
@@ -172,7 +172,7 @@ void CBmp180::moduleTask()
 
 	/* Start pressure conversion */
 	while (!setReg(BMP180_CTRL_ADDR, (BMP180_PRES_ADDR + m_oversampling))){};
-    CSystem::sleep(26);
+    m_task.sleep(26);
 
     /* Read the temperature conversion */
     while(!getReg(BMP180_ADC_MSB, Data, 3)){};
