@@ -1,7 +1,7 @@
 {
     "type": "module_def",
     "name": "Bmp180",
-    "version": 3,
+    "version": 4,
     "Task Priority": 66,
     "Task Period": 150,
     "paramsDefinitions": [
@@ -24,6 +24,14 @@
                 "id": "http://jsonschema.net",
                 "properties": {
                     "pressure": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "pressureHg": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "altitude": {
                         "type": "number",
                         "required": true
                     },

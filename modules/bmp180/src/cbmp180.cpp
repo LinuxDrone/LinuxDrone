@@ -36,6 +36,7 @@ const char* moduleName() {
 CBmp180::CBmp180() :
 	CModule(1024)
 {
+	m_oversampling = (BMP180_OVERSAMPLING << 6);
 }
 
 CBmp180::~CBmp180()
@@ -143,7 +144,7 @@ void CBmp180::moduleTask()
 {
     uint8_t Data[3];
 
-	RTIME time = rt_timer_read();
+	//RTIME time = rt_timer_read();
 
 	/* Straight from the datasheet */
 	int32_t X1, X2, X3, B3, B5, B6, P;
@@ -201,18 +202,14 @@ void CBmp180::moduleTask()
 
     builder.append("temperature", Temperature/10.0f);
     builder.append("pressure", Pressure/1000.0f);
+    builder.append("pressureHg", (Pressure * 760.0f) / 101325.0f);
+    builder.append("altitude", 44330.0f * (1 - pow((Pressure/101325.0f), 0.190295f)));
 
     mongo::BSONObj obj = builder.obj();
     addData(obj);
 
-    RTIME diff = time - rt_timer_read();
-    SRTIME el = rt_timer_ticks2ns(diff);
-    uint64_t elapsed = abs(el) / 1000;
-    Logger() << elapsed;
-
-    float PressureRs = (Pressure * 760.0f) / 101325.0f;
-    float Altitude = 44330.0f * (1 - pow((Pressure/101325.0f), 0.190295f));
-
-    printf("Temp=%f, Pres=%f, PressureRs=%f, Altitude=%f\n", Temperature/10.0,Pressure/1000.0, PressureRs, Altitude);
-    CSystem::sleep(100);
+    //RTIME diff = time - rt_timer_read();
+    //SRTIME el = rt_timer_ticks2ns(diff);
+    //uint64_t elapsed = abs(el) / 1000;
+    //Logger() << elapsed;
 }
