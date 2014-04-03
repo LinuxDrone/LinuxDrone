@@ -13,12 +13,42 @@ void debug_print_bson(bson_t* bson) {
 	bson_free(str);
 }
 
+
+void print_task_error(int err)
+{
+	switch(err)
+	{
+		case -EINVAL:
+			printf("is returned if task is not a task descriptor./n");
+			break;
+
+		case -EIDRM:
+			printf("is returned if task is a deleted task descriptor.\n");
+			break;
+
+		case -EBUSY:
+			printf("is returned if task is already started.\n");
+			break;
+
+		case -EPERM:
+			printf("is returned if this service was called from an asynchronous context.\n");
+			break;
+
+		default:
+			printf("Unknown task error: %i.\n", err);
+	}
+
+}
+
+
 int init(module_t* module, const uint8_t * data, uint32_t length) {
 	bson_t bson;
 	bson_init_static(&bson, data, length);
 	debug_print_bson(&bson);
 
-	// Instance name
+	/**
+	 * Instance name
+	 */
 	bson_iter_t iter;
 	if (!bson_iter_init_find(&iter, &bson, "instance")) {
 		printf("Not found property \"instance\"");
@@ -31,7 +61,9 @@ int init(module_t* module, const uint8_t * data, uint32_t length) {
 	module->instance_name = bson_iter_utf8(&iter, NULL);
 	fprintf(stdout, "instance name=%s\n", module->instance_name);
 
-	// Task Priority
+	/**
+	 * Task Priority
+	 */
 	if (!bson_iter_init_find(&iter, &bson, "Task Priority")) {
 		printf("Not found property \"Task Priority\"");
 		return -1;
@@ -43,25 +75,44 @@ int init(module_t* module, const uint8_t * data, uint32_t length) {
 	module->task_priority = bson_iter_int32(&iter);
 	fprintf(stdout, "Task Priority=%i\n", module->task_priority);
 
-	// Task Period
+
+	/**
+	 * Main task Period
+	 */
 	if (!bson_iter_init_find(&iter, &bson, "Task Period")) {
 		printf("Not found property \"Task Period\"");
 		return -1;
 	}
 	if (!BSON_ITER_HOLDS_INT32(&iter)) {
-		printf("Property \"Task Period\" not INT32 type");
+		printf("Property \"Main task Period\" not INT32 type");
 		return -1;
 	}
 	module->queue_timeout = rt_timer_ns2ticks(bson_iter_int32(&iter) * 1000);
 	fprintf(stdout, "queue_timeout=%i\n", module->queue_timeout);
 
-	// Start required xenomai services
+	/**
+	 * Transfer task Period
+	 */
+	if (!bson_iter_init_find(&iter, &bson, "Transfer task period")) {
+		printf("Not found property \"Transfer task period\"");
+		return -1;
+	}
+	if (!BSON_ITER_HOLDS_INT32(&iter)) {
+		printf("Property \"Main task Period\" not INT32 type");
+		return -1;
+	}
+	module->transfer_task_period = rt_timer_ns2ticks(bson_iter_int32(&iter) * 1000);
+	fprintf(stdout, "transfer_task_period=%i\n", module->transfer_task_period);
+
+	/**
+	 * Start required xenomai services
+	 */
 	int err = create_xenomai_services(module);
 	if (err != 0) {
 		printf("Error create xenomai services\n");
 		return err;
 	}
-
+	return 0;
 }
 
 Reason4callback get_input_data(module_t* module) {
@@ -74,20 +125,38 @@ Reason4callback get_input_data(module_t* module) {
 	return obtained_data;
 }
 
+void task_transmit_body (void *cookie) {
+	module_t* module = cookie;
+	int i=0;
+    for (;;) {
+    	rt_task_sleep(module->transfer_task_period);
+    	printf("task_transmit %i\n", i++);
+    }
+}
+
 int start(module_t* module) {
 	if (module == NULL) {
-		printf("param \"module\" is null\n");
+		printf("Function \"start\". Param \"module\" is null\n");
 		return -1;
 	}
 
 	if (module->func == NULL) {
-		printf("module->func required\n");
+		printf("module->func for main task required\n");
 		return -1;
 	}
 
-	int err = rt_task_start(&module->task_main, module->func, NULL);
+	int err =0;
+	err = rt_task_start(&module->task_main, module->func, NULL);
 	if (err != 0)
-		printf("Error start task\n");
+		printf("Error start main task\n");
+
+
+	err = rt_task_start(&module->task_transmit, &task_transmit_body, module);
+	if (err != 0)
+	{
+		printf("Error start transmit task. err=%i\n", err);
+		print_task_error(err);
+	}
 
 	return err;
 }
@@ -124,7 +193,7 @@ int create_xenomai_services(module_t* module) {
 		return err;
 	}
 
-	// Create task
+	// Create main task
 	char name_task_main[64] = "";
 	strcat(name_task_main, module->instance_name);
 	strcat(name_task_main, "_task");
@@ -134,5 +203,15 @@ int create_xenomai_services(module_t* module) {
 		fprintf(stdout, "Error create work task \"%s\"\n", name_task_main);
 		return err;
 	}
-}
 
+	// Create transmit task
+	char name_tr_task_main[64] = "";
+	strcat(name_tr_task_main, module->instance_name);
+	strcat(name_tr_task_main, "_tr_task");
+	err = rt_task_create(&module->task_transmit, name_tr_task_main, TASK_STKSZ, 99,
+			TASK_MODE);
+	if (err != 0) {
+		fprintf(stdout, "Error create transmit task \"%s\"\n", name_tr_task_main);
+		return err;
+	}
+}

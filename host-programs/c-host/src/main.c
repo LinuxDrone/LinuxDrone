@@ -80,7 +80,6 @@ int main() {
 	bson_destroy(bson1);
 
 
-
 	if (c_gy87_init(docbuf, doclen) != 0)
 		return -1;
 

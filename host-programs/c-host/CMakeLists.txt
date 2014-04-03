@@ -34,6 +34,8 @@ add_custom_command(
 	TARGET c-host
 	POST_BUILD
 	COMMAND scp c-host root@osen73.dyndns-home.com:/root/c-host
+	COMMAND scp /home/vrubel/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
 )
+
 
 install(TARGETS c-host DESTINATION bin)

@@ -28,10 +28,17 @@ typedef void (*t_cycle_function)(void *cookie);
 typedef struct
 {
 	/**
-	 * \~english Main thread
+	 * \~english Main task
 	 * \~russian
 	 */
 	RT_TASK task_main;
+
+	/**
+	 * \~english Transmit task
+	 * \~russian
+	 */
+	RT_TASK task_transmit;
+	RTIME transfer_task_period;
 
 	/**
 	 * \~english input queue

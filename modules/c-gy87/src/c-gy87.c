@@ -8,7 +8,7 @@ void task_main_body (void *cookie)
 	int i=0;
     for (;;) {
     	Reason4callback res = get_input_data(&module_info);
-    	printf("%i\n", i++);
+    	printf("c-gu87 %i\n", i++);
     }
 }
 
