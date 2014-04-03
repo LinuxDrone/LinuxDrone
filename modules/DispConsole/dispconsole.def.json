@@ -1,0 +1,101 @@
+{
+    "type": "module_def",
+    "name": "DispConsole",
+    "version": 1,
+    "Task Priority": 1,
+    "Task Period": 200000,
+    "Notify on change": false,
+    "description": {
+    "en": "Console Output and Input",
+    "ru": "Ввод-вывод данных в консоль"
+    },
+    "paramsDefinitions": [
+        {
+            "name": "Console scroll lines",
+            "displayName": {
+                "en": "Console scroll lines",
+                "ru": "Прогнать консоль на заданное количество строк"
+            },
+            "description": {
+                "ru": "Очистка консоли"
+            },
+            "type": "number",
+            "defaultValue": 50,
+            "unitMeasured": "uint8_t"
+        }
+    ],
+    "inputShema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+            "in_x": {
+                "type": "number",
+                "required": true
+            },
+            "in_y": {
+                "type": "number",
+                "required": true
+            },
+            "in_z": {
+                "type": "number",
+                "required": true
+            },
+            "in_1": {
+                "type": "number",
+                "required": true
+            },
+            "in_2": {
+                "type": "number",
+                "required": true
+            },
+            "in_3": {
+                "type": "number",
+                "required": true
+            },
+            "in_4": {
+                "type": "number",
+                "required": true
+            },
+            "in_5": {
+                "type": "number",
+                "required": true
+            },
+            "in_6": {
+                "type": "number",
+                "required": true
+            },
+            "in_7": {
+                "type": "number",
+                "required": true
+            },
+            "in_8": {
+                "type": "number",
+                "required": true
+            }
+        }
+    },
+    "outputs": [
+        {
+            "name": "out_data",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "out_x": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "out_y": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "out_z": {
+                        "type": "number",
+                        "required": true
+                    }
+                }
+            }
+        }
+    ]
+}
+
