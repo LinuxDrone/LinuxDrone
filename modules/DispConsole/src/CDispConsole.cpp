@@ -11,10 +11,11 @@
 //--------------------------------------------------------------------
 
 #include "CDispConsole.h"
-#include "system/Logger"
+//#include "system/Logger"
 //#include <iostream>
 //#include <iomanip>
 //#include <ncurses.h>
+#include <rtdk.h>
 
 #include "my_memory"
 
@@ -57,6 +58,8 @@ bool CDispConsole::init(const mongo::BSONObj& initObject)
 	for(int i=0;i<3;i++) in_xyz[i]=0;
 	for(int i=0;i<8;i++) in_data[i]=0;
 
+	rt_print_auto_init(1);
+
 	return true;
 }
 
@@ -73,7 +76,7 @@ bool CDispConsole::start()
 void CDispConsole::moduleTask()
 {
 	//initscr();
-	//for(int i=0;i<scrline;i++) std::cout << std::endl;
+/*
 	for(int i=0;i<scrline;i++) Logger() << "";
 
 	Logger()  << "--------------------------";
@@ -92,6 +95,27 @@ void CDispConsole::moduleTask()
 	Logger() << "in_7 = " << in_data[6];
 	Logger() << "in_8 = " << in_data[7];
 	Logger()  << "--------------------------";
+*/
+	for(int i=0;i<scrline;i++) rt_printf("\n");
+
+	rt_printf("--------------------------\n");
+	rt_printf("in_x = %8.2f\n", in_xyz[0]);
+	rt_printf("in_y = %8.2f\n", in_xyz[1]);
+	rt_printf("in_z = %8.2f\n", in_xyz[2]);
+
+	rt_printf("--------------------------\n");
+
+	rt_printf("in_1 = %8.2f\n", in_data[0]);
+	rt_printf("in_2 = %8.2f\n", in_data[1]);
+	rt_printf("in_3 = %8.2f\n", in_data[2]);
+	rt_printf("in_4 = %8.2f\n", in_data[3]);
+	rt_printf("in_5 = %8.2f\n", in_data[4]);
+	rt_printf("in_6 = %8.2f\n", in_data[5]);
+	rt_printf("in_7 = %8.2f\n", in_data[6]);
+	rt_printf("in_8 = %8.2f\n", in_data[7]);
+	rt_printf("--------------------------\n");
+
+	//m_task.sleep(200);
 
 	//printw("Test ncurses");
 	//refresh();
