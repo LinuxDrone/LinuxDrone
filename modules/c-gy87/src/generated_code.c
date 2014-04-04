@@ -32,7 +32,7 @@ int c_gy87_init(const uint8_t* bson_data, uint32_t bson_len)
 
 int c_gy87_start()
 {
-	if (start(&module_GY87_info.module_info) != 0)
+	if (start(&module_GY87_info) != 0)
 		return -1;
 	return 0;
 }

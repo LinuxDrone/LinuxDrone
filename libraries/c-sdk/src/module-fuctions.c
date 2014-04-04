@@ -306,7 +306,8 @@ void read_shmem(shmem_publisher_set_t* set, void* data, unsigned short* datalen)
 
 }
 
-Reason4callback get_input_data(module_t* module) {
+Reason4callback get_input_data(void* p_module) {
+	module_t* module = p_module;
 	char buf[256];
 
 	int res_read = rt_queue_read(&module->in_queue, buf, 256,
@@ -357,7 +358,9 @@ void task_transmit_body(void *cookie) {
 	}
 }
 
-int start(module_t* module) {
+int start(void* p_module) {
+	module_t* module = p_module;
+
 	if (module == NULL) {
 		printf("Function \"start\". Param \"module\" is null\n");
 		return -1;
@@ -368,11 +371,11 @@ int start(module_t* module) {
 		return -1;
 	}
 
-	int err = rt_task_start(&module->task_main, module->func, NULL);
+	int err = rt_task_start(&module->task_main, module->func, p_module);
 	if (err != 0)
 		printf("Error start main task\n");
 
-	err = rt_task_start(&module->task_transmit, &task_transmit_body, module);
+	err = rt_task_start(&module->task_transmit, &task_transmit_body, p_module);
 	if (err != 0) {
 		printf("Error start transmit task. err=%i\n", err);
 		print_task_error(err);
@@ -381,7 +384,7 @@ int start(module_t* module) {
 	return err;
 }
 
-int stop(module_t* module) {
+int stop(void* module) {
 
 	//int res = rt_heap_free(&module->h_shmem, module->shmem);
 
@@ -400,37 +403,7 @@ int create_xenomai_services(module_t* module) {
 		fprintf(stdout, "Error create queue \"%s\"\n", name_queue);
 		return err;
 	}
-	/*
-	 // Create shared memory
-	 char name_shmem[64] = "";
-	 strcat(name_shmem, module->instance_name);
-	 strcat(name_shmem, "_shmem");
-	 err = rt_heap_create(&module->h_shmem, name_shmem, SHMEM_HEAP_SIZE, H_PRIO);
-	 if (err != 0) {
-	 fprintf(stdout, "Error create shared memory \"%s\"\n", name_shmem);
-	 return err;
-	 }
 
-	 // Create event service
-	 char name_eflags[64] = "";
-	 strcat(name_eflags, module->instance_name);
-	 strcat(name_eflags, "_flags");
-	 err = rt_event_create(&module->eflags, name_eflags, ULONG_MAX, EV_PRIO);
-	 if (err != 0) {
-	 fprintf(stdout, "Error create event service \"%s\"\n", name_eflags);
-	 return err;
-	 }
-
-	 // Create mutex for read shared memory
-	 char name_rmutex[64] = "";
-	 strcat(name_rmutex, module->instance_name);
-	 strcat(name_rmutex, "_rmutex");
-	 err = rt_mutex_create(&module->mutex_read_shmem, name_rmutex);
-	 if (err != 0) {
-	 fprintf(stdout, "Error create mutex_read_shmem \"%s\"\n", name_rmutex);
-	 return err;
-	 }
-	 */
 	// Create main task
 	char name_task_main[64] = "";
 	strcat(name_task_main, module->instance_name);

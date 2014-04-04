@@ -79,10 +79,10 @@ typedef struct
 
 int init(module_t* module, const uint8_t * data, uint32_t length);
 
-int start(module_t* module);
+int start(void* module);
 
-int stop(module_t* module);
+int stop(void* module);
 
-Reason4callback get_input_data(module_t* module);
+Reason4callback get_input_data(void* module);
 
 #endif
