@@ -8,9 +8,21 @@
 #include <native/event.h>
 #include <native/mutex.h>
 
+
+typedef struct {
+	RT_HEAP h_shmem;
+	void* shmem;
+	int shmem_len;
+
+	RT_EVENT eflags;
+
+	RT_MUTEX mutex_read_shmem;
+} shmem_publisher_set_t;
+
+
 /**
  * \enum Reason4callback
- * \~russian ������� ������ ������� ������-�������
+ * \~russian
  */
 typedef enum {
 	/**
@@ -24,16 +36,21 @@ typedef enum {
 	obtained_data
 } Reason4callback;
 
-typedef void (*t_cycle_function)(void *cookie);
+typedef void (t_cycle_function)(void *cookie);
+typedef t_cycle_function* p_cycle_function;
 
 
 typedef struct
 {
+	const char* instance_name;
+
 	/**
 	 * \~english Main task
 	 * \~russian
 	 */
 	RT_TASK task_main;
+	int task_priority;
+
 
 	/**
 	 * \~english Transmit task
@@ -48,26 +65,11 @@ typedef struct
 	RT_QUEUE in_queue;
 	RTIME queue_timeout;
 
-	/**
-	 * \~english Shared memory
-	 */
-	RT_HEAP h_shmem;
-	void* shmem;
-	int shmem_len;
 
-	RT_EVENT eflags;
+	// массив струткр предназначенных для передачи объектов в шаред мемори
+	shmem_publisher_set_t** shmem_publishers;
 
-	/**
-	 * \~english Name Main thread
-	 * \~russian
-	 */
-	const char* instance_name;
-
-	int task_priority;
-
-	RT_MUTEX mutex_read_shmem;
-
-	t_cycle_function func;
+	p_cycle_function func;
 
 	const uint8_t * obj1_data;
 	uint32_t obj1_length;

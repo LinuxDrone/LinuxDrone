@@ -43,6 +43,50 @@ void print_task_error(int err) {
 
 }
 
+int init_publisher_set(shmem_publisher_set_t * pset, char* instance_name,
+		char* out_name) {
+	// Create shared memory
+	char name_shmem[64] = "";
+	strcat(name_shmem, instance_name);
+	strcat(name_shmem, out_name);
+	strcat(name_shmem, "_shmem");
+	int err = rt_heap_create(&pset->h_shmem, name_shmem, pset->shmem_len,
+			H_SHARED | H_PRIO);
+	if (err != 0) {
+		fprintf(stdout, "Error create shared memory \"%s\"\n", name_shmem);
+		return err;
+	}
+
+	// Alloc shared memory block
+	err = rt_heap_alloc(&pset->h_shmem, 0, TM_INFINITE, &pset->shmem);
+	if (err != 0)
+		printf("Error rt_heap_alloc for block1 err=%i\n", err);
+	memset(pset->shmem, 0, pset->shmem_len);
+
+	// Create event service
+	char name_eflags[64] = "";
+	strcat(name_eflags, instance_name);
+	strcat(name_eflags, out_name);
+	strcat(name_eflags, "_flags");
+	err = rt_event_create(&pset->eflags, name_eflags, ULONG_MAX, EV_PRIO);
+	if (err != 0) {
+		fprintf(stdout, "Error create event service \"%s\"\n", name_eflags);
+		return err;
+	}
+
+	// Create mutex for read shared memory
+	char name_rmutex[64] = "";
+	strcat(name_rmutex, instance_name);
+	strcat(name_rmutex, out_name);
+	strcat(name_rmutex, "_rmutex");
+	err = rt_mutex_create(&pset->mutex_read_shmem, name_rmutex);
+	if (err != 0) {
+		fprintf(stdout, "Error create mutex_read_shmem \"%s\"\n", name_rmutex);
+		return err;
+	}
+	return 0;
+}
+
 int init(module_t* module, const uint8_t * data, uint32_t length) {
 	bson_t bson;
 	bson_init_static(&bson, data, length);
@@ -121,9 +165,10 @@ int init(module_t* module, const uint8_t * data, uint32_t length) {
 	return 0;
 }
 
-void write_shmem(module_t* module, const char* data, unsigned short datalen) {
+void write_shmem(shmem_publisher_set_t* set, const char* data,
+		unsigned short datalen) {
 	unsigned long after_mask;
-	int res = rt_event_clear(&module->eflags, ~SHMEM_WRITER_MASK, &after_mask);
+	int res = rt_event_clear(&set->eflags, ~SHMEM_WRITER_MASK, &after_mask);
 	if (res != 0) {
 		printf("error write_shmem: rt_event_clear1\n");
 		return;
@@ -134,7 +179,7 @@ void write_shmem(module_t* module, const char* data, unsigned short datalen) {
 	/**
 	 * \~russian Подождем, пока все читающие потоки выйдут из функции чтения и обнулят счетчик читающих потоков
 	 */
-	res = rt_event_wait(&module->eflags, SHMEM_WRITER_MASK, &after_mask,
+	res = rt_event_wait(&set->eflags, SHMEM_WRITER_MASK, &after_mask,
 	EV_ALL,
 	TM_INFINITE);
 	if (res != 0) {
@@ -143,24 +188,24 @@ void write_shmem(module_t* module, const char* data, unsigned short datalen) {
 	}
 
 	// В первые два байта сохраняем длину блока
-	*((unsigned short*)module->shmem) = datalen;
+	*((unsigned short*) set->shmem) = datalen;
 
 	// в буфер (со смещением в два байта) копируем блок данных
-	memcpy(module->shmem + sizeof(unsigned short), data, datalen);
+	memcpy(set->shmem + sizeof(unsigned short), data, datalen);
 	//printf("datalen write_shmem: %i\n", datalen);
-	res = rt_event_signal(&module->eflags, ~SHMEM_WRITER_MASK);
+	res = rt_event_signal(&set->eflags, ~SHMEM_WRITER_MASK);
 	if (res != 0) {
 		printf("error write_shmem: rt_event_signal\n");
 		return;
 	}
 }
 
-void read_shmem(module_t* module, void* data, unsigned short* datalen) {
+void read_shmem(shmem_publisher_set_t* set, void* data, unsigned short* datalen) {
 	unsigned long after_mask;
 	/**
 	 * \~russian Подождем, если пишущий поток выставил флаг, что он занят записью
 	 */
-	int res = rt_event_wait(&module->eflags, ~SHMEM_WRITER_MASK, &after_mask,
+	int res = rt_event_wait(&set->eflags, ~SHMEM_WRITER_MASK, &after_mask,
 	EV_ALL,
 	TM_INFINITE);
 	if (res != 0) {
@@ -171,7 +216,7 @@ void read_shmem(module_t* module, void* data, unsigned short* datalen) {
 	/**
 	 * Залочим мьютекс
 	 */
-	res = rt_mutex_acquire(&module->mutex_read_shmem, TM_INFINITE);
+	res = rt_mutex_acquire(&set->mutex_read_shmem, TM_INFINITE);
 	if (res != 0) {
 		printf("error read_shmem: rt_mutex_acquire1\n");
 		return;
@@ -181,7 +226,7 @@ void read_shmem(module_t* module, void* data, unsigned short* datalen) {
 	 * Считываем показания счетчика (младших битов флагов)
 	 */
 	RT_EVENT_INFO info;
-	res = rt_event_inquire(&module->eflags, &info);
+	res = rt_event_inquire(&set->eflags, &info);
 	if (res != 0) {
 		printf("error read_shmem: rt_event_inquire1\n");
 		return;
@@ -189,43 +234,43 @@ void read_shmem(module_t* module, void* data, unsigned short* datalen) {
 	//printf("read raw mask = 0x%08X\n", info.value);
 
 	// инкрементируем показания счетчика
-	unsigned long count = (~(info.value & SHMEM_WRITER_MASK))& SHMEM_WRITER_MASK;
+	unsigned long count = (~(info.value & SHMEM_WRITER_MASK))
+			& SHMEM_WRITER_MASK;
 	//printf("masked raw mask = 0x%08X\n", count);
-	if(count==0)
-		count=1;
+	if (count == 0)
+		count = 1;
 	else
-		count=count << 1;
+		count = count << 1;
 
 	//printf("clear mask = 0x%08X\n", count);
 
 	// Сбросим флаги в соответствии со значением счетчика
-	res = rt_event_clear(&module->eflags, count, &after_mask);
+	res = rt_event_clear(&set->eflags, count, &after_mask);
 	if (res != 0) {
 		printf("error read_shmem: rt_event_clear\n");
 		return;
 	}
 
-	res = rt_mutex_release(&module->mutex_read_shmem);
+	res = rt_mutex_release(&set->mutex_read_shmem);
 	if (res != 0) {
 		printf("error read_shmem:  rt_mutex_release1\n");
 		return;
 	}
 
 	// из первых двух байт считываем блину последующего блока
-	unsigned short buflen = *((unsigned short*)module->shmem);
+	unsigned short buflen = *((unsigned short*) set->shmem);
 	//printf("buflen read_shmem: %i\n", buflen);
 
-	if(buflen!=0)
-	{
+	if (buflen != 0) {
 		// со смещением в два байта читаем следующий блок данных
-		memcpy(data, module->shmem+sizeof(unsigned short), buflen);
+		memcpy(data, set->shmem + sizeof(unsigned short), buflen);
 	}
 	*datalen = buflen;
 
 	/**
 	 * Залочим мьютекс
 	 */
-	res = rt_mutex_acquire(&module->mutex_read_shmem, TM_INFINITE);
+	res = rt_mutex_acquire(&set->mutex_read_shmem, TM_INFINITE);
 	if (res != 0) {
 		printf("error read_shmem: rt_mutex_acquire2\n");
 		return;
@@ -234,7 +279,7 @@ void read_shmem(module_t* module, void* data, unsigned short* datalen) {
 	/**
 	 * Считываем показания счетчика (младших битов флагов)
 	 */
-	res = rt_event_inquire(&module->eflags, &info);
+	res = rt_event_inquire(&set->eflags, &info);
 	if (res != 0) {
 		printf("error read_shmem: rt_event_inquire1\n");
 		return;
@@ -242,18 +287,18 @@ void read_shmem(module_t* module, void* data, unsigned short* datalen) {
 	// декрементируем показания счетчика
 	count = (~(info.value & SHMEM_WRITER_MASK));
 
-	count = count ^ (count>>1);
+	count = count ^ (count >> 1);
 
 	//printf("set mask = 0x%08X\n", count);
 
 	// Установим флаги в соответствии со значением счетчика
-	res = rt_event_signal(&module->eflags, count);
+	res = rt_event_signal(&set->eflags, count);
 	if (res != 0) {
 		printf("error read_shmem: rt_event_signal\n");
 		return;
 	}
 
-	res = rt_mutex_release(&module->mutex_read_shmem);
+	res = rt_mutex_release(&set->mutex_read_shmem);
 	if (res != 0) {
 		printf("error read_shmem:  rt_mutex_release2\n");
 		return;
@@ -271,12 +316,11 @@ Reason4callback get_input_data(module_t* module) {
 
 	unsigned short retlen;
 
-	read_shmem(module, buf, &retlen);
+	read_shmem(module->shmem_publishers[0], buf, &retlen);
 	//printf("retlen=%i\n", retlen);
 
 	bson_t bson;
-	if(retlen>0)
-	{
+	if (retlen > 0) {
 		bson_init_static(&bson, buf, retlen);
 		debug_print_bson(&bson);
 	}
@@ -284,10 +328,9 @@ Reason4callback get_input_data(module_t* module) {
 	return obtained_data;
 }
 
-
 void task_transmit_body(void *cookie) {
 	module_t* module = cookie;
-	int i = 0;
+	int cycle = 0;
 	for (;;) {
 		rt_task_sleep(module->transmit_task_period);
 
@@ -296,29 +339,21 @@ void task_transmit_body(void *cookie) {
 		//debug_print_bson(&bson);
 
 		bson_iter_t iter;
-		if(!bson_iter_init_find (&iter, &bson, "Task Priority"))
-		{
+		if (!bson_iter_init_find(&iter, &bson, "Task Priority")) {
 			printf("not found Task Priority\n");
 		}
 
+		bson_iter_overwrite_int32(&iter, cycle++);
 
-		bson_iter_overwrite_int32 (&iter, i++);
-
-		/*
-		if(bson_append_int32 (&bson,
-		                   "test_key",
-		                   -1,
-		                   i))
+		int i=0;
+		shmem_publisher_set_t* set = module->shmem_publishers[i];
+		while(set)
 		{
-			printf("err add property to bson\n");
+			write_shmem(set, bson_get_data(&bson), bson.len);
+			set = module->shmem_publishers[++i];
 		}
-		*/
-		//debug_print_bson(&bson);
 
-		//write_shmem(module, module->obj1_data, module->obj1_length);
-		write_shmem(module, bson_get_data(&bson), bson.len);
-
-		//printf("task_transmit %i\n", i++);
+		//printf("task_transmit cycle %i\n", cycle++);
 	}
 }
 
@@ -333,18 +368,7 @@ int start(module_t* module) {
 		return -1;
 	}
 
-	module->shmem_len = SHMEM_BLOCK1_SIZE;
-
-	// Alloc shared memoru block
-	int err = rt_heap_alloc(&module->h_shmem,
-			module->shmem_len,
-			TM_INFINITE, &module->shmem);
-	if (err != 0)
-		printf("Error rt_heap_alloc for block1\n");
-	memset(module->shmem, 0, module->shmem_len);
-
-
-	err = rt_task_start(&module->task_main, module->func, NULL);
+	int err = rt_task_start(&module->task_main, module->func, NULL);
 	if (err != 0)
 		printf("Error start main task\n");
 
@@ -359,9 +383,9 @@ int start(module_t* module) {
 
 int stop(module_t* module) {
 
-	int res = rt_heap_free(&module->h_shmem, module->shmem);
+	//int res = rt_heap_free(&module->h_shmem, module->shmem);
 
-	return res;
+	return 0;
 }
 
 int create_xenomai_services(module_t* module) {
@@ -376,37 +400,37 @@ int create_xenomai_services(module_t* module) {
 		fprintf(stdout, "Error create queue \"%s\"\n", name_queue);
 		return err;
 	}
+	/*
+	 // Create shared memory
+	 char name_shmem[64] = "";
+	 strcat(name_shmem, module->instance_name);
+	 strcat(name_shmem, "_shmem");
+	 err = rt_heap_create(&module->h_shmem, name_shmem, SHMEM_HEAP_SIZE, H_PRIO);
+	 if (err != 0) {
+	 fprintf(stdout, "Error create shared memory \"%s\"\n", name_shmem);
+	 return err;
+	 }
 
-	// Create shared memory
-	char name_shmem[64] = "";
-	strcat(name_shmem, module->instance_name);
-	strcat(name_shmem, "_shmem");
-	err = rt_heap_create(&module->h_shmem, name_shmem, SHMEM_HEAP_SIZE, H_PRIO);
-	if (err != 0) {
-		fprintf(stdout, "Error create shared memory \"%s\"\n", name_shmem);
-		return err;
-	}
+	 // Create event service
+	 char name_eflags[64] = "";
+	 strcat(name_eflags, module->instance_name);
+	 strcat(name_eflags, "_flags");
+	 err = rt_event_create(&module->eflags, name_eflags, ULONG_MAX, EV_PRIO);
+	 if (err != 0) {
+	 fprintf(stdout, "Error create event service \"%s\"\n", name_eflags);
+	 return err;
+	 }
 
-	// Create event service
-	char name_eflags[64] = "";
-	strcat(name_eflags, module->instance_name);
-	strcat(name_eflags, "_flags");
-	err = rt_event_create(&module->eflags, name_eflags, ULONG_MAX, EV_PRIO);
-	if (err != 0) {
-		fprintf(stdout, "Error create event service \"%s\"\n", name_eflags);
-		return err;
-	}
-
-	// Create mutex for read shared memory
-	char name_rmutex[64] = "";
-	strcat(name_rmutex, module->instance_name);
-	strcat(name_rmutex, "_rmutex");
-	err = rt_mutex_create(&module->mutex_read_shmem, name_rmutex);
-	if (err != 0) {
-		fprintf(stdout, "Error create mutex_read_shmem \"%s\"\n", name_rmutex);
-		return err;
-	}
-
+	 // Create mutex for read shared memory
+	 char name_rmutex[64] = "";
+	 strcat(name_rmutex, module->instance_name);
+	 strcat(name_rmutex, "_rmutex");
+	 err = rt_mutex_create(&module->mutex_read_shmem, name_rmutex);
+	 if (err != 0) {
+	 fprintf(stdout, "Error create mutex_read_shmem \"%s\"\n", name_rmutex);
+	 return err;
+	 }
+	 */
 	// Create main task
 	char name_task_main[64] = "";
 	strcat(name_task_main, module->instance_name);
