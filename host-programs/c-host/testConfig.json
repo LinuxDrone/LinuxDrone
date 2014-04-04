@@ -6,8 +6,8 @@
             "name" : "GY-87",
             "instance" : "GY-87-1",
             "Task Priority" : 80,
-            "Task Period" : 2000,
-            "Transfer task period" : 10000,
+            "Task Period" : 200000,
+            "Transfer task period" : 200000,
             "Notify on change" : true,
             "params" : {
                 "I2C Device" : "/dev/i2c-1",

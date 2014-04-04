@@ -26,6 +26,7 @@ typedef enum {
 
 typedef void (*t_cycle_function)(void *cookie);
 
+
 typedef struct
 {
 	/**

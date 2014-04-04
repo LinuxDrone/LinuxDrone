@@ -121,7 +121,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length) {
 	return 0;
 }
 
-void write_shmem(module_t* module, const char* data, int datalen) {
+void write_shmem(module_t* module, const char* data, unsigned short datalen) {
 	unsigned long after_mask;
 	int res = rt_event_clear(&module->eflags, ~SHMEM_WRITER_MASK, &after_mask);
 	if (res != 0) {
@@ -142,8 +142,12 @@ void write_shmem(module_t* module, const char* data, int datalen) {
 		return;
 	}
 
-	memcpy(module->shmem, data, datalen);
+	// В первые два байта сохраняем длину блока
+	*((unsigned short*)module->shmem) = datalen;
 
+	// в буфер (со смещением в два байта) копируем блок данных
+	memcpy(module->shmem + sizeof(unsigned short), data, datalen);
+	//printf("datalen write_shmem: %i\n", datalen);
 	res = rt_event_signal(&module->eflags, ~SHMEM_WRITER_MASK);
 	if (res != 0) {
 		printf("error write_shmem: rt_event_signal\n");
@@ -151,7 +155,7 @@ void write_shmem(module_t* module, const char* data, int datalen) {
 	}
 }
 
-void read_shmem(module_t* module, void* data, int* datalen) {
+void read_shmem(module_t* module, void* data, unsigned short* datalen) {
 	unsigned long after_mask;
 	/**
 	 * \~russian Подождем, если пишущий поток выставил флаг, что он занят записью
@@ -207,8 +211,16 @@ void read_shmem(module_t* module, void* data, int* datalen) {
 		return;
 	}
 
-	memcpy(data, module->shmem, module->shmem_len);
-	*datalen = module->shmem_len;
+	// из первых двух байт считываем блину последующего блока
+	unsigned short buflen = *((unsigned short*)module->shmem);
+	//printf("buflen read_shmem: %i\n", buflen);
+
+	if(buflen!=0)
+	{
+		// со смещением в два байта читаем следующий блок данных
+		memcpy(data, module->shmem+sizeof(unsigned short), buflen);
+	}
+	*datalen = buflen;
 
 	/**
 	 * Залочим мьютекс
@@ -257,10 +269,17 @@ Reason4callback get_input_data(module_t* module) {
 	if (res_read > 0)
 		printf("ofiget' ne vstat'\n");
 
-	int retlen;
-	read_shmem(module, module->shmem, &retlen);
+	unsigned short retlen;
 
+	read_shmem(module, buf, &retlen);
 	//printf("retlen=%i\n", retlen);
+
+	bson_t bson;
+	if(retlen>0)
+	{
+		bson_init_static(&bson, buf, retlen);
+		debug_print_bson(&bson);
+	}
 
 	return obtained_data;
 }
@@ -272,7 +291,32 @@ void task_transmit_body(void *cookie) {
 	for (;;) {
 		rt_task_sleep(module->transmit_task_period);
 
-		write_shmem(module, module->obj1_data, module->obj1_length);
+		bson_t bson;
+		bson_init_static(&bson, module->obj1_data, module->obj1_length);
+		//debug_print_bson(&bson);
+
+		bson_iter_t iter;
+		if(!bson_iter_init_find (&iter, &bson, "Task Priority"))
+		{
+			printf("not found Task Priority\n");
+		}
+
+
+		bson_iter_overwrite_int32 (&iter, i++);
+
+		/*
+		if(bson_append_int32 (&bson,
+		                   "test_key",
+		                   -1,
+		                   i))
+		{
+			printf("err add property to bson\n");
+		}
+		*/
+		//debug_print_bson(&bson);
+
+		//write_shmem(module, module->obj1_data, module->obj1_length);
+		write_shmem(module, bson_get_data(&bson), bson.len);
 
 		//printf("task_transmit %i\n", i++);
 	}
@@ -291,11 +335,14 @@ int start(module_t* module) {
 
 	module->shmem_len = SHMEM_BLOCK1_SIZE;
 
+	// Alloc shared memoru block
 	int err = rt_heap_alloc(&module->h_shmem,
 			module->shmem_len,
 			TM_INFINITE, &module->shmem);
 	if (err != 0)
 		printf("Error rt_heap_alloc for block1\n");
+	memset(module->shmem, 0, module->shmem_len);
+
 
 	err = rt_task_start(&module->task_main, module->func, NULL);
 	if (err != 0)
