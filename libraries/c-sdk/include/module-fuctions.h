@@ -34,7 +34,7 @@ typedef enum {
 	 * \~russian
 	 */
 	obtained_data
-} Reason4callback;
+} ReciveResult;
 
 typedef void (t_cycle_function)(void *cookie);
 typedef t_cycle_function* p_cycle_function;
@@ -83,6 +83,6 @@ int start(void* module);
 
 int stop(void* module);
 
-Reason4callback get_input_data(void* module);
+ReciveResult get_input_data(void* module);
 
 #endif

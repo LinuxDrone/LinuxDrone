@@ -306,7 +306,7 @@ void read_shmem(shmem_publisher_set_t* set, void* data, unsigned short* datalen)
 
 }
 
-Reason4callback get_input_data(void* p_module) {
+ReciveResult get_input_data(void* p_module) {
 	module_t* module = p_module;
 	char buf[256];
 
