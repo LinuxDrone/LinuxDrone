@@ -112,10 +112,8 @@ typedef struct
      */
     RT_COND obj_cond;
 
-
-	const uint8_t * obj1_data;
-	uint32_t obj1_length;
-
+    void* input_buf;
+    //int size_input_buf;
 
 
 } module_t;

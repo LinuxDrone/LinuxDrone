@@ -26,6 +26,10 @@ typedef struct {
 typedef struct {
 	module_t module_info;
 
+    // может не быть если объект без входа
+    GyroAccelMagTemp_t input4modul;
+
+
 	shmem_publisher_set_t  GyroAccelMagTemp;
 	shmem_publisher_set_t  Baro;
 

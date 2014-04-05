@@ -188,8 +188,6 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     }
 
 
-    module->obj1_data = data;
-    module->obj1_length = length;
 
     return 0;
 }
@@ -352,6 +350,14 @@ void read_shmem(shmem_publisher_set_t* set, void* data, unsigned short* datalen)
 ReceiveResult get_input_data(void* p_module)
 {
     module_t* module = p_module;
+
+    if(module->input_buf==NULL)
+    {
+        printf("Module don't have input\n");
+        return timeout;
+    }
+
+    //TODO: Определить размер буфера где нибудь в настройках
     char buf[256];
 
     int res_read = rt_queue_read(&module->in_queue, buf, 256, module->queue_timeout);
@@ -359,7 +365,6 @@ ReceiveResult get_input_data(void* p_module)
         printf("ofiget' ne vstat'\n");
 
     unsigned short retlen;
-
     shmem_publisher_set_t* set = module->shmem_sets[0];
     read_shmem(set, buf, &retlen);
     //printf("retlen=%i\n", retlen);
@@ -369,10 +374,9 @@ ReceiveResult get_input_data(void* p_module)
         bson_init_static(&bson, buf, retlen);
         debug_print_bson(&bson);
 
-        char obj[300];
-        if(set->bson2obj(obj, &bson)==0)
+        if(set->bson2obj(module->input_buf, &bson)==0)
         {
-            (*set->print_obj)(obj);
+            (*set->print_obj)(module->input_buf);
         }
     }
 

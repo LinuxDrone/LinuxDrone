@@ -55,7 +55,6 @@ int bson2GyroAccelMagTemp(GyroAccelMagTemp_t* obj, bson_t* bson)
     return 0;
 }
 
-
 void printGyroAccelMagTemp(GyroAccelMagTemp_t* obj)
 {
     printf("accelX=%i  ", obj->accelX);
@@ -100,6 +99,7 @@ int c_gy87_init(const uint8_t* bson_data, uint32_t bson_len)
     module_GY87_info.Baro.obj1 = &module_GY87_info.obj1_Baro;
     module_GY87_info.Baro.obj2 = &module_GY87_info.obj2_Baro;
 
+    module_GY87_info.module_info.input_buf = &module_GY87_info.input4modul;
 
 	module_GY87_info.module_info.func = &c_gy87_run;
 
