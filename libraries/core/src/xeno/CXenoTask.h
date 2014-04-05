@@ -37,7 +37,7 @@ public:
 	bool started() const;
 	bool suspend();
 	bool resume();
-	void sleep(int miliseconds);
+	void sleep(int64_t miliseconds, bool microsecs = false);
 	void* handle();
 
 	template<class C>
