@@ -255,7 +255,6 @@ void CGY87::moduleTask()
 
 	const char* names[] = {"X", "Y", "Z"};
     char tmp[256];
-
 	for (int i = 0;i<3;i++) {
 		float gyro  = float (gyros[i]) * (1.0f / 16.4f);
 		float accel = float (accels[i]) * (9.81f / 4096.0f);
@@ -272,5 +271,12 @@ void CGY87::moduleTask()
 //    RTIME diff = time - rt_timer_read();
 //    SRTIME el = rt_timer_ticks2ns(diff);
 //    double elapsed = double (abs(el)) / 1000000.0;
+
+//    static double sum = 0.0;
+//    static double count = 0.0;
+//    count += 1.0;
+//    sum += elapsed;
+
+//    Logger() << (sum / count);
 //    Logger() << elapsed;
 }
