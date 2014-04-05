@@ -28,6 +28,12 @@ typedef struct {
 
 	shmem_publisher_set_t  GyroAccelMagTemp;
 	shmem_publisher_set_t  Baro;
+
+    GyroAccelMagTemp_t obj1_GyroAccelMagTemp;
+    GyroAccelMagTemp_t obj2_GyroAccelMagTemp;
+
+    Baro_t obj1_Baro;
+    Baro_t obj2_Baro;
 } module_GY87_t;
 
 

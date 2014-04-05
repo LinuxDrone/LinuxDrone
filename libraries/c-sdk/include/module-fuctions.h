@@ -7,7 +7,15 @@
 #include <native/heap.h>
 #include <native/event.h>
 #include <native/mutex.h>
+#include <native/cond.h>
 
+typedef enum
+{
+    Empty,
+    Writing,
+    Transferring,
+    Filled
+} StatusObj;
 
 typedef struct {
 	RT_HEAP h_shmem;
@@ -16,7 +24,18 @@ typedef struct {
 
 	RT_EVENT eflags;
 
+    /**
+     * @brief mutex_read_shmem
+     * /~russian мьютех используемый для синхронизации при обмене через разделяемую память,
+     * потоков разных модулей
+     */
 	RT_MUTEX mutex_read_shmem;
+
+    void* obj1;
+    StatusObj status_obj1;
+
+    void* obj2;
+    StatusObj status_obj2;
 } shmem_publisher_set_t;
 
 
@@ -66,13 +85,30 @@ typedef struct
 	RTIME queue_timeout;
 
 
-	// массив струткр предназначенных для передачи объектов в шаред мемори
-	shmem_publisher_set_t** shmem_publishers;
+    // массив структур предназначенных для передачи объектов в шаред мемори
+    shmem_publisher_set_t** shmem_sets;
 
 	p_cycle_function func;
 
+    /**
+     * @brief mutex_obj_exchange
+     * /~russian мьютех используемый для синхронизации при обмене основного потока с потоком передачи
+     * в разделяемую память
+     */
+    RT_MUTEX mutex_obj_exchange;
+
+    /**
+     * @brief obj_cond
+     * /~russian для синхронизации при обмене основного потока с потоком передачи
+     * в разделяемую память
+     */
+    RT_COND obj_cond;
+
+
 	const uint8_t * obj1_data;
 	uint32_t obj1_length;
+
+
 
 } module_t;
 

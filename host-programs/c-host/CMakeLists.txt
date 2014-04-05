@@ -18,9 +18,10 @@ include_directories(../../modules/c-gy87/include)
 
 
 set(EXTRA_LIBS
-	#/Users/vrubel/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
-	/home/vrubel/Projects/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
-	/home/vrubel/Projects/LinuxDrone/build.Debug/modules/c-gy87/libc-gy87.so
+	/Users/vrubel/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
+	/Users/vrubel/LinuxDrone/build.Debug/modules/c-gy87/libc-gy87.so
+	#/home/vrubel/Projects/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
+	#/home/vrubel/Projects/LinuxDrone/build.Debug/modules/c-gy87/libc-gy87.so
 	#c-gy87
 	${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
 	bson_shared
@@ -34,7 +35,8 @@ add_custom_command(
 	TARGET c-host
 	POST_BUILD
 	COMMAND scp c-host root@osen73.dyndns-home.com:/root/c-host
-	COMMAND scp /home/vrubel/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
+	#COMMAND scp /home/vrubel/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
+	COMMAND scp /Users/vrubel/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
 )
 
 

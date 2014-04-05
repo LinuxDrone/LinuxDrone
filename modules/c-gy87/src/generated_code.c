@@ -12,7 +12,7 @@ int c_gy87_init(const uint8_t* bson_data, uint32_t bson_len)
 	ar_publishers[1]=&module_GY87_info.Baro;
 	ar_publishers[2]=NULL;
 
-	module_GY87_info.module_info.shmem_publishers = ar_publishers;
+	module_GY87_info.module_info.shmem_sets = ar_publishers;
 
 	int res = init(&module_GY87_info.module_info, bson_data, bson_len);
 
@@ -22,8 +22,15 @@ int c_gy87_init(const uint8_t* bson_data, uint32_t bson_len)
 	module_GY87_info.Baro.shmem_len = 300;
 
 	// для каждого типа порождаемого объекта инициализируется соответсвующая структура
+    // и указываются буферы (для обмена данными между основным и передающим потоком)
 	init_publisher_set(&module_GY87_info.GyroAccelMagTemp, module_GY87_info.module_info.instance_name, "GyroAccelMagTemp");
+    module_GY87_info.GyroAccelMagTemp.obj1 = &module_GY87_info.obj1_GyroAccelMagTemp;
+    module_GY87_info.GyroAccelMagTemp.obj2 = &module_GY87_info.obj2_GyroAccelMagTemp;
+
 	init_publisher_set(&module_GY87_info.Baro, module_GY87_info.module_info.instance_name, "Baro");
+    module_GY87_info.Baro.obj1 = &module_GY87_info.obj1_Baro;
+    module_GY87_info.Baro.obj2 = &module_GY87_info.obj2_Baro;
+
 
 	module_GY87_info.module_info.func = &c_gy87_run;
 
@@ -36,3 +43,28 @@ int c_gy87_start()
 		return -1;
 	return 0;
 }
+
+/**
+ * @brief checkout4writer_GyroAccelMagTemp
+ * /~russian    Заполняет указатель адресом на структуру GyroAccelMagTemp_t,
+ *              которую можно заполнять данными для последующей передачи в разделяемую память
+ * @param obj
+ * @return
+ * /~russian 0 в случае успеха
+ */
+int checkout_GyroAccelMagTemp(GyroAccelMagTemp_t** obj)
+{
+    return checkout4writer(&module_GY87_info, &module_GY87_info.GyroAccelMagTemp, obj);
+}
+
+/**
+ * @brief checkin4writer_GyroAccelMagTemp
+ * /~ Возвращает объект системе (данные будут переданы в разделяемую память)
+ * @param obj
+ * @return
+ */
+int checkin_GyroAccelMagTemp(GyroAccelMagTemp_t** obj)
+{
+    return checkin4writer(&module_GY87_info, &module_GY87_info.GyroAccelMagTemp, obj);
+}
+
