@@ -349,25 +349,31 @@ void read_shmem(shmem_publisher_set_t* set, void* data, unsigned short* datalen)
 
 }
 
-ReciveResult get_input_data(void* p_module)
+ReceiveResult get_input_data(void* p_module)
 {
     module_t* module = p_module;
     char buf[256];
 
-    int res_read = rt_queue_read(&module->in_queue, buf, 256,
-                                 module->queue_timeout);
+    int res_read = rt_queue_read(&module->in_queue, buf, 256, module->queue_timeout);
     if (res_read > 0)
         printf("ofiget' ne vstat'\n");
 
     unsigned short retlen;
 
-    read_shmem(module->shmem_sets[0], buf, &retlen);
+    shmem_publisher_set_t* set = module->shmem_sets[0];
+    read_shmem(set, buf, &retlen);
     //printf("retlen=%i\n", retlen);
 
     bson_t bson;
     if (retlen > 0) {
         bson_init_static(&bson, buf, retlen);
         debug_print_bson(&bson);
+
+        char obj[300];
+        if(set->bson2obj(obj, &bson)==0)
+        {
+            (*set->print_obj)(obj);
+        }
     }
 
     return obtained_data;

@@ -22,6 +22,55 @@ int GyroAccelMagTemp2bson(GyroAccelMagTemp_t* obj, bson_t* bson)
     return 0;
 }
 
+int bson2GyroAccelMagTemp(GyroAccelMagTemp_t* obj, bson_t* bson)
+{
+    if(!obj || !bson)
+    {
+        printf("Error: func bson2GyroAccelMagTemp, NULL parameter\n");
+        return -1;
+    }
+
+    bson_iter_t iter;
+
+    if(!bson_iter_init (&iter, bson))
+        return -1;
+
+    while(bson_iter_next(&iter))
+    {
+        const char* key = bson_iter_key (&iter);
+        //printf("key=%s\tval=%i\n", key, bson_iter_int32(&iter));
+
+        if(!strncmp(key, "accelX", 100)) obj->accelX = bson_iter_int32(&iter);
+        if(!strncmp(key, "accelY", 100)) obj->accelY = bson_iter_int32(&iter);
+        if(!strncmp(key, "accelZ", 100)) obj->accelZ = bson_iter_int32(&iter);
+        if(!strncmp(key, "gyroX", 100)) obj->gyroX = bson_iter_int32(&iter);
+        if(!strncmp(key, "gyroY", 100)) obj->gyroY = bson_iter_int32(&iter);
+        if(!strncmp(key, "gyroZ", 100)) obj->gyroZ = bson_iter_int32(&iter);
+        if(!strncmp(key, "magX", 100)) obj->magX = bson_iter_int32(&iter);
+        if(!strncmp(key, "magY", 100)) obj->magY = bson_iter_int32(&iter);
+        if(!strncmp(key, "magZ", 100)) obj->magZ = bson_iter_int32(&iter);
+        if(!strncmp(key, "temperature", 100)) obj->temperature = bson_iter_int32(&iter);
+    }
+
+    return 0;
+}
+
+
+void printGyroAccelMagTemp(GyroAccelMagTemp_t* obj)
+{
+    printf("accelX=%i  ", obj->accelX);
+    printf("accelY=%i  ", obj->accelY);
+    printf("accelZ=%i  ", obj->accelZ);
+    printf("gyroX=%i  ", obj->gyroX);
+    printf("gyroY=%i  ", obj->gyroY);
+    printf("gyroZ=%i  ", obj->gyroZ);
+    printf("magX=%i  ", obj->magX);
+    printf("magY=%i  ", obj->magY);
+    printf("magZ=%i  ", obj->magZ);
+    printf("temperature=%i\n\n", obj->temperature);
+
+}
+
 
 int c_gy87_init(const uint8_t* bson_data, uint32_t bson_len)
 {
@@ -44,6 +93,8 @@ int c_gy87_init(const uint8_t* bson_data, uint32_t bson_len)
     module_GY87_info.GyroAccelMagTemp.obj1 = &module_GY87_info.obj1_GyroAccelMagTemp;
     module_GY87_info.GyroAccelMagTemp.obj2 = &module_GY87_info.obj2_GyroAccelMagTemp;
     module_GY87_info.GyroAccelMagTemp.obj2bson = (p_obj2bson)&GyroAccelMagTemp2bson;
+    module_GY87_info.GyroAccelMagTemp.bson2obj = (p_obj2bson)&bson2GyroAccelMagTemp;
+    module_GY87_info.GyroAccelMagTemp.print_obj = (p_print_obj)&printGyroAccelMagTemp;
 
 	init_publisher_set(&module_GY87_info.Baro, module_GY87_info.module_info.instance_name, "Baro");
     module_GY87_info.Baro.obj1 = &module_GY87_info.obj1_Baro;

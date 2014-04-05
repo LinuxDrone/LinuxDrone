@@ -18,6 +18,7 @@ typedef enum
 } StatusObj;
 
 typedef int (*p_obj2bson)(void* obj, bson_t* bson);
+typedef void (*p_print_obj)(void* obj);
 
 typedef struct {
 	RT_HEAP h_shmem;
@@ -40,6 +41,8 @@ typedef struct {
     StatusObj status_obj2;
 
     p_obj2bson obj2bson;
+    p_obj2bson bson2obj;
+    p_print_obj print_obj;
 
 } shmem_publisher_set_t;
 
@@ -58,7 +61,7 @@ typedef enum {
 	 * \~russian
 	 */
 	obtained_data
-} ReciveResult;
+} ReceiveResult;
 
 typedef void (t_cycle_function)(void *cookie);
 typedef t_cycle_function* p_cycle_function;
@@ -124,6 +127,6 @@ int start(void* module);
 
 int stop(void* module);
 
-ReciveResult get_input_data(void* module);
+ReceiveResult get_input_data(void* module);
 
 #endif
