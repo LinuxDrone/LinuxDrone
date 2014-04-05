@@ -10,6 +10,7 @@ void c_gy87_run (module_GY87_t *module)
         checkout_GyroAccelMagTemp(&objGAMT);
 
         objGAMT->accelX = cycle;
+        objGAMT->accelY = cycle*2+1;
 
         checkin_GyroAccelMagTemp(&objGAMT);
 

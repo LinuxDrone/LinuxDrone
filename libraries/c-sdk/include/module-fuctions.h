@@ -17,6 +17,8 @@ typedef enum
     Filled
 } StatusObj;
 
+typedef int (*p_obj2bson)(void* obj, bson_t* bson);
+
 typedef struct {
 	RT_HEAP h_shmem;
 	void* shmem;
@@ -36,6 +38,9 @@ typedef struct {
 
     void* obj2;
     StatusObj status_obj2;
+
+    p_obj2bson obj2bson;
+
 } shmem_publisher_set_t;
 
 

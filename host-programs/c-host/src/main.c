@@ -87,6 +87,7 @@ int main() {
 	if (c_gy87_start() != 0)
 		return -1;
 
+
 	printf("END\n");
 	getchar();
 

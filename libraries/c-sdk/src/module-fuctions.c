@@ -377,21 +377,13 @@ void task_transmit_body(void *cookie)
 {
     module_t* module = cookie;
     int cycle = 0;
+
+    bson_t bson_tr;
+    void* obj;
+
     for (;;) {
         rt_task_sleep(module->transmit_task_period);
 
-        bson_t bson;
-        bson_init_static(&bson, module->obj1_data, module->obj1_length);
-        //debug_print_bson(&bson);
-
-        bson_iter_t iter;
-        if (!bson_iter_init_find(&iter, &bson, "Task Priority")) {
-            printf("not found Task Priority\n");
-        }
-
-        bson_iter_overwrite_int32(&iter, cycle++);
-
-        void* obj;
         int i=0;
         shmem_publisher_set_t* set = module->shmem_sets[i];
         while(set)
@@ -399,13 +391,16 @@ void task_transmit_body(void *cookie)
             checkout4transmiter(module, set, &obj);
             if(obj!=NULL)
             {
-                write_shmem(set, bson_get_data(&bson), bson.len);
+                bson_init (&bson_tr);
+                // Call user convert function
+                (*set->obj2bson)(obj, &bson_tr);
+                write_shmem(set, bson_get_data(&bson_tr), bson_tr.len);
+                bson_destroy(&bson_tr);
 
                 checkin4transmiter(module, set, &obj);
             }
             set = module->shmem_sets[++i];
         }
-
         /*
         if(obj==NULL)
         {
