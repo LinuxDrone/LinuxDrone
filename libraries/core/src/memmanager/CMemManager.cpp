@@ -83,12 +83,15 @@ void* CMemManager::realloc(void* ptr, size_t size)
 
 void CMemManager::free(void* ptr)
 {
+	if (!ptr) {
+		return;
+	}
 #ifdef XENO_SERVICES
 	char* data = (char*)ptr;
 	data -= sizeof(size_t);
 	int err = rt_heap_free(&m_heap, data);
 	if (err) {
-		printf("%s: error freeing of memory pointer. error = %d\n", __FUNCTION__, err);
+		printf("%s: error release pointer to memory. error = %d\n", __FUNCTION__, err);
 	}
 #endif
 }
