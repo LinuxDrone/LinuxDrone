@@ -178,17 +178,6 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
                 bson_iter_int32(&iter) * 1000);
     fprintf(stdout, "transmit_task_period=%i\n", module->transmit_task_period);
 
-    /**
-     * Create required xenomai services
-     */
-    int err = create_xenomai_services(module);
-    if (err != 0) {
-        printf("Error create xenomai services\n");
-        return err;
-    }
-
-
-
     return 0;
 }
 
@@ -347,41 +336,57 @@ void read_shmem(shmem_publisher_set_t* set, void* data, unsigned short* datalen)
 
 }
 
-ReceiveResult get_input_data(void* p_module)
+void get_input_data(void* p_module)
 {
     module_t* module = p_module;
 
-    if(module->input_buf==NULL)
+    if(module->input_data==NULL)
     {
+        //TODO: здесь просто поспать потоку
+
         printf("Module don't have input\n");
-        return timeout;
+        return;
     }
 
     //TODO: Определить размер буфера где нибудь в настройках
+    // и вынести в структуру
     char buf[256];
+
+    module->updated_input_properties = 0;
 
     int res_read = rt_queue_read(&module->in_queue, buf, 256, module->queue_timeout);
     if (res_read > 0)
+    {
         printf("ofiget' ne vstat'\n");
 
-    unsigned short retlen;
-    shmem_publisher_set_t* set = module->shmem_sets[0];
-    read_shmem(set, buf, &retlen);
-    //printf("retlen=%i\n", retlen);
+        // распарсить полученный объект
 
-    bson_t bson;
-    if (retlen > 0) {
-        bson_init_static(&bson, buf, retlen);
-        debug_print_bson(&bson);
+        bson_t bson;
+        bson_init_static(&bson, buf, res_read);
 
-        if(set->bson2obj(module->input_buf, &bson)==0)
+        if(module->input_bson2obj(module, &bson)==0)
         {
-            (*set->print_obj)(module->input_buf);
+            printf("Error: func get_input_data, input_bson2obj\n");
         }
+
+        // destroy bson
     }
 
-    return obtained_data;
+    // Если установлены флаги того, что юзер обязательно хочет каких то данных,
+    // то постараемся их вытащить из разделяемой памяти
+    // Если конечно его запрос не удовлетворен уже (возможно) полученными данными
+    // 1) получено:             0010011 updated_input_properties
+    // 2) мне надо:             0110001 refresh_input_mask
+    // 3) часть нужного
+    // мне из полученного:      0010001 получается логическим И 1&2
+    // 4) осталось получить:    0100000 получается исключающим ИЛИ 2^3
+    //printf("before logic oper mask=0x%08X\n", module->refresh_input_mask);
+    //printf("updated_input_properties=0x%08X\n", module->updated_input_properties);
+    module->refresh_input_mask ^= (module->refresh_input_mask & module->updated_input_properties);
+    //printf("before refresh mask=0x%08X\n", module->refresh_input_mask);
+    refresh_input(module);
 }
+
 
 void task_transmit_body(void *cookie)
 {
@@ -391,7 +396,7 @@ void task_transmit_body(void *cookie)
     bson_t bson_tr;
     void* obj;
 
-    for (;;) {
+    while (1) {
         rt_task_sleep(module->transmit_task_period);
 
         int i=0;
@@ -405,6 +410,7 @@ void task_transmit_body(void *cookie)
                 // Call user convert function
                 (*set->obj2bson)(obj, &bson_tr);
                 write_shmem(set, bson_get_data(&bson_tr), bson_tr.len);
+                //printf("send %i\n", bson_tr.len);
                 bson_destroy(&bson_tr);
 
                 checkin4transmiter(module, set, &obj);
@@ -434,9 +440,20 @@ void task_transmit_body(void *cookie)
     }
 }
 
+
 int start(void* p_module)
 {
     module_t* module = p_module;
+
+    /**
+     * Create required xenomai services
+     */
+    int err = create_xenomai_services(module);
+    if (err != 0) {
+        printf("Error create xenomai services\n");
+        return err;
+    }
+
 
     if (module == NULL) {
         printf("Function \"start\". Param \"module\" is null\n");
@@ -448,9 +465,13 @@ int start(void* p_module)
         return -1;
     }
 
-    int err = rt_task_start(&module->task_main, module->func, p_module);
+    err = rt_task_start(&module->task_main, module->func, p_module);
     if (err != 0)
         printf("Error start main task\n");
+
+    // Если нет выходов не нужна и таска передатчика
+    if(module->shmem_sets==NULL)
+        return err;
 
     err = rt_task_start(&module->task_transmit, &task_transmit_body, p_module);
     if (err != 0) {
@@ -461,6 +482,7 @@ int start(void* p_module)
     return err;
 }
 
+
 int stop(void* module)
 {
 
@@ -469,18 +491,23 @@ int stop(void* module)
     return 0;
 }
 
+
 int create_xenomai_services(module_t* module)
 {
-    // Create input queue
-    char name_queue[64] = "";
-    strcat(name_queue, module->instance_name);
-    strcat(name_queue, "_queue");
-    int queue_poolsize = 200;
-    int err = rt_queue_create(&module->in_queue, name_queue, queue_poolsize, 10, Q_FIFO);
-    if (err != 0)
+    if(module->input_data)
     {
-        fprintf(stdout, "Error create queue \"%s\"\n", name_queue);
-        return err;
+        // Create input queue
+        // But only defined input buffer
+        char name_queue[64] = "";
+        strcat(name_queue, module->instance_name);
+        strcat(name_queue, "_queue");
+        int queue_poolsize = 200; //TODO вынести эту фиыру в настройки
+        int err = rt_queue_create(&module->in_queue, name_queue, queue_poolsize, 10, Q_FIFO);
+        if (err != 0)
+        {
+            fprintf(stdout, "Error create queue \"%s\"\n", name_queue);
+            return err;
+        }
     }
 
 
@@ -489,29 +516,31 @@ int create_xenomai_services(module_t* module)
     strcat(name_task_main, module->instance_name);
     strcat(name_task_main, "_task");
 
-    err = rt_task_create(&module->task_main, name_task_main,
+    int err = rt_task_create(&module->task_main, name_task_main,
                          TASK_STKSZ,
                          module->task_priority,
                          TASK_MODE);
-
     if (err != 0)
     {
         fprintf(stdout, "Error create work task \"%s\"\n", name_task_main);
         return err;
     }
 
+    // Если не определены выходы для модуля, то нефиг и создавать сервисы
+    if(module->shmem_sets==NULL)
+        return 0;
+
     // Create transmit task
     char name_tr_task_main[64] = "";
     strcat(name_tr_task_main, module->instance_name);
     strcat(name_tr_task_main, "_tr_task");
-
     err = rt_task_create(&module->task_transmit, name_tr_task_main, TASK_STKSZ, 99, TASK_MODE);
-
     if (err != 0)
     {
         fprintf(stdout, "Error create transmit task \"%s\"\n", name_tr_task_main);
         return err;
     }
+
 
     // Create mutex for exchange between main and transmit task
     char name_objmutex[64] = "";
@@ -545,6 +574,7 @@ int create_xenomai_services(module_t* module)
  * @return
  * /~russian 0 в случае успеха
  */
+
 int checkout4writer(module_t* module, shmem_publisher_set_t* set, void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
@@ -593,6 +623,7 @@ int checkout4writer(module_t* module, shmem_publisher_set_t* set, void** obj)
     return res;
 }
 
+
 /**
  * @brief checkin4writer
  * /~ Возвращает объект системе (данные будут переданы в разделяемую память)
@@ -600,6 +631,7 @@ int checkout4writer(module_t* module, shmem_publisher_set_t* set, void** obj)
  * @param obj
  * @return
  */
+
 int checkin4writer(module_t* module, shmem_publisher_set_t* set, void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
@@ -646,6 +678,7 @@ int checkin4writer(module_t* module, shmem_publisher_set_t* set, void** obj)
     return res;
 }
 
+
 /**
  * @brief checkout4transmiter
  * /~russian    Заполняет указатель адресом на структуру ,
@@ -654,6 +687,7 @@ int checkin4writer(module_t* module, shmem_publisher_set_t* set, void** obj)
  * @return
  * /~russian 0 в случае успеха
  */
+
 int checkout4transmiter(module_t* module, shmem_publisher_set_t* set, void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
@@ -687,12 +721,14 @@ int checkout4transmiter(module_t* module, shmem_publisher_set_t* set, void** obj
     return res;
 }
 
+
 /**
  * @brief checkin4transmiter
  * /~ Возвращает объект системе (объект будет помечен как свободный для записи основным потоком)
  * @param obj
  * @return
  */
+
 int checkin4transmiter(module_t* module, shmem_publisher_set_t* set,  void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
@@ -731,3 +767,44 @@ int checkin4transmiter(module_t* module, shmem_publisher_set_t* set,  void** obj
 }
 
 
+/**
+ * @brief refresh_input
+ * /~russian Функция вычитывает данные из разделяемой памяти и мержит их во входной объект
+ * @param p_module
+ * @return
+ */
+
+int refresh_input(void* p_module)
+{
+    module_t* module = p_module;
+
+    // биты не установлены, обновления данных не требуется
+    if(module->refresh_input_mask == 0)
+        return 0;
+
+    // Здесь подготовить список сетов, которые необходимо вычитать из разделяемой памяти
+
+    //TODO: Определить размер буфера где нибудь в настройках
+    // и вынести в структуру
+    char buf[300];
+
+    unsigned short retlen;
+    shmem_publisher_set_t* set = module->shmem_sets[0];
+    read_shmem(set, buf, &retlen);
+    //printf("retlen=%i\n", retlen);
+
+    bson_t bson;
+    if (retlen > 0) {
+        bson_init_static(&bson, buf, retlen);
+        debug_print_bson(&bson);
+
+        if(set->bson2obj(module, &bson)==0)
+        {
+            (*set->print_obj)(module->input_data);
+        }
+    }
+
+    // перед выходом обнулить биты. они отработаны
+    module->refresh_input_mask = 0;
+    return 0;
+}

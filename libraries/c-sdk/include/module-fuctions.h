@@ -18,6 +18,10 @@ typedef enum
 } StatusObj;
 
 typedef int (*p_obj2bson)(void* obj, bson_t* bson);
+
+// примечание: буфер объекта добывается из структуры модуля
+typedef int (*p_bson2obj)(void* p_module, bson_t* bson);
+
 typedef void (*p_print_obj)(void* obj);
 
 typedef struct {
@@ -41,30 +45,16 @@ typedef struct {
     StatusObj status_obj2;
 
     p_obj2bson obj2bson;
-    p_obj2bson bson2obj;
+    p_bson2obj bson2obj;
     p_print_obj print_obj;
 
 } shmem_publisher_set_t;
 
 
-/**
- * \enum Reason4callback
- * \~russian
- */
-typedef enum {
-	/**
-	 * \~russian
-	 */
-	timeout,
-
-	/**
-	 * \~russian
-	 */
-	obtained_data
-} ReceiveResult;
 
 typedef void (t_cycle_function)(void *cookie);
 typedef t_cycle_function* p_cycle_function;
+#define t_mask unsigned int
 
 
 typedef struct
@@ -112,9 +102,23 @@ typedef struct
      */
     RT_COND obj_cond;
 
-    void* input_buf;
-    //int size_input_buf;
+    // Указатель на структуру (входные данные модуля)
+    void* input_data;
 
+    // Функция преобразования принятого из очереди bson объекта
+    // в структуру представляющую входной объект
+    // Указатель на функцию должен подставляться пользовательским (автогенеренным) кодом
+    p_bson2obj input_bson2obj;
+
+    // каждый бит числа соответствцет одному из входов модуля.
+    // установленный бит подразумевает запрос (пользовательского кода)
+    // на обновление соответствующего биту значения во входной структуре данными
+    // из разделяемой памяти
+    t_mask refresh_input_mask;
+
+    // каждый бит числа соответствцет одному из входов модуля.
+    // установленный бит сигнализирует, что в текущей итерации, значение соответствующее биту обновилось
+    t_mask updated_input_properties;
 
 } module_t;
 
@@ -125,6 +129,8 @@ int start(void* module);
 
 int stop(void* module);
 
-ReceiveResult get_input_data(void* module);
+void get_input_data(void* module);
+
+int refresh_input(void* p_module);
 
 #endif

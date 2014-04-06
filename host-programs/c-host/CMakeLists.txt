@@ -34,9 +34,10 @@ target_link_libraries(c-host ${EXTRA_LIBS})
 add_custom_command(
 	TARGET c-host
 	POST_BUILD
-	COMMAND scp c-host root@osen73.dyndns-home.com:/root/c-host
+        COMMAND scp c-host root@osen73.dyndns-home.com:/root/c-host
+#COMMAND
 	#COMMAND scp /home/vrubel/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
-	COMMAND scp /Users/vrubel/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
+        COMMAND scp /Users/vrubel/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
 )
 
 
