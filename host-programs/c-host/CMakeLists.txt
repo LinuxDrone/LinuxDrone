@@ -38,9 +38,14 @@ add_custom_command(
 	TARGET c-host
 	POST_BUILD
         #COMMAND scp c-host root@osen73.dyndns-home.com:/root/c-host
-		COMMAND D:/Projects/LinuxDrone/tools/pscp.exe c-host root@osen73.dyndns-home.com:/root/c-host
-		
+
+    #Windows
+    #COMMAND D:/Projects/LinuxDrone/tools/pscp.exe c-host root@osen73.dyndns-home.com:/root/c-host
+	COMMAND D:/Projects/LinuxDrone/tools/pscp.exe -P 1234 c-host root@voha-bbb.linuxdrone.org:/root/c-host
+	COMMAND D:/Projects/LinuxDrone/tools/pscp.exe -P 1234 D:/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@voha-bbb.linuxdrone.org:/root/testConfig.json
+
 #COMMAND
+
 	#COMMAND scp /home/vrubel/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
     #    COMMAND scp /Users/vrubel/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
 )

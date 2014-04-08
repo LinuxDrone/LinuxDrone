@@ -118,7 +118,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 {
     bson_t bson;
     bson_init_static(&bson, data, length);
-    debug_print_bson(&bson);
+    //debug_print_bson(&bson);
 
     /**
      * Instance name
@@ -796,7 +796,7 @@ int refresh_input(void* p_module)
     bson_t bson;
     if (retlen > 0) {
         bson_init_static(&bson, buf, retlen);
-        debug_print_bson(&bson);
+        //debug_print_bson(&bson);
 
         if(set->bson2obj(module, &bson)==0)
         {

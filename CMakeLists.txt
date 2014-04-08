@@ -76,22 +76,22 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
 # Project libraries
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-add_subdirectory(${LIB_DIR}/core)
-add_subdirectory(${LIB_DIR}/sdk)
+#add_subdirectory(${LIB_DIR}/core)
+#add_subdirectory(${LIB_DIR}/sdk)
 #add_subdirectory(${LIB_DIR}/libbson)
-add_subdirectory(${LIB_DIR}/dotnet-sdk)
+#add_subdirectory(${LIB_DIR}/dotnet-sdk)
 add_subdirectory(${LIB_DIR}/c-sdk)
 
 # Loadable modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
-add_subdirectory(${MOD_DIR}/gy87)
+#add_subdirectory(${MOD_DIR}/gy87)
 add_subdirectory(${MOD_DIR}/c-gy87)
-add_subdirectory(${MOD_DIR}/bmp180)
-add_subdirectory(${MOD_DIR}/ms5611)
-add_subdirectory(${MOD_DIR}/hmc5883)
-add_subdirectory(${MOD_DIR}/pwmoutput)
-add_subdirectory(${MOD_DIR}/PwmInput)
-add_subdirectory(${MOD_DIR}/SimpleTransform)
+#add_subdirectory(${MOD_DIR}/bmp180)
+#add_subdirectory(${MOD_DIR}/ms5611)
+#add_subdirectory(${MOD_DIR}/hmc5883)
+#add_subdirectory(${MOD_DIR}/pwmoutput)
+#add_subdirectory(${MOD_DIR}/PwmInput)
+#add_subdirectory(${MOD_DIR}/SimpleTransform)
 #add_subdirectory(${MOD_DIR}/SerialGps)
 
 # Host programms
@@ -99,4 +99,4 @@ add_subdirectory(${HST_DIR}/c-host)
 
 # Main project target
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-add_subdirectory(${TGT_DIR}/beaglebone) 
+#add_subdirectory(${TGT_DIR}/beaglebone) 
