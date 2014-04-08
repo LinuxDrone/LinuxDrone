@@ -78,8 +78,7 @@ int main() {
 	}
 
 
-    bson_t bson_module;
-    bson_init_static(&bson_module, module_buf, module_buf_len);
+    bson_t * bson_module = bson_new_from_data (module_buf, module_buf_len);
     //debug_print_bson(&bson_module);
 
     // Теперь надо вычитать линки и засунуть их как массивы в объект bson_module
@@ -107,50 +106,33 @@ int main() {
     // итерация по связям
     int lc = 0;
     bson_t bson_link;
-
     bson_t b_arr;
 
-    bson_t * res_obj = bson_new();
-
-
-    bson_append_array_begin (res_obj,
-                             "inputs",
-                             6,
-                             &b_arr);
-
+    bson_append_array_begin (bson_module, "inputs", -1, &b_arr);
     while(bson_iter_next(&iter_links))
     {
         if(!BSON_ITER_HOLDS_DOCUMENT(&iter_links))
         {
             fprintf(stderr, "Error: Not link document\n");
-            //continue;
-            return -1;
+            continue;
         }
         bson_iter_document(&iter_links, &link_buf_len, &link_buf);
 
         bson_init_static(&bson_link, link_buf, link_buf_len);
-        debug_print_bson(&bson_link);
+        //debug_print_bson(&bson_link);
 
-
-        char buffer [2];
+        char buffer [3];
         sprintf(buffer,"%i",lc);
 
-
-        bson_append_document (&b_arr,
-                              buffer,
-                              1,
-                              &bson_link);
+        bson_append_document (&b_arr, buffer, -1, &bson_link);
 
         lc++;
     }
+    bson_append_array_end (bson_module, &b_arr);
 
-    bson_append_array_end (res_obj, &b_arr);
+    debug_print_bson(bson_module);
 
-    debug_print_bson(res_obj);
-    //debug_print_bson(&bson_module);
-
-
-
+    bson_destroy(bson_module);
     bson_destroy(bson_configuration);
 
 
