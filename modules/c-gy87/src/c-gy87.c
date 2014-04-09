@@ -1,4 +1,4 @@
-#include "../include/generated_code.h"
+#include "../include/c-gy87.h"
 
 void c_gy87_run (module_GY87_t *module)
 {
@@ -18,13 +18,23 @@ void c_gy87_run (module_GY87_t *module)
 
 
         GyroAccelMagTemp_t* objGAMT;
-        checkout_GyroAccelMagTemp(&objGAMT);
+        checkout_GyroAccelMagTemp(module, &objGAMT);
         objGAMT->accelX = cycle;
         objGAMT->accelY = cycle*2+1;
-        checkin_GyroAccelMagTemp(&objGAMT);
+        objGAMT->accelZ = 0;
+        objGAMT->gyroX = 0;
+        objGAMT->gyroY = 0;
+        objGAMT->gyroZ = 0;
+        objGAMT->magX = 0;
+        objGAMT->magY = 0;
+        objGAMT->magZ = 0;
+        objGAMT->temperature = 0;
+        checkin_GyroAccelMagTemp(module, &objGAMT);
 
+        // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу
         module->module_info.refresh_input_mask = accelX | accelY | accelZ;
 
+        // Наглое считывание данных из разделяемой памяти
         //int res = refresh_input(module);
 
         cycle++;

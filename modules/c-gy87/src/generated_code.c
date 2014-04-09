@@ -1,10 +1,11 @@
 #include "../include/generated_code.h"
 
-module_GY87_t module_GY87_info;
+// количество типов выходных объектов
+#define count_shmem_sets 2
 
 extern t_cycle_function c_gy87_run;
 
-shmem_publisher_set_t* ar_publishers[3];
+//shmem_publisher_set_t* ar_publishers[3];
 
 int GyroAccelMagTemp2bson(GyroAccelMagTemp_t* obj, bson_t* bson)
 {
@@ -123,49 +124,66 @@ void printGyroAccelMagTemp(GyroAccelMagTemp_t* obj)
 }
 
 
-int c_gy87_init(const uint8_t* bson_data, uint32_t bson_len)
+
+module_GY87_t* c_gy87_create()
 {
-	ar_publishers[0]=&module_GY87_info.GyroAccelMagTemp;
-	ar_publishers[1]=&module_GY87_info.Baro;
-	ar_publishers[2]=NULL;
+    module_GY87_t* module = malloc(sizeof(module_GY87_t));
 
-    int res = init(&module_GY87_info.module_info, bson_data, bson_len);
+    module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));
+    module->module_info.shmem_sets[0]=&module->GyroAccelMagTemp;
+    module->module_info.shmem_sets[1]=&module->Baro;
+    module->module_info.shmem_sets[2]=NULL;
 
-	module_GY87_info.module_info.shmem_sets = ar_publishers;
+    return module;
+}
+
+
+void c_gy87_delete(module_GY87_t* module)
+{
+    free(module->module_info.shmem_sets);
+    free(module);
+}
+
+
+int c_gy87_init(module_GY87_t* module, const uint8_t* bson_data, uint32_t bson_len)
+{
+    int res = init(&module->module_info, bson_data, bson_len);
 
 	// временное решение для указания размера выделяемой памяти под bson  объекты каждого типа
 	// в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации
-	module_GY87_info.GyroAccelMagTemp.shmem_len = 300;
-	module_GY87_info.Baro.shmem_len = 300;
+    module->GyroAccelMagTemp.shmem_len = 300;
+    module->Baro.shmem_len = 300;
 
 	// для каждого типа порождаемого объекта инициализируется соответсвующая структура
     // и указываются буферы (для обмена данными между основным и передающим потоком)
-    init_publisher_set(&module_GY87_info.GyroAccelMagTemp, module_GY87_info.module_info.instance_name, "GyroAccelMagTemp");
-    module_GY87_info.GyroAccelMagTemp.obj1 = &module_GY87_info.obj1_GyroAccelMagTemp;
-    module_GY87_info.GyroAccelMagTemp.obj2 = &module_GY87_info.obj2_GyroAccelMagTemp;
-    module_GY87_info.GyroAccelMagTemp.obj2bson = (p_obj2bson)&GyroAccelMagTemp2bson;
-    module_GY87_info.GyroAccelMagTemp.bson2obj = (p_bson2obj)&bson2GyroAccelMagTemp;
-    module_GY87_info.GyroAccelMagTemp.print_obj = (p_print_obj)&printGyroAccelMagTemp;
+    init_publisher_set(&module->GyroAccelMagTemp, module->module_info.instance_name, "GyroAccelMagTemp");
+    module->GyroAccelMagTemp.obj1 = &module->obj1_GyroAccelMagTemp;
+    module->GyroAccelMagTemp.obj2 = &module->obj2_GyroAccelMagTemp;
+    module->GyroAccelMagTemp.obj2bson = (p_obj2bson)&GyroAccelMagTemp2bson;
+    module->GyroAccelMagTemp.bson2obj = (p_bson2obj)&bson2GyroAccelMagTemp;
+    module->GyroAccelMagTemp.print_obj = (p_print_obj)&printGyroAccelMagTemp;
 
-	init_publisher_set(&module_GY87_info.Baro, module_GY87_info.module_info.instance_name, "Baro");
-    module_GY87_info.Baro.obj1 = &module_GY87_info.obj1_Baro;
-    module_GY87_info.Baro.obj2 = &module_GY87_info.obj2_Baro;
+    init_publisher_set(&module->Baro, module->module_info.instance_name, "Baro");
+    module->Baro.obj1 = &module->obj1_Baro;
+    module->Baro.obj2 = &module->obj2_Baro;
 
-    memset(&module_GY87_info.input4modul, 0, sizeof(GyroAccelMagTemp_t));
-    module_GY87_info.module_info.input_data = &module_GY87_info.input4modul;
-    module_GY87_info.module_info.input_bson2obj = (p_bson2obj)&bson2GyroAccelMagTemp;
+    memset(&module->input4modul, 0, sizeof(GyroAccelMagTemp_t));
+    module->module_info.input_data = &module->input4modul;
+    module->module_info.input_bson2obj = (p_bson2obj)&bson2GyroAccelMagTemp;
 
-	module_GY87_info.module_info.func = &c_gy87_run;
+    module->module_info.func = &c_gy87_run;
 
     return res;
 }
 
-int c_gy87_start()
+
+int c_gy87_start(module_GY87_t* module)
 {
-    if (start(&module_GY87_info) != 0)
+    if (start(module) != 0)
         return -1;
 	return 0;
 }
+
 
 /**
  * @brief checkout4writer_GyroAccelMagTemp
@@ -175,10 +193,11 @@ int c_gy87_start()
  * @return
  * /~russian 0 в случае успеха
  */
-int checkout_GyroAccelMagTemp(GyroAccelMagTemp_t** obj)
+int checkout_GyroAccelMagTemp(module_GY87_t* module, GyroAccelMagTemp_t** obj)
 {
-    return checkout4writer(&module_GY87_info, &module_GY87_info.GyroAccelMagTemp, obj);
+    return checkout4writer(module, &module->GyroAccelMagTemp, obj);
 }
+
 
 /**
  * @brief checkin4writer_GyroAccelMagTemp
@@ -186,9 +205,9 @@ int checkout_GyroAccelMagTemp(GyroAccelMagTemp_t** obj)
  * @param obj
  * @return
  */
-int checkin_GyroAccelMagTemp(GyroAccelMagTemp_t** obj)
+int checkin_GyroAccelMagTemp(module_GY87_t* module, GyroAccelMagTemp_t** obj)
 {
-    return checkin4writer(&module_GY87_info, &module_GY87_info.GyroAccelMagTemp, obj);
+    return checkin4writer(module, &module->GyroAccelMagTemp, obj);
 }
 
 

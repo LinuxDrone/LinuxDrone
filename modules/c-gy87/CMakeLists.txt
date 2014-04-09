@@ -30,10 +30,10 @@ add_custom_command(
 	
 	#COMMAND
 	
-        COMMAND scp libc-gy87.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
+        #COMMAND scp libc-gy87.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
 
 	#Windows
-	#COMMAND D:/Projects/LinuxDrone/tools/pscp.exe libc-gy87.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
+        COMMAND D:/Projects/LinuxDrone/tools/pscp.exe libc-gy87.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
         #COMMAND D:/Projects/LinuxDrone/tools/pscp.exe -P 1234 libc-gy87.so root@voha-bbb.linuxdrone.org:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
 )
 

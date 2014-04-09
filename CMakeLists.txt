@@ -78,7 +78,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 #add_subdirectory(${LIB_DIR}/core)
 #add_subdirectory(${LIB_DIR}/sdk)
-add_subdirectory(${LIB_DIR}/libbson)
+#add_subdirectory(${LIB_DIR}/libbson)
 #add_subdirectory(${LIB_DIR}/dotnet-sdk)
 add_subdirectory(${LIB_DIR}/c-sdk)
 

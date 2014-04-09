@@ -1,4 +1,4 @@
-#include "../include/module-fuctions.h"
+#include "../include/module-functions.h"
 #include <native/queue.h>
 #include <native/heap.h>
 #include <native/event.h>
@@ -18,7 +18,7 @@ void debug_print_bson(bson_t* bson) {
     bson_free(str);
 }
 
-void print_task_error(int err) {
+void print_task_start_error(int err) {
     switch (err)
     {
     case -EINVAL:
@@ -76,7 +76,7 @@ int init_publisher_set(shmem_publisher_set_t * pset, char* instance_name, char* 
     int err = rt_heap_create(&pset->h_shmem, name_shmem, pset->shmem_len,
                              H_SHARED | H_PRIO);
     if (err != 0) {
-        fprintf(stdout, "Error create shared memory \"%s\"\n", name_shmem);
+        fprintf(stdout, "Error %i create shared memory \"%s\"\n", err, name_shmem);
         return err;
     }
 
@@ -476,7 +476,7 @@ int start(void* p_module)
     err = rt_task_start(&module->task_transmit, &task_transmit_body, p_module);
     if (err != 0) {
         printf("Error start transmit task. err=%i\n", err);
-        print_task_error(err);
+        print_task_start_error(err);
     }
 
     return err;
