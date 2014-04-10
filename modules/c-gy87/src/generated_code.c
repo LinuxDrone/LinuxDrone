@@ -134,6 +134,8 @@ module_GY87_t* c_gy87_create()
     module->module_info.shmem_sets[1]=&module->Baro;
     module->module_info.shmem_sets[2]=NULL;
 
+    printf("CREATE\n\n");
+
     return module;
 }
 

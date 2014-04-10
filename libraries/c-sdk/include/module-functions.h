@@ -123,6 +123,20 @@ typedef struct
 } module_t;
 
 
+// Тип функции создания модуля
+typedef module_t* (*create_f)();
+
+// Тип функции инициализации модуля
+typedef int (*init_f)(module_t*, const uint8_t*, uint32_t);
+
+// Тип функции старта модуля
+typedef int (*start_f)();
+
+// Тип функции удаления модуля
+typedef void (*delete_f)(module_t*);
+
+
+
 int init(module_t* module, const uint8_t * data, uint32_t length);
 
 int start(void* module);
@@ -132,5 +146,8 @@ int stop(void* module);
 void get_input_data(void* module);
 
 int refresh_input(void* p_module);
+
+
+char *replace(const char *s, char ch, const char *repl);
 
 #endif

@@ -1,3 +1,4 @@
+#include <dlfcn.h>
 #include <stdio.h>
 #include <bson.h>
 #include "c-gy87.h"
@@ -40,20 +41,28 @@ bson_t* get_bson_from_file() {
 	return NULL ;
 }
 
-int start_module(bson_t* bson_configuration, bson_t* modules, char* instance_name)
+int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_name)
 {
     bson_iter_t iter_modules;
+
+//    if(!bson_iter_init_find (&iter_modules, modules, instance_name))
+//    {
+//        fprintf("Not found instance ");
+//    }
+
+
     if(!bson_iter_init (&iter_modules, modules))
     {
         fprintf(stderr, "Error: error create iterator for modules\n");
         return -1;
     }
 
+    bson_t * module_instance = NULL;
     const uint8_t *buf = NULL;
     uint32_t buf_len = 0;
 
-    // Вычитывается первый модуль
-    if(bson_iter_next(&iter_modules))
+    // Бежим по списку инстансов в конфигурации
+    while(bson_iter_next(&iter_modules))
     {
         if(!BSON_ITER_HOLDS_DOCUMENT(&iter_modules))
         {
@@ -62,14 +71,111 @@ int start_module(bson_t* bson_configuration, bson_t* modules, char* instance_nam
             return -1;
         }
         bson_iter_document(&iter_modules, &buf_len, &buf);
+
+        module_instance = bson_new_from_data (buf, buf_len);
+
+        // Get Module Type
+        bson_iter_t iter_instance_name;
+        if (!bson_iter_init_find(&iter_instance_name, module_instance, "instance")) {
+            printf("Not found property \"instance\" in module_instance");
+            return -1;
+        }
+        if (!BSON_ITER_HOLDS_UTF8(&iter_instance_name)) {
+            printf("Property \"instance\" in module_instance not UTF8 type");
+            return -1;
+        }
+
+        const char* module_instance_name = bson_iter_utf8(&iter_instance_name, NULL);
+
+        if(!strncmp(module_instance_name, instance_name, 100))
+        {
+            // Мы нашли в конфигурации инстанс с нужным именем
+            break;
+        }
+        module_instance = NULL;
     }
-    else{
+
+
+
+    //debug_print_bson(&bson_module);
+
+    // Get Module Type
+    bson_iter_t iter_module_type;
+    if (!bson_iter_init_find(&iter_module_type, module_instance, "name")) {
+        printf("Not found property \"name\" in bson_module");
+        return -1;
+    }
+    if (!BSON_ITER_HOLDS_UTF8(&iter_module_type)) {
+        printf("Property \"name\" in bson_module not UTF8 type");
         return -1;
     }
 
+    const char* module_type = bson_iter_utf8(&iter_module_type, NULL);
+    char so_name[64] = "";
+    strcat(so_name, "lib");
+    strcat(so_name, module_type);
+    strcat(so_name, ".so");
 
-    bson_t * bson_module = bson_new_from_data (buf, buf_len);
-    //debug_print_bson(&bson_module);
+    fprintf(stdout, "so_name=%s\n", so_name);
+
+
+
+    void *handle;
+    //int (*init)(module_GY87_t*, const uint8_t*, uint32_t);
+
+    char *error;
+
+    handle = dlopen(so_name, RTLD_NOW);
+    if (!handle) {
+        fprintf(stderr, "%s\n", dlerror());
+        exit(EXIT_FAILURE);
+    }
+    dlerror();    // Clear any existing error
+
+
+    // Сварганим имя функции и вызовем ее
+    char f_create_name[64] = "";
+    strcat(f_create_name, replace(module_type, '-', "_")); // FREE NEED
+    strcat(f_create_name, "_create");
+    create_f create = dlsym(handle, f_create_name);
+    if ((error = dlerror()) != NULL)  {
+        fprintf(stderr, "%s\n", error);
+        exit(EXIT_FAILURE);
+    }
+    void* module = (*create)();
+
+
+    //if ((*init)(module, buf, buf_len) != 0)
+      //  return -1;
+
+/*
+ * c_gy87_init
+    *(void **) (&cosine) = dlsym(handle, "cos");
+
+    if ((error = dlerror()) != NULL)  {
+        fprintf(stderr, "%s\n", error);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("%f\n", (*cosine)(2.0));
+*/
+
+    //dlclose(handle);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Теперь надо вычитать линки и засунуть их как массивы в объект bson_module
     bson_iter_t iter_l;
@@ -98,7 +204,7 @@ int start_module(bson_t* bson_configuration, bson_t* modules, char* instance_nam
     bson_t bson_link;
     bson_t b_arr;
 
-    bson_append_array_begin (bson_module, "inputs", -1, &b_arr);
+    bson_append_array_begin (module_instance, "inputs", -1, &b_arr);
     while(bson_iter_next(&iter_links))
     {
         if(!BSON_ITER_HOLDS_DOCUMENT(&iter_links))
@@ -118,12 +224,14 @@ int start_module(bson_t* bson_configuration, bson_t* modules, char* instance_nam
 
         lc++;
     }
-    bson_append_array_end (bson_module, &b_arr);
-
-    debug_print_bson(bson_module);
+    bson_append_array_end (module_instance, &b_arr);
 
 
-    module_GY87_t* module = c_gy87_create();
+    debug_print_bson(module_instance);
+
+
+
+    //module_GY87_t* module = c_gy87_create();
 
     if (c_gy87_init(module, buf, buf_len) != 0)
         return -1;
@@ -132,7 +240,7 @@ int start_module(bson_t* bson_configuration, bson_t* modules, char* instance_nam
         return -1;
 
 
-    bson_destroy(bson_module);
+    bson_destroy(module_instance);
 }
 
 
@@ -161,9 +269,9 @@ int main(int argc, char *argv[]) {
     int im;
     for(im=1; im<argc; im++)
     {
-        printf("module=%s\n", argv[im]);
+        printf("instance=%s\n", argv[im]);
 
-        start_module(bson_configuration, &bson_modules, argv[im]);
+        start_instance(bson_configuration, &bson_modules, argv[im]);
     }
 
     bson_destroy(bson_configuration);
@@ -172,5 +280,5 @@ int main(int argc, char *argv[]) {
 	printf("END\n");
 	getchar();
 
-	return 0;
+    exit(EXIT_SUCCESS);
 }
