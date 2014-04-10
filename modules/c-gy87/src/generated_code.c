@@ -5,8 +5,6 @@
 
 extern t_cycle_function c_gy87_run;
 
-//shmem_publisher_set_t* ar_publishers[3];
-
 int GyroAccelMagTemp2bson(GyroAccelMagTemp_t* obj, bson_t* bson)
 {
     bson_append_int32 (bson, "accelX", 6, obj->accelX);
@@ -128,14 +126,10 @@ void printGyroAccelMagTemp(GyroAccelMagTemp_t* obj)
 module_GY87_t* c_gy87_create()
 {
     module_GY87_t* module = malloc(sizeof(module_GY87_t));
-
     module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));
     module->module_info.shmem_sets[0]=&module->GyroAccelMagTemp;
     module->module_info.shmem_sets[1]=&module->Baro;
     module->module_info.shmem_sets[2]=NULL;
-
-    printf("CREATE\n\n");
-
     return module;
 }
 

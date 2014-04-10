@@ -41,142 +41,13 @@ bson_t* get_bson_from_file() {
 	return NULL ;
 }
 
-int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_name)
+
+/**
+ * @brief add_links2instance
+ * extract info about links from configuration and add them to instance bson
+ */
+int add_links2instance(bson_t* bson_configuration, bson_t * module_instance)
 {
-    bson_iter_t iter_modules;
-
-//    if(!bson_iter_init_find (&iter_modules, modules, instance_name))
-//    {
-//        fprintf("Not found instance ");
-//    }
-
-
-    if(!bson_iter_init (&iter_modules, modules))
-    {
-        fprintf(stderr, "Error: error create iterator for modules\n");
-        return -1;
-    }
-
-    bson_t * module_instance = NULL;
-    const uint8_t *buf = NULL;
-    uint32_t buf_len = 0;
-
-    // Бежим по списку инстансов в конфигурации
-    while(bson_iter_next(&iter_modules))
-    {
-        if(!BSON_ITER_HOLDS_DOCUMENT(&iter_modules))
-        {
-            fprintf(stderr, "Error: Not document\n");
-            //continue;
-            return -1;
-        }
-        bson_iter_document(&iter_modules, &buf_len, &buf);
-
-        module_instance = bson_new_from_data (buf, buf_len);
-
-        // Get Module Type
-        bson_iter_t iter_instance_name;
-        if (!bson_iter_init_find(&iter_instance_name, module_instance, "instance")) {
-            printf("Not found property \"instance\" in module_instance");
-            return -1;
-        }
-        if (!BSON_ITER_HOLDS_UTF8(&iter_instance_name)) {
-            printf("Property \"instance\" in module_instance not UTF8 type");
-            return -1;
-        }
-
-        const char* module_instance_name = bson_iter_utf8(&iter_instance_name, NULL);
-
-        if(!strncmp(module_instance_name, instance_name, 100))
-        {
-            // Мы нашли в конфигурации инстанс с нужным именем
-            break;
-        }
-        module_instance = NULL;
-    }
-
-
-
-    //debug_print_bson(&bson_module);
-
-    // Get Module Type
-    bson_iter_t iter_module_type;
-    if (!bson_iter_init_find(&iter_module_type, module_instance, "name")) {
-        printf("Not found property \"name\" in bson_module");
-        return -1;
-    }
-    if (!BSON_ITER_HOLDS_UTF8(&iter_module_type)) {
-        printf("Property \"name\" in bson_module not UTF8 type");
-        return -1;
-    }
-
-    const char* module_type = bson_iter_utf8(&iter_module_type, NULL);
-    char so_name[64] = "";
-    strcat(so_name, "lib");
-    strcat(so_name, module_type);
-    strcat(so_name, ".so");
-
-    fprintf(stdout, "so_name=%s\n", so_name);
-
-
-
-    void *handle;
-    //int (*init)(module_GY87_t*, const uint8_t*, uint32_t);
-
-    char *error;
-
-    handle = dlopen(so_name, RTLD_NOW);
-    if (!handle) {
-        fprintf(stderr, "%s\n", dlerror());
-        exit(EXIT_FAILURE);
-    }
-    dlerror();    // Clear any existing error
-
-
-    // Сварганим имя функции и вызовем ее
-    char f_create_name[64] = "";
-    strcat(f_create_name, replace(module_type, '-', "_")); // FREE NEED
-    strcat(f_create_name, "_create");
-    create_f create = dlsym(handle, f_create_name);
-    if ((error = dlerror()) != NULL)  {
-        fprintf(stderr, "%s\n", error);
-        exit(EXIT_FAILURE);
-    }
-    void* module = (*create)();
-
-
-    //if ((*init)(module, buf, buf_len) != 0)
-      //  return -1;
-
-/*
- * c_gy87_init
-    *(void **) (&cosine) = dlsym(handle, "cos");
-
-    if ((error = dlerror()) != NULL)  {
-        fprintf(stderr, "%s\n", error);
-        exit(EXIT_FAILURE);
-    }
-
-    printf("%f\n", (*cosine)(2.0));
-*/
-
-    //dlclose(handle);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // Теперь надо вычитать линки и засунуть их как массивы в объект bson_module
     bson_iter_t iter_l;
     if (!bson_iter_init_find(&iter_l, bson_configuration, "links")) {
@@ -225,19 +96,149 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
         lc++;
     }
     bson_append_array_end (module_instance, &b_arr);
+    //debug_print_bson(module_instance);
+    return 0;
+}
 
+
+int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_name)
+{
+    bson_iter_t iter_modules;
+    if(!bson_iter_init (&iter_modules, modules))
+    {
+        fprintf(stderr, "Error: error create iterator for modules\n");
+        return -1;
+    }
+
+    bson_t * module_instance = NULL;
+    const uint8_t *buf = NULL;
+    uint32_t buf_len = 0;
+
+    // Бежим по списку инстансов в конфигурации
+    while(bson_iter_next(&iter_modules))
+    {
+        if(!BSON_ITER_HOLDS_DOCUMENT(&iter_modules))
+        {
+            fprintf(stderr, "Error: Not document\n");
+            //continue;
+            return -1;
+        }
+        bson_iter_document(&iter_modules, &buf_len, &buf);
+
+        module_instance = bson_new_from_data (buf, buf_len);
+
+        // Get Module Type
+        bson_iter_t iter_instance_name;
+        if (!bson_iter_init_find(&iter_instance_name, module_instance, "instance")) {
+            printf("Not found property \"instance\" in module_instance");
+            return -1;
+        }
+        if (!BSON_ITER_HOLDS_UTF8(&iter_instance_name)) {
+            printf("Property \"instance\" in module_instance not UTF8 type");
+            return -1;
+        }
+
+        const char* module_instance_name = bson_iter_utf8(&iter_instance_name, NULL);
+
+        if(!strncmp(module_instance_name, instance_name, 100))
+        {
+            // Мы нашли в конфигурации инстанс с нужным именем
+            break;
+        }
+        module_instance = NULL;
+    }
+
+    if(module_instance==NULL)
+    {
+        printf("Not found instance \"%s\"\n", instance_name);
+        return -1;
+    }
+
+    if(add_links2instance(bson_configuration, module_instance)!=0)
+    {
+        printf("Error add_links2instance \"%s\"\n", instance_name);
+        return -1;
+    }
 
     debug_print_bson(module_instance);
 
 
+    // Get Module Type
+    bson_iter_t iter_module_type;
+    if (!bson_iter_init_find(&iter_module_type, module_instance, "name")) {
+        printf("Not found property \"name\" in bson_module");
+        return -1;
+    }
+    if (!BSON_ITER_HOLDS_UTF8(&iter_module_type)) {
+        printf("Property \"name\" in bson_module not UTF8 type");
+        return -1;
+    }
 
-    //module_GY87_t* module = c_gy87_create();
+    const char* module_type = bson_iter_utf8(&iter_module_type, NULL);
+    char so_name[64] = "";
+    strcat(so_name, "lib");
+    strcat(so_name, module_type);
+    strcat(so_name, ".so");
 
-    if (c_gy87_init(module, buf, buf_len) != 0)
+    fprintf(stdout, "so_name=%s\n", so_name);
+
+    void *handle;
+    char *error;
+
+    handle = dlopen(so_name, RTLD_NOW);
+    if (!handle) {
+        fprintf(stderr, "%s\n", dlerror());
+        exit(EXIT_FAILURE);
+    }
+    dlerror();    // Clear any existing error
+
+
+    // Сварганим имя функции и вызовем ее
+    char f_create_name[64] = "";
+    strcat(f_create_name, replace(module_type, '-', "_")); // FREE NEED
+    strcat(f_create_name, "_create");
+    create_f create = dlsym(handle, f_create_name);
+    if ((error = dlerror()) != NULL)  {
+        fprintf(stderr, "%s\n", error);
+        exit(EXIT_FAILURE);
+    }
+    dlerror();    // Clear any existing error
+
+    // Call function Create instance (.so)
+    void* module = (*create)();
+
+
+    char f_init_name[64] = "";
+    strcat(f_init_name, replace(module_type, '-', "_")); // FREE NEED
+    strcat(f_init_name, "_init");
+    init_f init = dlsym(handle, f_init_name);
+    if ((error = dlerror()) != NULL)  {
+        fprintf(stderr, "%s\n", error);
+        exit(EXIT_FAILURE);
+    }
+    dlerror();    // Clear any existing error
+
+    // Call function init
+    if ((*init)(module, buf, buf_len) != 0)
         return -1;
 
-    if (c_gy87_start(module) != 0)
+
+    char f_start_name[64] = "";
+    strcat(f_start_name, replace(module_type, '-', "_")); // FREE NEED
+    strcat(f_start_name, "_start");
+    start_f start = dlsym(handle, f_start_name);
+    if ((error = dlerror()) != NULL)  {
+        fprintf(stderr, "%s\n", error);
+        exit(EXIT_FAILURE);
+    }
+    dlerror();    // Clear any existing error
+
+    // Call function start
+    if ((*start)(module) != 0)
         return -1;
+
+    //dlclose(handle);
+
 
 
     bson_destroy(module_instance);
