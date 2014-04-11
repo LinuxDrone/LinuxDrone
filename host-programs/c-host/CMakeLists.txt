@@ -29,6 +29,7 @@ set(EXTRA_LIBS
         #bson_shared
         D:/Projects/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libbson-1.0.so
 	rt
+        dl
 )
 
 add_executable(c-host ${INC} ${SRC})

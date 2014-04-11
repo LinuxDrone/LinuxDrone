@@ -139,11 +139,6 @@ module_GY87_t* c_gy87_create(void *handle)
 void c_gy87_delete(module_GY87_t* module)
 {
     stop(module);
-
-    free(module->module_info.module_type);
-    free(module->module_info.shmem_sets);
-    dlclose(module->module_info.dll_handle);
-    free(module);
 }
 
 
@@ -158,6 +153,7 @@ int c_gy87_init(module_GY87_t* module, const uint8_t* bson_data, uint32_t bson_l
 
 	// для каждого типа порождаемого объекта инициализируется соответсвующая структура
     // и указываются буферы (для обмена данными между основным и передающим потоком)
+    // GyroAccelMagTemp
     init_publisher_set(&module->GyroAccelMagTemp, module->module_info.instance_name, "GyroAccelMagTemp");
     module->GyroAccelMagTemp.obj1 = &module->obj1_GyroAccelMagTemp;
     module->GyroAccelMagTemp.obj2 = &module->obj2_GyroAccelMagTemp;

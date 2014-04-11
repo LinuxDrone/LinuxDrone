@@ -496,6 +496,11 @@ int stop(void* p_module)
 
     //int res = rt_heap_free(&module->h_shmem, module->shmem);
 
+    free(module->module_type);
+    free(module->shmem_sets);
+    dlclose(module->dll_handle);
+    free(module);
+
     return 0;
 }
 
