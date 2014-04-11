@@ -484,8 +484,15 @@ int start(void* p_module)
 }
 
 
-int stop(void* module)
+int stop(void* p_module)
 {
+    module_t* module = p_module;
+
+
+    // TODO: Удалить и все сервисы ксеномая
+    rt_task_delete(&module->task_transmit);
+    rt_task_delete(&module->task_main);
+
 
     //int res = rt_heap_free(&module->h_shmem, module->shmem);
 

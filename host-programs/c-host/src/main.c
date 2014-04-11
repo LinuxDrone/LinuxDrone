@@ -3,6 +3,9 @@
 #include <bson.h>
 #include "c-gy87.h"
 
+// Хранилище указателей на загруженные пускачем инстансы модулей
+bson_t instances;
+
 bson_t* get_bson_from_file() {
 	bson_json_reader_t *reader;
 	bson_error_t error;
@@ -182,9 +185,8 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
 
     fprintf(stdout, "so_name=%s\n", so_name);
 
-    void *handle;
+    void *handle; // Указатель на загруженную dll
     char *error;
-
     handle = dlopen(so_name, RTLD_NOW);
     if (!handle) {
         fprintf(stderr, "%s\n", dlerror());
@@ -205,7 +207,10 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
     dlerror();    // Clear any existing error
 
     // Call function Create instance (.so)
-    void* module = (*create)();
+    module_t* module = (*create)(handle);
+
+    module->module_type = malloc(strlen(module_type));
+    strcpy(module->module_type, module_type);
 
 
     char f_init_name[64] = "";
@@ -237,12 +242,51 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
     if ((*start)(module) != 0)
         return -1;
 
-    //dlclose(handle);
-
-
 
     bson_destroy(module_instance);
+
+    bson_append_int32 (&instances, instance_name, -1, (int32_t)module);
+
+    return 0;
 }
+
+
+int stop_instance(char* instance_name)
+{
+    // Ищем по имени инстанса, ссылку на него
+    bson_iter_t iter_l;
+    if (!bson_iter_init_find(&iter_l, &instances, instance_name))
+    {
+        fprintf(stderr, "funcrion:stop_instance, call:bson_iter_init_find, Error: not found node \"%s\" in instances\n", instance_name);
+        return -1;
+    }
+
+    module_t* module;
+    module = (module_t*)bson_iter_int32(&iter_l);
+
+    //printf("val poiner to module = 0x%08X\n", module);
+
+    // Указатель на загруженную dll
+    void *handle = module->dll_handle;
+    char *error;
+
+    char f_delete_name[64] = "";
+    strcat(f_delete_name, replace(module->module_type, '-', "_")); // FREE NEED
+    strcat(f_delete_name, "_delete");
+    delete_f f_delete = dlsym(handle, f_delete_name);
+    if ((error = dlerror()) != NULL)
+    {
+        fprintf(stderr, "%s\n", error);
+        exit(EXIT_FAILURE);
+    }
+    dlerror();    // Clear any existing error
+
+    // Call function delete
+    (*f_delete)(module);
+
+    return 0;
+}
+
 
 
 int main(int argc, char *argv[]) {
@@ -252,6 +296,10 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    // Инициализируем переменную (bson объект), в котором будем хранить ссылки на созданные инстансы
+    bson_init(&instances);
+
+    // Временное решение - грузить конфигурацию из файла, а не из базы
     bson_t* bson_configuration = get_bson_from_file();
 
 	bson_iter_t iter_m;
@@ -278,8 +326,13 @@ int main(int argc, char *argv[]) {
     bson_destroy(bson_configuration);
 
 
-	printf("END\n");
+    printf("\nPress ENTER for exit\n\n");
 	getchar();
+
+    for(im=1; im<argc; im++)
+    {
+        stop_instance(argv[im]);
+    }
 
     exit(EXIT_SUCCESS);
 }

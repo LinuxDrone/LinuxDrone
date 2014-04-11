@@ -123,9 +123,11 @@ void printGyroAccelMagTemp(GyroAccelMagTemp_t* obj)
 
 
 
-module_GY87_t* c_gy87_create()
+module_GY87_t* c_gy87_create(void *handle)
 {
     module_GY87_t* module = malloc(sizeof(module_GY87_t));
+    // Сохраним указатель на загруженную dll
+    module->module_info.dll_handle = handle;
     module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));
     module->module_info.shmem_sets[0]=&module->GyroAccelMagTemp;
     module->module_info.shmem_sets[1]=&module->Baro;
@@ -136,7 +138,11 @@ module_GY87_t* c_gy87_create()
 
 void c_gy87_delete(module_GY87_t* module)
 {
+    stop(module);
+
+    free(module->module_info.module_type);
     free(module->module_info.shmem_sets);
+    dlclose(module->module_info.dll_handle);
     free(module);
 }
 
