@@ -3,7 +3,9 @@
 
 #include "../../../libraries/c-sdk/include/module-functions.h"
 
-typedef enum {
+// Enum and Structure for output GyroAccelMagTemp
+typedef enum
+{
     accelX =        0b00000000000000000000000000000001,
     accelY =        0b00000000000000000000000000000010,
     accelZ =        0b00000000000000000000000000000100,
@@ -16,7 +18,9 @@ typedef enum {
     temperature =   0b00000000000000000000001000000000
 } fields_GyroAccelMagTemp_t;
 
-typedef struct {
+
+typedef struct
+{
 	int accelX;
 	int accelY;
 	int accelZ;
@@ -30,9 +34,18 @@ typedef struct {
 } GyroAccelMagTemp_t;
 
 
-typedef struct {
+// Enum and Structure for output Baro
+typedef enum
+{
+    pressure =        0b00000000000000000000000000000001
+} fields_Baro_t;
+
+
+typedef struct
+{
 	int pressure;
 } Baro_t;
+
 
 
 typedef struct {

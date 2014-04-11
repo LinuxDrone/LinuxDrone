@@ -59,6 +59,14 @@ typedef t_cycle_function* p_cycle_function;
 
 typedef struct
 {
+    // Указатель на подгруженную библиотеку, в которой располагается код моудля.
+    // Необходимо хранить для того, чтобы при выгрузке модуля вызвать dlclose и освободить ресурсы
+    void *dll_handle;
+
+    // Имя типа модуля (например: c-gy87)
+    char* module_type;
+
+    // Имя инстанса модуля (например: c-gy87-1)
 	const char* instance_name;
 
 	/**
@@ -124,7 +132,7 @@ typedef struct
 
 
 // Тип функции создания модуля
-typedef module_t* (*create_f)();
+typedef module_t* (*create_f)(void *);
 
 // Тип функции инициализации модуля
 typedef int (*init_f)(module_t*, const uint8_t*, uint32_t);

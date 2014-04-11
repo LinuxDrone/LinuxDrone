@@ -1,0 +1,119 @@
+{
+    "type": "module_def",
+    "name": "test-receiver",
+    "version": 7,
+    "Task Priority": 80,
+    "Task Period": 200,
+    "Notify on change": false,
+    "description": {
+        "en": "test-receiver sensors set",
+        "ru": "Набор датчиков на плате test-receiver"
+    },
+    "paramsDefinitions": [
+        {
+            "name": "I2C Device",
+            "displayName": {
+                "en": "Bus Name",
+                "ru": "Имя шины"
+            },
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "string",
+            "defaultValue": "/dev/i2c-1",
+            "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
+            "unitMeasured": ""
+        },
+        {
+            "name": "Test Number Param",
+            "displayName": {
+                "en": "Bus Name",
+                "ru": "Имя шины"
+            },
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "number",
+            "defaultValue": 123,
+            "validValues" : [56,123],
+            "unitMeasured": "int"
+        },
+        {
+            "name": "Test Boolean Param",
+            "displayName": {
+                "en": "Bus Name",
+                "ru": "Имя шины"
+            },
+            "description": {
+                "ru": "Название девайса"
+            },
+            "type": "boolean",
+            "defaultValue": false,
+            "unitMeasured": "bool"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "Gyro+Accel+Mag+Temp",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "accelX": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "accelY": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "accelZ": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "gyroX": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "gyroY": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "gyroZ": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "magX": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "magY": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "magZ": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "temperature": {
+                        "type": "number",
+                        "required": true
+                    }
+                }
+            }
+        },
+        {
+            "name": "Baro",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "pressure": {
+                        "type": "number",
+                        "required": true
+                    }
+                }
+            }
+        }
+    ]
+}
