@@ -152,8 +152,57 @@ function CreateModuleDefinition(module_name) {
         }
     };
 
-    return JSON.stringify(obj_def, undefined, 2);
+    return obj_def;
 }
+
+function CreateModuleCFile(obj_def){
+    var module_name = obj_def.name.replace(/-/g, "_");
+    var r = "";
+    r += "#include \"../include/generated_code.h\"\n\n";
+    r += "void "+module_name+"_run (module_"+module_name+"_t *module)\n";
+    r += "{\n";
+    r += "    int cycle=0;\n";
+    r += "    while(1) {\n";
+    r += "        get_input_data(module);\n\n";
+    r += "        // проверим, обновились ли данные\n";
+    r += "        if(module->module_info.updated_input_properties!=0)\n";
+    r += "        {\n";
+    r += "            // есть новые данные\n";
+    r += "        }\n";
+    r += "        else\n";
+    r += "        {\n";
+    r += "            // вышел таймаут\n";
+    r += "        }\n\n";
+
+    obj_def.outputs.forEach(function (out) {
+        var outName = out.name.replace(/\+/g, "");
+        r += "        "+outName+"_t* obj"+outName+";\n";
+        r += "        checkout_"+outName+"(module, &obj"+outName+");\n";
+        for (var key in out.Schema.properties) {
+            r += "        obj"+outName+"->"+key+" = cycle;\n";
+        }
+        r += "        checkin_"+outName+"(module, &obj"+outName+");\n\n";
+    });
+
+    var mask="";
+    for (var key in obj_def.inputShema.properties) {
+        if(mask!=""){
+            mask += " | ";
+        }
+        mask += key;
+    }
+
+    r += "        // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу\n";
+    r += "        module->module_info.refresh_input_mask = "+mask+";\n\n";
+    r += "        // Наглое считывание данных из разделяемой памяти\n";
+    r += "        //int res = refresh_input(module);\n\n";
+    r += "        cycle++;\n";
+    r += "    }\n";
+    r += "}\n";
+
+    return r;
+}
+
 
 function main() {
     if (process.argv.length < 3) {
@@ -180,7 +229,8 @@ function main() {
     });
 
 
-    fs.writeFile(module_name + "/" + module_name + '.def.json', CreateModuleDefinition(module_name), function (err) {
+    var obj_def = CreateModuleDefinition(module_name);
+    fs.writeFile(module_name + "/" + module_name + '.def.json', JSON.stringify(obj_def, undefined, 2), function (err) {
         if (err) return console.log(err);
     });
 
@@ -203,6 +253,10 @@ function main() {
             }
         });
     }
+
+    fs.writeFile(module_name + "/src/" + module_name + '.c', CreateModuleCFile(obj_def), function (err) {
+        if (err) return console.log(err);
+    });
 
     process.argv[2] = module_name + "/" + module_name + '.def.json';
     process.argv[3] = module_name;
