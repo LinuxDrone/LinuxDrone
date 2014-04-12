@@ -23,8 +23,10 @@ public:
 	CSerial();        
 	~CSerial();
     	
+    virtual int serialWrite(const void* data, size_t size) = 0;
     virtual int serialWrite(CByteArray const &data) = 0;
 	virtual int serialRead(void *data, size_t size) = 0;
+    virtual size_t bytesToRead() = 0;
         
     CString getPortName();
     int getPortSpeed();        

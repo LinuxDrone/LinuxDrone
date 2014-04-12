@@ -29,9 +29,11 @@ class CSerialUART : public CSerial
 {
 public:
 
-    int serialWrite(CByteArray const &data) override;
-    int serialRead(void *data, size_t size) override;
-        
+    virtual int serialWrite(const void* data, size_t size) override;
+    virtual int serialWrite(CByteArray const &data) override;
+    virtual int serialRead(void *data, size_t size) override;
+    virtual size_t bytesToRead() override;
+
     bool portOpen() override;
     bool portClose() override;        
     
