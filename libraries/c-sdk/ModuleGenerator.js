@@ -1,83 +1,83 @@
-function Create_H_file(module)
+function make_structures(properties, portName)
 {
+    var r = "";
+    // формирование перечисления
+    r += "// Enum and Structure for port " + portName + "\n";
+    r += "typedef enum\n";
+    r += "{\n";
+    var i = 0;
+    for (var key in properties) {
+        if (i != 0) {
+            r += ",\n";
+        }
+        r += "\t" + key + " =\t0b";
+        for (var c = 0; c < 32; c++) {
+            if (i == 31 - c) {
+                r += "1";
+            }
+            else {
+                r += "0";
+            }
+        }
+        i++;
+    }
+    r += "\n";
+    r += "} fields_" + portName + "_t;\n\n";
+
+    // формирование структуры выходного объекта
+    r += "typedef struct\n";
+    r += "{\n";
+    for (var key in properties) {
+        // TODO: Pay attention property type (need realize)
+        r += "\tint " + key + ";\n";
+    }
+    r += "} " + portName + "_t;\n\n";
+    return r;
+}
+
+function Create_H_file(module) {
+    var module_type = module.name.replace(/-/g,"_");
     var r = "";
 
     r += "#ifndef GENERATED_CODE_H_\n";
-    r += "#define GENERATED_CODE_H_\n";
+    r += "#define GENERATED_CODE_H_\n\n";
 
     r += "#include \"../../../libraries/c-sdk/include/module-functions.h\"\n\n";
 
-    r += "// Enum and Structure for output GyroAccelMagTemp\n";
-    r += "typedef enum\n";
-    r += "{\n";
-    r += "    accelX =        0b00000000000000000000000000000001,\n";
-    r += "    accelY =        0b00000000000000000000000000000010,\n";
-    r += "    accelZ =        0b00000000000000000000000000000100,\n";
-    r += "    gyroX =         0b00000000000000000000000000001000,\n";
-    r += "    gyroY =         0b00000000000000000000000000010000,\n";
-    r += "    gyroZ =         0b00000000000000000000000000100000,\n";
-    r += "    magX =          0b00000000000000000000000001000000,\n";
-    r += "    magY =          0b00000000000000000000000010000000,\n";
-    r += "    magZ =          0b00000000000000000000000100000000,\n";
-    r += "    temperature =   0b00000000000000000000001000000000\n";
-    r += "} fields_GyroAccelMagTemp_t;\n\n";
+    if ('inputShema' in module) {
+        r += make_structures(module.inputShema.properties, "input");
+        //r += "\t" + input_struct + "_t input4modul;\n";
+    }
+
+    module.outputs.forEach(function (out) {
+        var outName = out.name.replace(/\+/g, "");
+        r += make_structures(out.Schema.properties, outName);
+    });
 
 
-    r += "typedef struct\n";
-    r += "{\n";
-    r += "    int accelX;\n";
-    r += "    int accelY;\n";
-    r += "    int accelZ;\n";
-    r += "    int gyroX;\n";
-    r += "    int gyroY;\n";
-    r += "    int gyroZ;\n";
-    r += "    int magX;\n";
-    r += "    int magY;\n";
-    r += "    int magZ;\n";
-    r += "    int temperature;\n";
-    r += "} GyroAccelMagTemp_t;\n\n";
-
-
-    r += "// Enum and Structure for output Baro\n";
-    r += "typedef enum\n";
-    r += "{\n";
-    r += "    pressure =        0b00000000000000000000000000000001\n";
-    r += "} fields_Baro_t;\n\n";
-
-
-    r += "typedef struct\n";
-    r += "{\n";
-    r += "    int pressure;\n";
-    r += "} Baro_t;\n\n";
-
-
-
+    // формирование структуры модуля
+    r += "\n// Module Structure\n";
     r += "typedef struct {\n";
-    r += "    module_t module_info;\n";
-
-    r += "    // может не быть если объект без входа\n";
-    r += "    GyroAccelMagTemp_t input4modul;\n";
-
-    r += "    shmem_publisher_set_t  GyroAccelMagTemp;\n";
-    r += "    shmem_publisher_set_t  Baro;\n";
-
-    r += "    GyroAccelMagTemp_t obj1_GyroAccelMagTemp;\n";
-    r += "    GyroAccelMagTemp_t obj2_GyroAccelMagTemp;\n";
-
-    r += "    Baro_t obj1_Baro;\n";
-    r += "    Baro_t obj2_Baro;\n";
-    r += "} module_GY87_t;\n\n";
+    r += "\tmodule_t module_info;\n";
+    if ('inputShema' in module) {
+        r += "\tinput_t input4modul;\n";
+    }
+    module.outputs.forEach(function (out) {
+        var outName = out.name.replace(/\+/g, "");
+        r += "\n\t// набор данных для выхода "+outName+"\n";
+        r += "\tshmem_publisher_set_t  " + outName + ";\n";
+        r += "\t" + outName + "_t obj1_" + outName + ";\n";
+        r += "\t" + outName + "_t obj2_" + outName + ";\n";
+    });
+    r += "} module_" + module_type + "_t;\n\n";
 
 
-
-    r += "module_GY87_t* c_gy87_create();\n";
-
-    r += "int c_gy87_init(module_GY87_t* module, const uint8_t* bson_data, uint32_t bson_len);\n";
-
-    r += "int c_gy87_start();\n";
-
-    r += "void c_gy87_delete(module_GY87_t* module);\n";
-
+    // Формирование объявлений функций
+    r += "\n// Helper functions\n";
+    r += "module_" + module_type + "_t* " + module_type + "_create();\n";
+    r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len);\n";
+    r += "int " + module_type + "_start();\n";
+    r += "void " + module_type + "_delete(module_" + module_type + "_t* module);\n\n";
     r += "#endif\n";
 
     return r;
