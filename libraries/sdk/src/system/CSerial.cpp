@@ -44,12 +44,17 @@ CString CSerial::getPortFile()
 bool CSerial::setPortFile(CString const &portFile)
 {
     m_portFile = portFile;
+    return true;
 }
+
 bool CSerial::setPortSpeed(int portSpeed)
 {
     m_portSpeed = portSpeed;
+    return true;
 }
+
 bool CSerial::setPortName(CString const &portName)
 {
     m_portName = portName;
+    return true;
 }
