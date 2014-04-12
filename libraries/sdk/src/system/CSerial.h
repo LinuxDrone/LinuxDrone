@@ -23,16 +23,16 @@ public:
 	CSerial();        
 	~CSerial();
     	
-    virtual int serial_write(CByteArray data) = 0;
-	virtual int serial_read(void* data, size_t size) = 0; 
+    virtual int serialWrite(CByteArray const &data) = 0;
+	virtual int serialRead(void *data, size_t size) = 0;
         
     CString getPortName();
     int getPortSpeed();        
     CString getPortFile();
         
-    bool setPortFile(CString portFile);
+    bool setPortFile(CString const &portFile);
     bool setPortSpeed(int portSpeed);
-    bool setPortName(CString portName);
+    bool setPortName(CString const &portName);
         
     bool isOpened();
         

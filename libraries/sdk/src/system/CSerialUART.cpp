@@ -83,7 +83,7 @@ bool CSerialUART::portClose()
     m_portName = CString();
 }
     
-int CSerialUART::serial_write(CByteArray data)
+int CSerialUART::serialWrite(CByteArray const &data)
 {
     if (!isOpened()) 
     {
@@ -103,7 +103,7 @@ int CSerialUART::serial_write(CByteArray data)
     return len;
 }
 
-int CSerialUART::serial_read(void* data, size_t size)
+int CSerialUART::serialRead(void *data, size_t size)
 {
     int tot_b = 0;
     int bytesRead=0;

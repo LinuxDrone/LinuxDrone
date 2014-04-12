@@ -29,12 +29,12 @@ class CSerialUART : public CSerial
 {
 public:
 
-    int serial_write(CByteArray data) override;
-    int serial_read(void* data, size_t size) override;
+    int serialWrite(CByteArray const &data) override;
+    int serialRead(void *data, size_t size) override;
         
     bool portOpen() override;
     bool portClose() override;        
     
-    private:
-        int m_fhandler;
+private:
+    int m_fhandler;
 };

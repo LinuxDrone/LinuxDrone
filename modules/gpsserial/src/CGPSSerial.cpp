@@ -125,10 +125,10 @@ bool CGpsSerial::initGpsSerial()
     for(int i=0;i<l_gpsInitCommands.size();i++)
     {
         CByteArray elemento = l_gpsInitCommands[i];
-        l_retgps = m_serialbus->serial_write(elemento);
+        l_retgps = m_serialbus->serialWrite(elemento);
         CSystem::sleep(100);
         char str_retorno[1024];        
-        int size = m_serialbus->serial_read(&str_retorno,1024);
+        int size = m_serialbus->serialRead(&str_retorno, 1024);
     }
     return l_return;
 }
@@ -141,11 +141,11 @@ uint32_t CGpsSerial::readSentence()
     CString l_tmpbuf;
     int l_retgps;
 
-    l_retgps = m_serialbus->serial_write(l_queryCommand);
+    l_retgps = m_serialbus->serialWrite(l_queryCommand);
    
     CSystem::sleep(100);
     char str_retorno[512];    
-    int size = m_serialbus->serial_read(&str_retorno,512);        
+    int size = m_serialbus->serialRead(&str_retorno, 512);
     CByteArray ba_return = CByteArray(str_retorno,size,false);
     if(ba_return.size() > 0)
     {    

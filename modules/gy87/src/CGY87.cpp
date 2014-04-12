@@ -145,7 +145,7 @@ bool CGY87::initMpu()
 			break;
 		}
 	}
-	if (ret == false) {
+	if (!ret) {
 		return false;
 	}
 	CSystem::sleep(10);
@@ -171,7 +171,7 @@ bool CGY87::initMpu()
 void CGY87::configureRanges()
 {
 //	CGY87_SCALE_2000_DEG, CGY87_ACCEL_8G, CGY87_LOWPASS_256_HZ
-    if (setReg(MpuRegs_DlpfCfg, MpuFilter_Lowpass256Hz) != true) {
+    if (!setReg(MpuRegs_DlpfCfg, MpuFilter_Lowpass256Hz)) {
         return;
     }
 
@@ -208,7 +208,7 @@ bool CGY87::getReg(uint8_t reg, uint8_t* data, size_t size /*= 1*/)
 		return false;
 	}
 	len = m_bus.read(data, size);
-	if (int (size) != len) {
+	if (size != len) {
 		return false;
 	}
 	return true;
