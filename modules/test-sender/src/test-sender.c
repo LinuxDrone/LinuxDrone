@@ -1,6 +1,7 @@
-#include "../include/test-sender.h"
+#include "../include/generated_code.h"
 
-void test_sender_run (module_GY87_t *module)
+
+void test_sender_run (module_test_sender_t *module)
 {
     int cycle=0;
     while(1) {
@@ -16,7 +17,7 @@ void test_sender_run (module_GY87_t *module)
             // вышел таймаут
         }
 
-
+/*
         GyroAccelMagTemp_t* objGAMT;
         checkout_GyroAccelMagTemp(module, &objGAMT);
         objGAMT->accelX = cycle;
@@ -36,9 +37,10 @@ void test_sender_run (module_GY87_t *module)
 
         // Наглое считывание данных из разделяемой памяти
         //int res = refresh_input(module);
-
+*/
         cycle++;
     }
 }
+
 
 

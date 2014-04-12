@@ -1,5 +1,4 @@
-function make_structures(properties, portName)
-{
+function make_structures(properties, portName) {
     var r = "";
     // формирование перечисления
     r += "// Enum and Structure for port " + portName + "\n";
@@ -35,12 +34,70 @@ function make_structures(properties, portName)
     return r;
 }
 
+function make_Structure2Bson(properties, portName) {
+    var r = "";
+    r += "// Convert structure " + portName + " to bson\n";
+    r += "int " + portName + "2bson(" + portName + "_t* obj, bson_t* bson)\n";
+    r += "{\n";
+    for (var key in properties) {
+        // TODO: Pay attention property type (need realize)
+        r += "\tbson_append_int32 (bson, \"" + key + "\", -1, obj->" + key + ");\n";
+    }
+    r += "\treturn 0;\n";
+    r += "}\n\n";
+
+    return r;
+}
+
+function make_Bson2Structure(properties, portName) {
+    var r = "";
+    r += "// Convert bson to structure " + portName + "\n";
+    r += "int bson2" + portName + "(module_t* module, bson_t* bson)\n";
+    r += "{\n";
+    r += "    if(!module || !module->input_data || !bson)\n";
+    r += "    {\n";
+    r += "        printf(\"Error: func bson2" + portName + ", NULL parameter\\n\");\n";
+    r += "        return -1;\n";
+    r += "    }\n\n";
+    r += "    " + portName + "_t* obj = (" + portName + "_t*)module->input_data;\n";
+    r += "    bson_iter_t iter;\n";
+    r += "    if(!bson_iter_init (&iter, bson))\n";
+    r += "    {\n";
+    r += "        printf(\"Error: func bson2" + portName + ", bson_iter_init\\n\");\n";
+    r += "        return -1;\n";
+    r += "    }\n\n";
+    r += "    while(bson_iter_next(&iter))\n";
+    r += "    {\n";
+    r += "        const char* key = bson_iter_key (&iter);\n\n";
+    for (var key in properties) {
+        // TODO: Pay attention property type (need realize)
+        r += "        if(!strncmp(key, \"" + key + "\", 100))\n";
+        r += "        {\n";
+        r += "            obj->" + key + " = bson_iter_int32(&iter);\n";
+        r += "            module->updated_input_properties |= " + key + ";\n";
+        r += "            continue;\n";
+        r += "        }\n";
+    }
+    r += "    }\n";
+    r += "    return 0;\n";
+    r += "}\n\n";
+
+    r += "// Helper function. Print structure " + portName + "\n";
+    r += "void print_" + portName + "(" + portName + "_t* obj)\n";
+    r += "{\n";
+    for (var key in properties) {
+        r += "    printf(\"" + key + "=%i\\n\", obj->" + key + ");\n";
+    }
+    r += "}\n\n";
+
+    return r;
+}
+
 function Create_H_file(module) {
-    var module_type = module.name.replace(/-/g,"_");
+    var module_type = module.name.replace(/-/g, "_");
     var r = "";
 
-    r += "#ifndef GENERATED_CODE_H_\n";
-    r += "#define GENERATED_CODE_H_\n\n";
+    r += "#pragma once\n\n";
 
     r += "#include \"../../../libraries/c-sdk/include/module-functions.h\"\n\n";
 
@@ -64,7 +121,7 @@ function Create_H_file(module) {
     }
     module.outputs.forEach(function (out) {
         var outName = out.name.replace(/\+/g, "");
-        r += "\n\t// набор данных для выхода "+outName+"\n";
+        r += "\n\t// набор данных для выхода " + outName + "\n";
         r += "\tshmem_publisher_set_t  " + outName + ";\n";
         r += "\t" + outName + "_t obj1_" + outName + ";\n";
         r += "\t" + outName + "_t obj2_" + outName + ";\n";
@@ -78,18 +135,134 @@ function Create_H_file(module) {
     r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len);\n";
     r += "int " + module_type + "_start();\n";
     r += "void " + module_type + "_delete(module_" + module_type + "_t* module);\n\n";
-    r += "#endif\n";
+
+    return r;
+}
+
+function Create_C_file(module) {
+    var module_type = module.name.replace(/-/g, "_");
+    var r = "";
+
+    r += "#include \"../include/generated_code.h\"\n\n";
+
+    r += "// количество типов выходных объектов\n";
+    r += "#define count_shmem_sets " + module.outputs.length + "\n\n";
+
+    r += "extern t_cycle_function " + module_type + "_run;\n\n";
+
+    if ('inputShema' in module) {
+        r += make_Bson2Structure(module.inputShema.properties, "input");
+    }
+
+    module.outputs.forEach(function (out) {
+        var outName = out.name.replace(/\+/g, "");
+
+        r += make_Structure2Bson(out.Schema.properties, outName);
+        r += make_Bson2Structure(out.Schema.properties, outName);
+    });
+
+
+    r += "// Create module.\n";
+    r += "module_" + module_type + "_t* " + module_type + "_create(void *handle)\n";
+    r += "{\n";
+    r += "    module_" + module_type + "_t* module = malloc(sizeof(module_" + module_type + "_t));\n";
+    r += "    // Сохраним указатель на загруженную dll\n";
+    r += "    module->module_info.dll_handle = handle;\n";
+    r += "    module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));\n";
+    module.outputs.forEach(function (out) {
+        var outName = out.name.replace(/\+/g, "");
+        r += "    module->module_info.shmem_sets[0]=&module->" + outName + ";\n";
+    });
+    r += "    module->module_info.shmem_sets[" + module.outputs.length + "]=NULL;\n";
+    r += "    return module;\n";
+    r += "}\n\n";
+
+
+    r += "// Stop and delete module. Free memory.\n";
+    r += "void " + module_type + "_delete(module_" + module_type + "_t* module)\n";
+    r += "{\n";
+    r += "    stop(module);\n";
+    r += "}\n\n";
+
+
+    r += "// Init module.\n";
+    r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len)\n";
+    r += "{\n";
+    r += "    int res = init(&module->module_info, bson_data, bson_len);\n\n";
+    module.outputs.forEach(function (out) {
+        var outName = out.name.replace(/\+/g, "");
+        r += "    // " + outName + "\n";
+        r += "    // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа\n";
+        r += "    // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации\n";
+        r += "    module->" + outName + ".shmem_len = 300;\n";
+        r += "    // для каждого типа порождаемого объекта инициализируется соответсвующая структура\n";
+        r += "    // и указываются буферы (для обмена данными между основным и передающим потоком)\n";
+        r += "    init_publisher_set(&module->" + outName + ", module->module_info.instance_name, \"" + outName + "\");\n";
+        r += "    module->" + outName + ".obj1 = &module->obj1_" + outName + ";\n";
+        r += "    module->" + outName + ".obj2 = &module->obj2_" + outName + ";\n";
+        r += "    module->" + outName + ".obj2bson = (p_obj2bson)&" + outName + "2bson;\n";
+        r += "    module->" + outName + ".bson2obj = (p_bson2obj)&bson2" + outName + ";\n";
+        r += "    module->" + outName + ".print_obj = (p_print_obj)&print_" + outName + ";\n\n";
+    });
+    if ('inputShema' in module) {
+        r += "    // Input\n";
+        r += "    memset(&module->input4modul, 0, sizeof(input_t));\n";
+        r += "    module->module_info.input_data = &module->input4modul;\n";
+        r += "    module->module_info.input_bson2obj = (p_bson2obj)&bson2input;\n";
+    }
+    r += "\n";
+    r += "    module->module_info.func = &" + module_type + "_run;\n\n";
+    r += "    return res;\n";
+    r += "}\n\n";
+
+
+    r += "int " + module_type + "_start(module_" + module_type + "_t* module)\n";
+    r += "{\n";
+    r += "    if (start(module) != 0)\n";
+    r += "        return -1;\n";
+    r += "    return 0;\n";
+    r += "}\n\n";
+
+
+    module.outputs.forEach(function (out) {
+        var outName = out.name.replace(/\+/g, "");
+        r += "/**\n";
+        r += "* @brief checkout4writer_" + outName + "\n";
+        r += "* /~russian    Заполняет указатель адресом на структуру " + outName + "_t,\n";
+        r += "*              которую можно заполнять данными для последующей передачи в разделяемую память\n";
+        r += "* @param obj\n";
+        r += "* @return\n";
+        r += "* /~russian 0 в случае успеха\n";
+        r += "*/\n";
+        r += "int checkout_" + outName + "(module_" + module_type + "_t* module, " + outName + "_t** obj)\n";
+        r += "{\n";
+        r += "    return checkout4writer(module, &module->" + outName + ", obj);\n";
+        r += "}\n\n";
+
+
+        r += "/**\n";
+        r += "* @brief checkin4writer_" + outName + "\n";
+        r += "* /~ Возвращает объект системе (данные будут переданы в разделяемую память)\n";
+        r += "* @param obj\n";
+        r += "* @return\n";
+        r += "*/\n";
+        r += "int checkin_" + outName + "(module_" + module_type + "_t* module, " + outName + "_t** obj)\n";
+        r += "{\n";
+        r += "    return checkin4writer(module, &module->" + outName + ", obj);\n";
+        r += "}\n\n";
+    });
 
     return r;
 }
 
 function main() {
-    if (process.argv.length < 3) {
-        console.log("Use " + process.argv[0] + " " + process.argv[1] + " YOUR_MODULE.def.json");
+    if (process.argv.length < 4) {
+        console.log("Use " + process.argv[0] + " " + process.argv[1] + " YOUR_MODULE.def.json OUT_DIR");
         return -1;
     }
 
     var file_module_definition = process.argv[2];
+    var out_dir = process.argv[3];
     var fs = require('fs');
 
     fs.readFile(file_module_definition, 'utf8', function (err, data) {
@@ -103,11 +276,15 @@ function main() {
 
         var text_H_file = Create_H_file(module);
         //console.log(text_H_file);
-
-        fs.writeFile('generated_code.h', text_H_file, function (err) {
+        fs.writeFile(out_dir + '/include/generated_code.h', text_H_file, function (err) {
             if (err) return console.log(err);
         });
 
+        var text_C_file = Create_C_file(module);
+        //console.log(text_H_file);
+        fs.writeFile(out_dir + '/src/generated_code.c', text_C_file, function (err) {
+            if (err) return console.log(err);
+        });
     });
 }
 

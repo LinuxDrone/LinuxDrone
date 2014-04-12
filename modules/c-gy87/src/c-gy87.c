@@ -1,6 +1,6 @@
 #include "../include/c-gy87.h"
 
-void c_gy87_run (module_GY87_t *module)
+void c_gy87_run (module_c_gy87_t *module)
 {
     int cycle=0;
     while(1) {
@@ -15,7 +15,6 @@ void c_gy87_run (module_GY87_t *module)
         {
             // вышел таймаут
         }
-
 
         GyroAccelMagTemp_t* objGAMT;
         checkout_GyroAccelMagTemp(module, &objGAMT);
