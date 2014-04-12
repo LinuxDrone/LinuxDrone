@@ -57,7 +57,7 @@ CString	CGPSParser::getTime()
 	return m_Time;
 }
 
-void CGPSParser::setSentence(CString sentence)
+void CGPSParser::setSentence(CByteArray sentence)
 {
 	m_Sentence = sentence;
 }
@@ -66,3 +66,8 @@ bool CGPSParser::getValidParser()
 {
 	return m_validChecksum;
 }
+
+/*CString CGPSParser::getFullSentence()
+{
+ 	return m_Sentence;
+}*/

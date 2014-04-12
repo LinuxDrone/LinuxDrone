@@ -82,33 +82,49 @@ bool CSerialUART::portClose()
     m_portFile = CString();
     m_portName = CString();
 }
-
-int CSerialUART::serial_write(CString &data)
+    
+int CSerialUART::serial_write(CByteArray data)
 {
     if (!isOpened()) 
     {
         return -1;
     }
-    //Logger() << "Write (" << data << ")";
-    int len = write(m_fhandler, data.data(), data.size()+5);
+    int len=0;
+    //Logger() << "Size " << data.size();
+    if(data.isString())
+    {
+        CString msg = data.data();
+        len = write(m_fhandler, msg.data(), msg.size());
+    }
+    else
+    {    
+        len = write(m_fhandler, data.data(), data.size());
+    }
     return len;
 }
 
-int CSerialUART::serial_read(CString &data, size_t size)
+int CSerialUART::serial_read(void* data, size_t size)
 {
-	int l_len=0;
-	
-	char buff[150];
+    int tot_b = 0;
+    int bytesRead=0;
+    int l_cicle = 0;
 
     if (!isOpened()) 
     {
     	Logger() << "port closed on read operation";
         return -1;
     }
-    memset(buff,'\0',sizeof(buff));
-    l_len = read(m_fhandler,buff, 1);
-
-   	data = buff;
-    return data.size();
-    
+    ioctl(m_fhandler, FIONREAD, &tot_b);
+    while(tot_b == 0)
+    {
+        ioctl(m_fhandler, FIONREAD, &tot_b);
+        l_cicle++;
+        //Logger() << "Ciclo:" << l_cicle;
+        if(l_cicle >= 400)
+        {
+            break;
+        }
+    }    
+    bytesRead = read(m_fhandler,data,tot_b);
+    return bytesRead;
 }

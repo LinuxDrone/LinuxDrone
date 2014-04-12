@@ -19,7 +19,10 @@
 class CGPSProtocol
 {
 public:
-	virtual std::vector<CString> getInitCommands() = 0;
-	virtual CString	getQueryCommand() = 0;
-	virtual int getEndSentence() = 0;	
+	virtual std::vector<CByteArray> getInitCommands() = 0;
+	virtual CByteArray	getQueryCommand() = 0;
+	CString getProtocolType();
+
+protected:
+	CString m_ProtocolType;
 };

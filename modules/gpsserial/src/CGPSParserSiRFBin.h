@@ -14,23 +14,32 @@
 #include "text/CString"
 #include "system/Logger"
 #include "CGPSParser.h"
+#include "core/CByteArray"
+#include <string.h>
 
-
-class CGPSParserNMEA : public CGPSParser
+class CGPSParserSiRFBin : public CGPSParser
 {
 	
 public:
 
-	CGPSParserNMEA();        
-	CGPSParserNMEA(CString sentence);        
-	~CGPSParserNMEA();
+	CGPSParserSiRFBin();        
+	CGPSParserSiRFBin(CByteArray sentence);        
+	~CGPSParserSiRFBin();
 
 	bool parseSentence() override;
 
 private:	
-	
+	int m_payloadsize=0;	
 	bool m_validChecksum; //If checksum is valid	
-	bool validade_checksum(CString sentence);
-	int hex2dec(char hexdigit); 
-	CString l_sentence;
+	int m_year=0;
+	int m_seconds=0;
+	double m_lat1=0;
+	double m_lon1=0;
+	double m_alt1=0;
+	int m_fix1=0;
+	int m_sat=0;
+	
+	bool checkSum();
+	unsigned int swaplow(unsigned char b1, unsigned char b2);
+	int swaphigh(unsigned char b1, unsigned char b2,unsigned char b3, unsigned char b4);
 };

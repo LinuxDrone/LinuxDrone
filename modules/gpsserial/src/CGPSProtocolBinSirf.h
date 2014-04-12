@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------
 // This file was created as a part of the LinuxDrone project:
-//                http://www.linuxdrone.org
+//                http://www.linuxdroneBin
 //
 // Distributed under the Creative Commons Attribution-ShareAlike 4.0
 // International License (see accompanying License.txt file or a copy
@@ -11,30 +11,17 @@
 //--------------------------------------------------------------------
 
 #pragma once
-
-#include "CSerial.h"
-#include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <errno.h>
-#include <termios.h>
-#include <system/Logger>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
 #include "core/CByteArray"
+#include <vector>
+#include "CGPSProtocol.h"
+#include "system/Logger"
 
-class CSerialUART : public CSerial
+class CGPSProtocolBinSirf : public CGPSProtocol
 {
 public:
-
-    int serial_write(CByteArray data) override;
-    int serial_read(void* data, size_t size) override;
-        
-    bool portOpen() override;
-    bool portClose() override;        
-    
-    private:
-        int m_fhandler;
+	CGPSProtocolBinSirf();	
+	~CGPSProtocolBinSirf();
+	
+	std::vector<CByteArray> getInitCommands() override;
+	CByteArray	getQueryCommand() override;
 };

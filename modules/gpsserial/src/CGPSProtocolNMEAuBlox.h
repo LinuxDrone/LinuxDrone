@@ -21,7 +21,6 @@ public:
 	CGPSProtocolNMEAuBlox();	
 	~CGPSProtocolNMEAuBlox();
 	
-	std::vector<CString> getInitCommands() override;
-	CString	getQueryCommand() override;
-	int getEndSentence() override;
+	std::vector<CByteArray> getInitCommands() override;
+	CByteArray	getQueryCommand() override;
 };
