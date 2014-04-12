@@ -13,7 +13,6 @@
 #include "CGPSSerial.h"
 #include "my_memory"
 
-
 extern "C" 
 {
     CModule* moduleCreator()
@@ -30,7 +29,8 @@ extern "C"
 CGpsSerial::CGpsSerial() :
 	CModule(1024)
 {
-
+    m_serialType  = CSerialBus::SerialType_Unknown;
+    m_serialSpeed = 0;
 }
 
 CGpsSerial::~CGpsSerial()
@@ -130,7 +130,7 @@ bool CGpsSerial::initGpsSerial()
         char str_retorno[1024];        
         int size = m_serialbus->serialRead(&str_retorno, 1024);
     }
-    return l_return;
+    return (bool) l_return;
 }
 
 uint32_t CGpsSerial::readSentence()

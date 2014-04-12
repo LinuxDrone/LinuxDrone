@@ -39,7 +39,7 @@ private:
     void moduleTask();
     uint32_t readSentence();
     
-    //Variables
+//Variables
     CSerial* m_serialbus;
     CString m_serialPort;
     CString m_sentence;
