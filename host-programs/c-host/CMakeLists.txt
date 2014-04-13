@@ -14,6 +14,7 @@ file(GLOB_RECURSE INC "include/*")
 file(GLOB_RECURSE SRC "src/*.c")
 
 include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
+include_directories(../../tools/rootfs/beaglebone/usr/local/include/libmongoc-1.0)
 include_directories(../../modules/c-gy87/include)
 
 
@@ -28,6 +29,7 @@ set(EXTRA_LIBS
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
     #bson_shared
     /Users/vrubel/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libbson-1.0.so
+    /Users/vrubel/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libmongoc-1.0.so
     #D:/Projects/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libbson-1.0.so
     rt
     dl
