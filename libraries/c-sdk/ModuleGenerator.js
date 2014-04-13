@@ -143,7 +143,7 @@ function Create_C_file(module) {
     var module_type = module.name.replace(/-/g, "_");
     var r = "";
 
-    r += "#include \"../include/generated_code.h\"\n\n";
+    r += "#include \"../include/"+module_type+".helper.h\"\n\n";
 
     r += "// количество типов выходных объектов\n";
     r += "#define count_shmem_sets " + module.outputs.length + "\n\n";
@@ -272,17 +272,17 @@ function main() {
         }
 
         var module = JSON.parse(data);
-        //console.dir(module);
+        var module_type = module.name.replace(/-/g, "_");
 
         var text_H_file = Create_H_file(module);
         //console.log(text_H_file);
-        fs.writeFile(out_dir + '/include/generated_code.h', text_H_file, function (err) {
+        fs.writeFile(out_dir + "/include/"+module_type+".helper.h", text_H_file, function (err) {
             if (err) return console.log(err);
         });
 
         var text_C_file = Create_C_file(module);
         //console.log(text_H_file);
-        fs.writeFile(out_dir + '/src/generated_code.c', text_C_file, function (err) {
+        fs.writeFile(out_dir + "/src/"+module_type+".helper.c", text_C_file, function (err) {
             if (err) return console.log(err);
         });
     });

@@ -158,7 +158,7 @@ function CreateModuleDefinition(module_name) {
 function CreateModuleCFile(obj_def){
     var module_name = obj_def.name.replace(/-/g, "_");
     var r = "";
-    r += "#include \"../include/generated_code.h\"\n\n";
+    r += "#include \"../include/"+module_name +".helper.h\"\n\n";
     r += "void "+module_name+"_run (module_"+module_name+"_t *module)\n";
     r += "{\n";
     r += "    int cycle=0;\n";
