@@ -54,7 +54,13 @@ function make_Bson2Structure(properties, portName) {
     r += "// Convert bson to structure " + portName + "\n";
     r += "int bson2" + portName + "(module_t* module, bson_t* bson)\n";
     r += "{\n";
-    r += "    if(!module || !module->input_data || !bson)\n";
+    var forInputCorrect = "";
+    if(portName=="input"){
+        forInputCorrect = " || !module->input_data ";
+    }
+    r += "    if(!module || "+forInputCorrect+" !bson)\n";
+
+
     r += "    {\n";
     r += "        printf(\"Error: func bson2" + portName + ", NULL parameter\\n\");\n";
     r += "        return -1;\n";
@@ -209,6 +215,10 @@ function Create_C_file(module) {
         r += "    memset(&module->input4modul, 0, sizeof(input_t));\n";
         r += "    module->module_info.input_data = &module->input4modul;\n";
         r += "    module->module_info.input_bson2obj = (p_bson2obj)&bson2input;\n";
+    }
+    else
+    {
+        r += "    module->module_info.input_data = NULL;\n";
     }
     r += "\n";
     r += "    module->module_info.func = &" + module_type + "_run;\n\n";
