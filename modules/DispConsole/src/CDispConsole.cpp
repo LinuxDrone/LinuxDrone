@@ -53,12 +53,17 @@ bool CDispConsole::init(const mongo::BSONObj& initObject)
 		if (objParam.hasElement("Console scroll lines")) {
 			scrline = objParam["Console scroll lines"].Number();
 		}
+		if (objParam.hasElement("Period update console")) {
+			periodUpdateConsole = objParam["Period update console"].Number();
+		}
 	}
 
 	for(int i=0;i<3;i++) in_xyz[i]=0;
 	for(int i=0;i<8;i++) in_data[i]=0;
 
 	rt_print_auto_init(1);
+
+	timeTickOld = rt_timer_read();
 
 	return true;
 }
@@ -75,7 +80,19 @@ bool CDispConsole::start()
 
 void CDispConsole::moduleTask()
 {
-	//initscr();
+	bool bConsoleOut;
+
+	SRTIME diff;
+	RTIME timeTick = rt_timer_read();
+	diff = rt_timer_ticks2ns(timeTick - timeTickOld);
+
+	if((static_cast<float>(diff) / 1000000.0) > periodUpdateConsole) {
+		timeTickOld = timeTick;
+		bConsoleOut = true;
+	} else {
+		bConsoleOut = false;
+	}
+
 /*
 	for(int i=0;i<scrline;i++) Logger() << "";
 
@@ -96,26 +113,28 @@ void CDispConsole::moduleTask()
 	Logger() << "in_8 = " << in_data[7];
 	Logger()  << "--------------------------";
 */
-	for(int i=0;i<scrline;i++) rt_printf("\n");
 
-	rt_printf("--------------------------\n");
-	rt_printf("in_x = %8.2f\n", in_xyz[0]);
-	rt_printf("in_y = %8.2f\n", in_xyz[1]);
-	rt_printf("in_z = %8.2f\n", in_xyz[2]);
+	if(bConsoleOut) {
+		for(int i=0;i<scrline;i++) rt_printf("\n");
 
-	rt_printf("--------------------------\n");
+		rt_printf("--------------------------\n");
+		rt_printf("in_x = %8.2f\n", in_xyz[0]);
+		rt_printf("in_y = %8.2f\n", in_xyz[1]);
+		rt_printf("in_z = %8.2f\n", in_xyz[2]);
 
-	rt_printf("in_1 = %8.2f\n", in_data[0]);
-	rt_printf("in_2 = %8.2f\n", in_data[1]);
-	rt_printf("in_3 = %8.2f\n", in_data[2]);
-	rt_printf("in_4 = %8.2f\n", in_data[3]);
-	rt_printf("in_5 = %8.2f\n", in_data[4]);
-	rt_printf("in_6 = %8.2f\n", in_data[5]);
-	rt_printf("in_7 = %8.2f\n", in_data[6]);
-	rt_printf("in_8 = %8.2f\n", in_data[7]);
-	rt_printf("--------------------------\n");
+		rt_printf("--------------------------\n");
 
-	//m_task.sleep(200);
+		rt_printf("in_1 = %8.2f\n", in_data[0]);
+		rt_printf("in_2 = %8.2f\n", in_data[1]);
+		rt_printf("in_3 = %8.2f\n", in_data[2]);
+		rt_printf("in_4 = %8.2f\n", in_data[3]);
+		rt_printf("in_5 = %8.2f\n", in_data[4]);
+		rt_printf("in_6 = %8.2f\n", in_data[5]);
+		rt_printf("in_7 = %8.2f\n", in_data[6]);
+		rt_printf("in_8 = %8.2f\n", in_data[7]);
+		rt_printf("--------------------------\n");
+	}
+
 
 	//printw("Test ncurses");
 	//refresh();

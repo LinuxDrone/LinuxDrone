@@ -27,6 +27,8 @@ private:
 
 	float in_data[8], in_xyz[3];
 	uint8_t scrline;
+	float periodUpdateConsole = 0;
+	RTIME timeTickOld = 0;
 
 	void moduleTask();
 
