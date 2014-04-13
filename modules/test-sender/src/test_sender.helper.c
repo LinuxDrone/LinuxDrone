@@ -1,123 +1,9 @@
-#include "../include/generated_code.h"
+#include "../include/test_sender.helper.h"
 
 // количество типов выходных объектов
 #define count_shmem_sets 2
 
-extern t_cycle_function c_gy87_run;
-
-// Convert bson to structure input
-int bson2input(module_t* module, bson_t* bson)
-{
-    if(!module || !module->input_data || !bson)
-    {
-        printf("Error: func bson2input, NULL parameter\n");
-        return -1;
-    }
-
-    input_t* obj = (input_t*)module->input_data;
-    bson_iter_t iter;
-    if(!bson_iter_init (&iter, bson))
-    {
-        printf("Error: func bson2input, bson_iter_init\n");
-        return -1;
-    }
-
-    while(bson_iter_next(&iter))
-    {
-        const char* key = bson_iter_key (&iter);
-
-        if(!strncmp(key, "pwm0", 100))
-        {
-            obj->pwm0 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm0;
-            continue;
-        }
-        if(!strncmp(key, "pwm1", 100))
-        {
-            obj->pwm1 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm1;
-            continue;
-        }
-        if(!strncmp(key, "pwm2", 100))
-        {
-            obj->pwm2 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm2;
-            continue;
-        }
-        if(!strncmp(key, "pwm3", 100))
-        {
-            obj->pwm3 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm3;
-            continue;
-        }
-        if(!strncmp(key, "pwm4", 100))
-        {
-            obj->pwm4 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm4;
-            continue;
-        }
-        if(!strncmp(key, "pwm5", 100))
-        {
-            obj->pwm5 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm5;
-            continue;
-        }
-        if(!strncmp(key, "pwm6", 100))
-        {
-            obj->pwm6 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm6;
-            continue;
-        }
-        if(!strncmp(key, "pwm7", 100))
-        {
-            obj->pwm7 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm7;
-            continue;
-        }
-        if(!strncmp(key, "pwm8", 100))
-        {
-            obj->pwm8 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm8;
-            continue;
-        }
-        if(!strncmp(key, "pwm9", 100))
-        {
-            obj->pwm9 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm9;
-            continue;
-        }
-        if(!strncmp(key, "pwm10", 100))
-        {
-            obj->pwm10 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm10;
-            continue;
-        }
-        if(!strncmp(key, "pwm11", 100))
-        {
-            obj->pwm11 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm11;
-            continue;
-        }
-    }
-    return 0;
-}
-
-// Helper function. Print structure input
-void print_input(input_t* obj)
-{
-    printf("pwm0=%i\n", obj->pwm0);
-    printf("pwm1=%i\n", obj->pwm1);
-    printf("pwm2=%i\n", obj->pwm2);
-    printf("pwm3=%i\n", obj->pwm3);
-    printf("pwm4=%i\n", obj->pwm4);
-    printf("pwm5=%i\n", obj->pwm5);
-    printf("pwm6=%i\n", obj->pwm6);
-    printf("pwm7=%i\n", obj->pwm7);
-    printf("pwm8=%i\n", obj->pwm8);
-    printf("pwm9=%i\n", obj->pwm9);
-    printf("pwm10=%i\n", obj->pwm10);
-    printf("pwm11=%i\n", obj->pwm11);
-}
+extern t_cycle_function test_sender_run;
 
 // Convert structure GyroAccelMagTemp to bson
 int GyroAccelMagTemp2bson(GyroAccelMagTemp_t* obj, bson_t* bson)
@@ -280,9 +166,9 @@ void print_Baro(Baro_t* obj)
 }
 
 // Create module.
-module_c_gy87_t* c_gy87_create(void *handle)
+module_test_sender_t* test_sender_create(void *handle)
 {
-    module_c_gy87_t* module = malloc(sizeof(module_c_gy87_t));
+    module_test_sender_t* module = malloc(sizeof(module_test_sender_t));
     // Сохраним указатель на загруженную dll
     module->module_info.dll_handle = handle;
     module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));
@@ -293,13 +179,13 @@ module_c_gy87_t* c_gy87_create(void *handle)
 }
 
 // Stop and delete module. Free memory.
-void c_gy87_delete(module_c_gy87_t* module)
+void test_sender_delete(module_test_sender_t* module)
 {
     stop(module);
 }
 
 // Init module.
-int c_gy87_init(module_c_gy87_t* module, const uint8_t* bson_data, uint32_t bson_len)
+int test_sender_init(module_test_sender_t* module, const uint8_t* bson_data, uint32_t bson_len)
 {
     int res = init(&module->module_info, bson_data, bson_len);
 
@@ -329,17 +215,13 @@ int c_gy87_init(module_c_gy87_t* module, const uint8_t* bson_data, uint32_t bson
     module->Baro.bson2obj = (p_bson2obj)&bson2Baro;
     module->Baro.print_obj = (p_print_obj)&print_Baro;
 
-    // Input
-    memset(&module->input4modul, 0, sizeof(input_t));
-    module->module_info.input_data = &module->input4modul;
-    module->module_info.input_bson2obj = (p_bson2obj)&bson2input;
 
-    module->module_info.func = &c_gy87_run;
+    module->module_info.func = &test_sender_run;
 
     return res;
 }
 
-int c_gy87_start(module_c_gy87_t* module)
+int test_sender_start(module_test_sender_t* module)
 {
     if (start(module) != 0)
         return -1;
@@ -354,7 +236,7 @@ int c_gy87_start(module_c_gy87_t* module)
 * @return
 * /~russian 0 в случае успеха
 */
-int checkout_GyroAccelMagTemp(module_c_gy87_t* module, GyroAccelMagTemp_t** obj)
+int checkout_GyroAccelMagTemp(module_test_sender_t* module, GyroAccelMagTemp_t** obj)
 {
     return checkout4writer(module, &module->GyroAccelMagTemp, obj);
 }
@@ -365,7 +247,7 @@ int checkout_GyroAccelMagTemp(module_c_gy87_t* module, GyroAccelMagTemp_t** obj)
 * @param obj
 * @return
 */
-int checkin_GyroAccelMagTemp(module_c_gy87_t* module, GyroAccelMagTemp_t** obj)
+int checkin_GyroAccelMagTemp(module_test_sender_t* module, GyroAccelMagTemp_t** obj)
 {
     return checkin4writer(module, &module->GyroAccelMagTemp, obj);
 }
@@ -378,7 +260,7 @@ int checkin_GyroAccelMagTemp(module_c_gy87_t* module, GyroAccelMagTemp_t** obj)
 * @return
 * /~russian 0 в случае успеха
 */
-int checkout_Baro(module_c_gy87_t* module, Baro_t** obj)
+int checkout_Baro(module_test_sender_t* module, Baro_t** obj)
 {
     return checkout4writer(module, &module->Baro, obj);
 }
@@ -389,7 +271,7 @@ int checkout_Baro(module_c_gy87_t* module, Baro_t** obj)
 * @param obj
 * @return
 */
-int checkin_Baro(module_c_gy87_t* module, Baro_t** obj)
+int checkin_Baro(module_test_sender_t* module, Baro_t** obj)
 {
     return checkin4writer(module, &module->Baro, obj);
 }

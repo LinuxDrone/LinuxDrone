@@ -1,4 +1,4 @@
-#include "../include/generated_code.h"
+#include "../include/test_sender.helper.h"
 
 
 void test_sender_run (module_test_sender_t *module)

@@ -1,4 +1,4 @@
-#include "../include/generated_code.h"
+#include "../include/c_gy87.helper.h"
 
 void c_gy87_run (module_c_gy87_t *module)
 {
