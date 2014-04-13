@@ -169,9 +169,9 @@ function Create_C_file(module) {
     r += "    // Сохраним указатель на загруженную dll\n";
     r += "    module->module_info.dll_handle = handle;\n";
     r += "    module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));\n";
-    module.outputs.forEach(function (out) {
+    module.outputs.forEach(function (out, i) {
         var outName = out.name.replace(/\+/g, "");
-        r += "    module->module_info.shmem_sets[0]=&module->" + outName + ";\n";
+        r += "    module->module_info.shmem_sets["+i+"]=&module->" + outName + ";\n";
     });
     r += "    module->module_info.shmem_sets[" + module.outputs.length + "]=NULL;\n";
     r += "    return module;\n";
