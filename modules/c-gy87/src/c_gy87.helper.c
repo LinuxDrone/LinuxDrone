@@ -8,7 +8,7 @@ extern t_cycle_function c_gy87_run;
 // Convert bson to structure input
 int bson2input(module_t* module, bson_t* bson)
 {
-    if(!module || !module->input_data || !bson)
+    if(!module ||  !module->input_data ||  !bson)
     {
         printf("Error: func bson2input, NULL parameter\n");
         return -1;
@@ -105,18 +105,19 @@ int bson2input(module_t* module, bson_t* bson)
 // Helper function. Print structure input
 void print_input(input_t* obj)
 {
-    printf("pwm0=%i\n", obj->pwm0);
-    printf("pwm1=%i\n", obj->pwm1);
-    printf("pwm2=%i\n", obj->pwm2);
-    printf("pwm3=%i\n", obj->pwm3);
-    printf("pwm4=%i\n", obj->pwm4);
-    printf("pwm5=%i\n", obj->pwm5);
-    printf("pwm6=%i\n", obj->pwm6);
-    printf("pwm7=%i\n", obj->pwm7);
-    printf("pwm8=%i\n", obj->pwm8);
-    printf("pwm9=%i\n", obj->pwm9);
-    printf("pwm10=%i\n", obj->pwm10);
-    printf("pwm11=%i\n", obj->pwm11);
+    printf("pwm0=%i\t", obj->pwm0);
+    printf("pwm1=%i\t", obj->pwm1);
+    printf("pwm2=%i\t", obj->pwm2);
+    printf("pwm3=%i\t", obj->pwm3);
+    printf("pwm4=%i\t", obj->pwm4);
+    printf("pwm5=%i\t", obj->pwm5);
+    printf("pwm6=%i\t", obj->pwm6);
+    printf("pwm7=%i\t", obj->pwm7);
+    printf("pwm8=%i\t", obj->pwm8);
+    printf("pwm9=%i\t", obj->pwm9);
+    printf("pwm10=%i\t", obj->pwm10);
+    printf("pwm11=%i\t", obj->pwm11);
+    printf("\n");
 }
 
 // Convert structure GyroAccelMagTemp to bson
@@ -138,7 +139,7 @@ int GyroAccelMagTemp2bson(GyroAccelMagTemp_t* obj, bson_t* bson)
 // Convert bson to structure GyroAccelMagTemp
 int bson2GyroAccelMagTemp(module_t* module, bson_t* bson)
 {
-    if(!module || !module->input_data || !bson)
+    if(!module ||  !bson)
     {
         printf("Error: func bson2GyroAccelMagTemp, NULL parameter\n");
         return -1;
@@ -223,16 +224,17 @@ int bson2GyroAccelMagTemp(module_t* module, bson_t* bson)
 // Helper function. Print structure GyroAccelMagTemp
 void print_GyroAccelMagTemp(GyroAccelMagTemp_t* obj)
 {
-    printf("accelX=%i\n", obj->accelX);
-    printf("accelY=%i\n", obj->accelY);
-    printf("accelZ=%i\n", obj->accelZ);
-    printf("gyroX=%i\n", obj->gyroX);
-    printf("gyroY=%i\n", obj->gyroY);
-    printf("gyroZ=%i\n", obj->gyroZ);
-    printf("magX=%i\n", obj->magX);
-    printf("magY=%i\n", obj->magY);
-    printf("magZ=%i\n", obj->magZ);
-    printf("temperature=%i\n", obj->temperature);
+    printf("accelX=%i\t", obj->accelX);
+    printf("accelY=%i\t", obj->accelY);
+    printf("accelZ=%i\t", obj->accelZ);
+    printf("gyroX=%i\t", obj->gyroX);
+    printf("gyroY=%i\t", obj->gyroY);
+    printf("gyroZ=%i\t", obj->gyroZ);
+    printf("magX=%i\t", obj->magX);
+    printf("magY=%i\t", obj->magY);
+    printf("magZ=%i\t", obj->magZ);
+    printf("temperature=%i\t", obj->temperature);
+    printf("\n");
 }
 
 // Convert structure Baro to bson
@@ -245,7 +247,7 @@ int Baro2bson(Baro_t* obj, bson_t* bson)
 // Convert bson to structure Baro
 int bson2Baro(module_t* module, bson_t* bson)
 {
-    if(!module || !module->input_data || !bson)
+    if(!module ||  !bson)
     {
         printf("Error: func bson2Baro, NULL parameter\n");
         return -1;
@@ -276,7 +278,8 @@ int bson2Baro(module_t* module, bson_t* bson)
 // Helper function. Print structure Baro
 void print_Baro(Baro_t* obj)
 {
-    printf("pressure=%i\n", obj->pressure);
+    printf("pressure=%i\t", obj->pressure);
+    printf("\n");
 }
 
 // Create module.
@@ -287,7 +290,7 @@ module_c_gy87_t* c_gy87_create(void *handle)
     module->module_info.dll_handle = handle;
     module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));
     module->module_info.shmem_sets[0]=&module->GyroAccelMagTemp;
-    module->module_info.shmem_sets[0]=&module->Baro;
+    module->module_info.shmem_sets[1]=&module->Baro;
     module->module_info.shmem_sets[2]=NULL;
     return module;
 }

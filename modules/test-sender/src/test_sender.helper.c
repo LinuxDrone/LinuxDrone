@@ -24,7 +24,7 @@ int GyroAccelMagTemp2bson(GyroAccelMagTemp_t* obj, bson_t* bson)
 // Convert bson to structure GyroAccelMagTemp
 int bson2GyroAccelMagTemp(module_t* module, bson_t* bson)
 {
-    if(!module || !module->input_data || !bson)
+    if(!module ||  !bson)
     {
         printf("Error: func bson2GyroAccelMagTemp, NULL parameter\n");
         return -1;
@@ -109,16 +109,17 @@ int bson2GyroAccelMagTemp(module_t* module, bson_t* bson)
 // Helper function. Print structure GyroAccelMagTemp
 void print_GyroAccelMagTemp(GyroAccelMagTemp_t* obj)
 {
-    printf("accelX=%i\n", obj->accelX);
-    printf("accelY=%i\n", obj->accelY);
-    printf("accelZ=%i\n", obj->accelZ);
-    printf("gyroX=%i\n", obj->gyroX);
-    printf("gyroY=%i\n", obj->gyroY);
-    printf("gyroZ=%i\n", obj->gyroZ);
-    printf("magX=%i\n", obj->magX);
-    printf("magY=%i\n", obj->magY);
-    printf("magZ=%i\n", obj->magZ);
-    printf("temperature=%i\n", obj->temperature);
+    printf("accelX=%i\t", obj->accelX);
+    printf("accelY=%i\t", obj->accelY);
+    printf("accelZ=%i\t", obj->accelZ);
+    printf("gyroX=%i\t", obj->gyroX);
+    printf("gyroY=%i\t", obj->gyroY);
+    printf("gyroZ=%i\t", obj->gyroZ);
+    printf("magX=%i\t", obj->magX);
+    printf("magY=%i\t", obj->magY);
+    printf("magZ=%i\t", obj->magZ);
+    printf("temperature=%i\t", obj->temperature);
+    printf("\n");
 }
 
 // Convert structure Baro to bson
@@ -131,7 +132,7 @@ int Baro2bson(Baro_t* obj, bson_t* bson)
 // Convert bson to structure Baro
 int bson2Baro(module_t* module, bson_t* bson)
 {
-    if(!module || !module->input_data || !bson)
+    if(!module ||  !bson)
     {
         printf("Error: func bson2Baro, NULL parameter\n");
         return -1;
@@ -162,7 +163,8 @@ int bson2Baro(module_t* module, bson_t* bson)
 // Helper function. Print structure Baro
 void print_Baro(Baro_t* obj)
 {
-    printf("pressure=%i\n", obj->pressure);
+    printf("pressure=%i\t", obj->pressure);
+    printf("\n");
 }
 
 // Create module.
@@ -173,7 +175,7 @@ module_test_sender_t* test_sender_create(void *handle)
     module->module_info.dll_handle = handle;
     module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));
     module->module_info.shmem_sets[0]=&module->GyroAccelMagTemp;
-    module->module_info.shmem_sets[0]=&module->Baro;
+    module->module_info.shmem_sets[1]=&module->Baro;
     module->module_info.shmem_sets[2]=NULL;
     return module;
 }
@@ -215,6 +217,7 @@ int test_sender_init(module_test_sender_t* module, const uint8_t* bson_data, uin
     module->Baro.bson2obj = (p_bson2obj)&bson2Baro;
     module->Baro.print_obj = (p_print_obj)&print_Baro;
 
+    module->module_info.input_data = NULL;
 
     module->module_info.func = &test_sender_run;
 

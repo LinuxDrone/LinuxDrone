@@ -56,7 +56,7 @@ function make_Bson2Structure(properties, portName) {
     r += "{\n";
     var forInputCorrect = "";
     if(portName=="input"){
-        forInputCorrect = " || !module->input_data ";
+        forInputCorrect = " !module->input_data || ";
     }
     r += "    if(!module || "+forInputCorrect+" !bson)\n";
 
@@ -92,8 +92,9 @@ function make_Bson2Structure(properties, portName) {
     r += "void print_" + portName + "(" + portName + "_t* obj)\n";
     r += "{\n";
     for (var key in properties) {
-        r += "    printf(\"" + key + "=%i\\n\", obj->" + key + ");\n";
+        r += "    printf(\"" + key + "=%i\\t\", obj->" + key + ");\n";
     }
+    r += "    printf(\"\\n\");\n";
     r += "}\n\n";
 
     return r;

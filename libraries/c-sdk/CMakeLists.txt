@@ -18,8 +18,8 @@ include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
 set(EXTRA_LIBS
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
     #bson_shared
-    /Users/vrubel/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libbson-1.0.so
-    #D:/Projects/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libbson-1.0.so
+    #/Users/vrubel/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libbson-1.0.so
+    D:/Projects/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libbson-1.0.so
 )
 
 add_library(c-sdk ${INC} ${SRC})
@@ -32,11 +32,12 @@ add_custom_command(
 	
     #COMMAND
 		
-	#Windows	
-        #COMMAND D:/Projects/LinuxDrone/tools/pscp.exe libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
-        #COMMAND D:/Projects/LinuxDrone/tools/pscp.exe -P 1234 libc-sdk.so root@voha-bbb.linuxdrone.org:/usr/local/linuxdrone/lib/libc-sdk.so
+    #Windows
+    COMMAND D:/Projects/LinuxDrone/tools/pscp.exe libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
+    #COMMAND D:/Projects/LinuxDrone/tools/pscp.exe -P 1234 libc-sdk.so root@voha-bbb.linuxdrone.org:/usr/local/linuxdrone/lib/libc-sdk.so
 	
-        COMMAND scp libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
+    #Unix
+    #COMMAND scp libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
 )
 
 install(TARGETS c-sdk DESTINATION lib)
