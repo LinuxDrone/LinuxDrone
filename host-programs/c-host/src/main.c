@@ -358,7 +358,7 @@ int main(int argc, char *argv[]) {
 
     bson_t* bson_configuration = get_bson_from_db();
 
-    debug_print_bson(bson_configuration);
+    //debug_print_bson(bson_configuration);
 
 	bson_iter_t iter_m;
     if (!bson_iter_init_find(&iter_m, bson_configuration, "modules")) {
