@@ -802,6 +802,8 @@ int refresh_input(void* p_module)
     char buf[300];
 
     unsigned short retlen;
+    // Данный сет является просто одним из выходных сетов этого же модуля
+    // исключительно для проверки
     shmem_publisher_set_t* set = module->shmem_sets[0];
     read_shmem(set, buf, &retlen);
     //printf("retlen=%i\n", retlen);

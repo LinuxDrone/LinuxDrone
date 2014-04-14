@@ -27,7 +27,7 @@ target_link_libraries(c-gy87 ${EXTRA_LIBS})
 add_custom_command(
     TARGET c-gy87
     PRE_BUILD
-    COMMAND node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/c-gy87/c-gy87.def.json ${MOD_DIR}/c-gy87
+    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/c-gy87/c-gy87.def.json ${MOD_DIR}/c-gy87
 )
 
 add_custom_command(

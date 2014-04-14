@@ -29,7 +29,7 @@ function CreateCMakeLists(module_name) {
     r += "add_custom_command(\n";
     r += "    TARGET " + module_name + "\n";
     r += "    PRE_BUILD\n";
-    r += "    COMMAND node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/" + module_name + "/" + module_name + ".def.json ${MOD_DIR}/" + module_name + "\n";
+    r += "    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/" + module_name + "/" + module_name + ".def.json ${MOD_DIR}/" + module_name + "\n";
     r += ")\n\n";
 
     r += "add_custom_command(\n";

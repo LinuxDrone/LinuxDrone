@@ -49,8 +49,10 @@ set(RFS_DIR ${TLS_DIR}/rootfs/beaglebone)
 
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(SCP ${TLS_DIR}/pscp.exe)
+    SET(NODEJS node)
 ELSE()
     SET(SCP scp)
+    SET(NODEJS /opt/local/bin/node)
 ENDIF()
 
 SET(URL_TARGET_SYSTEM root@osen73.dyndns-home.com)

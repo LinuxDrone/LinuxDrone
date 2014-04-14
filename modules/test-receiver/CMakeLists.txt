@@ -27,7 +27,7 @@ target_link_libraries(test-receiver ${EXTRA_LIBS})
 add_custom_command(
     TARGET test-receiver
     PRE_BUILD
-    COMMAND node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-receiver/test-receiver.def.json ${MOD_DIR}/test-receiver
+    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-receiver/test-receiver.def.json ${MOD_DIR}/test-receiver
 )
 
 add_custom_command(
