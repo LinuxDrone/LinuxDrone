@@ -27,15 +27,7 @@ target_link_libraries(c-sdk ${EXTRA_LIBS})
 add_custom_command(
     TARGET c-sdk
     POST_BUILD
-	
-    #COMMAND
-		
-    #Windows
-    COMMAND ${TLS_DIR}/pscp.exe libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
-    #COMMAND ${TLS_DIR}/pscp.exe -P 1234 libc-sdk.so root@voha-bbb.linuxdrone.org:/usr/local/linuxdrone/lib/libc-sdk.so
-	
-    #Unix
-    #COMMAND scp libc-sdk.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/lib/libc-sdk.so
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-sdk.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/lib/libc-sdk.so
 )
 
 install(TARGETS c-sdk DESTINATION lib)

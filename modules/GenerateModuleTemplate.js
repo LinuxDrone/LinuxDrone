@@ -16,7 +16,7 @@ function CreateCMakeLists(module_name) {
     r += "file(GLOB_RECURSE SRC \"src/*.c\")\n\n";
 
     r += "include_directories(${LIB_DIR}/c-sdk/include)\n";
-    r += "include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)\n\n";
+    r += "include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)\n\n";
 
     r += "set(EXTRA_LIBS\n";
     r += "    c-sdk\n";
@@ -29,7 +29,13 @@ function CreateCMakeLists(module_name) {
     r += "add_custom_command(\n";
     r += "    TARGET " + module_name + "\n";
     r += "    PRE_BUILD\n";
-    r += "    COMMAND /opt/local/bin/node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/" + module_name + "/" + module_name + ".def.json ${MOD_DIR}/" + module_name + "\n";
+    r += "    COMMAND node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/" + module_name + "/" + module_name + ".def.json ${MOD_DIR}/" + module_name + "\n";
+    r += ")\n\n";
+
+    r += "add_custom_command(\n";
+    r += "    TARGET " + module_name + "\n";
+    r += "    POST_BUILD\n";
+    r += "    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} " + module_name + ".so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/" + module_name + "/" + module_name + ".so\n";
     r += ")\n\n";
 
     r += "install(TARGETS " + module_name + " DESTINATION modules/" + module_name + ")\n";

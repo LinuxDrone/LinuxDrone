@@ -33,7 +33,7 @@ project(linuxdrone)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME})
 
 # Compiler options
-add_definitions(-std=c++11 -mfpu=neon ${XENOMAI_DEFINITIONS})
+add_definitions(-mfpu=neon ${XENOMAI_DEFINITIONS}) #-std=c++11
 
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
@@ -46,6 +46,18 @@ set(SYS_DIR ${PROJECT_SOURCE_DIR}/system)
 set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
 set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
 set(RFS_DIR ${TLS_DIR}/rootfs/beaglebone)
+
+IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
+    SET(SCP ${TLS_DIR}/pscp.exe)
+ELSE()
+    SET(SCP scp)
+ENDIF()
+
+SET(URL_TARGET_SYSTEM root@osen73.dyndns-home.com)
+SET(SSH_PORT_TARGET_SYSTEM 22)
+
+#SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
+#SET(SSH_PORT_TARGET_SYSTEM 1234)
 
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}

@@ -33,20 +33,8 @@ target_link_libraries(c-host ${EXTRA_LIBS})
 add_custom_command(
     TARGET c-host
     POST_BUILD
-    #COMMAND scp c-host root@osen73.dyndns-home.com:/root/c-host
-
-    #Windows
-    COMMAND ${TLS_DIR}/pscp.exe c-host root@osen73.dyndns-home.com:/root/c-host
-    #COMMAND ${TLS_DIR}/pscp.exe -P 1234 c-host root@voha-bbb.linuxdrone.org:/root/c-host
-    #COMMAND ${TLS_DIR}/pscp.exe -P 1234 D:/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@voha-bbb.linuxdrone.org:/root/testConfig.json
-    COMMAND ${TLS_DIR}/pscp.exe D:/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
-
-    #COMMAND
-
-    #Unix
-    #COMMAND scp /home/vrubel/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
-    #COMMAND scp /Users/vrubel/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
-    #COMMAND ${TLS_DIR}/pscp.exe D:/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-host ${URL_TARGET_SYSTEM}:/root/c-host
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${HST_DIR}/c-host/testConfig.json ${URL_TARGET_SYSTEM}:/root/testConfig.json
 )
 
 

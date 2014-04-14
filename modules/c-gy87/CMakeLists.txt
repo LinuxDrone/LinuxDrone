@@ -20,7 +20,6 @@ set(EXTRA_LIBS
     c-sdk
 )
 
-
 add_library(c-gy87 MODULE ${INC} ${SRC})
 
 target_link_libraries(c-gy87 ${EXTRA_LIBS})
@@ -34,15 +33,7 @@ add_custom_command(
 add_custom_command(
     TARGET c-gy87
     POST_BUILD
-	
-    #COMMAND
-	
-    #Unix
-    #COMMAND scp libc-gy87.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
-
-    #Windows
-    COMMAND ${TLS_DIR}/pscp.exe libc-gy87.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
-    #COMMAND ${TLS_DIR}/pscp.exe -P 1234 libc-gy87.so root@voha-bbb.linuxdrone.org:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-gy87.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
 )
 
 install(TARGETS c-gy87 DESTINATION modules/c-gy87)

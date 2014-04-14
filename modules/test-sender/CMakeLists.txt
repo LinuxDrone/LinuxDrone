@@ -24,26 +24,16 @@ add_library(test-sender MODULE ${INC} ${SRC})
 
 target_link_libraries(test-sender ${EXTRA_LIBS})
 
-
 add_custom_command(
     TARGET test-sender
     PRE_BUILD
     COMMAND node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-sender/test-sender.def.json ${MOD_DIR}/test-sender
 )
 
-
 add_custom_command(
     TARGET test-sender
     POST_BUILD
-	
-    #COMMAND
-	
-    #Unix
-    #COMMAND scp libtest-sender.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/test-sender/libtest-sender.so
-
-    #Windows
-    COMMAND ${TLS_DIR}/pscp.exe libtest-sender.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/test-sender/libtest-sender.so
-    #COMMAND ${TLS_DIR}/pscp.exe -P 1234 libtest-sender.so root@voha-bbb.linuxdrone.org:/usr/local/linuxdrone/modules/test-sender/libtest-sender.so
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libtest-sender.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender/libtest-sender.so
 )
 
 install(TARGETS test-sender DESTINATION modules/test-sender)
