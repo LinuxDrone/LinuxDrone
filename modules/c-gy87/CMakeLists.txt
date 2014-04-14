@@ -14,10 +14,10 @@ file(GLOB_RECURSE INC "include/*")
 file(GLOB_RECURSE SRC "src/*.c")
 
 include_directories(${LIB_DIR}/c-sdk/include)
-include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
+include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
 
 set(EXTRA_LIBS
-	c-sdk
+    c-sdk
 )
 
 
@@ -26,9 +26,9 @@ add_library(c-gy87 MODULE ${INC} ${SRC})
 target_link_libraries(c-gy87 ${EXTRA_LIBS})
 
 add_custom_command(
-        TARGET c-gy87
-        PRE_BUILD
-        COMMAND node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/c-gy87/c-gy87.def.json ${MOD_DIR}/c-gy87
+    TARGET c-gy87
+    PRE_BUILD
+    COMMAND node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/c-gy87/c-gy87.def.json ${MOD_DIR}/c-gy87
 )
 
 add_custom_command(
@@ -41,8 +41,8 @@ add_custom_command(
     #COMMAND scp libc-gy87.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
 
     #Windows
-    COMMAND D:/Projects/LinuxDrone/tools/pscp.exe libc-gy87.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
-    #COMMAND D:/Projects/LinuxDrone/tools/pscp.exe -P 1234 libc-gy87.so root@voha-bbb.linuxdrone.org:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
+    COMMAND ${TLS_DIR}/pscp.exe libc-gy87.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
+    #COMMAND ${TLS_DIR}/pscp.exe -P 1234 libc-gy87.so root@voha-bbb.linuxdrone.org:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
 )
 
 install(TARGETS c-gy87 DESTINATION modules/c-gy87)

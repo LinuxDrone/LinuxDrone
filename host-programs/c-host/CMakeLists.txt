@@ -13,21 +13,15 @@
 file(GLOB_RECURSE INC "include/*")
 file(GLOB_RECURSE SRC "src/*.c")
 
-include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
-include_directories(../../tools/rootfs/beaglebone/usr/local/include/libmongoc-1.0)
-include_directories(../../modules/c-gy87/include)
-
+include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
+include_directories(${RFS_DIR}/usr/local/include/libmongoc-1.0)
+include_directories(${LIB_DIR}/c-sdk/include)
 
 set(EXTRA_LIBS
-    D:/Projects/LinuxDrone-build-work/libraries/c-sdk/libc-sdk.so
-    #Users/vrubel/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
-    #/home/vrubel/Projects/LinuxDrone/build.Debug/libraries/c-sdk/libc-sdk.so
+    c-sdk
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
-    #bson_shared
-    #/Users/vrubel/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libbson-1.0.so
-    #/Users/vrubel/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libmongoc-1.0.so
-    D:/Projects/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libbson-1.0.so
-    D:/Projects/LinuxDrone/tools/rootfs/beaglebone/usr/local/lib/libmongoc-1.0.so
+    ${RFS_DIR}/usr/local/lib/libbson-1.0.so
+    ${RFS_DIR}/usr/local/lib/libmongoc-1.0.so
     rt
     dl
     pthread
@@ -42,17 +36,17 @@ add_custom_command(
     #COMMAND scp c-host root@osen73.dyndns-home.com:/root/c-host
 
     #Windows
-    COMMAND D:/Projects/LinuxDrone/tools/pscp.exe c-host root@osen73.dyndns-home.com:/root/c-host
-    #COMMAND D:/Projects/LinuxDrone/tools/pscp.exe -P 1234 c-host root@voha-bbb.linuxdrone.org:/root/c-host
-    #COMMAND D:/Projects/LinuxDrone/tools/pscp.exe -P 1234 D:/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@voha-bbb.linuxdrone.org:/root/testConfig.json
-    COMMAND D:/Projects/LinuxDrone/tools/pscp.exe D:/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
+    COMMAND ${TLS_DIR}/pscp.exe c-host root@osen73.dyndns-home.com:/root/c-host
+    #COMMAND ${TLS_DIR}/pscp.exe -P 1234 c-host root@voha-bbb.linuxdrone.org:/root/c-host
+    #COMMAND ${TLS_DIR}/pscp.exe -P 1234 D:/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@voha-bbb.linuxdrone.org:/root/testConfig.json
+    COMMAND ${TLS_DIR}/pscp.exe D:/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
 
     #COMMAND
 
     #Unix
     #COMMAND scp /home/vrubel/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
     #COMMAND scp /Users/vrubel/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
-    #COMMAND D:/Projects/LinuxDrone/tools/pscp.exe D:/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
+    #COMMAND ${TLS_DIR}/pscp.exe D:/Projects/LinuxDrone/host-programs/c-host/testConfig.json root@osen73.dyndns-home.com:/root/testConfig.json
 )
 
 

@@ -14,10 +14,10 @@ file(GLOB_RECURSE INC "include/*")
 file(GLOB_RECURSE SRC "src/*.c")
 
 include_directories(${LIB_DIR}/c-sdk/include)
-include_directories(../../tools/rootfs/beaglebone/usr/local/include/libbson-1.0)
+include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
 
 set(EXTRA_LIBS
-	c-sdk
+    c-sdk
 )
 
 add_library(test-sender MODULE ${INC} ${SRC})
@@ -26,9 +26,9 @@ target_link_libraries(test-sender ${EXTRA_LIBS})
 
 
 add_custom_command(
-        TARGET test-sender
-        PRE_BUILD
-        COMMAND node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-sender/test-sender.def.json ${MOD_DIR}/test-sender
+    TARGET test-sender
+    PRE_BUILD
+    COMMAND node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-sender/test-sender.def.json ${MOD_DIR}/test-sender
 )
 
 
@@ -42,8 +42,8 @@ add_custom_command(
     #COMMAND scp libtest-sender.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/test-sender/libtest-sender.so
 
     #Windows
-    COMMAND D:/Projects/LinuxDrone/tools/pscp.exe libtest-sender.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/test-sender/libtest-sender.so
-    #COMMAND D:/Projects/LinuxDrone/tools/pscp.exe -P 1234 libtest-sender.so root@voha-bbb.linuxdrone.org:/usr/local/linuxdrone/modules/test-sender/libtest-sender.so
+    COMMAND ${TLS_DIR}/pscp.exe libtest-sender.so root@osen73.dyndns-home.com:/usr/local/linuxdrone/modules/test-sender/libtest-sender.so
+    #COMMAND ${TLS_DIR}/pscp.exe -P 1234 libtest-sender.so root@voha-bbb.linuxdrone.org:/usr/local/linuxdrone/modules/test-sender/libtest-sender.so
 )
 
 install(TARGETS test-sender DESTINATION modules/test-sender)

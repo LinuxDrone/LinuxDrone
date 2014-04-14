@@ -3,7 +3,7 @@
 #include <bcon.h>
 #include <bson.h>
 #include <mongoc.h>
-#include "c-gy87.h"
+#include "module-functions.h"
 
 // Хранилище указателей на загруженные пускачем инстансы модулей
 bson_t instances;

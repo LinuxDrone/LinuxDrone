@@ -44,6 +44,8 @@ set(MOD_DIR ${PROJECT_SOURCE_DIR}/modules)
 set(HST_DIR ${PROJECT_SOURCE_DIR}/host-programs)
 set(SYS_DIR ${PROJECT_SOURCE_DIR}/system)
 set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
+set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
+set(RFS_DIR ${TLS_DIR}/rootfs/beaglebone)
 
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}
