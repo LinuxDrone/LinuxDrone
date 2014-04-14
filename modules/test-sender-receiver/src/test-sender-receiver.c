@@ -1,6 +1,6 @@
-#include "../include/test_sender.helper.h"
+#include "../include/test_sender_receiver.helper.h"
 
-void test_sender_run (module_test_sender_t *module)
+void test_sender_receiver_run (module_test_sender_receiver_t *module)
 {
     int cycle=0;
     while(1) {

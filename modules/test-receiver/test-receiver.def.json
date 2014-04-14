@@ -1,119 +1,119 @@
 {
-    "type": "module_def",
-    "name": "test-receiver",
-    "version": 7,
-    "Task Priority": 80,
-    "Task Period": 200,
-    "Notify on change": false,
-    "description": {
-        "en": "test-receiver sensors set",
-        "ru": "Набор датчиков на плате test-receiver"
+  "type": "module_def",
+  "name": "test-receiver",
+  "version": 1,
+  "Task Priority": 80,
+  "Task Period": 200000,
+  "Transfer task period": 200000,
+  "Notify on change": false,
+  "description": {
+    "en": "en description",
+    "ru": "русское описание"
+  },
+  "paramsDefinitions": [
+    {
+      "name": "I2C Device",
+      "displayName": {
+        "en": "param 1",
+        "ru": "параметр 1"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "string",
+      "defaultValue": "default value",
+      "validValues": [
+        "str1",
+        "str2"
+      ],
+      "unitMeasured": ""
     },
-    "paramsDefinitions": [
-        {
-            "name": "I2C Device",
-            "displayName": {
-                "en": "Bus Name",
-                "ru": "Имя шины"
-            },
-            "description": {
-                "ru": "Название девайса"
-            },
-            "type": "string",
-            "defaultValue": "/dev/i2c-1",
-            "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
-            "unitMeasured": ""
-        },
-        {
-            "name": "Test Number Param",
-            "displayName": {
-                "en": "Bus Name",
-                "ru": "Имя шины"
-            },
-            "description": {
-                "ru": "Название девайса"
-            },
+    {
+      "name": "Test Number Param",
+      "displayName": {
+        "en": "param 2",
+        "ru": "параметр 2"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "number",
+      "defaultValue": 123,
+      "validValues": [
+        56,
+        123
+      ],
+      "unitMeasured": "Ms"
+    },
+    {
+      "name": "Test Boolean Param",
+      "displayName": {
+        "en": "param 3",
+        "ru": "параметр 3"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "boolean",
+      "defaultValue": false,
+      "unitMeasured": "bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Output1",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "out1": {
             "type": "number",
-            "defaultValue": 123,
-            "validValues" : [56,123],
-            "unitMeasured": "int"
-        },
-        {
-            "name": "Test Boolean Param",
-            "displayName": {
-                "en": "Bus Name",
-                "ru": "Имя шины"
-            },
-            "description": {
-                "ru": "Название девайса"
-            },
-            "type": "boolean",
-            "defaultValue": false,
-            "unitMeasured": "bool"
+            "required": true
+          },
+          "out2": {
+            "type": "number",
+            "required": true
+          }
         }
-    ],
-    "outputs": [
-        {
-            "name": "Gyro+Accel+Mag+Temp",
-            "Schema": {
-                "type": "object",
-                "id": "http://jsonschema.net",
-                "properties": {
-                    "accelX": {
-                        "type": "number",
-                        "required": true
-                    },
-                    "accelY": {
-                        "type": "number",
-                        "required": true
-                    },
-                    "accelZ": {
-                        "type": "number",
-                        "required": true
-                    },
-                    "gyroX": {
-                        "type": "number",
-                        "required": true
-                    },
-                    "gyroY": {
-                        "type": "number",
-                        "required": true
-                    },
-                    "gyroZ": {
-                        "type": "number",
-                        "required": true
-                    },
-                    "magX": {
-                        "type": "number",
-                        "required": true
-                    },
-                    "magY": {
-                        "type": "number",
-                        "required": true
-                    },
-                    "magZ": {
-                        "type": "number",
-                        "required": true
-                    },
-                    "temperature": {
-                        "type": "number",
-                        "required": true
-                    }
-                }
-            }
-        },
-        {
-            "name": "Baro",
-            "Schema": {
-                "type": "object",
-                "id": "http://jsonschema.net",
-                "properties": {
-                    "pressure": {
-                        "type": "number",
-                        "required": true
-                    }
-                }
-            }
+      }
+    },
+    {
+      "name": "Output2",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "out3": {
+            "type": "number",
+            "required": true
+          }
         }
-    ]
+      }
+    }
+  ],
+  "inputShema": {
+    "type": "object",
+    "id": "http://jsonschema.net",
+    "properties": {
+      "in1": {
+        "type": "number",
+        "required": true,
+        "description": {
+          "en": "input 1",
+          "ru": "Вход 1"
+        }
+      },
+      "in2": {
+        "type": "number",
+        "required": true,
+        "description": {
+          "en": "input 2",
+          "ru": "Вход 2"
+        }
+      }
+    }
+  }
 }

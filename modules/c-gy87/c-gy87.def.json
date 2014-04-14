@@ -1,7 +1,7 @@
 {
     "type": "module_def",
     "name": "c-gy87",
-    "version": 7,
+    "version": 1,
     "Task Priority": 80,
     "Task Period": 200,
     "Notify on change": false,

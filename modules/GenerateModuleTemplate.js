@@ -35,7 +35,8 @@ function CreateCMakeLists(module_name) {
     r += "add_custom_command(\n";
     r += "    TARGET " + module_name + "\n";
     r += "    POST_BUILD\n";
-    r += "    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} " + module_name + ".so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/" + module_name + "/" + module_name + ".so\n";
+    r += "    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} lib" + module_name + ".so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/" + module_name + "/lib" + module_name + ".so\n";
+    r += "    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/" + module_name + "/" + module_name + ".def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/" + module_name + "/" + module_name + ".def.json\n";
     r += ")\n\n";
 
     r += "install(TARGETS " + module_name + " DESTINATION modules/" + module_name + ")\n";
@@ -50,7 +51,8 @@ function CreateModuleDefinition(module_name) {
         "name": module_name,
         "version": 1,
         "Task Priority": 80,
-        "Task Period": 200,
+        "Task Period": 200000,
+        "Transfer task period" : 200000,
         "Notify on change": false,
         "description": {
             "en": "en description",
@@ -126,7 +128,7 @@ function CreateModuleDefinition(module_name) {
                     "type": "object",
                     "id": "http://jsonschema.net",
                     "properties": {
-                        "pressure": {
+                        "out3": {
                             "type": "number",
                             "required": true
                         }
@@ -138,15 +140,15 @@ function CreateModuleDefinition(module_name) {
             "type": "object",
             "id": "http://jsonschema.net",
             "properties": {
-                "pwm0": {
+                "in1": {
                     "type": "number",
                     "required": true,
                     "description": {
-                        "en": "input 2",
+                        "en": "input 1",
                         "ru": "Вход 1"
                     }
                 },
-                "pwm1": {
+                "in2": {
                     "type": "number",
                     "required": true,
                     "description": {

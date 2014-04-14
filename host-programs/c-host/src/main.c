@@ -46,8 +46,9 @@ bson_t* get_bson_from_file() {
 	return NULL ;
 }
 
-int get_bson_from_db()
+bson_t* get_bson_from_db()
 {
+    bson_t *result;
     mongoc_collection_t *collection;
     mongoc_client_t *client;
     mongoc_cursor_t *cursor;
@@ -55,7 +56,7 @@ int get_bson_from_db()
     bson_error_t error;
     bson_oid_t oid;
     bson_t *query;
-    bson_t *doc;
+    //bson_t *doc;
     char *str;
     bool r;
 
@@ -80,10 +81,12 @@ int get_bson_from_db()
 
     /* execute the query and iterate the results */
     cursor = mongoc_collection_find (collection, MONGOC_QUERY_NONE, 0, 0, 0, query, NULL, NULL);
-    while (mongoc_cursor_next (cursor, &item)) {
-       str = bson_as_json (item, NULL);
-       printf ("%s\n", str);
-       bson_free (str);
+    if (mongoc_cursor_next (cursor, &item)) {
+       result = bson_copy (item);
+
+       //str = bson_as_json (item, NULL);
+       //printf ("%s\n", str);
+       //bson_free (str);
     }
 
     /* release everything */
@@ -92,6 +95,8 @@ int get_bson_from_db()
     mongoc_client_destroy (client);
     bson_destroy (query);
     //bson_destroy (doc);
+
+    return result;
 }
 
 /**
@@ -349,9 +354,11 @@ int main(int argc, char *argv[]) {
     bson_init(&instances);
 
     // Временное решение - грузить конфигурацию из файла, а не из базы
-    bson_t* bson_configuration = get_bson_from_file();
+    //bson_t* bson_configuration = get_bson_from_file();
 
-    //get_bson_from_db();
+    bson_t* bson_configuration = get_bson_from_db();
+
+    debug_print_bson(bson_configuration);
 
 	bson_iter_t iter_m;
     if (!bson_iter_init_find(&iter_m, bson_configuration, "modules")) {

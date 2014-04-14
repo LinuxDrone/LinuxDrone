@@ -1,9 +1,9 @@
-#include "../include/test_sender.helper.h"
+#include "../include/test_receiver.helper.h"
 
 // количество типов выходных объектов
 #define count_shmem_sets 2
 
-extern t_cycle_function test_sender_run;
+extern t_cycle_function test_receiver_run;
 
 // Convert bson to structure input
 int bson2input(module_t* module, bson_t* bson)
@@ -149,9 +149,9 @@ void print_Output2(Output2_t* obj)
 }
 
 // Create module.
-module_test_sender_t* test_sender_create(void *handle)
+module_test_receiver_t* test_receiver_create(void *handle)
 {
-    module_test_sender_t* module = malloc(sizeof(module_test_sender_t));
+    module_test_receiver_t* module = malloc(sizeof(module_test_receiver_t));
     // Сохраним указатель на загруженную dll
     module->module_info.dll_handle = handle;
     module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));
@@ -162,13 +162,13 @@ module_test_sender_t* test_sender_create(void *handle)
 }
 
 // Stop and delete module. Free memory.
-void test_sender_delete(module_test_sender_t* module)
+void test_receiver_delete(module_test_receiver_t* module)
 {
     stop(module);
 }
 
 // Init module.
-int test_sender_init(module_test_sender_t* module, const uint8_t* bson_data, uint32_t bson_len)
+int test_receiver_init(module_test_receiver_t* module, const uint8_t* bson_data, uint32_t bson_len)
 {
     int res = init(&module->module_info, bson_data, bson_len);
 
@@ -203,12 +203,12 @@ int test_sender_init(module_test_sender_t* module, const uint8_t* bson_data, uin
     module->module_info.input_data = &module->input4modul;
     module->module_info.input_bson2obj = (p_bson2obj)&bson2input;
 
-    module->module_info.func = &test_sender_run;
+    module->module_info.func = &test_receiver_run;
 
     return res;
 }
 
-int test_sender_start(module_test_sender_t* module)
+int test_receiver_start(module_test_receiver_t* module)
 {
     if (start(module) != 0)
         return -1;
@@ -223,7 +223,7 @@ int test_sender_start(module_test_sender_t* module)
 * @return
 * /~russian 0 в случае успеха
 */
-int checkout_Output1(module_test_sender_t* module, Output1_t** obj)
+int checkout_Output1(module_test_receiver_t* module, Output1_t** obj)
 {
     return checkout4writer(module, &module->Output1, obj);
 }
@@ -234,7 +234,7 @@ int checkout_Output1(module_test_sender_t* module, Output1_t** obj)
 * @param obj
 * @return
 */
-int checkin_Output1(module_test_sender_t* module, Output1_t** obj)
+int checkin_Output1(module_test_receiver_t* module, Output1_t** obj)
 {
     return checkin4writer(module, &module->Output1, obj);
 }
@@ -247,7 +247,7 @@ int checkin_Output1(module_test_sender_t* module, Output1_t** obj)
 * @return
 * /~russian 0 в случае успеха
 */
-int checkout_Output2(module_test_sender_t* module, Output2_t** obj)
+int checkout_Output2(module_test_receiver_t* module, Output2_t** obj)
 {
     return checkout4writer(module, &module->Output2, obj);
 }
@@ -258,7 +258,7 @@ int checkout_Output2(module_test_sender_t* module, Output2_t** obj)
 * @param obj
 * @return
 */
-int checkin_Output2(module_test_sender_t* module, Output2_t** obj)
+int checkin_Output2(module_test_receiver_t* module, Output2_t** obj)
 {
     return checkin4writer(module, &module->Output2, obj);
 }

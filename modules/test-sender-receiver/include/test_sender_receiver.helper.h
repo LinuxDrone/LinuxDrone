@@ -54,12 +54,12 @@ typedef struct {
 	shmem_publisher_set_t  Output2;
 	Output2_t obj1_Output2;
 	Output2_t obj2_Output2;
-} module_test_sender_t;
+} module_test_sender_receiver_t;
 
 
 // Helper functions
-module_test_sender_t* test_sender_create();
-int test_sender_init(module_test_sender_t* module, const uint8_t* bson_data, uint32_t bson_len);
-int test_sender_start();
-void test_sender_delete(module_test_sender_t* module);
+module_test_sender_receiver_t* test_sender_receiver_create();
+int test_sender_receiver_init(module_test_sender_receiver_t* module, const uint8_t* bson_data, uint32_t bson_len);
+int test_sender_receiver_start();
+void test_sender_receiver_delete(module_test_sender_receiver_t* module);
 

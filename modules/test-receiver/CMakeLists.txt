@@ -20,22 +20,22 @@ set(EXTRA_LIBS
     c-sdk
 )
 
-add_library(c-gy87 MODULE ${INC} ${SRC})
+add_library(test-receiver MODULE ${INC} ${SRC})
 
-target_link_libraries(c-gy87 ${EXTRA_LIBS})
+target_link_libraries(test-receiver ${EXTRA_LIBS})
 
 add_custom_command(
-    TARGET c-gy87
+    TARGET test-receiver
     PRE_BUILD
-    COMMAND node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/c-gy87/c-gy87.def.json ${MOD_DIR}/c-gy87
+    COMMAND node ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-receiver/test-receiver.def.json ${MOD_DIR}/test-receiver
 )
 
 add_custom_command(
-    TARGET c-gy87
+    TARGET test-receiver
     POST_BUILD
-    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-gy87.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
-    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-gy87/c-gy87.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-gy87/c-gy87.def.json
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libtest-receiver.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-receiver/libtest-receiver.so
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/test-receiver/test-receiver.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-receiver/test-receiver.def.json
 )
 
-install(TARGETS c-gy87 DESTINATION modules/c-gy87)
-install(FILES c-gy87.def.json DESTINATION modules/c-gy87)
+install(TARGETS test-receiver DESTINATION modules/test-receiver)
+install(FILES test-receiver.def.json DESTINATION modules/test-receiver)
