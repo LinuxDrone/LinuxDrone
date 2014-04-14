@@ -1,7 +1,7 @@
 {
   "type": "module_def",
   "name": "test-sender",
-  "version": 1,
+  "version": 2,
   "Task Priority": 80,
   "Task Period": 200000,
   "Transfer task period": 200000,
@@ -93,27 +93,5 @@
         }
       }
     }
-  ],
-  "inputShema": {
-    "type": "object",
-    "id": "http://jsonschema.net",
-    "properties": {
-      "in1": {
-        "type": "number",
-        "required": true,
-        "description": {
-          "en": "input 1",
-          "ru": "Вход 1"
-        }
-      },
-      "in2": {
-        "type": "number",
-        "required": true,
-        "description": {
-          "en": "input 2",
-          "ru": "Вход 2"
-        }
-      }
-    }
-  }
+  ]
 }

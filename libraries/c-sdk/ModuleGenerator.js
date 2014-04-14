@@ -55,10 +55,10 @@ function make_Bson2Structure(properties, portName) {
     r += "int bson2" + portName + "(module_t* module, bson_t* bson)\n";
     r += "{\n";
     var forInputCorrect = "";
-    if(portName=="input"){
+    if (portName == "input") {
         forInputCorrect = " !module->input_data || ";
     }
-    r += "    if(!module || "+forInputCorrect+" !bson)\n";
+    r += "    if(!module || " + forInputCorrect + " !bson)\n";
 
 
     r += "    {\n";
@@ -113,11 +113,12 @@ function Create_H_file(module) {
         //r += "\t" + input_struct + "_t input4modul;\n";
     }
 
-    module.outputs.forEach(function (out) {
-        var outName = out.name.replace(/\+/g, "");
-        r += make_structures(out.Schema.properties, outName);
-    });
-
+    if (module.outputs) {
+        module.outputs.forEach(function (out) {
+            var outName = out.name.replace(/\+/g, "");
+            r += make_structures(out.Schema.properties, outName);
+        });
+    }
 
     // формирование структуры модуля
     r += "\n// Module Structure\n";
@@ -126,13 +127,15 @@ function Create_H_file(module) {
     if ('inputShema' in module) {
         r += "\tinput_t input4modul;\n";
     }
-    module.outputs.forEach(function (out) {
-        var outName = out.name.replace(/\+/g, "");
-        r += "\n\t// набор данных для выхода " + outName + "\n";
-        r += "\tshmem_publisher_set_t  " + outName + ";\n";
-        r += "\t" + outName + "_t obj1_" + outName + ";\n";
-        r += "\t" + outName + "_t obj2_" + outName + ";\n";
-    });
+    if (module.outputs) {
+        module.outputs.forEach(function (out) {
+            var outName = out.name.replace(/\+/g, "");
+            r += "\n\t// набор данных для выхода " + outName + "\n";
+            r += "\tshmem_publisher_set_t  " + outName + ";\n";
+            r += "\t" + outName + "_t obj1_" + outName + ";\n";
+            r += "\t" + outName + "_t obj2_" + outName + ";\n";
+        });
+    }
     r += "} module_" + module_type + "_t;\n\n";
 
 
@@ -150,10 +153,15 @@ function Create_C_file(module) {
     var module_type = module.name.replace(/-/g, "_");
     var r = "";
 
-    r += "#include \"../include/"+module_type+".helper.h\"\n\n";
+    r += "#include \"../include/" + module_type + ".helper.h\"\n\n";
 
     r += "// количество типов выходных объектов\n";
-    r += "#define count_shmem_sets " + module.outputs.length + "\n\n";
+    if (module.outputs) {
+        r += "#define count_shmem_sets " + module.outputs.length + "\n\n";
+    }
+    else {
+        r += "#define count_shmem_sets 0\n\n";
+    }
 
     r += "extern t_cycle_function " + module_type + "_run;\n\n";
 
@@ -161,12 +169,14 @@ function Create_C_file(module) {
         r += make_Bson2Structure(module.inputShema.properties, "input");
     }
 
-    module.outputs.forEach(function (out) {
-        var outName = out.name.replace(/\+/g, "");
+    if (module.outputs) {
+        module.outputs.forEach(function (out) {
+            var outName = out.name.replace(/\+/g, "");
 
-        r += make_Structure2Bson(out.Schema.properties, outName);
-        r += make_Bson2Structure(out.Schema.properties, outName);
-    });
+            r += make_Structure2Bson(out.Schema.properties, outName);
+            r += make_Bson2Structure(out.Schema.properties, outName);
+        });
+    }
 
 
     r += "// Create module.\n";
@@ -176,11 +186,18 @@ function Create_C_file(module) {
     r += "    // Сохраним указатель на загруженную dll\n";
     r += "    module->module_info.dll_handle = handle;\n";
     r += "    module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));\n";
-    module.outputs.forEach(function (out, i) {
-        var outName = out.name.replace(/\+/g, "");
-        r += "    module->module_info.shmem_sets["+i+"]=&module->" + outName + ";\n";
-    });
-    r += "    module->module_info.shmem_sets[" + module.outputs.length + "]=NULL;\n";
+    if (module.outputs) {
+        module.outputs.forEach(function (out, i) {
+            var outName = out.name.replace(/\+/g, "");
+            r += "    module->module_info.shmem_sets[" + i + "]=&module->" + outName + ";\n";
+        });
+    }
+    if (module.outputs) {
+        r += "    module->module_info.shmem_sets[" + module.outputs.length + "]=NULL;\n";
+    }
+    else {
+        r += "    module->module_info.shmem_sets[0]=NULL;\n";
+    }
     r += "    return module;\n";
     r += "}\n\n";
 
@@ -196,29 +213,30 @@ function Create_C_file(module) {
     r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len)\n";
     r += "{\n";
     r += "    int res = init(&module->module_info, bson_data, bson_len);\n\n";
-    module.outputs.forEach(function (out) {
-        var outName = out.name.replace(/\+/g, "");
-        r += "    // " + outName + "\n";
-        r += "    // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа\n";
-        r += "    // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации\n";
-        r += "    module->" + outName + ".shmem_len = 300;\n";
-        r += "    // для каждого типа порождаемого объекта инициализируется соответсвующая структура\n";
-        r += "    // и указываются буферы (для обмена данными между основным и передающим потоком)\n";
-        r += "    init_publisher_set(&module->" + outName + ", module->module_info.instance_name, \"" + outName + "\");\n";
-        r += "    module->" + outName + ".obj1 = &module->obj1_" + outName + ";\n";
-        r += "    module->" + outName + ".obj2 = &module->obj2_" + outName + ";\n";
-        r += "    module->" + outName + ".obj2bson = (p_obj2bson)&" + outName + "2bson;\n";
-        r += "    module->" + outName + ".bson2obj = (p_bson2obj)&bson2" + outName + ";\n";
-        r += "    module->" + outName + ".print_obj = (p_print_obj)&print_" + outName + ";\n\n";
-    });
+    if (module.outputs) {
+        module.outputs.forEach(function (out) {
+            var outName = out.name.replace(/\+/g, "");
+            r += "    // " + outName + "\n";
+            r += "    // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа\n";
+            r += "    // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации\n";
+            r += "    module->" + outName + ".shmem_len = 300;\n";
+            r += "    // для каждого типа порождаемого объекта инициализируется соответсвующая структура\n";
+            r += "    // и указываются буферы (для обмена данными между основным и передающим потоком)\n";
+            r += "    init_publisher_set(&module->" + outName + ", module->module_info.instance_name, \"" + outName + "\");\n";
+            r += "    module->" + outName + ".obj1 = &module->obj1_" + outName + ";\n";
+            r += "    module->" + outName + ".obj2 = &module->obj2_" + outName + ";\n";
+            r += "    module->" + outName + ".obj2bson = (p_obj2bson)&" + outName + "2bson;\n";
+            r += "    module->" + outName + ".bson2obj = (p_bson2obj)&bson2" + outName + ";\n";
+            r += "    module->" + outName + ".print_obj = (p_print_obj)&print_" + outName + ";\n\n";
+        });
+    }
     if ('inputShema' in module) {
         r += "    // Input\n";
         r += "    memset(&module->input4modul, 0, sizeof(input_t));\n";
         r += "    module->module_info.input_data = &module->input4modul;\n";
         r += "    module->module_info.input_bson2obj = (p_bson2obj)&bson2input;\n";
     }
-    else
-    {
+    else {
         r += "    module->module_info.input_data = NULL;\n";
     }
     r += "\n";
@@ -235,33 +253,35 @@ function Create_C_file(module) {
     r += "}\n\n";
 
 
-    module.outputs.forEach(function (out) {
-        var outName = out.name.replace(/\+/g, "");
-        r += "/**\n";
-        r += "* @brief checkout4writer_" + outName + "\n";
-        r += "* /~russian    Заполняет указатель адресом на структуру " + outName + "_t,\n";
-        r += "*              которую можно заполнять данными для последующей передачи в разделяемую память\n";
-        r += "* @param obj\n";
-        r += "* @return\n";
-        r += "* /~russian 0 в случае успеха\n";
-        r += "*/\n";
-        r += "int checkout_" + outName + "(module_" + module_type + "_t* module, " + outName + "_t** obj)\n";
-        r += "{\n";
-        r += "    return checkout4writer(module, &module->" + outName + ", obj);\n";
-        r += "}\n\n";
+    if (module.outputs) {
+        module.outputs.forEach(function (out) {
+            var outName = out.name.replace(/\+/g, "");
+            r += "/**\n";
+            r += "* @brief checkout4writer_" + outName + "\n";
+            r += "* /~russian    Заполняет указатель адресом на структуру " + outName + "_t,\n";
+            r += "*              которую можно заполнять данными для последующей передачи в разделяемую память\n";
+            r += "* @param obj\n";
+            r += "* @return\n";
+            r += "* /~russian 0 в случае успеха\n";
+            r += "*/\n";
+            r += "int checkout_" + outName + "(module_" + module_type + "_t* module, " + outName + "_t** obj)\n";
+            r += "{\n";
+            r += "    return checkout4writer(module, &module->" + outName + ", obj);\n";
+            r += "}\n\n";
 
 
-        r += "/**\n";
-        r += "* @brief checkin4writer_" + outName + "\n";
-        r += "* /~ Возвращает объект системе (данные будут переданы в разделяемую память)\n";
-        r += "* @param obj\n";
-        r += "* @return\n";
-        r += "*/\n";
-        r += "int checkin_" + outName + "(module_" + module_type + "_t* module, " + outName + "_t** obj)\n";
-        r += "{\n";
-        r += "    return checkin4writer(module, &module->" + outName + ", obj);\n";
-        r += "}\n\n";
-    });
+            r += "/**\n";
+            r += "* @brief checkin4writer_" + outName + "\n";
+            r += "* /~ Возвращает объект системе (данные будут переданы в разделяемую память)\n";
+            r += "* @param obj\n";
+            r += "* @return\n";
+            r += "*/\n";
+            r += "int checkin_" + outName + "(module_" + module_type + "_t* module, " + outName + "_t** obj)\n";
+            r += "{\n";
+            r += "    return checkin4writer(module, &module->" + outName + ", obj);\n";
+            r += "}\n\n";
+        });
+    }
 
     return r;
 }
@@ -287,19 +307,19 @@ function main() {
 
         var text_H_file = Create_H_file(module);
         //console.log(text_H_file);
-        fs.writeFile(out_dir + "/include/"+module_type+".helper.h", text_H_file, function (err) {
+        fs.writeFile(out_dir + "/include/" + module_type + ".helper.h", text_H_file, function (err) {
             if (err) return console.log(err);
         });
 
         var text_C_file = Create_C_file(module);
         //console.log(text_H_file);
-        fs.writeFile(out_dir + "/src/"+module_type+".helper.c", text_C_file, function (err) {
+        fs.writeFile(out_dir + "/src/" + module_type + ".helper.c", text_C_file, function (err) {
             if (err) return console.log(err);
         });
     });
 }
 
-module.exports.main=main;
+module.exports.main = main;
 
 main();
 

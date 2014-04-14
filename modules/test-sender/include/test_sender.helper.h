@@ -2,19 +2,6 @@
 
 #include "../../../libraries/c-sdk/include/module-functions.h"
 
-// Enum and Structure for port input
-typedef enum
-{
-	in1 =	0b00000000000000000000000000000001,
-	in2 =	0b00000000000000000000000000000010
-} fields_input_t;
-
-typedef struct
-{
-	int in1;
-	int in2;
-} input_t;
-
 // Enum and Structure for port Output1
 typedef enum
 {
@@ -43,7 +30,6 @@ typedef struct
 // Module Structure
 typedef struct {
 	module_t module_info;
-	input_t input4modul;
 
 	// набор данных для выхода Output1
 	shmem_publisher_set_t  Output1;

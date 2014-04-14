@@ -5,51 +5,6 @@
 
 extern t_cycle_function test_sender_run;
 
-// Convert bson to structure input
-int bson2input(module_t* module, bson_t* bson)
-{
-    if(!module ||  !module->input_data ||  !bson)
-    {
-        printf("Error: func bson2input, NULL parameter\n");
-        return -1;
-    }
-
-    input_t* obj = (input_t*)module->input_data;
-    bson_iter_t iter;
-    if(!bson_iter_init (&iter, bson))
-    {
-        printf("Error: func bson2input, bson_iter_init\n");
-        return -1;
-    }
-
-    while(bson_iter_next(&iter))
-    {
-        const char* key = bson_iter_key (&iter);
-
-        if(!strncmp(key, "in1", 100))
-        {
-            obj->in1 = bson_iter_int32(&iter);
-            module->updated_input_properties |= in1;
-            continue;
-        }
-        if(!strncmp(key, "in2", 100))
-        {
-            obj->in2 = bson_iter_int32(&iter);
-            module->updated_input_properties |= in2;
-            continue;
-        }
-    }
-    return 0;
-}
-
-// Helper function. Print structure input
-void print_input(input_t* obj)
-{
-    printf("in1=%i\t", obj->in1);
-    printf("in2=%i\t", obj->in2);
-    printf("\n");
-}
-
 // Convert structure Output1 to bson
 int Output12bson(Output1_t* obj, bson_t* bson)
 {
@@ -198,10 +153,7 @@ int test_sender_init(module_test_sender_t* module, const uint8_t* bson_data, uin
     module->Output2.bson2obj = (p_bson2obj)&bson2Output2;
     module->Output2.print_obj = (p_print_obj)&print_Output2;
 
-    // Input
-    memset(&module->input4modul, 0, sizeof(input_t));
-    module->module_info.input_data = &module->input4modul;
-    module->module_info.input_bson2obj = (p_bson2obj)&bson2input;
+    module->module_info.input_data = NULL;
 
     module->module_info.func = &test_sender_run;
 

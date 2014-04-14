@@ -1,7 +1,7 @@
 {
   "type": "module_def",
   "name": "test-receiver",
-  "version": 1,
+  "version": 2,
   "Task Priority": 80,
   "Task Period": 200000,
   "Transfer task period": 200000,
@@ -62,38 +62,6 @@
       "unitMeasured": "bool"
     }
   ],
-  "outputs": [
-    {
-      "name": "Output1",
-      "Schema": {
-        "type": "object",
-        "id": "http://jsonschema.net",
-        "properties": {
-          "out1": {
-            "type": "number",
-            "required": true
-          },
-          "out2": {
-            "type": "number",
-            "required": true
-          }
-        }
-      }
-    },
-    {
-      "name": "Output2",
-      "Schema": {
-        "type": "object",
-        "id": "http://jsonschema.net",
-        "properties": {
-          "out3": {
-            "type": "number",
-            "required": true
-          }
-        }
-      }
-    }
-  ],
   "inputShema": {
     "type": "object",
     "id": "http://jsonschema.net",
@@ -113,7 +81,23 @@
           "en": "input 2",
           "ru": "Вход 2"
         }
-      }
+      },
+        "in3": {
+            "type": "number",
+            "required": true,
+            "description": {
+                "en": "input 3",
+                "ru": "Вход 3"
+            }
+        },
+        "in4": {
+            "type": "number",
+            "required": true,
+            "description": {
+                "en": "input 4",
+                "ru": "Вход 4"
+            }
+        }
     }
   }
 }

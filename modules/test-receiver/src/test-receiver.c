@@ -16,19 +16,9 @@ void test_receiver_run (module_test_receiver_t *module)
             // вышел таймаут
         }
 
-        Output1_t* objOutput1;
-        checkout_Output1(module, &objOutput1);
-        objOutput1->out1 = cycle;
-        objOutput1->out2 = cycle;
-        checkin_Output1(module, &objOutput1);
-
-        Output2_t* objOutput2;
-        checkout_Output2(module, &objOutput2);
-        objOutput2->out3 = cycle;
-        checkin_Output2(module, &objOutput2);
 
         // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу
-        module->module_info.refresh_input_mask = in1 | in2;
+        module->module_info.refresh_input_mask = in1 | in2 | in3 | in4;
 
         // Наглое считывание данных из разделяемой памяти
         //int res = refresh_input(module);
