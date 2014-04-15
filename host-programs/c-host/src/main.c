@@ -132,7 +132,8 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, con
     bson_t bson_link;
     bson_t b_arr;
 
-    bson_append_array_begin (module_instance, "in_links", -1, &b_arr);
+    // Добавление линков в список входящих связей
+    bool was_in_links = false;
     while(bson_iter_next(&iter_links))
     {
         if(!BSON_ITER_HOLDS_DOCUMENT(&iter_links))
@@ -143,8 +144,7 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, con
         bson_iter_document(&iter_links, &link_buf_len, &link_buf);
         bson_init_static(&bson_link, link_buf, link_buf_len);
 
-        debug_print_bson(&bson_link);
-
+        //debug_print_bson(&bson_link);
 
         bson_iter_t iter_inInst;
         if (!bson_iter_init_find(&iter_inInst, &bson_link, "inInst")) {
@@ -153,18 +153,78 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, con
             return -1;
         }
 
-        // Имя инстанса с входящим линков
+        // Имя инстанса с входящим линком
         const char* name_inInst = bson_iter_utf8(&iter_inInst, NULL);
         // Если это имя равно имени данного инстанса, то добавим связь в список входящих связей данного модуля
         if(!strncmp(name_inInst, module_instance_name, 100))
         {
+            if(!was_in_links)
+            {
+                bson_append_array_begin (module_instance, "in_links", -1, &b_arr);
+                was_in_links = true;
+            }
             char buffer [3];
             sprintf(buffer,"%i",lc);
             bson_append_document (&b_arr, buffer, -1, &bson_link);
             lc++;
         }
     }
-    bson_append_array_end (module_instance, &b_arr);
+    if(was_in_links)
+    {
+        bson_append_array_end (module_instance, &b_arr);
+    }
+
+
+
+    // Добавление линков в список исходящих связей
+    if(!bson_iter_init (&iter_links, &bson_links))
+    {
+        fprintf(stderr, "Error: error create iterator for links\n");
+        return -1;
+    }
+
+    bool was_out_links = false;
+    while(bson_iter_next(&iter_links))
+    {
+        if(!BSON_ITER_HOLDS_DOCUMENT(&iter_links))
+        {
+            fprintf(stderr, "Error: iter_links not a link document\n");
+            continue;
+        }
+        bson_iter_document(&iter_links, &link_buf_len, &link_buf);
+        bson_init_static(&bson_link, link_buf, link_buf_len);
+
+        //debug_print_bson(&bson_link);
+
+        bson_iter_t iter_outInst;
+        if (!bson_iter_init_find(&iter_outInst, &bson_link, "outInst")) {
+            fprintf(stderr, "Error: not found node \"outInst\" in link\n");
+            debug_print_bson(&bson_link);
+            return -1;
+        }
+
+        // Имя инстанса с исходящим линком
+        const char* name_outInst = bson_iter_utf8(&iter_outInst, NULL);
+        // Если это имя равно имени данного инстанса, то добавим связь в список входящих связей данного модуля
+        if(!strncmp(name_outInst, module_instance_name, 100))
+        {
+            if(!was_out_links)
+            {
+                bson_append_array_begin (module_instance, "out_links", -1, &b_arr);
+                was_out_links = true;
+            }
+            char buffer [3];
+            sprintf(buffer,"%i",lc);
+            bson_append_document (&b_arr, buffer, -1, &bson_link);
+            lc++;
+        }
+    }
+    if(was_out_links)
+    {
+        bson_append_array_end (module_instance, &b_arr);
+    }
+
+
     //debug_print_bson(module_instance);
     return 0;
 }
