@@ -48,12 +48,12 @@ typedef struct {
 	module_t module_info;
 
 	// набор данных для выхода GyroAccelMagTemp
-	shmem_publisher_set_t  GyroAccelMagTemp;
+	out_object_t  GyroAccelMagTemp;
 	GyroAccelMagTemp_t obj1_GyroAccelMagTemp;
 	GyroAccelMagTemp_t obj2_GyroAccelMagTemp;
 
 	// набор данных для выхода Baro
-	shmem_publisher_set_t  Baro;
+	out_object_t  Baro;
 	Baro_t obj1_Baro;
 	Baro_t obj2_Baro;
 } module_c_gy87_t;

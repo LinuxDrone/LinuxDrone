@@ -1,7 +1,7 @@
 #include "../include/test_receiver.helper.h"
 
 // количество типов выходных объектов
-#define count_shmem_sets 0
+#define count_outs 0
 
 extern t_cycle_function test_receiver_run;
 
@@ -70,8 +70,8 @@ module_test_receiver_t* test_receiver_create(void *handle)
     module_test_receiver_t* module = malloc(sizeof(module_test_receiver_t));
     // Сохраним указатель на загруженную dll
     module->module_info.dll_handle = handle;
-    module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));
-    module->module_info.shmem_sets[0]=NULL;
+    module->module_info.out_objects = malloc(sizeof(void *) * (count_outs+1));
+    module->module_info.out_objects[0]=NULL;
     return module;
 }
 

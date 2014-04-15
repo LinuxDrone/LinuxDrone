@@ -316,7 +316,7 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
     strcat(so_name, module_type);
     strcat(so_name, ".so");
 
-    fprintf(stdout, "so_name=%s\n", so_name);
+    //fprintf(stdout, "so_name=%s\n", so_name);
 
     void *handle; // Указатель на загруженную dll
     char *error;

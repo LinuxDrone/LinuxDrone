@@ -99,14 +99,14 @@ void print_obj_status(int number_obj, StatusObj status) {
     }
 }
 
-int init_publisher_set(shmem_publisher_set_t * pset, char* instance_name, char* out_name)
+int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
 {
     // Create shared memory
     char name_shmem[64] = "";
     strcat(name_shmem, instance_name);
     strcat(name_shmem, out_name);
     strcat(name_shmem, "_shmem");
-    int err = rt_heap_create(&pset->h_shmem, name_shmem, pset->shmem_len,
+    int err = rt_heap_create(&pset->shmem_set.h_shmem, name_shmem, pset->shmem_set.shmem_len,
                              H_SHARED | H_PRIO);
     if (err != 0) {
         fprintf(stdout, "Error %i create shared memory \"%s\"\n", err, name_shmem);
@@ -114,17 +114,17 @@ int init_publisher_set(shmem_publisher_set_t * pset, char* instance_name, char* 
     }
 
     // Alloc shared memory block
-    err = rt_heap_alloc(&pset->h_shmem, 0, TM_INFINITE, &pset->shmem);
+    err = rt_heap_alloc(&pset->shmem_set.h_shmem, 0, TM_INFINITE, &pset->shmem_set.shmem);
     if (err != 0)
         printf("Error rt_heap_alloc for block1 err=%i\n", err);
-    memset(pset->shmem, 0, pset->shmem_len);
+    memset(pset->shmem_set.shmem, 0, pset->shmem_set.shmem_len);
 
     // Create event service
     char name_eflags[64] = "";
     strcat(name_eflags, instance_name);
     strcat(name_eflags, out_name);
     strcat(name_eflags, "_flags");
-    err = rt_event_create(&pset->eflags, name_eflags, ULONG_MAX, EV_PRIO);
+    err = rt_event_create(&pset->shmem_set.eflags, name_eflags, ULONG_MAX, EV_PRIO);
     if (err != 0) {
         fprintf(stdout, "Error create event service \"%s\"\n", name_eflags);
         return err;
@@ -135,7 +135,7 @@ int init_publisher_set(shmem_publisher_set_t * pset, char* instance_name, char* 
     strcat(name_rmutex, instance_name);
     strcat(name_rmutex, out_name);
     strcat(name_rmutex, "_rmutex");
-    err = rt_mutex_create(&pset->mutex_read_shmem, name_rmutex);
+    err = rt_mutex_create(&pset->shmem_set.mutex_read_shmem, name_rmutex);
     if (err != 0) {
         fprintf(stdout, "Error create mutex_read_shmem \"%s\"\n", name_rmutex);
         return err;
@@ -166,7 +166,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         return -1;
     }
     module->instance_name = bson_iter_utf8(&iter, NULL);
-    fprintf(stdout, "instance name=%s\n", module->instance_name);
+    //fprintf(stdout, "instance name=%s\n", module->instance_name);
 
     /**
      * Task Priority
@@ -180,7 +180,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         return -1;
     }
     module->task_priority = bson_iter_int32(&iter);
-    fprintf(stdout, "Task Priority=%i\n", module->task_priority);
+    //fprintf(stdout, "Task Priority=%i\n", module->task_priority);
 
     /**
      * Main task Period
@@ -194,7 +194,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         return -1;
     }
     module->queue_timeout = rt_timer_ns2ticks(bson_iter_int32(&iter) * 1000);
-    fprintf(stdout, "queue_timeout=%i\n", module->queue_timeout);
+    //fprintf(stdout, "queue_timeout=%i\n", module->queue_timeout);
 
     /**
      * Transfer task Period
@@ -209,7 +209,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     }
     module->transmit_task_period = rt_timer_ns2ticks(
                 bson_iter_int32(&iter) * 1000);
-    fprintf(stdout, "transmit_task_period=%i\n", module->transmit_task_period);
+    //fprintf(stdout, "transmit_task_period=%i\n", module->transmit_task_period);
 
     return 0;
 }
@@ -220,7 +220,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
  * @param data данные копируемые в разделяемую память
  * @param datalen длина копируемых данных
  */
-void write_shmem(shmem_publisher_set_t* set, const char* data, unsigned short datalen)
+void write_shmem(shmem_set_t* set, const char* data, unsigned short datalen)
 {
     unsigned long after_mask;
     int res = rt_event_clear(&set->eflags, ~SHMEM_WRITER_MASK, &after_mask);
@@ -259,8 +259,7 @@ void write_shmem(shmem_publisher_set_t* set, const char* data, unsigned short da
     }
 }
 
-
-void read_shmem(shmem_publisher_set_t* set, void* data, unsigned short* datalen)
+void read_shmem(shmem_set_t* set, void* data, unsigned short* datalen)
 {
     unsigned long after_mask;
     /**
@@ -370,6 +369,10 @@ void read_shmem(shmem_publisher_set_t* set, void* data, unsigned short* datalen)
 
 }
 
+
+
+
+
 void get_input_data(void* p_module)
 {
     module_t* module = p_module;
@@ -422,55 +425,59 @@ void get_input_data(void* p_module)
     refresh_input(module);
 }
 
-
-void task_transmit_body(void *cookie)
+void task_transmit_body(void *p_module)
 {
-    module_t* module = cookie;
+    module_t* module = p_module;
     int cycle = 0;
 
     bson_t bson_tr;
     void* obj;
+    RTIME time_last_publish_shmem;
 
     while (1) {
-        rt_task_sleep(module->transmit_task_period);
-
-        int i=0;
-        shmem_publisher_set_t* set = module->shmem_sets[i];
-        while(set)
+        int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
+        if (res != 0)
         {
-            checkout4transmiter(module, set, &obj);
-            if(obj!=NULL)
-            {
-                bson_init (&bson_tr);
-                // Call user convert function
-                (*set->obj2bson)(obj, &bson_tr);
-                write_shmem(set, bson_get_data(&bson_tr), bson_tr.len);
-                //printf("send %i\n", bson_tr.len);
-                bson_destroy(&bson_tr);
-
-                checkin4transmiter(module, set, &obj);
-            }
-            set = module->shmem_sets[++i];
+            printf("error function task_transmit_body: rt_mutex_acquire\n");
+            return;
         }
-        /*
-        if(obj==NULL)
+        // Если нет заполненных объектов, то поспим пока они не появятся
+        res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, module->transmit_task_period);
+        if (res == 0)
         {
-            int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
-            if (res != 0)
-            {
-                printf("error checkout4transmiter: rt_mutex_acquire\n");
-                return;
-            }
+            // Пуш в очереди подписчиков
 
-            // Если нет заполненных объектов, то поспим пока они не появятся
-            res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, TM_INFINITE);
-            if (res != 0)
+
+            // Публикация данных в разделяемую память, не чаще чем в оговоренный период
+            if(rt_timer_read() - time_last_publish_shmem > module->transmit_task_period)
             {
-                printf("error=%i in task_transmit_body:  rt_cond_wait\n", res);
-                return;
+                int i=0;
+                out_object_t* set = module->out_objects[i];
+                while(set)
+                {
+                    checkout4transmiter(module, set, &obj);
+                    if(obj!=NULL)
+                    {
+                        bson_init (&bson_tr);
+                        // Call user convert function
+                        (*set->obj2bson)(obj, &bson_tr);
+//                        write_shmem(set, bson_get_data(&bson_tr), bson_tr.len);
+                        //printf("send %i\n", bson_tr.len);
+                        bson_destroy(&bson_tr);
+
+                        checkin4transmiter(module, set, &obj);
+                    }
+                    set = module->out_objects[++i];
+                }
+                time_last_publish_shmem=rt_timer_read();
             }
         }
-        */
+        else if (res!=-ETIMEDOUT)
+        {
+            printf("error=%i in task_transmit_body:  rt_cond_wait\n", res);
+            return;
+        }
+
         //printf("task_transmit cycle %i\n", cycle++);
     }
 }
@@ -505,7 +512,7 @@ int start(void* p_module)
         printf("Error start main task\n");
 
     // Если нет выходов не нужна и таска передатчика
-    if(module->shmem_sets==NULL)
+    if(module->out_objects[0]==NULL)
         return err;
 
     err = rt_task_start(&module->task_transmit, &task_transmit_body, p_module);
@@ -516,7 +523,6 @@ int start(void* p_module)
 
     return err;
 }
-
 
 int stop(void* p_module)
 {
@@ -531,7 +537,7 @@ int stop(void* p_module)
     //int res = rt_heap_free(&module->h_shmem, module->shmem);
 
     free(module->module_type);
-    free(module->shmem_sets);
+    free(module->out_objects);
     dlclose(module->dll_handle);
     free(module);
 
@@ -574,7 +580,7 @@ int create_xenomai_services(module_t* module)
     }
 
     // Если не определены выходы для модуля, то нефиг и создавать сервисы
-    if(module->shmem_sets==NULL)
+    if(module->out_objects[0]==NULL)
         return 0;
 
     // Create transmit task
@@ -599,7 +605,7 @@ int create_xenomai_services(module_t* module)
         return err;
     }
 
-    // Create condition for exchange between maon and transmit task
+    // Create condition for exchange between main and transmit task
     char name_cond[64] = "";
     strcat(name_cond, module->instance_name);
     strcat(name_cond, "_cond");
@@ -622,7 +628,7 @@ int create_xenomai_services(module_t* module)
  * /~russian 0 в случае успеха
  */
 
-int checkout4writer(module_t* module, shmem_publisher_set_t* set, void** obj)
+int checkout4writer(module_t* module, out_object_t* set, void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
@@ -679,7 +685,7 @@ int checkout4writer(module_t* module, shmem_publisher_set_t* set, void** obj)
  * @return
  */
 
-int checkin4writer(module_t* module, shmem_publisher_set_t* set, void** obj)
+int checkin4writer(module_t* module, out_object_t* set, void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
@@ -735,7 +741,7 @@ int checkin4writer(module_t* module, shmem_publisher_set_t* set, void** obj)
  * /~russian 0 в случае успеха
  */
 
-int checkout4transmiter(module_t* module, shmem_publisher_set_t* set, void** obj)
+int checkout4transmiter(module_t* module, out_object_t* set, void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
@@ -776,7 +782,7 @@ int checkout4transmiter(module_t* module, shmem_publisher_set_t* set, void** obj
  * @return
  */
 
-int checkin4transmiter(module_t* module, shmem_publisher_set_t* set,  void** obj)
+int checkin4transmiter(module_t* module, out_object_t* set,  void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
@@ -838,8 +844,8 @@ int refresh_input(void* p_module)
     unsigned short retlen;
     // Данный сет является просто одним из выходных сетов этого же модуля
     // исключительно для проверки
-    shmem_publisher_set_t* set = module->shmem_sets[0];
-    read_shmem(set, buf, &retlen);
+    out_object_t* set = module->out_objects[0];
+    read_shmem(&set->shmem_set, buf, &retlen);
     //printf("retlen=%i\n", retlen);
 
     bson_t bson;

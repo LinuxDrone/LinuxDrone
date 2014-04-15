@@ -131,7 +131,7 @@ function Create_H_file(module) {
         module.outputs.forEach(function (out) {
             var outName = out.name.replace(/\+/g, "");
             r += "\n\t// набор данных для выхода " + outName + "\n";
-            r += "\tshmem_publisher_set_t  " + outName + ";\n";
+            r += "\tout_object_t  " + outName + ";\n";
             r += "\t" + outName + "_t obj1_" + outName + ";\n";
             r += "\t" + outName + "_t obj2_" + outName + ";\n";
         });
@@ -157,10 +157,10 @@ function Create_C_file(module) {
 
     r += "// количество типов выходных объектов\n";
     if (module.outputs) {
-        r += "#define count_shmem_sets " + module.outputs.length + "\n\n";
+        r += "#define count_outs " + module.outputs.length + "\n\n";
     }
     else {
-        r += "#define count_shmem_sets 0\n\n";
+        r += "#define count_outs 0\n\n";
     }
 
     r += "extern t_cycle_function " + module_type + "_run;\n\n";
@@ -185,18 +185,18 @@ function Create_C_file(module) {
     r += "    module_" + module_type + "_t* module = malloc(sizeof(module_" + module_type + "_t));\n";
     r += "    // Сохраним указатель на загруженную dll\n";
     r += "    module->module_info.dll_handle = handle;\n";
-    r += "    module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));\n";
+    r += "    module->module_info.out_objects = malloc(sizeof(void *) * (count_outs+1));\n";
     if (module.outputs) {
         module.outputs.forEach(function (out, i) {
             var outName = out.name.replace(/\+/g, "");
-            r += "    module->module_info.shmem_sets[" + i + "]=&module->" + outName + ";\n";
+            r += "    module->module_info.out_objects[" + i + "]=&module->" + outName + ";\n";
         });
     }
     if (module.outputs) {
-        r += "    module->module_info.shmem_sets[" + module.outputs.length + "]=NULL;\n";
+        r += "    module->module_info.out_objects[" + module.outputs.length + "]=NULL;\n";
     }
     else {
-        r += "    module->module_info.shmem_sets[0]=NULL;\n";
+        r += "    module->module_info.out_objects[0]=NULL;\n";
     }
     r += "    return module;\n";
     r += "}\n\n";
@@ -219,10 +219,10 @@ function Create_C_file(module) {
             r += "    // " + outName + "\n";
             r += "    // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа\n";
             r += "    // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации\n";
-            r += "    module->" + outName + ".shmem_len = 300;\n";
+            r += "    module->" + outName + ".shmem_set.shmem_len = 300;\n";
             r += "    // для каждого типа порождаемого объекта инициализируется соответсвующая структура\n";
             r += "    // и указываются буферы (для обмена данными между основным и передающим потоком)\n";
-            r += "    init_publisher_set(&module->" + outName + ", module->module_info.instance_name, \"" + outName + "\");\n";
+            r += "    init_object_set(&module->" + outName + ", module->module_info.instance_name, \"" + outName + "\");\n";
             r += "    module->" + outName + ".obj1 = &module->obj1_" + outName + ";\n";
             r += "    module->" + outName + ".obj2 = &module->obj2_" + outName + ";\n";
             r += "    module->" + outName + ".obj2bson = (p_obj2bson)&" + outName + "2bson;\n";

@@ -24,20 +24,34 @@ typedef int (*p_bson2obj)(void* p_module, bson_t* bson);
 
 typedef void (*p_print_obj)(void* obj);
 
-typedef struct {
-	RT_HEAP h_shmem;
-	void* shmem;
-	int shmem_len;
+/**
+  Структура данных, необходимых для работы с блоком разделяемой памяти
+ */
+typedef struct
+{
+    RT_HEAP h_shmem;
 
-	RT_EVENT eflags;
+    void* shmem;
+    int shmem_len;
+
+    RT_EVENT eflags;
 
     /**
      * @brief mutex_read_shmem
      * /~russian мьютех используемый для синхронизации при обмене через разделяемую память,
      * потоков разных модулей
      */
-	RT_MUTEX mutex_read_shmem;
+    RT_MUTEX mutex_read_shmem;
 
+} shmem_set_t;
+
+
+/**
+  Структура данных, представляющая тип выходного объекта
+  Для каждого типа выходного объекта, необходимо иметь в памяти такую обслуживающую структуру.
+ */
+typedef struct
+{
     void* obj1;
     StatusObj status_obj1;
 
@@ -48,8 +62,19 @@ typedef struct {
     p_bson2obj bson2obj;
     p_print_obj print_obj;
 
-} shmem_publisher_set_t;
+    shmem_set_t shmem_set;
 
+}out_object_t;
+
+
+
+/**
+  Структура данных, необходимых для работы с очередью подписчика
+ */
+typedef struct
+{
+
+} out_queue_set_t;
 
 
 typedef void (t_cycle_function)(void *cookie);
@@ -90,9 +115,12 @@ typedef struct
 	RT_QUEUE in_queue;
 	RTIME queue_timeout;
 
+    out_object_t** out_objects;
+
+    //out_queue_set_t** out_queue_sets;
 
     // массив структур предназначенных для передачи объектов в шаред мемори
-    shmem_publisher_set_t** shmem_sets;
+    //shmem_publisher_set_t** out_shmem_sets;
 
 	p_cycle_function func;
 

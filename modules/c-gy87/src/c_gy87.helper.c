@@ -1,7 +1,7 @@
 #include "../include/c_gy87.helper.h"
 
 // количество типов выходных объектов
-#define count_shmem_sets 2
+#define count_outs 2
 
 extern t_cycle_function c_gy87_run;
 
@@ -173,10 +173,10 @@ module_c_gy87_t* c_gy87_create(void *handle)
     module_c_gy87_t* module = malloc(sizeof(module_c_gy87_t));
     // Сохраним указатель на загруженную dll
     module->module_info.dll_handle = handle;
-    module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));
-    module->module_info.shmem_sets[0]=&module->GyroAccelMagTemp;
-    module->module_info.shmem_sets[1]=&module->Baro;
-    module->module_info.shmem_sets[2]=NULL;
+    module->module_info.out_objects = malloc(sizeof(void *) * (count_outs+1));
+    module->module_info.out_objects[0]=&module->GyroAccelMagTemp;
+    module->module_info.out_objects[1]=&module->Baro;
+    module->module_info.out_objects[2]=NULL;
     return module;
 }
 
@@ -194,10 +194,10 @@ int c_gy87_init(module_c_gy87_t* module, const uint8_t* bson_data, uint32_t bson
     // GyroAccelMagTemp
     // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа
     // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации
-    module->GyroAccelMagTemp.shmem_len = 300;
+    module->GyroAccelMagTemp.shmem_set.shmem_len = 300;
     // для каждого типа порождаемого объекта инициализируется соответсвующая структура
     // и указываются буферы (для обмена данными между основным и передающим потоком)
-    init_publisher_set(&module->GyroAccelMagTemp, module->module_info.instance_name, "GyroAccelMagTemp");
+    init_object_set(&module->GyroAccelMagTemp, module->module_info.instance_name, "GyroAccelMagTemp");
     module->GyroAccelMagTemp.obj1 = &module->obj1_GyroAccelMagTemp;
     module->GyroAccelMagTemp.obj2 = &module->obj2_GyroAccelMagTemp;
     module->GyroAccelMagTemp.obj2bson = (p_obj2bson)&GyroAccelMagTemp2bson;
@@ -207,10 +207,10 @@ int c_gy87_init(module_c_gy87_t* module, const uint8_t* bson_data, uint32_t bson
     // Baro
     // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа
     // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации
-    module->Baro.shmem_len = 300;
+    module->Baro.shmem_set.shmem_len = 300;
     // для каждого типа порождаемого объекта инициализируется соответсвующая структура
     // и указываются буферы (для обмена данными между основным и передающим потоком)
-    init_publisher_set(&module->Baro, module->module_info.instance_name, "Baro");
+    init_object_set(&module->Baro, module->module_info.instance_name, "Baro");
     module->Baro.obj1 = &module->obj1_Baro;
     module->Baro.obj2 = &module->obj2_Baro;
     module->Baro.obj2bson = (p_obj2bson)&Baro2bson;

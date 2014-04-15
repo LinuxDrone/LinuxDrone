@@ -1,7 +1,7 @@
 #include "../include/test_sender_receiver.helper.h"
 
 // количество типов выходных объектов
-#define count_shmem_sets 2
+#define count_outs 2
 
 extern t_cycle_function test_sender_receiver_run;
 
@@ -154,10 +154,10 @@ module_test_sender_receiver_t* test_sender_receiver_create(void *handle)
     module_test_sender_receiver_t* module = malloc(sizeof(module_test_sender_receiver_t));
     // Сохраним указатель на загруженную dll
     module->module_info.dll_handle = handle;
-    module->module_info.shmem_sets = malloc(sizeof(void *) * (count_shmem_sets+1));
-    module->module_info.shmem_sets[0]=&module->Output1;
-    module->module_info.shmem_sets[1]=&module->Output2;
-    module->module_info.shmem_sets[2]=NULL;
+    module->module_info.out_objects = malloc(sizeof(void *) * (count_outs+1));
+    module->module_info.out_objects[0]=&module->Output1;
+    module->module_info.out_objects[1]=&module->Output2;
+    module->module_info.out_objects[2]=NULL;
     return module;
 }
 
@@ -175,10 +175,10 @@ int test_sender_receiver_init(module_test_sender_receiver_t* module, const uint8
     // Output1
     // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа
     // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации
-    module->Output1.shmem_len = 300;
+    module->Output1.shmem_set.shmem_len = 300;
     // для каждого типа порождаемого объекта инициализируется соответсвующая структура
     // и указываются буферы (для обмена данными между основным и передающим потоком)
-    init_publisher_set(&module->Output1, module->module_info.instance_name, "Output1");
+    init_object_set(&module->Output1, module->module_info.instance_name, "Output1");
     module->Output1.obj1 = &module->obj1_Output1;
     module->Output1.obj2 = &module->obj2_Output1;
     module->Output1.obj2bson = (p_obj2bson)&Output12bson;
@@ -188,10 +188,10 @@ int test_sender_receiver_init(module_test_sender_receiver_t* module, const uint8
     // Output2
     // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа
     // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации
-    module->Output2.shmem_len = 300;
+    module->Output2.shmem_set.shmem_len = 300;
     // для каждого типа порождаемого объекта инициализируется соответсвующая структура
     // и указываются буферы (для обмена данными между основным и передающим потоком)
-    init_publisher_set(&module->Output2, module->module_info.instance_name, "Output2");
+    init_object_set(&module->Output2, module->module_info.instance_name, "Output2");
     module->Output2.obj1 = &module->obj1_Output2;
     module->Output2.obj2 = &module->obj2_Output2;
     module->Output2.obj2bson = (p_obj2bson)&Output22bson;

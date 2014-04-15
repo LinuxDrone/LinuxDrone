@@ -46,12 +46,12 @@ typedef struct {
 	input_t input4modul;
 
 	// набор данных для выхода Output1
-	shmem_publisher_set_t  Output1;
+	out_object_t  Output1;
 	Output1_t obj1_Output1;
 	Output1_t obj2_Output1;
 
 	// набор данных для выхода Output2
-	shmem_publisher_set_t  Output2;
+	out_object_t  Output2;
 	Output2_t obj1_Output2;
 	Output2_t obj2_Output2;
 } module_test_sender_receiver_t;
