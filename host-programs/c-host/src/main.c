@@ -5,6 +5,11 @@
 #include <mongoc.h>
 #include "module-functions.h"
 
+#define DB_HOST "mongodb://localhost:27017"
+#define DB_NAME "test"
+#define DB_CONF_COLLECTION "configuration"
+
+
 // Хранилище указателей на загруженные пускачем инстансы модулей
 bson_t instances;
 
@@ -46,9 +51,9 @@ bson_t* get_bson_from_file() {
 	return NULL ;
 }
 
-bson_t* get_bson_from_db()
+bson_t* get_bson_from_db(const char* configuration_name, const char* configuration_version)
 {
-    bson_t *result;
+    bson_t *result = NULL;
     mongoc_collection_t *collection;
     mongoc_client_t *client;
     mongoc_cursor_t *cursor;
@@ -61,8 +66,8 @@ bson_t* get_bson_from_db()
     bool r;
 
     /* get a handle to our collection */
-    client = mongoc_client_new ("mongodb://localhost:27017");
-    collection = mongoc_client_get_collection (client, "test", "configuration");
+    client = mongoc_client_new (DB_HOST);
+    collection = mongoc_client_get_collection (client, DB_NAME, DB_CONF_COLLECTION);
 
     /*
     // insert a document
@@ -77,7 +82,7 @@ bson_t* get_bson_from_db()
     */
 
     /* build a query to execute */
-    query = BCON_NEW ("name", BCON_UTF8 ("New Schema"), "version", BCON_UTF8("1"));
+    query = BCON_NEW ("name", BCON_UTF8 (configuration_name), "version", BCON_UTF8(configuration_version));
 
     /* execute the query and iterate the results */
     cursor = mongoc_collection_find (collection, MONGOC_QUERY_NONE, 0, 0, 0, query, NULL, NULL);
@@ -230,6 +235,7 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, con
 }
 
 
+
 int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_name)
 {
     bson_iter_t iter_modules;
@@ -378,6 +384,7 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
 }
 
 
+
 int stop_instance(char* instance_name)
 {
     // Ищем по имени инстанса, ссылку на него
@@ -415,13 +422,17 @@ int stop_instance(char* instance_name)
 }
 
 
-
 int main(int argc, char *argv[]) {
-    if(argc < 2)
+    if(argc < 4)
     {
-        printf( "usage: %s instance_name1, instance_name2, ...\n", argv[0] );
+        printf( "usage: %s configuration_name configuration_version instance_name [instance_name ...]\n", argv[0] );
         return -1;
     }
+
+    const char* configuration_name = argv[1];
+    const char* configuration_version = argv[2];
+    //fprintf(stderr, "configuration_name=%s configuration_version=%s\n", configuration_name, configuration_version);
+
 
     // Инициализируем переменную (bson объект), в котором будем хранить ссылки на созданные инстансы
     bson_init(&instances);
@@ -429,7 +440,12 @@ int main(int argc, char *argv[]) {
     // Временное решение - грузить конфигурацию из файла, а не из базы
     //bson_t* bson_configuration = get_bson_from_file();
 
-    bson_t* bson_configuration = get_bson_from_db();
+    bson_t* bson_configuration = get_bson_from_db(configuration_name, configuration_version);
+    if(bson_configuration==NULL)
+    {
+        fprintf(stderr, "Not found configuration \"%s\" with version \"%s\"\n", configuration_name, configuration_version);
+        return -1;
+    }
 
     //debug_print_bson(bson_configuration);
 
@@ -447,7 +463,7 @@ int main(int argc, char *argv[]) {
 
 
     int im;
-    for(im=1; im<argc; im++)
+    for(im=3; im<argc; im++)
     {
         printf("instance=%s\n", argv[im]);
 
@@ -460,7 +476,7 @@ int main(int argc, char *argv[]) {
     printf("\nPress ENTER for exit\n\n");
 	getchar();
 
-    for(im=1; im<argc; im++)
+    for(im=3; im<argc; im++)
     {
         stop_instance(argv[im]);
     }
