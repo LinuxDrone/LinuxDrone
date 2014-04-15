@@ -5,121 +5,6 @@
 
 extern t_cycle_function c_gy87_run;
 
-// Convert bson to structure input
-int bson2input(module_t* module, bson_t* bson)
-{
-    if(!module ||  !module->input_data ||  !bson)
-    {
-        printf("Error: func bson2input, NULL parameter\n");
-        return -1;
-    }
-
-    input_t* obj = (input_t*)module->input_data;
-    bson_iter_t iter;
-    if(!bson_iter_init (&iter, bson))
-    {
-        printf("Error: func bson2input, bson_iter_init\n");
-        return -1;
-    }
-
-    while(bson_iter_next(&iter))
-    {
-        const char* key = bson_iter_key (&iter);
-
-        if(!strncmp(key, "pwm0", 100))
-        {
-            obj->pwm0 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm0;
-            continue;
-        }
-        if(!strncmp(key, "pwm1", 100))
-        {
-            obj->pwm1 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm1;
-            continue;
-        }
-        if(!strncmp(key, "pwm2", 100))
-        {
-            obj->pwm2 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm2;
-            continue;
-        }
-        if(!strncmp(key, "pwm3", 100))
-        {
-            obj->pwm3 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm3;
-            continue;
-        }
-        if(!strncmp(key, "pwm4", 100))
-        {
-            obj->pwm4 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm4;
-            continue;
-        }
-        if(!strncmp(key, "pwm5", 100))
-        {
-            obj->pwm5 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm5;
-            continue;
-        }
-        if(!strncmp(key, "pwm6", 100))
-        {
-            obj->pwm6 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm6;
-            continue;
-        }
-        if(!strncmp(key, "pwm7", 100))
-        {
-            obj->pwm7 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm7;
-            continue;
-        }
-        if(!strncmp(key, "pwm8", 100))
-        {
-            obj->pwm8 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm8;
-            continue;
-        }
-        if(!strncmp(key, "pwm9", 100))
-        {
-            obj->pwm9 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm9;
-            continue;
-        }
-        if(!strncmp(key, "pwm10", 100))
-        {
-            obj->pwm10 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm10;
-            continue;
-        }
-        if(!strncmp(key, "pwm11", 100))
-        {
-            obj->pwm11 = bson_iter_int32(&iter);
-            module->updated_input_properties |= pwm11;
-            continue;
-        }
-    }
-    return 0;
-}
-
-// Helper function. Print structure input
-void print_input(input_t* obj)
-{
-    printf("pwm0=%i\t", obj->pwm0);
-    printf("pwm1=%i\t", obj->pwm1);
-    printf("pwm2=%i\t", obj->pwm2);
-    printf("pwm3=%i\t", obj->pwm3);
-    printf("pwm4=%i\t", obj->pwm4);
-    printf("pwm5=%i\t", obj->pwm5);
-    printf("pwm6=%i\t", obj->pwm6);
-    printf("pwm7=%i\t", obj->pwm7);
-    printf("pwm8=%i\t", obj->pwm8);
-    printf("pwm9=%i\t", obj->pwm9);
-    printf("pwm10=%i\t", obj->pwm10);
-    printf("pwm11=%i\t", obj->pwm11);
-    printf("\n");
-}
-
 // Convert structure GyroAccelMagTemp to bson
 int GyroAccelMagTemp2bson(GyroAccelMagTemp_t* obj, bson_t* bson)
 {
@@ -332,10 +217,7 @@ int c_gy87_init(module_c_gy87_t* module, const uint8_t* bson_data, uint32_t bson
     module->Baro.bson2obj = (p_bson2obj)&bson2Baro;
     module->Baro.print_obj = (p_print_obj)&print_Baro;
 
-    // Input
-    memset(&module->input4modul, 0, sizeof(input_t));
-    module->module_info.input_data = &module->input4modul;
-    module->module_info.input_bson2obj = (p_bson2obj)&bson2input;
+    module->module_info.input_data = NULL;
 
     module->module_info.func = &c_gy87_run;
 

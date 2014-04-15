@@ -2,39 +2,6 @@
 
 #include "../../../libraries/c-sdk/include/module-functions.h"
 
-// Enum and Structure for port input
-typedef enum
-{
-	pwm0 =	0b00000000000000000000000000000001,
-	pwm1 =	0b00000000000000000000000000000010,
-	pwm2 =	0b00000000000000000000000000000100,
-	pwm3 =	0b00000000000000000000000000001000,
-	pwm4 =	0b00000000000000000000000000010000,
-	pwm5 =	0b00000000000000000000000000100000,
-	pwm6 =	0b00000000000000000000000001000000,
-	pwm7 =	0b00000000000000000000000010000000,
-	pwm8 =	0b00000000000000000000000100000000,
-	pwm9 =	0b00000000000000000000001000000000,
-	pwm10 =	0b00000000000000000000010000000000,
-	pwm11 =	0b00000000000000000000100000000000
-} fields_input_t;
-
-typedef struct
-{
-	int pwm0;
-	int pwm1;
-	int pwm2;
-	int pwm3;
-	int pwm4;
-	int pwm5;
-	int pwm6;
-	int pwm7;
-	int pwm8;
-	int pwm9;
-	int pwm10;
-	int pwm11;
-} input_t;
-
 // Enum and Structure for port GyroAccelMagTemp
 typedef enum
 {
@@ -79,7 +46,6 @@ typedef struct
 // Module Structure
 typedef struct {
 	module_t module_info;
-	input_t input4modul;
 
 	// набор данных для выхода GyroAccelMagTemp
 	shmem_publisher_set_t  GyroAccelMagTemp;

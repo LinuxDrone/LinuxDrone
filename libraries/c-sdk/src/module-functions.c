@@ -43,6 +43,38 @@ void print_task_start_error(int err) {
     }
 }
 
+void print_event_wait_error(int err) {
+    switch (err)
+    {
+    case -EINVAL:
+        printf("is returned if event is not a event group descriptor.\n");
+        break;
+
+    case -EIDRM:
+        printf("is returned if event is a deleted event group descriptor, including if the deletion occurred while the caller was sleeping on it before the request has been satisfied.\n");
+        break;
+
+    case -EWOULDBLOCK:
+        printf("is returned if timeout is equal to TM_NONBLOCK and the current event mask value does not satisfy the request.\n");
+        break;
+
+    case -EINTR:
+        printf("is returned if rt_task_unblock() has been called for the waiting task before the request has been satisfied.\n");
+        break;
+
+    case -ETIMEDOUT:
+        printf("is returned if the request has not been satisfied within the specified amount of time.\n");
+        break;
+
+    case -EPERM:
+        printf("is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime context).\n");
+        break;
+
+    default:
+        printf("Unknown event wait error: %i.\n", err);
+    }
+}
+
 void print_obj_status(int number_obj, StatusObj status) {
     switch (status)
     {
@@ -239,6 +271,7 @@ void read_shmem(shmem_publisher_set_t* set, void* data, unsigned short* datalen)
                             TM_INFINITE);
     if (res != 0) {
         printf("error read_shmem: rt_event_wait\n");
+        print_event_wait_error(res);
         return;
     }
 
@@ -343,9 +376,10 @@ void get_input_data(void* p_module)
 
     if(module->input_data==NULL)
     {
-        //TODO: здесь просто поспать потоку
+        //здесь просто поспать потоку
+        rt_task_sleep(module->queue_timeout);
 
-        printf("Module don't have input\n");
+        //printf("Module don't have input\n");
         return;
     }
 

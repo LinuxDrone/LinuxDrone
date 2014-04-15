@@ -103,7 +103,7 @@ bson_t* get_bson_from_db()
  * @brief add_links2instance
  * extract info about links from configuration and add them to instance bson
  */
-int add_links2instance(bson_t* bson_configuration, bson_t * module_instance)
+int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, const char* module_instance_name)
 {
     // Теперь надо вычитать линки и засунуть их как массивы в объект bson_module
     bson_iter_t iter_l;
@@ -132,25 +132,37 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance)
     bson_t bson_link;
     bson_t b_arr;
 
-    bson_append_array_begin (module_instance, "inputs", -1, &b_arr);
+    bson_append_array_begin (module_instance, "in_links", -1, &b_arr);
     while(bson_iter_next(&iter_links))
     {
         if(!BSON_ITER_HOLDS_DOCUMENT(&iter_links))
         {
-            fprintf(stderr, "Error: Not link document\n");
+            fprintf(stderr, "Error: iter_links not a link document\n");
             continue;
         }
         bson_iter_document(&iter_links, &link_buf_len, &link_buf);
-
         bson_init_static(&bson_link, link_buf, link_buf_len);
-        //debug_print_bson(&bson_link);
 
-        char buffer [3];
-        sprintf(buffer,"%i",lc);
+        debug_print_bson(&bson_link);
 
-        bson_append_document (&b_arr, buffer, -1, &bson_link);
 
-        lc++;
+        bson_iter_t iter_inInst;
+        if (!bson_iter_init_find(&iter_inInst, &bson_link, "inInst")) {
+            fprintf(stderr, "Error: not found node \"inInst\" in link\n");
+            debug_print_bson(&bson_link);
+            return -1;
+        }
+
+        // Имя инстанса с входящим линков
+        const char* name_inInst = bson_iter_utf8(&iter_inInst, NULL);
+        // Если это имя равно имени данного инстанса, то добавим связь в список входящих связей данного модуля
+        if(!strncmp(name_inInst, module_instance_name, 100))
+        {
+            char buffer [3];
+            sprintf(buffer,"%i",lc);
+            bson_append_document (&b_arr, buffer, -1, &bson_link);
+            lc++;
+        }
     }
     bson_append_array_end (module_instance, &b_arr);
     //debug_print_bson(module_instance);
@@ -170,6 +182,7 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
     bson_t * module_instance = NULL;
     const uint8_t *buf = NULL;
     uint32_t buf_len = 0;
+    const char* module_instance_name;
 
     // Бежим по списку инстансов в конфигурации
     while(bson_iter_next(&iter_modules))
@@ -195,7 +208,7 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
             return -1;
         }
 
-        const char* module_instance_name = bson_iter_utf8(&iter_instance_name, NULL);
+        module_instance_name = bson_iter_utf8(&iter_instance_name, NULL);
 
         if(!strncmp(module_instance_name, instance_name, 100))
         {
@@ -211,7 +224,7 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
         return -1;
     }
 
-    if(add_links2instance(bson_configuration, module_instance)!=0)
+    if(add_links2instance(bson_configuration, module_instance, module_instance_name)!=0)
     {
         printf("Error add_links2instance \"%s\"\n", instance_name);
         return -1;

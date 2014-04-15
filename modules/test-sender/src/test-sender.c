@@ -27,12 +27,6 @@ void test_sender_run (module_test_sender_t *module)
         objOutput2->out3 = cycle;
         checkin_Output2(module, &objOutput2);
 
-        // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу
-        module->module_info.refresh_input_mask = in1 | in2;
-
-        // Наглое считывание данных из разделяемой памяти
-        //int res = refresh_input(module);
-
         cycle++;
     }
 }
