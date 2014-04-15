@@ -24,6 +24,7 @@ typedef int (*p_bson2obj)(void* p_module, bson_t* bson);
 
 typedef void (*p_print_obj)(void* obj);
 
+
 /**
   Структура данных, необходимых для работы с блоком разделяемой памяти
  */
@@ -47,6 +48,16 @@ typedef struct
 
 
 /**
+  Структура данных, необходимых для работы с очередью подписчика
+ */
+typedef struct
+{
+    RT_QUEUE out_queue;
+
+} out_queue_set_t;
+
+
+/**
   Структура данных, представляющая тип выходного объекта
   Для каждого типа выходного объекта, необходимо иметь в памяти такую обслуживающую структуру.
  */
@@ -62,19 +73,14 @@ typedef struct
     p_bson2obj bson2obj;
     p_print_obj print_obj;
 
+    // Данные необходимые для публикации объекта в разделяемую память
     shmem_set_t shmem_set;
+
+    // Список очередей (подписчиков), в которые будет передаваться объект
+    out_queue_set_t** out_queues;
 
 }out_object_t;
 
-
-
-/**
-  Структура данных, необходимых для работы с очередью подписчика
- */
-typedef struct
-{
-
-} out_queue_set_t;
 
 
 typedef void (t_cycle_function)(void *cookie);

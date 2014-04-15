@@ -445,31 +445,35 @@ void task_transmit_body(void *p_module)
         res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, module->transmit_task_period);
         if (res == 0)
         {
-            // Пуш в очереди подписчиков
-
-
-            // Публикация данных в разделяемую память, не чаще чем в оговоренный период
-            if(rt_timer_read() - time_last_publish_shmem > module->transmit_task_period)
+            int i=0;
+            out_object_t* set = module->out_objects[i];
+            while(set)
             {
-                int i=0;
-                out_object_t* set = module->out_objects[i];
-                while(set)
+                checkout4transmiter(module, set, &obj);
+                if(obj!=NULL)
                 {
-                    checkout4transmiter(module, set, &obj);
-                    if(obj!=NULL)
+                    // Нашли обновившийся в основном потоке объект
+                    // Пуш в очереди подписчиков
+
+
+
+                    // Публикация данных в разделяемую память, не чаще чем в оговоренный период
+                    if(rt_timer_read() - time_last_publish_shmem > module->transmit_task_period)
                     {
+
                         bson_init (&bson_tr);
                         // Call user convert function
                         (*set->obj2bson)(obj, &bson_tr);
-//                        write_shmem(set, bson_get_data(&bson_tr), bson_tr.len);
+                        write_shmem(&set->shmem_set, bson_get_data(&bson_tr), bson_tr.len);
                         //printf("send %i\n", bson_tr.len);
                         bson_destroy(&bson_tr);
-
-                        checkin4transmiter(module, set, &obj);
+                        time_last_publish_shmem=rt_timer_read();
                     }
-                    set = module->out_objects[++i];
+
+                    // Вернуть объект основному потоку на новое заполнение
+                    checkin4transmiter(module, set, &obj);
                 }
-                time_last_publish_shmem=rt_timer_read();
+                set = module->out_objects[++i];
             }
         }
         else if (res!=-ETIMEDOUT)
