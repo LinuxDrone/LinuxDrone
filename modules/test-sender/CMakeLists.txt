@@ -28,6 +28,7 @@ add_custom_command(
     TARGET test-sender
     PRE_BUILD
     COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-sender/test-sender.def.json ${MOD_DIR}/test-sender
+#COMMAND
 )
 
 add_custom_command(

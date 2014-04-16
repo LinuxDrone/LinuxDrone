@@ -232,7 +232,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         bson_init_static(&bson_queue_links, array_buf, array_buf_len);
 
         uint32_t count_links = bson_count_keys (&bson_queue_links);
-        printf("count_links=%i\n", count_links);
+        //printf("count_links=%i\n", count_links);
 
         bson_iter_t iter_links;
         if(!bson_iter_init (&iter_links, &bson_queue_links))
@@ -282,20 +282,32 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             const char* remote_inpin_name = bson_iter_utf8(&iter_remote_inpin_name, NULL);
 
 
-            unsigned short size_of_type;
-            out_object_t* obj = (*module->get_outobj_by_outpin)(module, outpin_name, &size_of_type);
+            unsigned short offset_field;
+            unsigned short index_port;
+            out_object_t* obj = (*module->get_outobj_by_outpin)(module, outpin_name, &offset_field, &index_port);
             if(obj)
             {
+                /* WARNING Неверно реализовано
                 // Проверим, существует ли уже массив (выделена ли под него память)
                 if(obj->out_queues == NULL)
                 {
                     // Немного некрасивая реализация.
                     // Для каждого выходного объекта выделяется массив размером равным общему количеству исходящих queue линков
-                    // Хотя часть линов может относиться к одному выходному объекту, а часть к другому
+                    // Хотя часть линков может относиться к одному выходному объекту, а часть к другому
+                    int size_buf_ar = sizeof(void*) * (count_links+1);
+                    obj->out_queues = malloc(size_buf_ar);
+                    memset(obj->out_queues, 0, size_buf_ar);
                 }
+                remote_obj_field_t* remote_obj_field = (remote_obj_field_t*)malloc(sizeof(remote_obj_field_t));
+                remote_obj_field->offset_field_obj = offset_field;
+                remote_obj_field->remote_field_name = malloc(strlen(remote_inpin_name));
+                strcpy(remote_obj_field->remote_field_name, remote_inpin_name);
+                remote_obj_field->type_field_obj = fieldInteger; //TODO: обрабатывать и другие типы
+                obj->out_queues[index_port] = remote_obj_field;
 
                 //TODO: Сформировать массив с именами полей удаленного объекта
-                printf("size_of_type=%i\n", size_of_type);
+                printf("size_of_type=%i\n", offset_field);
+                */
             }
             else
             {

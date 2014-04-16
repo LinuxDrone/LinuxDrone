@@ -118,22 +118,26 @@ module_test_sender_t* test_sender_create(void *handle)
 
 // Возвращает указатель на структуру выходного объекта, по имени пина
 // Используется при подготовке списка полей, для мапинга объектов (для передачи в очередь)
-out_object_t* get_outobject_by_outpin(module_test_sender_t* module, char* name_out_pin, unsigned short* size_of_type)
+out_object_t* get_outobject_by_outpin(module_test_sender_t* module, char* name_out_pin, unsigned short* offset_field, unsigned short* index_port)
 {
-    (*size_of_type) = 0;
+    (*offset_field) = 0;
+    (*index_port) = 0;
     if(!strncmp(name_out_pin, "out1", 100))
     {
-        (*size_of_type) = (void*)&module->obj1_Output1.out1 - (void*)&module->obj1_Output1;
+        (*offset_field) = (void*)&module->obj1_Output1.out1 - (void*)&module->obj1_Output1;
+        (*index_port) = 0;
         return &module->Output1;
     }
     if(!strncmp(name_out_pin, "out2", 100))
     {
-        (*size_of_type) = (void*)&module->obj1_Output1.out2 - (void*)&module->obj1_Output1;
+        (*offset_field) = (void*)&module->obj1_Output1.out2 - (void*)&module->obj1_Output1;
+        (*index_port) = 1;
         return &module->Output1;
     }
     if(!strncmp(name_out_pin, "out3", 100))
     {
-        (*size_of_type) = (void*)&module->obj1_Output2.out3 - (void*)&module->obj1_Output2;
+        (*offset_field) = (void*)&module->obj1_Output2.out3 - (void*)&module->obj1_Output2;
+        (*index_port) = 0;
         return &module->Output2;
     }
     printf("Not found property \"%s\" among properties out objects\n", name_out_pin);
