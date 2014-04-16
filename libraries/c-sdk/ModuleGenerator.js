@@ -202,6 +202,26 @@ function Create_C_file(module) {
     r += "}\n\n";
 
 
+
+    r += "// Возвращает указатель на структуру выходного объекта, по имени пина\n";
+    r += "// Используется при подготовке списка полей, для мапинга объектов (для передачи в очередь)\n";
+    r += "out_object_t* get_outobject_by_outpin(module_test_sender_t* module, char* name_out_pin)\n";
+    r += "{\n";
+    if (module.outputs) {
+        module.outputs.forEach(function (out) {
+            var outName = out.name.replace(/\+/g, "");
+            for (var key in out.Schema.properties) {
+                r += "    if(!strncmp(name_out_pin, \""+key+"\", 100))\n";
+                r += "        return &module->" + outName + ";\n";
+            };
+        });
+    }
+    r += "    printf(\"Not found property \\\"%s\\\" among properties out objects\\n\", name_out_pin);\n";
+    r += "    return NULL;\n";
+    r += "}\n\n";
+
+
+
     r += "// Stop and delete module. Free memory.\n";
     r += "void " + module_type + "_delete(module_" + module_type + "_t* module)\n";
     r += "{\n";
@@ -212,7 +232,6 @@ function Create_C_file(module) {
     r += "// Init module.\n";
     r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len)\n";
     r += "{\n";
-    r += "    int res = init(&module->module_info, bson_data, bson_len);\n\n";
     if (module.outputs) {
         module.outputs.forEach(function (out) {
             var outName = out.name.replace(/\+/g, "");
@@ -230,6 +249,8 @@ function Create_C_file(module) {
             r += "    module->" + outName + ".print_obj = (p_print_obj)&print_" + outName + ";\n\n";
         });
     }
+    r += "module->module_info.get_outobj_by_outpin = (p_get_outobj_by_outpin)&get_outobject_by_outpin;\n";
+
     if ('inputShema' in module) {
         r += "    // Input\n";
         r += "    memset(&module->input4modul, 0, sizeof(input_t));\n";
@@ -241,6 +262,7 @@ function Create_C_file(module) {
     }
     r += "\n";
     r += "    module->module_info.func = &" + module_type + "_run;\n\n";
+    r += "    int res = init(&module->module_info, bson_data, bson_len);\n\n";
     r += "    return res;\n";
     r += "}\n\n";
 

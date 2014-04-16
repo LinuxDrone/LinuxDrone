@@ -153,6 +153,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     bson_init_static(&bson, data, length);
     //debug_print_bson(&bson);
 
+    // Вытаскиваем из конфигурации значения обязательных настроечных параметров
     /**
      * Instance name
      */
@@ -207,9 +208,80 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         printf("Property \"Main task Period\" not INT32 type");
         return -1;
     }
-    module->transmit_task_period = rt_timer_ns2ticks(
-                bson_iter_int32(&iter) * 1000);
+    // Умножаем на тысячу, поточу, что время в конфиге указывается в микросекундах, а функция должна примать на вход наносекунды
+    module->transmit_task_period = rt_timer_ns2ticks(bson_iter_int32(&iter) * 1000);
     //fprintf(stdout, "transmit_task_period=%i\n", module->transmit_task_period);
+
+
+    // Выделяем память под структуры, представляющие связи с другими модулями
+    // Связи через очередь (данный модуль поставщик, другие потреьители данных)
+    // Список исходящих связей, должен быть в массиве "out_links" в объекте конфигурации
+    // но его может не быть, если модуль не имеет вызодов
+    if (bson_iter_init_find(&iter, &bson, "out_links"))
+    {
+        if (!BSON_ITER_HOLDS_ARRAY(&iter)) {
+            printf("Property \"out_links\" not ARRAY type");
+            return -1;
+        }
+
+        const uint8_t *array_buf = NULL;
+        uint32_t array_buf_len = 0;
+        bson_t bson_queue_links;
+        bson_iter_array(&iter, &array_buf_len, &array_buf);
+        bson_init_static(&bson_queue_links, array_buf, array_buf_len);
+
+        bson_iter_t iter_links;
+        if(!bson_iter_init (&iter_links, &bson_queue_links))
+        {
+            fprintf(stderr, "Error: error create iterator for queue links\n");
+            return -1;
+        }
+
+        const uint8_t *link_buf = NULL;
+        uint32_t link_buf_len = 0;
+        bson_t bson_out_link;
+        while(bson_iter_next(&iter_links))
+        {
+            if(!BSON_ITER_HOLDS_DOCUMENT(&iter_links))
+            {
+                fprintf(stderr, "Function: init, Error: iter_links not a out link document\n");
+                continue;
+            }
+            bson_iter_document(&iter_links, &link_buf_len, &link_buf);
+            bson_init_static(&bson_out_link, link_buf, link_buf_len);
+
+            debug_print_bson(&bson_out_link);
+
+            bson_iter_t iter_outpin_name;
+            if (!bson_iter_init_find(&iter_outpin_name, &bson_out_link, "outPin")) {
+                printf("Not found property \"outPin\" in bson_out_link");
+                return -1;
+            }
+            if (!BSON_ITER_HOLDS_UTF8(&iter_outpin_name)) {
+                printf("Property \"outPin\" in bson_out_link not UTF8 type");
+                return -1;
+            }
+            const char* outpin_name = bson_iter_utf8(&iter_outpin_name, NULL);
+
+
+            out_object_t* obj = (*module->get_outobj_by_outpin)(module, outpin_name);
+            if(obj)
+            {
+                //TODO: Сформировать массив с именами полей удаленного объекта
+            }
+            else
+            {
+                printf("Not found OUT PIN \"%s\" in instance \"%s\"\n", outpin_name, module->instance_name);
+            }
+        }
+    }
+    else
+    {
+        printf("Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
+        debug_print_bson(&bson);
+    }
+
+
 
     return 0;
 }

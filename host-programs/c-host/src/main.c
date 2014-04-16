@@ -207,11 +207,21 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, con
             debug_print_bson(&bson_link);
             return -1;
         }
-
         // Имя инстанса с исходящим линком
         const char* name_outInst = bson_iter_utf8(&iter_outInst, NULL);
+
+
+        if (!bson_iter_init_find(&iter_outInst, &bson_link, "type")) {
+            fprintf(stderr, "Error: not found node \"type\" in link\n");
+            debug_print_bson(&bson_link);
+            return -1;
+        }
+        // Имя инстанса с исходящим линком
+        const char* type_outInst = bson_iter_utf8(&iter_outInst, NULL);
+
+
         // Если это имя равно имени данного инстанса, то добавим связь в список входящих связей данного модуля
-        if(!strncmp(name_outInst, module_instance_name, 100))
+        if(!strncmp(name_outInst, module_instance_name, 100) && !strncmp(type_outInst, "queue", 100))
         {
             if(!was_out_links)
             {
@@ -357,7 +367,8 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
     dlerror();    // Clear any existing error
 
     // Call function init
-    if ((*init)(module, buf, buf_len) != 0)
+
+    if ((*init)(module, bson_get_data(module_instance), module_instance->len) != 0)
         return -1;
 
 
@@ -465,8 +476,7 @@ int main(int argc, char *argv[]) {
     int im;
     for(im=3; im<argc; im++)
     {
-        printf("instance=%s\n", argv[im]);
-
+        //printf("instance=%s\n", argv[im]);
         start_instance(bson_configuration, &bson_modules, argv[im]);
     }
 

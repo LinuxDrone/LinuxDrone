@@ -17,13 +17,19 @@ typedef enum
     Filled
 } StatusObj;
 
+typedef enum
+{
+    fieldInteger,
+    fieldBoolean
+} TypeFieldObj;
+
+
 typedef int (*p_obj2bson)(void* obj, bson_t* bson);
 
 // примечание: буфер объекта добывается из структуры модуля
 typedef int (*p_bson2obj)(void* p_module, bson_t* bson);
 
 typedef void (*p_print_obj)(void* obj);
-
 
 /**
   Структура данных, необходимых для работы с блоком разделяемой памяти
@@ -48,11 +54,28 @@ typedef struct
 
 
 /**
+  Структура данных, содержащая информацию о поле в объекте, который ожидает получить подписчик (через очередь)
+  Список таких описаний используется при формировании bson объекта, передаваемого модулю подписчику
+ */
+typedef struct
+{
+    unsigned short  offset_field_obj;    // Смещение данных в структуре объекта источника
+    TypeFieldObj    type_field_obj;      // Тип поля (по типу поля определяется длина блока данных представляющих значение данного типа)
+    char*           remote_field_name;   // Имя поля в bson объекте (которое ожидает подписчик)
+
+} remote_obj_field_t;
+
+
+/**
   Структура данных, необходимых для работы с очередью подписчика
  */
 typedef struct
 {
+    // Входная очередь модуля подписчика
     RT_QUEUE out_queue;
+
+    // Список полей (в составе bson объекта) которые желает получать через очередь модуль подписчик
+    remote_obj_field_t** fields_of_remote_obj;
 
 } out_queue_set_t;
 
@@ -81,6 +104,8 @@ typedef struct
 
 }out_object_t;
 
+
+typedef out_object_t* (*p_get_outobj_by_outpin)(void* p_module, const char*);
 
 
 typedef void (t_cycle_function)(void *cookie);
@@ -121,13 +146,11 @@ typedef struct
 	RT_QUEUE in_queue;
 	RTIME queue_timeout;
 
+    // Указатель на масси. Список типов объектов, которые пораждает модуль.
+    // Массив структур инициализируется в хелпер методе инициализации в автосгенеренном для модуля коде.
     out_object_t** out_objects;
 
-    //out_queue_set_t** out_queue_sets;
-
-    // массив структур предназначенных для передачи объектов в шаред мемори
-    //shmem_publisher_set_t** out_shmem_sets;
-
+    // Указатель на бизнес-функцию (которая должна выполняться в бесконечном цикле)
 	p_cycle_function func;
 
     /**
@@ -161,6 +184,11 @@ typedef struct
     // каждый бит числа соответствцет одному из входов модуля.
     // установленный бит сигнализирует, что в текущей итерации, значение соответствующее биту обновилось
     t_mask updated_input_properties;
+
+
+
+    p_get_outobj_by_outpin get_outobj_by_outpin;
+//    p_get_outobj_by_outpin get_outobj_by_outpin;
 
 } module_t;
 

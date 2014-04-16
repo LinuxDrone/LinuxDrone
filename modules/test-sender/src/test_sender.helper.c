@@ -116,6 +116,20 @@ module_test_sender_t* test_sender_create(void *handle)
     return module;
 }
 
+// Возвращает указатель на структуру выходного объекта, по имени пина
+// Используется при подготовке списка полей, для мапинга объектов (для передачи в очередь)
+out_object_t* get_outobject_by_outpin(module_test_sender_t* module, char* name_out_pin)
+{
+    if(!strncmp(name_out_pin, "out1", 100))
+        return &module->Output1;
+    if(!strncmp(name_out_pin, "out2", 100))
+        return &module->Output1;
+    if(!strncmp(name_out_pin, "out3", 100))
+        return &module->Output2;
+    printf("Not found property \"%s\" among properties out objects\n", name_out_pin);
+    return NULL;
+}
+
 // Stop and delete module. Free memory.
 void test_sender_delete(module_test_sender_t* module)
 {
@@ -125,8 +139,6 @@ void test_sender_delete(module_test_sender_t* module)
 // Init module.
 int test_sender_init(module_test_sender_t* module, const uint8_t* bson_data, uint32_t bson_len)
 {
-    int res = init(&module->module_info, bson_data, bson_len);
-
     // Output1
     // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа
     // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации
@@ -153,9 +165,12 @@ int test_sender_init(module_test_sender_t* module, const uint8_t* bson_data, uin
     module->Output2.bson2obj = (p_bson2obj)&bson2Output2;
     module->Output2.print_obj = (p_print_obj)&print_Output2;
 
+module->module_info.get_outobj_by_outpin = (p_get_outobj_by_outpin)&get_outobject_by_outpin;
     module->module_info.input_data = NULL;
 
     module->module_info.func = &test_sender_run;
+
+    int res = init(&module->module_info, bson_data, bson_len);
 
     return res;
 }
