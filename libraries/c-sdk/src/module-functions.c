@@ -143,6 +143,7 @@ int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
 
     pset->status_obj1 = Empty;
     pset->status_obj2 = Empty;
+    pset->out_queues = NULL;
 
     return 0;
 }
@@ -230,6 +231,9 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         bson_iter_array(&iter, &array_buf_len, &array_buf);
         bson_init_static(&bson_queue_links, array_buf, array_buf_len);
 
+        uint32_t count_links = bson_count_keys (&bson_queue_links);
+        printf("count_links=%i\n", count_links);
+
         bson_iter_t iter_links;
         if(!bson_iter_init (&iter_links, &bson_queue_links))
         {
@@ -252,6 +256,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 
             debug_print_bson(&bson_out_link);
 
+            // Получим название выходного пина данного модуля
             bson_iter_t iter_outpin_name;
             if (!bson_iter_init_find(&iter_outpin_name, &bson_out_link, "outPin")) {
                 printf("Not found property \"outPin\" in bson_out_link");
@@ -264,10 +269,30 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             const char* outpin_name = bson_iter_utf8(&iter_outpin_name, NULL);
 
 
+            // Получим название входного пина модуля получателя
+            bson_iter_t iter_remote_inpin_name;
+            if (!bson_iter_init_find(&iter_remote_inpin_name, &bson_out_link, "inPin")) {
+                printf("Not found property \"inPin\" in bson_out_link");
+                return -1;
+            }
+            if (!BSON_ITER_HOLDS_UTF8(&iter_remote_inpin_name)) {
+                printf("Property \"inPin\" in bson_out_link not UTF8 type");
+                return -1;
+            }
+            const char* remote_inpin_name = bson_iter_utf8(&iter_remote_inpin_name, NULL);
+
+
             unsigned short size_of_type;
             out_object_t* obj = (*module->get_outobj_by_outpin)(module, outpin_name, &size_of_type);
             if(obj)
             {
+                // Проверим, существует ли уже массив (выделена ли под него память)
+                if(obj->out_queues == NULL)
+                {
+                    // Немного некрасивая реализация.
+                    // Для каждого выходного объекта выделяется массив размером равным общему количеству исходящих queue линков
+                }
+
                 //TODO: Сформировать массив с именами полей удаленного объекта
                 printf("size_of_type=%i\n", size_of_type);
             }
