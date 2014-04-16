@@ -264,10 +264,12 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             const char* outpin_name = bson_iter_utf8(&iter_outpin_name, NULL);
 
 
-            out_object_t* obj = (*module->get_outobj_by_outpin)(module, outpin_name);
+            unsigned short size_of_type;
+            out_object_t* obj = (*module->get_outobj_by_outpin)(module, outpin_name, &size_of_type);
             if(obj)
             {
                 //TODO: Сформировать массив с именами полей удаленного объекта
+                printf("size_of_type=%i\n", size_of_type);
             }
             else
             {

@@ -105,7 +105,7 @@ typedef struct
 }out_object_t;
 
 
-typedef out_object_t* (*p_get_outobj_by_outpin)(void* p_module, const char*);
+typedef out_object_t* (*p_get_outobj_by_outpin)(void* p_module, const char* name_out_pin, unsigned short* size_of_type);
 
 
 typedef void (t_cycle_function)(void *cookie);

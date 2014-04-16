@@ -205,14 +205,18 @@ function Create_C_file(module) {
 
     r += "// Возвращает указатель на структуру выходного объекта, по имени пина\n";
     r += "// Используется при подготовке списка полей, для мапинга объектов (для передачи в очередь)\n";
-    r += "out_object_t* get_outobject_by_outpin(module_test_sender_t* module, char* name_out_pin)\n";
+    r += "out_object_t* get_outobject_by_outpin(module_test_sender_t* module, char* name_out_pin, unsigned short* size_of_type)\n";
     r += "{\n";
+    r += "    (*size_of_type) = 0;\n";
     if (module.outputs) {
         module.outputs.forEach(function (out) {
             var outName = out.name.replace(/\+/g, "");
             for (var key in out.Schema.properties) {
                 r += "    if(!strncmp(name_out_pin, \""+key+"\", 100))\n";
+                r += "    {\n";
+                r += "        (*size_of_type) = (void*)&module->obj1_" + outName + "."+key+" - (void*)&module->obj1_" + outName + ";\n";
                 r += "        return &module->" + outName + ";\n";
+                r += "    }\n";
             };
         });
     }
