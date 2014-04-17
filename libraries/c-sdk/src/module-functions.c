@@ -582,6 +582,53 @@ void read_shmem(shmem_set_t* set, void* data, unsigned short* datalen)
 
 
 
+
+/**
+ * @brief send2queues Рассылает объект по входным очередям инстансов подписчиков
+ * @param out_object
+ * @return
+ */
+int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
+{
+    void* pval;
+    int i;
+    for(i=0;i<out_object->ar_out_queue_sets.len;i++)
+    {
+        bson_init (bson_obj);
+
+        out_queue_set_t* out_queue_set = out_object->ar_out_queue_sets.out_queue_sets[i];
+
+        int cl;
+        for(cl=0;cl<out_queue_set->ar_fields_of_remote_obj.len;cl++)
+        {
+            remote_obj_field_t* remote_obj_field = out_queue_set->ar_fields_of_remote_obj.remote_obj_fields[i];
+
+            switch (remote_obj_field->type_field_obj)
+            {
+                case fieldInteger:
+
+                    //TODO: Оптимизировать и не вычислять длину строку здесь. Подготовить заранее
+                    pval = data_obj + remote_obj_field->offset_field_obj;
+                    bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, strlen(remote_obj_field->remote_field_name), *((int*)pval));
+                    break;
+
+                default:
+                    printf("Funcrion \"send2queues\" Unknown type remote field\n");
+                    break;
+            }
+        }
+
+        debug_print_bson("send2queues", bson_obj);
+
+
+        bson_destroy(bson_obj);
+    }
+
+
+    return 0;
+}
+
+
 void get_input_data(void* p_module)
 {
     module_t* module = p_module;
@@ -656,34 +703,34 @@ void task_transmit_body(void *p_module)
         if (res == 0)
         {
             int i=0;
-            out_object_t* set = module->out_objects[i];
-            while(set)
+            out_object_t* out_object = module->out_objects[i];
+            while(out_object)
             {
-                checkout4transmiter(module, set, &obj);
+                checkout4transmiter(module, out_object, &obj);
                 if(obj!=NULL)
                 {
                     // Нашли обновившийся в основном потоке объект
                     // Пуш в очереди подписчиков
+                    send2queues(out_object, obj, &bson_tr);
 
 
 
                     // Публикация данных в разделяемую память, не чаще чем в оговоренный период
                     if(rt_timer_read() - time_last_publish_shmem > module->transmit_task_period)
                     {
-
                         bson_init (&bson_tr);
                         // Call user convert function
-                        (*set->obj2bson)(obj, &bson_tr);
-                        write_shmem(&set->shmem_set, bson_get_data(&bson_tr), bson_tr.len);
+                        (*out_object->obj2bson)(obj, &bson_tr);
+                        write_shmem(&out_object->shmem_set, bson_get_data(&bson_tr), bson_tr.len);
                         //printf("send %i\n", bson_tr.len);
                         bson_destroy(&bson_tr);
                         time_last_publish_shmem=rt_timer_read();
                     }
 
                     // Вернуть объект основному потоку на новое заполнение
-                    checkin4transmiter(module, set, &obj);
+                    checkin4transmiter(module, out_object, &obj);
                 }
-                set = module->out_objects[++i];
+                out_object = module->out_objects[++i];
             }
         }
         else if (res!=-ETIMEDOUT)
