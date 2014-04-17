@@ -164,7 +164,7 @@ int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
  * Подготавливает структуры необходимые для работы с данными линками (мапинг свойств) в риалтайме
  * @return
  */
-int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_name, unsigned short offset_field, TypeFieldObj type_field_obj, const char* remote_field_name)
+int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_name, unsigned short offset_field, TypeFieldObj type_field_obj, const char* remote_field_name, remote_queue_t* remote_queue)
 {
     // Найдем данные ассоциированные с инстансом подписчика
     // Если таковых не зарегистрировано, то создадим (выделим память и заполним) необходимые структуры
@@ -186,9 +186,9 @@ int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_
         out_object->ar_out_queue_sets.len += 1;
         out_object->ar_out_queue_sets.out_queue_sets = realloc(out_object->ar_out_queue_sets.out_queue_sets, sizeof(out_queue_set_t*)*out_object->ar_out_queue_sets.len);
         out_queue_set = calloc(1, sizeof(out_queue_set_t));
+        out_queue_set->out_queue = remote_queue;
         out_object->ar_out_queue_sets.out_queue_sets[out_object->ar_out_queue_sets.len-1] = out_queue_set;
     }
-
 
     // Зарегистрируем линк
     out_queue_set->ar_fields_of_remote_obj.len += 1;
@@ -199,6 +199,46 @@ int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_
     strcpy(remote_obj_field->remote_field_name, remote_field_name);
     remote_obj_field->type_field_obj = type_field_obj;
     out_queue_set->ar_fields_of_remote_obj.remote_obj_fields[out_queue_set->ar_fields_of_remote_obj.len-1] = remote_obj_field;
+
+    return 0;
+}
+
+
+
+/**
+ * @brief Фунция проверяет, имеется ли уже ссылка на очередь (входная очередь модуля потребителя)
+ * Если таковой нет, то создается очередь и ссылка на нее сохраняется в массиве
+ * @param ar_remote_queues Массив хранящий ссылки на входные очереди модулей подписчиков
+ * @param name_remote_queue Имя входной очереди модуля подписчика
+ */
+remote_queue_t* add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues, const char* name_remote_instance)
+{
+    if(ar_remote_queues==NULL)
+    {
+        printf("Function \"add2ar_remote_queues\" null parameter ar_remote_queues\n");
+        return NULL;
+    }
+
+    int i=0;
+    for(i=0;i<ar_remote_queues->len;i++)
+    {
+        remote_queue_t* info_remote_queue = ar_remote_queues->remote_queues[i];
+        if(strcmp(info_remote_queue->name_instance, name_remote_instance)==0)
+        {
+            // Очередь уже зарегестрирована
+            return info_remote_queue;
+        }
+    }
+
+    // Очередь не зарегистрирована и ее следует создать и сохранить на нее ссылку в массиве.
+    ar_remote_queues->len +=1;
+    ar_remote_queues->remote_queues = realloc(ar_remote_queues->remote_queues, sizeof(remote_queue_t*)*ar_remote_queues->len);
+    remote_queue_t* new_remote_queue = malloc(sizeof(remote_queue_t));
+    new_remote_queue->name_instance = malloc(strlen(name_remote_instance));
+    strcpy(new_remote_queue->name_instance, name_remote_instance);
+    ar_remote_queues->remote_queues[ar_remote_queues->len-1] = new_remote_queue;
+
+    return new_remote_queue;
 }
 
 
@@ -331,7 +371,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             const char* subscriber_instance_name = bson_iter_utf8(&iter_subscriber_instance_name, NULL);
 
             // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-            add2ar_remote_queues(&module->ar_remote_queues, subscriber_instance_name);
+            remote_queue_t* remote_queue = add2ar_remote_queues(&module->ar_remote_queues, subscriber_instance_name);
 
 
             // Получим название выходного пина данного модуля
@@ -366,32 +406,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             if(out_object)
             {
                 //fieldInteger; //TODO: обрабатывать и другие типы
-                //add_queuelink2out(out_object, subscriber_instance_name, offset_field, fieldInteger, remote_inpin_name);
-
-                //add_queuelink2out();
-
-
-                /* WARNING Неверно реализовано
-                // Проверим, существует ли уже массив (выделена ли под него память)
-                if(obj->out_queues == NULL)
-                {
-                    // Немного некрасивая реализация.
-                    // Для каждого выходного объекта выделяется массив размером равным общему количеству исходящих queue линков
-                    // Хотя часть линков может относиться к одному выходному объекту, а часть к другому
-                    int size_buf_ar = sizeof(void*) * (count_links+1);
-                    obj->out_queues = malloc(size_buf_ar);
-                    memset(obj->out_queues, 0, size_buf_ar);
-                }
-                remote_obj_field_t* remote_obj_field = (remote_obj_field_t*)malloc(sizeof(remote_obj_field_t));
-                remote_obj_field->offset_field_obj = offset_field;
-                remote_obj_field->remote_field_name = malloc(strlen(remote_inpin_name));
-                strcpy(remote_obj_field->remote_field_name, remote_inpin_name);
-                remote_obj_field->type_field_obj = fieldInteger; //TODO: обрабатывать и другие типы
-                obj->out_queues[index_port] = remote_obj_field;
-
-                //TODO: Сформировать массив с именами полей удаленного объекта
-                printf("size_of_type=%i\n", offset_field);
-                */
+                add_queuelink2out(out_object, subscriber_instance_name, offset_field, fieldInteger, remote_inpin_name, remote_queue);
             }
             else
             {
@@ -1078,42 +1093,6 @@ char *replace(const char *s, char ch, const char *repl) {
     return res;
 }
 
-
-/**
- * @brief Фунция проверяет, имеется ли уже ссылка на очередь (входная очередь модуля потребителя)
- * Если таковой нет, то создается очередь и ссылка на нее сохраняется в массиве
- * @param ar_remote_queues Массив хранящий ссылки на входные очереди модулей подписчиков
- * @param name_remote_queue Имя входной очереди модуля подписчика
- */
-int add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues, char* name_remote_instance)
-{
-    if(ar_remote_queues==NULL)
-    {
-        printf("Function \"add2ar_remote_queues\" null parameter ar_remote_queues\n");
-        return -1;
-    }
-
-    int i=0;
-    for(i=0;i<ar_remote_queues->len;i++)
-    {
-        remote_queue_t* info_remote_queue = ar_remote_queues->remote_queues[i];
-        if(strcmp(info_remote_queue->name_instance, name_remote_instance)==0)
-        {
-            // Очередь уже зарегестрирована
-            return 0;
-        }
-    }
-
-    // Очередь не зарегистрирована и ее следует создать и сохранить на нее ссылку в массиве.
-    ar_remote_queues->len +=1;
-    ar_remote_queues->remote_queues = realloc(ar_remote_queues->remote_queues, sizeof(remote_queue_t*)*ar_remote_queues->len);
-    remote_queue_t* new_remote_queue = malloc(sizeof(remote_queue_t));
-    new_remote_queue->name_instance = malloc(strlen(name_remote_instance));
-    strcpy(new_remote_queue->name_instance, name_remote_instance);
-    ar_remote_queues->remote_queues[ar_remote_queues->len-1] = new_remote_queue;
-
-    return 0;
-}
 
 
 
