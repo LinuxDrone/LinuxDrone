@@ -106,13 +106,12 @@ void print_Output2(Output2_t* obj)
 // Create module.
 module_test_sender_t* test_sender_create(void *handle)
 {
-    module_test_sender_t* module = malloc(sizeof(module_test_sender_t));
+    module_test_sender_t* module = calloc(1, sizeof(module_test_sender_t));
     // Сохраним указатель на загруженную dll
     module->module_info.dll_handle = handle;
-    module->module_info.out_objects = malloc(sizeof(void *) * (count_outs+1));
+    module->module_info.out_objects = calloc(count_outs+1, sizeof(void *));
     module->module_info.out_objects[0]=&module->Output1;
     module->module_info.out_objects[1]=&module->Output2;
-    module->module_info.out_objects[2]=NULL;
     return module;
 }
 
@@ -157,9 +156,6 @@ int test_sender_init(module_test_sender_t* module, const uint8_t* bson_data, uin
     // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа
     // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации
     module->Output1.shmem_set.shmem_len = 300;
-    // для каждого типа порождаемого объекта инициализируется соответсвующая структура
-    // и указываются буферы (для обмена данными между основным и передающим потоком)
-    init_object_set(&module->Output1, module->module_info.instance_name, "Output1");
     module->Output1.obj1 = &module->obj1_Output1;
     module->Output1.obj2 = &module->obj2_Output1;
     module->Output1.obj2bson = (p_obj2bson)&Output12bson;
@@ -170,21 +166,25 @@ int test_sender_init(module_test_sender_t* module, const uint8_t* bson_data, uin
     // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа
     // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации
     module->Output2.shmem_set.shmem_len = 300;
-    // для каждого типа порождаемого объекта инициализируется соответсвующая структура
-    // и указываются буферы (для обмена данными между основным и передающим потоком)
-    init_object_set(&module->Output2, module->module_info.instance_name, "Output2");
     module->Output2.obj1 = &module->obj1_Output2;
     module->Output2.obj2 = &module->obj2_Output2;
     module->Output2.obj2bson = (p_obj2bson)&Output22bson;
     module->Output2.bson2obj = (p_bson2obj)&bson2Output2;
     module->Output2.print_obj = (p_print_obj)&print_Output2;
 
-module->module_info.get_outobj_by_outpin = (p_get_outobj_by_outpin)&get_outobject_by_outpin;
+    module->module_info.get_outobj_by_outpin = (p_get_outobj_by_outpin)&get_outobject_by_outpin;
     module->module_info.input_data = NULL;
 
     module->module_info.func = &test_sender_run;
 
     int res = init(&module->module_info, bson_data, bson_len);
+
+    // для каждого типа порождаемого объекта инициализируется соответсвующая структура
+    // и указываются буферы (для обмена данными между основным и передающим потоком)
+    // Output1
+    init_object_set(&module->Output1, module->module_info.instance_name, "Output1");
+    // Output2
+    init_object_set(&module->Output2, module->module_info.instance_name, "Output2");
 
     return res;
 }

@@ -13,10 +13,12 @@
 #define SHMEM_HEAP_SIZE		300
 #define SHMEM_BLOCK1_SIZE	200
 
-void debug_print_bson(bson_t* bson) {
+void debug_print_bson(char* where, bson_t* bson) {
+    printf("%s\n", where);
     char* str = bson_as_json(bson, NULL);
     fprintf(stdout, "%s\n", str);
     bson_free(str);
+    printf("\n");
 }
 
 void print_task_start_error(int err) {
@@ -101,11 +103,18 @@ void print_obj_status(int number_obj, StatusObj status) {
 
 int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
 {
+    if(strlen(instance_name) > XNOBJECT_NAME_LEN-5)
+    {
+        fprintf(stdout, "Function init_object_set, Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", instance_name, strlen(instance_name), XNOBJECT_NAME_LEN-5);
+        return -1;
+    }
+
     // Create shared memory
-    char name_shmem[64] = "";
+    char name_shmem[XNOBJECT_NAME_LEN] = "";
     strcat(name_shmem, instance_name);
     strcat(name_shmem, out_name);
     strcat(name_shmem, "_shmem");
+
     int err = rt_heap_create(&pset->shmem_set.h_shmem, name_shmem, pset->shmem_set.shmem_len,
                              H_SHARED | H_PRIO);
     if (err != 0) {
@@ -120,7 +129,7 @@ int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
     memset(pset->shmem_set.shmem, 0, pset->shmem_set.shmem_len);
 
     // Create event service
-    char name_eflags[64] = "";
+    char name_eflags[XNOBJECT_NAME_LEN] = "";
     strcat(name_eflags, instance_name);
     strcat(name_eflags, out_name);
     strcat(name_eflags, "_flags");
@@ -131,7 +140,7 @@ int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
     }
 
     // Create mutex for read shared memory
-    char name_rmutex[64] = "";
+    char name_rmutex[XNOBJECT_NAME_LEN] = "";
     strcat(name_rmutex, instance_name);
     strcat(name_rmutex, out_name);
     strcat(name_rmutex, "_rmutex");
@@ -152,7 +161,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 {
     bson_t bson;
     bson_init_static(&bson, data, length);
-    //debug_print_bson(&bson);
+    debug_print_bson("Function \"init\" module-functions.c", &bson);
 
     // Вытаскиваем из конфигурации значения обязательных настроечных параметров
     /**
@@ -168,6 +177,14 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         return -1;
     }
     module->instance_name = bson_iter_utf8(&iter, NULL);
+    // Проверяем, не превышает ли длина имени инстанса значения 32-5=27
+    // Т.к. максимальная длина имен объектов ксеномая равна 32 а 5 символов могут быть использованы на суфикс,
+    // при формировании имен тасков, очередй и пр., необходимых для объетов ксеномая используемых инстансом в работе
+    if(strlen(module->instance_name) > XNOBJECT_NAME_LEN-5)
+    {
+        fprintf(stdout, "Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", module->instance_name, strlen(module->instance_name), XNOBJECT_NAME_LEN-5);
+        return -1;
+    }
     //fprintf(stdout, "instance name=%s\n", module->instance_name);
 
     /**
@@ -254,7 +271,26 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             bson_iter_document(&iter_links, &link_buf_len, &link_buf);
             bson_init_static(&bson_out_link, link_buf, link_buf_len);
 
-            debug_print_bson(&bson_out_link);
+            debug_print_bson("Function \"init\" module-functions.c inside while", &bson_out_link);
+
+            // Получим имя инстанса модуля подписчика, и сотворим из него имя его входной очереди
+            bson_iter_t iter_subscriber_instance_name;
+            if (!bson_iter_init_find(&iter_subscriber_instance_name, &bson_out_link, "inInst")) {
+                printf("Not found property \"outPin\" in bson_out_link");
+                return -1;
+            }
+            if (!BSON_ITER_HOLDS_UTF8(&iter_subscriber_instance_name)) {
+                printf("Property \"outPin\" in bson_out_link not UTF8 type");
+                return -1;
+            }
+            const char* subscriber_instance_name = bson_iter_utf8(&iter_subscriber_instance_name, NULL);
+            char name_remote_queue[XNOBJECT_NAME_LEN] = "";
+            strcat(name_remote_queue, subscriber_instance_name);
+            strcat(name_remote_queue, SUFFIX_QUEUE);
+
+            // Добавим имя очереди инстанса подписчика (если оно не было зафиксировано раньше,ю то будут созданы необходимые структуры для его хранения)
+            add2ar_remote_queues(&module->ar_remote_queues, name_remote_queue);
+
 
             // Получим название выходного пина данного модуля
             bson_iter_t iter_outpin_name;
@@ -318,10 +354,8 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     else
     {
         printf("Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
-        debug_print_bson(&bson);
+        debug_print_bson("Function \"init\" module-functions.c on error", &bson);
     }
-
-
 
     return 0;
 }
@@ -667,10 +701,10 @@ int create_xenomai_services(module_t* module)
     {
         // Create input queue
         // But only defined input buffer
-        char name_queue[64] = "";
+        char name_queue[XNOBJECT_NAME_LEN] = "";
         strcat(name_queue, module->instance_name);
-        strcat(name_queue, "_queue");
-        int queue_poolsize = 200; //TODO вынести эту фиыру в настройки
+        strcat(name_queue, SUFFIX_QUEUE);
+        int queue_poolsize = 200; //TODO вынести эту цифру в настройки
         int err = rt_queue_create(&module->in_queue, name_queue, queue_poolsize, 10, Q_FIFO);
         if (err != 0)
         {
@@ -681,14 +715,10 @@ int create_xenomai_services(module_t* module)
 
 
     // Create main task
-    char name_task_main[64] = "";
+    char name_task_main[XNOBJECT_NAME_LEN] = "";
     strcat(name_task_main, module->instance_name);
-    strcat(name_task_main, "_task");
-
-    int err = rt_task_create(&module->task_main, name_task_main,
-                         TASK_STKSZ,
-                         module->task_priority,
-                         TASK_MODE);
+    strcat(name_task_main, SUFFIX_TASK);
+    int err = rt_task_create(&module->task_main, name_task_main, TASK_STKSZ, module->task_priority, TASK_MODE);
     if (err != 0)
     {
         fprintf(stdout, "Error create work task \"%s\"\n", name_task_main);
@@ -700,9 +730,9 @@ int create_xenomai_services(module_t* module)
         return 0;
 
     // Create transmit task
-    char name_tr_task_main[64] = "";
+    char name_tr_task_main[XNOBJECT_NAME_LEN] = "";
     strcat(name_tr_task_main, module->instance_name);
-    strcat(name_tr_task_main, "_tr_task");
+    strcat(name_tr_task_main, SUFFIX_TR_TASK);
     err = rt_task_create(&module->task_transmit, name_tr_task_main, TASK_STKSZ, 99, TASK_MODE);
     if (err != 0)
     {
@@ -712,9 +742,9 @@ int create_xenomai_services(module_t* module)
 
 
     // Create mutex for exchange between main and transmit task
-    char name_objmutex[64] = "";
+    char name_objmutex[XNOBJECT_NAME_LEN] = "";
     strcat(name_objmutex, module->instance_name);
-    strcat(name_objmutex, "_objmutex");
+    strcat(name_objmutex, SUFFIX_EXCHANGE_MUTEX);
     err = rt_mutex_create(&module->mutex_obj_exchange, name_objmutex);
     if (err != 0) {
         fprintf(stdout, "Error create mutex_obj_exchange \"%s\"\n", name_objmutex);
@@ -722,9 +752,9 @@ int create_xenomai_services(module_t* module)
     }
 
     // Create condition for exchange between main and transmit task
-    char name_cond[64] = "";
+    char name_cond[XNOBJECT_NAME_LEN] = "";
     strcat(name_cond, module->instance_name);
-    strcat(name_cond, "_cond");
+    strcat(name_cond, SUFFIX_CONDITION);
     err = rt_cond_create(&module->obj_cond, name_cond);
     if (err != 0) {
         fprintf(stdout, "Error create obj_cond \"%s\"\n", name_cond);
@@ -1001,4 +1031,42 @@ char *replace(const char *s, char ch, const char *repl) {
     *ptr = 0;
     return res;
 }
+
+
+/**
+ * @brief Фунция проверяет, имеется ли уже ссылка на очередь (входная очередь модуля потребителя)
+ * Если таковой нет, то создается очередь и ссылка на нее сохраняется в массиве
+ * @param ar_remote_queues Массив хранящий ссылки на входные очереди модулей подписчиков
+ * @param name_remote_queue Имя входной очереди модуля подписчика
+ */
+int add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues, char* name_remote_queue)
+{
+    if(ar_remote_queues==NULL)
+    {
+        printf("Function \"add2ar_remote_queues\" null parameter ar_remote_queues\n");
+        return -1;
+    }
+
+    int i=0;
+    for(i=0;i<ar_remote_queues->len;i++)
+    {
+        remote_queue_t* info_remote_queue = ar_remote_queues->remote_queues[i];
+        if(strcmp(info_remote_queue->name_queue, name_remote_queue)==0)
+        {
+            // Очередь уже зарегестрирована
+            return 0;
+        }
+    }
+
+    // Очередь не зарегистрирована и ее следует создать и сохранить на нее ссылку в массиве.
+    ar_remote_queues->len +=1;
+    ar_remote_queues->remote_queues = realloc(ar_remote_queues->remote_queues, sizeof(remote_queue_t*)*ar_remote_queues->len);
+    remote_queue_t* new_remote_queue = malloc(sizeof(remote_queue_t));
+    new_remote_queue->name_queue = malloc(strlen(name_remote_queue));
+    strcpy(new_remote_queue->name_queue, name_remote_queue);
+    ar_remote_queues->remote_queues[ar_remote_queues->len-1] = new_remote_queue;
+
+    return 0;
+}
+
 

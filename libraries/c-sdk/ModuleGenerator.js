@@ -182,21 +182,15 @@ function Create_C_file(module) {
     r += "// Create module.\n";
     r += "module_" + module_type + "_t* " + module_type + "_create(void *handle)\n";
     r += "{\n";
-    r += "    module_" + module_type + "_t* module = malloc(sizeof(module_" + module_type + "_t));\n";
+    r += "    module_" + module_type + "_t* module = calloc(1, sizeof(module_" + module_type + "_t));\n";
     r += "    // Сохраним указатель на загруженную dll\n";
     r += "    module->module_info.dll_handle = handle;\n";
-    r += "    module->module_info.out_objects = malloc(sizeof(void *) * (count_outs+1));\n";
+    r += "    module->module_info.out_objects = calloc(count_outs+1, sizeof(void *));\n";
     if (module.outputs) {
         module.outputs.forEach(function (out, i) {
             var outName = out.name.replace(/\+/g, "");
             r += "    module->module_info.out_objects[" + i + "]=&module->" + outName + ";\n";
         });
-    }
-    if (module.outputs) {
-        r += "    module->module_info.out_objects[" + module.outputs.length + "]=NULL;\n";
-    }
-    else {
-        r += "    module->module_info.out_objects[0]=NULL;\n";
     }
     r += "    return module;\n";
     r += "}\n\n";
@@ -247,9 +241,6 @@ function Create_C_file(module) {
             r += "    // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа\n";
             r += "    // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации\n";
             r += "    module->" + outName + ".shmem_set.shmem_len = 300;\n";
-            r += "    // для каждого типа порождаемого объекта инициализируется соответсвующая структура\n";
-            r += "    // и указываются буферы (для обмена данными между основным и передающим потоком)\n";
-            r += "    init_object_set(&module->" + outName + ", module->module_info.instance_name, \"" + outName + "\");\n";
             r += "    module->" + outName + ".obj1 = &module->obj1_" + outName + ";\n";
             r += "    module->" + outName + ".obj2 = &module->obj2_" + outName + ";\n";
             r += "    module->" + outName + ".obj2bson = (p_obj2bson)&" + outName + "2bson;\n";
@@ -257,7 +248,7 @@ function Create_C_file(module) {
             r += "    module->" + outName + ".print_obj = (p_print_obj)&print_" + outName + ";\n\n";
         });
     }
-    r += "module->module_info.get_outobj_by_outpin = (p_get_outobj_by_outpin)&get_outobject_by_outpin;\n";
+    r += "    module->module_info.get_outobj_by_outpin = (p_get_outobj_by_outpin)&get_outobject_by_outpin;\n";
 
     if ('inputShema' in module) {
         r += "    // Input\n";
@@ -271,7 +262,16 @@ function Create_C_file(module) {
     r += "\n";
     r += "    module->module_info.func = &" + module_type + "_run;\n\n";
     r += "    int res = init(&module->module_info, bson_data, bson_len);\n\n";
-    r += "    return res;\n";
+    if (module.outputs) {
+        r += "    // для каждого типа порождаемого объекта инициализируется соответсвующая структура\n";
+        r += "    // и указываются буферы (для обмена данными между основным и передающим потоком)\n";
+        module.outputs.forEach(function (out) {
+            var outName = out.name.replace(/\+/g, "");
+            r += "    // " + outName + "\n";
+            r += "    init_object_set(&module->" + outName + ", module->module_info.instance_name, \"" + outName + "\");\n";
+        });
+    }
+    r += "\n    return res;\n";
     r += "}\n\n";
 
 

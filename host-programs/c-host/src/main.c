@@ -149,12 +149,10 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, con
         bson_iter_document(&iter_links, &link_buf_len, &link_buf);
         bson_init_static(&bson_link, link_buf, link_buf_len);
 
-        //debug_print_bson(&bson_link);
-
         bson_iter_t iter_inInst;
         if (!bson_iter_init_find(&iter_inInst, &bson_link, "inInst")) {
             fprintf(stderr, "Error: not found node \"inInst\" in link\n");
-            debug_print_bson(&bson_link);
+            debug_print_bson("Function \"add_links2instance\" main.c on error", &bson_link);
             return -1;
         }
 
@@ -199,12 +197,10 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, con
         bson_iter_document(&iter_links, &link_buf_len, &link_buf);
         bson_init_static(&bson_link, link_buf, link_buf_len);
 
-        //debug_print_bson(&bson_link);
-
         bson_iter_t iter_outInst;
         if (!bson_iter_init_find(&iter_outInst, &bson_link, "outInst")) {
             fprintf(stderr, "Error: not found node \"outInst\" in link\n");
-            debug_print_bson(&bson_link);
+            debug_print_bson("Function \"add_links2instance\" main.c on error", &bson_link);
             return -1;
         }
         // Имя инстанса с исходящим линком
@@ -213,7 +209,7 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, con
 
         if (!bson_iter_init_find(&iter_outInst, &bson_link, "type")) {
             fprintf(stderr, "Error: not found node \"type\" in link\n");
-            debug_print_bson(&bson_link);
+            debug_print_bson("Function \"add_links2instance\" main.c on error", &bson_link);
             return -1;
         }
         // Имя инстанса с исходящим линком
@@ -239,8 +235,6 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, con
         bson_append_array_end (module_instance, &b_arr);
     }
 
-
-    //debug_print_bson(module_instance);
     return 0;
 }
 
@@ -306,7 +300,7 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
         return -1;
     }
 
-    debug_print_bson(module_instance);
+    //debug_print_bson("Function \"start_instance\" main.c", module_instance);
 
 
     // Get Module Type
@@ -370,7 +364,6 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
 
     if ((*init)(module, bson_get_data(module_instance), module_instance->len) != 0)
         return -1;
-
 
     char f_start_name[64] = "";
     strcat(f_start_name, replace(module_type, '-', "_")); // FREE NEED
@@ -457,8 +450,6 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Not found configuration \"%s\" with version \"%s\"\n", configuration_name, configuration_version);
         return -1;
     }
-
-    //debug_print_bson(bson_configuration);
 
 	bson_iter_t iter_m;
     if (!bson_iter_init_find(&iter_m, bson_configuration, "modules")) {
