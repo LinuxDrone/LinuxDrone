@@ -150,10 +150,6 @@ int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
         return err;
     }
 
-    //pset->status_obj1 = Empty;
-    //pset->status_obj2 = Empty;
-    //pset->out_queues = NULL;
-
     return 0;
 }
 
@@ -177,6 +173,8 @@ int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_
             out_queue_set = out_object->ar_out_queue_sets.out_queue_sets[i];
             if(strcmp(out_queue_set->out_queue->name_instance, subscriber_instance_name)==0)
                 break;
+            else
+                out_queue_set = NULL;
         }
     }
 
@@ -601,7 +599,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
         int cl;
         for(cl=0;cl<out_queue_set->ar_fields_of_remote_obj.len;cl++)
         {
-            remote_obj_field_t* remote_obj_field = out_queue_set->ar_fields_of_remote_obj.remote_obj_fields[i];
+            remote_obj_field_t* remote_obj_field = out_queue_set->ar_fields_of_remote_obj.remote_obj_fields[cl];
 
             switch (remote_obj_field->type_field_obj)
             {
