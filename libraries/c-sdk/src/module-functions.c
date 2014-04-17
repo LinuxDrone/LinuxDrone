@@ -150,12 +150,57 @@ int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
         return err;
     }
 
-    pset->status_obj1 = Empty;
-    pset->status_obj2 = Empty;
-    pset->out_queues = NULL;
+    //pset->status_obj1 = Empty;
+    //pset->status_obj2 = Empty;
+    //pset->out_queues = NULL;
 
     return 0;
 }
+
+
+
+/**
+ * @brief Функция добавляет линк в список линков, связывающих данный модуль с удаленным модулем
+ * Подготавливает структуры необходимые для работы с данными линками (мапинг свойств) в риалтайме
+ * @return
+ */
+int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_name, unsigned short offset_field, TypeFieldObj type_field_obj, const char* remote_field_name)
+{
+    // Найдем данные ассоциированные с инстансом подписчика
+    // Если таковых не зарегистрировано, то создадим (выделим память и заполним) необходимые структуры
+    out_queue_set_t* out_queue_set=NULL;
+    if(out_object->ar_out_queue_sets.out_queue_sets!=NULL)
+    {
+        int i;
+        for(i=0;i<out_object->ar_out_queue_sets.len;i++)
+        {
+            out_queue_set = out_object->ar_out_queue_sets.out_queue_sets[i];
+            if(strcmp(out_queue_set->out_queue->name_instance, subscriber_instance_name)==0)
+                break;
+        }
+    }
+
+    if(out_queue_set==NULL)
+    {
+        // Если инстанс вообще не зарегестрирован в списке потребителей нашего модуля, сделаем это
+        out_object->ar_out_queue_sets.len += 1;
+        out_object->ar_out_queue_sets.out_queue_sets = realloc(out_object->ar_out_queue_sets.out_queue_sets, sizeof(out_queue_set_t*)*out_object->ar_out_queue_sets.len);
+        out_queue_set = calloc(1, sizeof(out_queue_set_t));
+        out_object->ar_out_queue_sets.out_queue_sets[out_object->ar_out_queue_sets.len-1] = out_queue_set;
+    }
+
+
+    // Зарегистрируем линк
+    out_queue_set->ar_fields_of_remote_obj.len += 1;
+    out_queue_set->ar_fields_of_remote_obj.remote_obj_fields = realloc(out_queue_set->ar_fields_of_remote_obj.remote_obj_fields, sizeof(remote_obj_field_t*)*out_queue_set->ar_fields_of_remote_obj.len);
+    remote_obj_field_t* remote_obj_field = calloc(1, sizeof(remote_obj_field_t));
+    remote_obj_field->offset_field_obj = offset_field;
+    remote_obj_field->remote_field_name = malloc(strlen(remote_field_name));
+    strcpy(remote_obj_field->remote_field_name, remote_field_name);
+    remote_obj_field->type_field_obj = type_field_obj;
+    out_queue_set->ar_fields_of_remote_obj.remote_obj_fields[out_queue_set->ar_fields_of_remote_obj.len-1] = remote_obj_field;
+}
+
 
 int init(module_t* module, const uint8_t * data, uint32_t length)
 {
@@ -273,7 +318,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 
             debug_print_bson("Function \"init\" module-functions.c inside while", &bson_out_link);
 
-            // Получим имя инстанса модуля подписчика, и сотворим из него имя его входной очереди
+            // Получим имя инстанса модуля подписчика
             bson_iter_t iter_subscriber_instance_name;
             if (!bson_iter_init_find(&iter_subscriber_instance_name, &bson_out_link, "inInst")) {
                 printf("Not found property \"outPin\" in bson_out_link");
@@ -284,12 +329,9 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
                 return -1;
             }
             const char* subscriber_instance_name = bson_iter_utf8(&iter_subscriber_instance_name, NULL);
-            char name_remote_queue[XNOBJECT_NAME_LEN] = "";
-            strcat(name_remote_queue, subscriber_instance_name);
-            strcat(name_remote_queue, SUFFIX_QUEUE);
 
-            // Добавим имя очереди инстанса подписчика (если оно не было зафиксировано раньше,ю то будут созданы необходимые структуры для его хранения)
-            add2ar_remote_queues(&module->ar_remote_queues, name_remote_queue);
+            // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
+            add2ar_remote_queues(&module->ar_remote_queues, subscriber_instance_name);
 
 
             // Получим название выходного пина данного модуля
@@ -320,9 +362,15 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 
             unsigned short offset_field;
             unsigned short index_port;
-            out_object_t* obj = (*module->get_outobj_by_outpin)(module, outpin_name, &offset_field, &index_port);
-            if(obj)
+            out_object_t* out_object = (*module->get_outobj_by_outpin)(module, outpin_name, &offset_field, &index_port);
+            if(out_object)
             {
+                //fieldInteger; //TODO: обрабатывать и другие типы
+                //add_queuelink2out(out_object, subscriber_instance_name, offset_field, fieldInteger, remote_inpin_name);
+
+                //add_queuelink2out();
+
+
                 /* WARNING Неверно реализовано
                 // Проверим, существует ли уже массив (выделена ли под него память)
                 if(obj->out_queues == NULL)
@@ -359,6 +407,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 
     return 0;
 }
+
 
 /**
  * @brief write_shmem копирует блок данных (data) в разделяемую память, определенную в set
@@ -404,6 +453,7 @@ void write_shmem(shmem_set_t* set, const char* data, unsigned short datalen)
         return;
     }
 }
+
 
 void read_shmem(shmem_set_t* set, void* data, unsigned short* datalen)
 {
@@ -517,8 +567,6 @@ void read_shmem(shmem_set_t* set, void* data, unsigned short* datalen)
 
 
 
-
-
 void get_input_data(void* p_module)
 {
     module_t* module = p_module;
@@ -570,6 +618,7 @@ void get_input_data(void* p_module)
     //printf("before refresh mask=0x%08X\n", module->refresh_input_mask);
     refresh_input(module);
 }
+
 
 void task_transmit_body(void *p_module)
 {
@@ -674,6 +723,7 @@ int start(void* p_module)
     return err;
 }
 
+
 int stop(void* p_module)
 {
     module_t* module = p_module;
@@ -773,7 +823,6 @@ int create_xenomai_services(module_t* module)
  * @return
  * /~russian 0 в случае успеха
  */
-
 int checkout4writer(module_t* module, out_object_t* set, void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
@@ -830,7 +879,6 @@ int checkout4writer(module_t* module, out_object_t* set, void** obj)
  * @param obj
  * @return
  */
-
 int checkin4writer(module_t* module, out_object_t* set, void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
@@ -886,7 +934,6 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
  * @return
  * /~russian 0 в случае успеха
  */
-
 int checkout4transmiter(module_t* module, out_object_t* set, void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
@@ -927,7 +974,6 @@ int checkout4transmiter(module_t* module, out_object_t* set, void** obj)
  * @param obj
  * @return
  */
-
 int checkin4transmiter(module_t* module, out_object_t* set,  void** obj)
 {
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
@@ -972,7 +1018,6 @@ int checkin4transmiter(module_t* module, out_object_t* set,  void** obj)
  * @param p_module
  * @return
  */
-
 int refresh_input(void* p_module)
 {
     module_t* module = p_module;
@@ -1010,6 +1055,7 @@ int refresh_input(void* p_module)
     return 0;
 }
 
+
 /* return a new string with every instance of ch replaced by repl */
 char *replace(const char *s, char ch, const char *repl) {
     int count = 0;
@@ -1039,7 +1085,7 @@ char *replace(const char *s, char ch, const char *repl) {
  * @param ar_remote_queues Массив хранящий ссылки на входные очереди модулей подписчиков
  * @param name_remote_queue Имя входной очереди модуля подписчика
  */
-int add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues, char* name_remote_queue)
+int add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues, char* name_remote_instance)
 {
     if(ar_remote_queues==NULL)
     {
@@ -1051,7 +1097,7 @@ int add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues, char* name_
     for(i=0;i<ar_remote_queues->len;i++)
     {
         remote_queue_t* info_remote_queue = ar_remote_queues->remote_queues[i];
-        if(strcmp(info_remote_queue->name_queue, name_remote_queue)==0)
+        if(strcmp(info_remote_queue->name_instance, name_remote_instance)==0)
         {
             // Очередь уже зарегестрирована
             return 0;
@@ -1062,11 +1108,12 @@ int add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues, char* name_
     ar_remote_queues->len +=1;
     ar_remote_queues->remote_queues = realloc(ar_remote_queues->remote_queues, sizeof(remote_queue_t*)*ar_remote_queues->len);
     remote_queue_t* new_remote_queue = malloc(sizeof(remote_queue_t));
-    new_remote_queue->name_queue = malloc(strlen(name_remote_queue));
-    strcpy(new_remote_queue->name_queue, name_remote_queue);
+    new_remote_queue->name_instance = malloc(strlen(name_remote_instance));
+    strcpy(new_remote_queue->name_instance, name_remote_instance);
     ar_remote_queues->remote_queues[ar_remote_queues->len-1] = new_remote_queue;
 
     return 0;
 }
+
 
 

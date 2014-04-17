@@ -77,6 +77,16 @@ typedef struct
     char*           remote_field_name;   // Имя поля в bson объекте (которое ожидает подписчик)
 
 } remote_obj_field_t;
+typedef struct
+{
+    // Текщая длина массива
+    size_t len;
+
+    // Массив указателей на структуры содержащие информацию о очередях модулей потребителей
+    remote_obj_field_t** remote_obj_fields;
+
+} sized_ar_remote_obj_field_t;
+
 
 
 /**
@@ -91,11 +101,11 @@ typedef struct
     // Хранение ее здесь (хотя ее копия есть в информационной структуре о очереди ксеномай) обсуловлено тем что,
     // пока не выполнен bind, данное имя не пявляется в структуре ксномая. А bind у нас отложен и выполняется в отдельной функции
     // установления связей
-    char* name_queue;
+    char* name_instance;
 
 } remote_queue_t;
 /**
-  Массив (с информацией о количестве элементов) указателей на структуры с информацией о удаленных очередяъ (входных очередях модулей потребителей)
+  Массив (с информацией о количестве элементов) указателей на структуры с информацией о удаленных очередях (входных очередях модулей потребителей)
  */
 typedef struct
 {
@@ -110,17 +120,29 @@ typedef struct
 
 
 /**
-  Структура данных, необходимых для работы с очередью подписчика
+  Структура данных, необходимых для работы со списком линков на очередь подписчика
  */
 typedef struct
 {
     // Входная очередь модуля подписчика
-    RT_QUEUE out_queue;
+    remote_queue_t* out_queue;
 
     // Список полей (в составе bson объекта) которые желает получать через очередь модуль подписчик
-    remote_obj_field_t** fields_of_remote_obj;
+    sized_ar_remote_obj_field_t ar_fields_of_remote_obj;
 
 } out_queue_set_t;
+/**
+  Массив (с информацией о количестве элементов) указателей на структуры необходимые для работы со списком линков на очереди подписчиков
+ */
+typedef struct
+{
+    // Текщая длина массива
+    size_t len;
+
+    // Массив указателей на структуры содержащие информацию о очередях модулей потребителей
+    out_queue_set_t** out_queue_sets;
+
+} sized_ar_out_queue_set_t;
 
 
 
@@ -144,7 +166,7 @@ typedef struct
     shmem_set_t shmem_set;
 
     // Список очередей (подписчиков), в которые будет передаваться объект
-    out_queue_set_t** out_queues;
+    sized_ar_out_queue_set_t ar_out_queue_sets;
 
 }out_object_t;
 
@@ -237,7 +259,6 @@ typedef struct
 
 
     p_get_outobj_by_outpin get_outobj_by_outpin;
-//    p_get_outobj_by_outpin get_outobj_by_outpin;
 
 } module_t;
 
