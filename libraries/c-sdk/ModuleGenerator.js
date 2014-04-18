@@ -199,7 +199,7 @@ function Create_C_file(module) {
 
     r += "// Возвращает указатель на структуру выходного объекта, по имени пина\n";
     r += "// Используется при подготовке списка полей, для мапинга объектов (для передачи в очередь)\n";
-    r += "out_object_t* get_outobject_by_outpin(module_test_sender_t* module, char* name_out_pin, unsigned short* offset_field, unsigned short* index_port)\n";
+    r += "out_object_t* get_outobject_by_outpin(module_" + module_type + "_t* module, char* name_out_pin, unsigned short* offset_field, unsigned short* index_port)\n";
     r += "{\n";
     r += "    (*offset_field) = 0;\n";
     r += "    (*index_port) = 0;\n";

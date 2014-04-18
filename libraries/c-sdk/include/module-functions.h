@@ -1,5 +1,4 @@
-#ifndef MODULE_FUNCTIONS_H_
-#define MODULE_FUNCTIONS_H_
+#pragma once
 
 #include <native/task.h>
 #include <bson.h>
@@ -96,6 +95,9 @@ typedef struct
 {
     // Входная очередь модуля подписчика
     RT_QUEUE remote_queue;
+
+    // флаг говорящий, что очередь подсоединена
+    bool f_queue_connected;
 
     // Имя очереди ксеномай.
     // Хранение ее здесь (хотя ее копия есть в информационной структуре о очереди ксеномай) обсуловлено тем что,
@@ -256,9 +258,12 @@ typedef struct
     // установленный бит сигнализирует, что в текущей итерации, значение соответствующее биту обновилось
     t_mask updated_input_properties;
 
-
-
+    // Функция в автогенеренной части модуля,
+    // возвращающая метаданные выходного объекта, по имени выходного порта модуля
     p_get_outobj_by_outpin get_outobj_by_outpin;
+
+    // Флаг показывающий (если true), что все соединения модуля установлены
+    bool f_connected_links;
 
 } module_t;
 
@@ -290,4 +295,4 @@ int refresh_input(void* p_module);
 
 char *replace(const char *s, char ch, const char *repl);
 
-#endif
+

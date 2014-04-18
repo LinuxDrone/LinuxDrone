@@ -13,94 +13,15 @@
 #define SHMEM_HEAP_SIZE		300
 #define SHMEM_BLOCK1_SIZE	200
 
-void debug_print_bson(char* where, bson_t* bson) {
-    printf("%s\n", where);
-    char* str = bson_as_json(bson, NULL);
-    fprintf(stdout, "%s\n", str);
-    bson_free(str);
-    printf("\n");
-}
-
-void print_task_start_error(int err) {
-    switch (err)
-    {
-    case -EINVAL:
-        printf("is returned if task is not a task descriptor.\n");
-        break;
-
-    case -EIDRM:
-        printf("is returned if task is a deleted task descriptor.\n");
-        break;
-
-    case -EBUSY:
-        printf("is returned if task is already started.\n");
-        break;
-
-    case -EPERM:
-        printf("is returned if this service was called from an asynchronous context.\n");
-        break;
-
-    default:
-        printf("Unknown task error: %i.\n", err);
-    }
-}
-
-void print_event_wait_error(int err) {
-    switch (err)
-    {
-    case -EINVAL:
-        printf("is returned if event is not a event group descriptor.\n");
-        break;
-
-    case -EIDRM:
-        printf("is returned if event is a deleted event group descriptor, including if the deletion occurred while the caller was sleeping on it before the request has been satisfied.\n");
-        break;
-
-    case -EWOULDBLOCK:
-        printf("is returned if timeout is equal to TM_NONBLOCK and the current event mask value does not satisfy the request.\n");
-        break;
-
-    case -EINTR:
-        printf("is returned if rt_task_unblock() has been called for the waiting task before the request has been satisfied.\n");
-        break;
-
-    case -ETIMEDOUT:
-        printf("is returned if the request has not been satisfied within the specified amount of time.\n");
-        break;
-
-    case -EPERM:
-        printf("is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime context).\n");
-        break;
-
-    default:
-        printf("Unknown event wait error: %i.\n", err);
-    }
-}
-
-void print_obj_status(int number_obj, StatusObj status) {
-    switch (status)
-    {
-    case Empty:
-        printf("Obj%i=Empty\n", number_obj);
-        break;
-
-    case Writing:
-        printf("Obj%i=Writing\n", number_obj);
-        break;
-
-    case Transferring:
-        printf("Obj%i=Transferring\n", number_obj);
-        break;
-
-    case Filled:
-        printf("Obj%i=Filled\n", number_obj);
-        break;
-
-    default:
-        printf("Unknown status of obj: %i.\n", status);
-    }
-}
-
+/**
+ * @brief init_object_set Инициализируети структуру, представляющую выходной объект инстанса в системе.
+ * Каждый тип объекта, который порождает модуль, должен иметь некоторый набор сущностей, требуемых ему для передачи данных объекта другим инстансам.
+ * Данная функция создает необходимые сущности (очереди, мьютексы и т.д.)
+ * @param pset Указатель на структуру, содержащую необхоимые для объекта сущности
+ * @param instance_name Имя инстанса объекта
+ * @param out_name Имя выходного объекта (имя группы портов, объедененных в логический объект)
+ * @return Код ошибки. 0 в случае успеха.
+ */
 int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
 {
     if(strlen(instance_name) > XNOBJECT_NAME_LEN-5)
@@ -204,7 +125,7 @@ int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_
 
 
 /**
- * @brief Фунция проверяет, имеется ли уже ссылка на очередь (входная очередь модуля потребителя)
+ * @brief Фунция проверяет, зарегистрирована ли ссылка на очередь инстанса потребителя (входная очередь модуля потребителя)
  * Если таковой нет, то создается очередь и ссылка на нее сохраняется в массиве
  * @param ar_remote_queues Массив хранящий ссылки на входные очереди модулей подписчиков
  * @param name_remote_queue Имя входной очереди модуля подписчика
@@ -231,7 +152,7 @@ remote_queue_t* add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues,
     // Очередь не зарегистрирована и ее следует создать и сохранить на нее ссылку в массиве.
     ar_remote_queues->len +=1;
     ar_remote_queues->remote_queues = realloc(ar_remote_queues->remote_queues, sizeof(remote_queue_t*)*ar_remote_queues->len);
-    remote_queue_t* new_remote_queue = malloc(sizeof(remote_queue_t));
+    remote_queue_t* new_remote_queue = calloc(1, sizeof(remote_queue_t));
     new_remote_queue->name_instance = malloc(strlen(name_remote_instance));
     strcpy(new_remote_queue->name_instance, name_remote_instance);
     ar_remote_queues->remote_queues[ar_remote_queues->len-1] = new_remote_queue;
@@ -240,11 +161,20 @@ remote_queue_t* add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues,
 }
 
 
+/**
+ * @brief init Инициализация инстанса модуля
+ * Принимает на вход bson объект, контент которого является конфигураций инстанса
+ * @param module
+ * @param data Указатель на блок данных, содержащий контент bson объекта
+ * @param length Длина блока данных, содержащего контент bson объекта
+ * @return
+ */
 int init(module_t* module, const uint8_t * data, uint32_t length)
 {
     bson_t bson;
     bson_init_static(&bson, data, length);
-    debug_print_bson("Function \"init\" module-functions.c", &bson);
+
+    //debug_print_bson("Function \"init\" module-functions.c", &bson);
 
     // Вытаскиваем из конфигурации значения обязательных настроечных параметров
     /**
@@ -268,7 +198,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         fprintf(stdout, "Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", module->instance_name, strlen(module->instance_name), XNOBJECT_NAME_LEN-5);
         return -1;
     }
-    //fprintf(stdout, "instance name=%s\n", module->instance_name);
+    //fprintf(stdout, "instance name=%s\n\n", module->instance_name);
 
     /**
      * Task Priority
@@ -371,7 +301,6 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
             remote_queue_t* remote_queue = add2ar_remote_queues(&module->ar_remote_queues, subscriber_instance_name);
 
-
             // Получим название выходного пина данного модуля
             bson_iter_t iter_outpin_name;
             if (!bson_iter_init_find(&iter_outpin_name, &bson_out_link, "outPin")) {
@@ -414,10 +343,9 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     }
     else
     {
-        printf("Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
-        debug_print_bson("Function \"init\" module-functions.c on error", &bson);
+        //printf("Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
+        //debug_print_bson("Function \"init\" module-functions.c on error", &bson);
     }
-
     return 0;
 }
 
@@ -616,17 +544,21 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
             }
         }
 
-        debug_print_bson("send2queues", bson_obj);
+        //debug_print_bson("send2queues", bson_obj);
 
 
         bson_destroy(bson_obj);
     }
 
-
     return 0;
 }
 
 
+/**
+ * @brief get_input_data Функция получения данных
+ * Должна вызываться из бизнес функции модуля. Доставляет данные из входной очереди и из шаред мемори инстансов поставщиков
+ * @param p_module
+ */
 void get_input_data(void* p_module)
 {
     module_t* module = p_module;
@@ -679,15 +611,71 @@ void get_input_data(void* p_module)
     refresh_input(module);
 }
 
+int connect_links(void *p_module)
+{
+    module_t* module = p_module;
 
-void task_transmit_body(void *p_module)
+    //printf("ar_remote_queues.len=%i\n", module->ar_remote_queues.len);
+
+    int count_connected = 0, i;
+    for(i=0; i < module->ar_remote_queues.len;i++)
+    {
+        remote_queue_t* info_remote_queue = module->ar_remote_queues.remote_queues[i];
+
+        if(info_remote_queue->f_queue_connected)
+        {
+            count_connected++;
+            continue;
+        }
+
+        char name_queue[XNOBJECT_NAME_LEN] = "";
+        strcat(name_queue, info_remote_queue->name_instance);
+        strcat(name_queue, SUFFIX_QUEUE);
+
+        //printf("attempt connect %s to %s\n", module->instance_name, name_queue);
+
+        int res = rt_queue_bind	(&info_remote_queue->remote_queue, name_queue, TM_NONBLOCK);
+        if(res!=0)
+        {
+            //printf("Error:%i rt_queue_bind instance=%s to queue %s\n", res, module->instance_name, name_queue);
+            continue;
+        }
+        else
+        {
+            info_remote_queue->f_queue_connected=true;
+            printf("CONNECTED: %s to queue %s\n", module->instance_name, name_queue);
+        }
+
+        count_connected++;
+    }
+
+    if(count_connected==module->ar_remote_queues.len)
+    {
+        module->f_connected_links=true;
+        printf("instance %s All queues connected\n", module->instance_name);
+    }
+
+    return 0;
+}
+
+
+/**
+ * @brief task_transmit Функция выполняется в потоке задачи передачи данных подписчикам
+ * @param p_module Указатель на инстанс модуль
+ */
+void task_transmit(void *p_module)
 {
     module_t* module = p_module;
     int cycle = 0;
 
     bson_t bson_tr;
     void* obj;
+
     RTIME time_last_publish_shmem;
+    RTIME time_attempt_link_modules;
+
+    time_last_publish_shmem = rt_timer_read();
+    time_attempt_link_modules = rt_timer_read();
 
     while (1) {
         int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
@@ -738,6 +726,18 @@ void task_transmit_body(void *p_module)
         }
 
         //printf("task_transmit cycle %i\n", cycle++);
+        if(!module->f_connected_links)
+        {
+            // Если не все связи модуля установлены, то будем пытаться их установить
+            if(rt_timer_read() - time_attempt_link_modules > 100000000)
+            {
+                //printf("попытка связи\n");
+
+                connect_links(module);
+
+                time_attempt_link_modules=rt_timer_read();
+            }
+        }
     }
 }
 
@@ -774,7 +774,7 @@ int start(void* p_module)
     if(module->out_objects[0]==NULL)
         return err;
 
-    err = rt_task_start(&module->task_transmit, &task_transmit_body, p_module);
+    err = rt_task_start(&module->task_transmit, &task_transmit, p_module);
     if (err != 0) {
         printf("Error start transmit task. err=%i\n", err);
         print_task_start_error(err);
@@ -1080,6 +1080,8 @@ int checkin4transmiter(module_t* module, out_object_t* set,  void** obj)
  */
 int refresh_input(void* p_module)
 {
+    return 0;
+
     module_t* module = p_module;
 
     // биты не установлены, обновления данных не требуется
@@ -1113,29 +1115,6 @@ int refresh_input(void* p_module)
     // перед выходом обнулить биты. они отработаны
     module->refresh_input_mask = 0;
     return 0;
-}
-
-
-/* return a new string with every instance of ch replaced by repl */
-char *replace(const char *s, char ch, const char *repl) {
-    int count = 0;
-    const char *t;
-    for(t=s; *t; t++)
-        count += (*t == ch);
-
-    size_t rlen = strlen(repl);
-    char *res = malloc(strlen(s) + (rlen-1)*count + 1);
-    char *ptr = res;
-    for(t=s; *t; t++) {
-        if(*t == ch) {
-            memcpy(ptr, repl, rlen);
-            ptr += rlen;
-        } else {
-            *ptr++ = *t;
-        }
-    }
-    *ptr = 0;
-    return res;
 }
 
 

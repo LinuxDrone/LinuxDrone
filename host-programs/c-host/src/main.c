@@ -362,8 +362,21 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
 
     // Call function init
 
-    if ((*init)(module, bson_get_data(module_instance), module_instance->len) != 0)
+
+    //void* bdata = malloc(module_instance->len);
+    //memcpy(bdata, bson_get_data(module_instance), module_instance->len);
+
+    bson_t * copy_module_instance;
+    copy_module_instance= bson_copy (module_instance);
+
+    //printf("main before debug_print_bson\n");
+    //debug_print_bson("Function \"start_instance\" main.c", forprint);
+    //printf("main after debug_print_bson\n");
+
+    if ((*init)(module, bson_get_data(copy_module_instance), copy_module_instance->len) != 0)
         return -1;
+
+
 
     char f_start_name[64] = "";
     strcat(f_start_name, replace(module_type, '-', "_")); // FREE NEED
@@ -379,6 +392,7 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
     if ((*start)(module) != 0)
         return -1;
 
+//bson_destroy(copy_module_instance);
 
     bson_destroy(module_instance);
 
@@ -468,7 +482,12 @@ int main(int argc, char *argv[]) {
     for(im=3; im<argc; im++)
     {
         //printf("instance=%s\n", argv[im]);
-        start_instance(bson_configuration, &bson_modules, argv[im]);
+        bson_t * copy_bson_configuration = bson_copy (bson_configuration);
+        bson_t * copy_bson_modules = bson_copy (&bson_modules);
+
+        start_instance(copy_bson_configuration, copy_bson_modules, argv[im]);
+
+//bson_destroy(copy_bson_configuration);
     }
 
     bson_destroy(bson_configuration);

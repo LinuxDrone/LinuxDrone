@@ -67,12 +67,21 @@ void print_input(input_t* obj)
 // Create module.
 module_test_receiver_t* test_receiver_create(void *handle)
 {
-    module_test_receiver_t* module = malloc(sizeof(module_test_receiver_t));
+    module_test_receiver_t* module = calloc(1, sizeof(module_test_receiver_t));
     // Сохраним указатель на загруженную dll
     module->module_info.dll_handle = handle;
-    module->module_info.out_objects = malloc(sizeof(void *) * (count_outs+1));
-    module->module_info.out_objects[0]=NULL;
+    module->module_info.out_objects = calloc(count_outs+1, sizeof(void *));
     return module;
+}
+
+// Возвращает указатель на структуру выходного объекта, по имени пина
+// Используется при подготовке списка полей, для мапинга объектов (для передачи в очередь)
+out_object_t* get_outobject_by_outpin(module_test_receiver_t* module, char* name_out_pin, unsigned short* offset_field, unsigned short* index_port)
+{
+    (*offset_field) = 0;
+    (*index_port) = 0;
+    printf("Not found property \"%s\" among properties out objects\n", name_out_pin);
+    return NULL;
 }
 
 // Stop and delete module. Free memory.
@@ -84,14 +93,16 @@ void test_receiver_delete(module_test_receiver_t* module)
 // Init module.
 int test_receiver_init(module_test_receiver_t* module, const uint8_t* bson_data, uint32_t bson_len)
 {
-    int res = init(&module->module_info, bson_data, bson_len);
-
+    module->module_info.get_outobj_by_outpin = (p_get_outobj_by_outpin)&get_outobject_by_outpin;
     // Input
     memset(&module->input4modul, 0, sizeof(input_t));
     module->module_info.input_data = &module->input4modul;
     module->module_info.input_bson2obj = (p_bson2obj)&bson2input;
 
     module->module_info.func = &test_receiver_run;
+
+    int res = init(&module->module_info, bson_data, bson_len);
+
 
     return res;
 }
