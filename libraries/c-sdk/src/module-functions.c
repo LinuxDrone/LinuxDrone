@@ -546,6 +546,11 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 
         //debug_print_bson("send2queues", bson_obj);
 
+        int res = rt_queue_write(&out_queue_set->out_queue->remote_queue, bson_get_data(bson_obj), bson_obj->len, Q_NORMAL);
+        if(res<0)
+        {
+            printf("Error: %i rt_queue_write\n", res);
+        }
 
         bson_destroy(bson_obj);
     }
@@ -581,17 +586,25 @@ void get_input_data(void* p_module)
     int res_read = rt_queue_read(&module->in_queue, buf, 256, module->queue_timeout);
     if (res_read > 0)
     {
-        printf("ofiget' ne vstat'\n");
+        //printf("ofiget' ne vstat'\n");
 
         // распарсить полученный объект
 
         bson_t bson;
         bson_init_static(&bson, buf, res_read);
 
-        if(module->input_bson2obj(module, &bson)==0)
+        debug_print_bson("get_input_data", &bson);
+
+        if ((*module->input_bson2obj)(module, &bson) != 0)
         {
             printf("Error: func get_input_data, input_bson2obj\n");
         }
+        else
+        {
+            //(*module->print_input)(module->input_data);
+        }
+
+
 
         // destroy bson
     }

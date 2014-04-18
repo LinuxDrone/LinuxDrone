@@ -43,6 +43,8 @@ typedef int (*p_bson2obj)(void* p_module, bson_t* bson);
 
 typedef void (*p_print_obj)(void* obj);
 
+typedef void (*p_print_input)(void* obj);
+
 /**
   Структура данных, необходимых для работы с блоком разделяемой памяти
  */
@@ -242,6 +244,9 @@ typedef struct
 
     // Указатель на структуру (входные данные модуля)
     void* input_data;
+
+    // Функция печати в консоль входного объекта
+    p_print_input print_input;
 
     // Функция преобразования принятого из очереди bson объекта
     // в структуру представляющую входной объект

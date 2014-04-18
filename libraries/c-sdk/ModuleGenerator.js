@@ -261,6 +261,7 @@ function Create_C_file(module) {
     }
     r += "\n";
     r += "    module->module_info.func = &" + module_type + "_run;\n\n";
+    //r += "    module->print_input = &print_input;\n\n";
     r += "    int res = init(&module->module_info, bson_data, bson_len);\n\n";
     if (module.outputs) {
         r += "    // для каждого типа порождаемого объекта инициализируется соответсвующая структура\n";
