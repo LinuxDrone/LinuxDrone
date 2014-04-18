@@ -55,8 +55,9 @@ int bson2input(module_t* module, bson_t* bson)
 }
 
 // Helper function. Print structure input
-void print_input(input_t* obj)
+void print_test_receiver(void* obj1)
 {
+    input_t* obj=obj1;
     printf("in1=%i\t", obj->in1);
     printf("in2=%i\t", obj->in2);
     printf("in3=%i\t", obj->in3);
@@ -100,6 +101,8 @@ int test_receiver_init(module_test_receiver_t* module, const uint8_t* bson_data,
     module->module_info.input_bson2obj = (p_bson2obj)&bson2input;
 
     module->module_info.func = &test_receiver_run;
+
+    module->module_info.print_input = &print_test_receiver;
 
     int res = init(&module->module_info, bson_data, bson_len);
 

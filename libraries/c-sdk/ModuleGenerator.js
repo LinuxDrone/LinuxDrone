@@ -49,7 +49,7 @@ function make_Structure2Bson(properties, portName) {
     return r;
 }
 
-function make_Bson2Structure(properties, portName) {
+function make_Bson2Structure(properties, portName, module_type) {
     var r = "";
     r += "// Convert bson to structure " + portName + "\n";
     r += "int bson2" + portName + "(module_t* module, bson_t* bson)\n";
@@ -89,8 +89,14 @@ function make_Bson2Structure(properties, portName) {
     r += "}\n\n";
 
     r += "// Helper function. Print structure " + portName + "\n";
-    r += "void print_" + portName + "(" + portName + "_t* obj)\n";
-    r += "{\n";
+    if(portName=="input"){
+        r += "void print_" + module_type + "(void* obj1)\n";
+        r += "{\n";
+        r += "    " + portName + "_t* obj=obj1;\n";
+    }else{
+        r += "void print_" + portName + "(" + portName + "_t* obj)\n";
+        r += "{\n";
+    }
     for (var key in properties) {
         r += "    printf(\"" + key + "=%i\\t\", obj->" + key + ");\n";
     }
@@ -110,7 +116,6 @@ function Create_H_file(module) {
 
     if ('inputShema' in module) {
         r += make_structures(module.inputShema.properties, "input");
-        //r += "\t" + input_struct + "_t input4modul;\n";
     }
 
     if (module.outputs) {
@@ -166,7 +171,7 @@ function Create_C_file(module) {
     r += "extern t_cycle_function " + module_type + "_run;\n\n";
 
     if ('inputShema' in module) {
-        r += make_Bson2Structure(module.inputShema.properties, "input");
+        r += make_Bson2Structure(module.inputShema.properties,  "input", module_type);
     }
 
     if (module.outputs) {
@@ -261,7 +266,9 @@ function Create_C_file(module) {
     }
     r += "\n";
     r += "    module->module_info.func = &" + module_type + "_run;\n\n";
-    //r += "    module->print_input = &print_input;\n\n";
+    if ('inputShema' in module) {
+        r += "    module->module_info.print_input = &print_" + module_type + ";\n\n";
+    }
     r += "    int res = init(&module->module_info, bson_data, bson_len);\n\n";
     if (module.outputs) {
         r += "    // для каждого типа порождаемого объекта инициализируется соответсвующая структура\n";

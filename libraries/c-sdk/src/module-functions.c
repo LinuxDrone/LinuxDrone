@@ -593,7 +593,7 @@ void get_input_data(void* p_module)
         bson_t bson;
         bson_init_static(&bson, buf, res_read);
 
-        debug_print_bson("get_input_data", &bson);
+        //debug_print_bson("get_input_data", &bson);
 
         if ((*module->input_bson2obj)(module, &bson) != 0)
         {
@@ -601,7 +601,7 @@ void get_input_data(void* p_module)
         }
         else
         {
-            //(*module->print_input)(module->input_data);
+            (*module->print_input)(module->input_data);
         }
 
 
