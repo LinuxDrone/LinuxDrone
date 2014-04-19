@@ -81,7 +81,7 @@ int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
  * Подготавливает структуры необходимые для работы с данными линками (мапинг свойств) в риалтайме
  * @return
  */
-int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_name, unsigned short offset_field, TypeFieldObj type_field_obj, const char* remote_field_name, remote_queue_t* remote_queue)
+int register_out_link(out_object_t* out_object, const char* subscriber_instance_name, unsigned short offset_field, TypeFieldObj type_field_obj, const char* remote_field_name, remote_queue_t* remote_queue)
 {
     // Найдем данные ассоциированные с инстансом подписчика
     // Если таковых не зарегистрировано, то создадим (выделим память и заполним) необходимые структуры
@@ -333,7 +333,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             if(out_object)
             {
                 //fieldInteger; //TODO: обрабатывать и другие типы
-                add_queuelink2out(out_object, subscriber_instance_name, offset_field, fieldInteger, remote_inpin_name, remote_queue);
+                register_out_link(out_object, subscriber_instance_name, offset_field, fieldInteger, remote_inpin_name, remote_queue);
             }
             else
             {
@@ -587,9 +587,7 @@ void get_input_data(void* p_module)
     {
         bson_t bson;
         bson_init_static(&bson, buf, res_read);
-
         //debug_print_bson("get_input_data", &bson);
-
         if ((*module->input_bson2obj)(module, &bson) != 0)
         {
             printf("Error: func get_input_data, input_bson2obj\n");
@@ -599,8 +597,7 @@ void get_input_data(void* p_module)
             printf("%s: ", module->instance_name);
             (*module->print_input)(module->input_data);
         }
-
-        // destroy bson
+        bson_destroy(&bson);
     }
 
     // Если установлены флаги того, что юзер обязательно хочет каких то данных,
@@ -618,7 +615,13 @@ void get_input_data(void* p_module)
     refresh_input(module);
 }
 
-int connect_links(void *p_module)
+/**
+ * @brief connect_links Устанавливает исходящие соединения
+ * С входными очередями инстансов подписчиков
+ * @param p_module
+ * @return
+ */
+int connect_out_links(void *p_module)
 {
     module_t* module = p_module;
 
@@ -658,12 +661,62 @@ int connect_links(void *p_module)
 
     if(count_connected==module->remote_queues_len)
     {
-        module->f_connected_links=true;
+        module->f_connected_out_links=true;
         printf("%s: ALL QUEUES CONNECTED\n", module->instance_name);
     }
 
     return 0;
 }
+
+
+
+int connect_in_links(void *p_module)
+{
+    module_t* module = p_module;
+/*
+    //printf("len=%i\n", module->len);
+
+    int count_connected = 0, i;
+    for(i=0; i < module->remote_queues_len;i++)
+    {
+        remote_queue_t* info_remote_queue = module->remote_queues[i];
+
+        if(info_remote_queue->f_queue_connected)
+        {
+            count_connected++;
+            continue;
+        }
+
+        char name_queue[XNOBJECT_NAME_LEN] = "";
+        strcat(name_queue, info_remote_queue->name_instance);
+        strcat(name_queue, SUFFIX_QUEUE);
+
+        //printf("attempt connect %s to %s\n", module->instance_name, name_queue);
+
+        int res = rt_queue_bind	(&info_remote_queue->remote_queue, name_queue, TM_NONBLOCK);
+        if(res!=0)
+        {
+            //printf("Error:%i rt_queue_bind instance=%s to queue %s\n", res, module->instance_name, name_queue);
+            continue;
+        }
+        else
+        {
+            info_remote_queue->f_queue_connected=true;
+            printf("CONNECTED: %s to queue %s\n", module->instance_name, name_queue);
+        }
+
+        count_connected++;
+    }
+
+    if(count_connected==module->remote_queues_len)
+    {
+        module->f_connected_out_links=true;
+        printf("%s: ALL QUEUES CONNECTED\n", module->instance_name);
+    }
+*/
+    return 0;
+}
+
 
 
 /**
@@ -733,18 +786,32 @@ void task_transmit(void *p_module)
         }
 
         //printf("task_transmit cycle %i\n", cycle++);
-        if(!module->f_connected_links)
+        if(!module->f_connected_out_links)
         {
             // Если не все связи модуля установлены, то будем пытаться их установить
             if(rt_timer_read() - time_attempt_link_modules > 100000000)
             {
-                //printf("попытка связи\n");
+                //printf("попытка out связи\n");
 
-                connect_links(module);
+                connect_out_links(module);
 
                 time_attempt_link_modules=rt_timer_read();
             }
         }
+
+        if(!module->f_connected_in_links)
+        {
+            // Если не все связи модуля установлены, то будем пытаться их установить
+            if(rt_timer_read() - time_attempt_link_modules > 100000000)
+            {
+                printf("попытка in связи\n");
+
+                connect_in_links(module);
+
+                time_attempt_link_modules=rt_timer_read();
+            }
+        }
+
     }
 }
 

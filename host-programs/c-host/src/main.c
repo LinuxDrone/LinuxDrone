@@ -13,43 +13,6 @@
 // Хранилище указателей на загруженные пускачем инстансы модулей
 bson_t instances;
 
-bson_t* get_bson_from_file() {
-	bson_json_reader_t *reader;
-	bson_error_t error;
-	const char *filename;
-	bson_t *b_out;
-	int i;
-	int b;
-
-	b_out = bson_new();
-
-	filename = "/root/testConfig.json";
-
-
-    if (!(reader = bson_json_reader_new_from_file(filename, &error))) {
-        fprintf(stderr, "Failed to open \"%s\": %s\n", filename,
-                error.message);
-        return NULL ;
-    }
-
-
-	/*
-	 * Convert incoming document to JSON.
-	 */
-	if ((b = bson_json_reader_read(reader, b_out, &error))) {
-		if (b < 0) {
-			fprintf(stderr, "Error in json parsing:\n%s\n", error.message);
-			abort();
-		}
-
-		//fwrite(bson_get_data(b_out), 1, b_out->len, stdout);
-
-		bson_json_reader_destroy(reader);
-
-		return b_out;
-	}
-	return NULL ;
-}
 
 bson_t* get_bson_from_db(const char* configuration_name, const char* configuration_version)
 {
@@ -156,10 +119,18 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, con
             return -1;
         }
 
+        bson_iter_t iter_type;
+        if (!bson_iter_init_find(&iter_type, &bson_link, "type")) {
+            fprintf(stderr, "Error: not found node \"type\" in link\n");
+            debug_print_bson("Function \"add_links2instance\" main.c on error", &bson_link);
+            return -1;
+        }
+
         // Имя инстанса с входящим линком
         const char* name_inInst = bson_iter_utf8(&iter_inInst, NULL);
+        const char* name_type = bson_iter_utf8(&iter_type, NULL);
         // Если это имя равно имени данного инстанса, то добавим связь в список входящих связей данного модуля
-        if(!strncmp(name_inInst, module_instance_name, 100))
+        if(strncmp(name_inInst, module_instance_name, 100)==0 && strncmp(name_type, "memory", 100)==0)
         {
             if(!was_in_links)
             {

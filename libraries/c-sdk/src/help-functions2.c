@@ -1,6 +1,44 @@
 #include "../include/module-functions.h"
 
 
+bson_t* get_bson_from_file() {
+    bson_json_reader_t *reader;
+    bson_error_t error;
+    const char *filename;
+    bson_t *b_out;
+    int i;
+    int b;
+
+    b_out = bson_new();
+
+    filename = "/root/testConfig.json";
+
+
+    if (!(reader = bson_json_reader_new_from_file(filename, &error))) {
+        fprintf(stderr, "Failed to open \"%s\": %s\n", filename,
+                error.message);
+        return NULL ;
+    }
+
+
+    /*
+     * Convert incoming document to JSON.
+     */
+    if ((b = bson_json_reader_read(reader, b_out, &error))) {
+        if (b < 0) {
+            fprintf(stderr, "Error in json parsing:\n%s\n", error.message);
+            abort();
+        }
+
+        //fwrite(bson_get_data(b_out), 1, b_out->len, stdout);
+
+        bson_json_reader_destroy(reader);
+
+        return b_out;
+    }
+    return NULL ;
+}
+
 void debug_print_bson(char* where, bson_t* bson) {
     printf("%s\n", where);
     char* str = bson_as_json(bson, NULL);
