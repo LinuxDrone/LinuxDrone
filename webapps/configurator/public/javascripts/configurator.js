@@ -565,6 +565,15 @@ viewModels.Editor = (function () {
         }
     }
 
+    // Приватная
+    // Возвращает имя типа модйля по идентификатору модуля в графической схеме
+    var GetModuleTypeByGraphId = function(IdModelInGraph)
+    {
+        return _.find(graph.attributes.cells.models, function (model) {
+            return model.id == IdModelInGraph;
+        }).attributes.moduleType;
+    }
+
     // Загрузка метаданных общих свойств модулей в observable переменную
     ModulesCommonParams.commonModuleParamsDefinition.forEach(function (prop) {
         prop.value = ko.observable(prop.defaultValue);
@@ -713,6 +722,14 @@ viewModels.Editor = (function () {
         if (cell.attributes.type == "link") {
             // При создании нового линка, ему по умолчанию устанавливается тип и цвет.
             cell.attributes["mode"] = "queue";
+
+            var moduleType = GetModuleTypeByGraphId(cell.attributes.source.id);
+            var moduleDef=GetModuleMeta(moduleType).definition();
+            var group = _.find(moduleDef.outputs, function (group) {
+                return cell.attributes.source.port in group.Schema.properties;
+            });
+
+            cell.attributes["nameOutGroup"] = group.name;
         }
     })
 

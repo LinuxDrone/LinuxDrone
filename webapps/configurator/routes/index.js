@@ -189,7 +189,8 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
             "outInst": GetInstanceName(graph, cell.source.id),
             "inInst": GetInstanceName(graph, cell.target.id),
             "outPin": cell.source.port,
-            "inPin": cell.target.port
+            "inPin": cell.target.port,
+            "nameOutGroup" : cell.nameOutGroup
         });
     }
 }
