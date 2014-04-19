@@ -86,12 +86,12 @@ int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_
     // Найдем данные ассоциированные с инстансом подписчика
     // Если таковых не зарегистрировано, то создадим (выделим память и заполним) необходимые структуры
     out_queue_set_t* out_queue_set=NULL;
-    if(out_object->ar_out_queue_sets.out_queue_sets!=NULL)
+    if(out_object->out_queue_sets!=NULL)
     {
         int i;
-        for(i=0;i<out_object->ar_out_queue_sets.len;i++)
+        for(i=0;i<out_object->out_queue_sets_len;i++)
         {
-            out_queue_set = out_object->ar_out_queue_sets.out_queue_sets[i];
+            out_queue_set = out_object->out_queue_sets[i];
             if(strcmp(out_queue_set->out_queue->name_instance, subscriber_instance_name)==0)
                 break;
             else
@@ -102,22 +102,22 @@ int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_
     if(out_queue_set==NULL)
     {
         // Если инстанс вообще не зарегестрирован в списке потребителей нашего модуля, сделаем это
-        out_object->ar_out_queue_sets.len += 1;
-        out_object->ar_out_queue_sets.out_queue_sets = realloc(out_object->ar_out_queue_sets.out_queue_sets, sizeof(out_queue_set_t*)*out_object->ar_out_queue_sets.len);
+        out_object->out_queue_sets_len += 1;
+        out_object->out_queue_sets = realloc(out_object->out_queue_sets, sizeof(out_queue_set_t*)*out_object->out_queue_sets_len);
         out_queue_set = calloc(1, sizeof(out_queue_set_t));
         out_queue_set->out_queue = remote_queue;
-        out_object->ar_out_queue_sets.out_queue_sets[out_object->ar_out_queue_sets.len-1] = out_queue_set;
+        out_object->out_queue_sets[out_object->out_queue_sets_len-1] = out_queue_set;
     }
 
     // Зарегистрируем линк
-    out_queue_set->ar_fields_of_remote_obj.len += 1;
-    out_queue_set->ar_fields_of_remote_obj.remote_obj_fields = realloc(out_queue_set->ar_fields_of_remote_obj.remote_obj_fields, sizeof(remote_obj_field_t*)*out_queue_set->ar_fields_of_remote_obj.len);
+    out_queue_set->len += 1;
+    out_queue_set->remote_obj_fields = realloc(out_queue_set->remote_obj_fields, sizeof(remote_obj_field_t*)*out_queue_set->len);
     remote_obj_field_t* remote_obj_field = calloc(1, sizeof(remote_obj_field_t));
     remote_obj_field->offset_field_obj = offset_field;
     remote_obj_field->remote_field_name = malloc(strlen(remote_field_name)+1);
     strcpy(remote_obj_field->remote_field_name, remote_field_name);
     remote_obj_field->type_field_obj = type_field_obj;
-    out_queue_set->ar_fields_of_remote_obj.remote_obj_fields[out_queue_set->ar_fields_of_remote_obj.len-1] = remote_obj_field;
+    out_queue_set->remote_obj_fields[out_queue_set->len-1] = remote_obj_field;
 
     return 0;
 }
@@ -127,21 +127,21 @@ int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_
 /**
  * @brief Фунция проверяет, зарегистрирована ли ссылка на очередь инстанса потребителя (входная очередь модуля потребителя)
  * Если таковой нет, то создается очередь и ссылка на нее сохраняется в массиве
- * @param ar_remote_queues Массив хранящий ссылки на входные очереди модулей подписчиков
+ * @param module Массив хранящий ссылки на входные очереди модулей подписчиков
  * @param name_remote_queue Имя входной очереди модуля подписчика
  */
-remote_queue_t* add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues, const char* name_remote_instance)
+remote_queue_t* add2module(module_t* module, const char* name_remote_instance)
 {
-    if(ar_remote_queues==NULL)
+    if(module==NULL)
     {
-        printf("Function \"add2ar_remote_queues\" null parameter ar_remote_queues\n");
+        printf("Function \"add2module\" null parameter module\n");
         return NULL;
     }
 
     int i=0;
-    for(i=0;i<ar_remote_queues->len;i++)
+    for(i=0;i<module->remote_queues_len;i++)
     {
-        remote_queue_t* info_remote_queue = ar_remote_queues->remote_queues[i];
+        remote_queue_t* info_remote_queue = module->remote_queues[i];
         if(strcmp(info_remote_queue->name_instance, name_remote_instance)==0)
         {
             // Очередь уже зарегестрирована
@@ -150,12 +150,12 @@ remote_queue_t* add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues,
     }
 
     // Очередь не зарегистрирована и ее следует создать и сохранить на нее ссылку в массиве.
-    ar_remote_queues->len +=1;
-    ar_remote_queues->remote_queues = realloc(ar_remote_queues->remote_queues, sizeof(remote_queue_t*)*ar_remote_queues->len);
+    module->remote_queues_len +=1;
+    module->remote_queues = realloc(module->remote_queues, sizeof(remote_queue_t*)*module->remote_queues_len);
     remote_queue_t* new_remote_queue = calloc(1, sizeof(remote_queue_t));
     new_remote_queue->name_instance = malloc(strlen(name_remote_instance)+1);
     strcpy(new_remote_queue->name_instance, name_remote_instance);
-    ar_remote_queues->remote_queues[ar_remote_queues->len-1] = new_remote_queue;
+    module->remote_queues[module->remote_queues_len-1] = new_remote_queue;
 
     return new_remote_queue;
 }
@@ -299,7 +299,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             const char* subscriber_instance_name = bson_iter_utf8(&iter_subscriber_instance_name, NULL);
 
             // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-            remote_queue_t* remote_queue = add2ar_remote_queues(&module->ar_remote_queues, subscriber_instance_name);
+            remote_queue_t* remote_queue = add2module(module, subscriber_instance_name);
 
             // Получим название выходного пина данного модуля
             bson_iter_t iter_outpin_name;
@@ -518,24 +518,22 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 {
     void* pval;
     int i;
-    for(i=0;i<out_object->ar_out_queue_sets.len;i++)
+    for(i=0;i<out_object->out_queue_sets_len;i++)
     {
         bson_init (bson_obj);
 
-        out_queue_set_t* out_queue_set = out_object->ar_out_queue_sets.out_queue_sets[i];
+        out_queue_set_t* out_queue_set = out_object->out_queue_sets[i];
 
         int cl;
-        for(cl=0;cl<out_queue_set->ar_fields_of_remote_obj.len;cl++)
+        for(cl=0;cl<out_queue_set->len;cl++)
         {
-            remote_obj_field_t* remote_obj_field = out_queue_set->ar_fields_of_remote_obj.remote_obj_fields[cl];
+            remote_obj_field_t* remote_obj_field = out_queue_set->remote_obj_fields[cl];
 
             switch (remote_obj_field->type_field_obj)
             {
                 case fieldInteger:
-
-                    //TODO: Оптимизировать и не вычислять длину строку здесь. Подготовить заранее
                     pval = data_obj + remote_obj_field->offset_field_obj;
-                    bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, strlen(remote_obj_field->remote_field_name), *((int*)pval));
+                    bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, -1, *((int*)pval));
                     break;
 
                 default:
@@ -549,7 +547,8 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
         int res = rt_queue_write(&out_queue_set->out_queue->remote_queue, bson_get_data(bson_obj), bson_obj->len, Q_NORMAL);
         if(res<0)
         {
-            printf("Error: %i rt_queue_write\n", res);
+            printf("Warning: %i rt_queue_write\n", res);
+            // TODO: если нет коннекта у очереди, то сбросить флаг коннекта всех очередей.
         }
 
         bson_destroy(bson_obj);
@@ -623,12 +622,12 @@ int connect_links(void *p_module)
 {
     module_t* module = p_module;
 
-    //printf("ar_remote_queues.len=%i\n", module->ar_remote_queues.len);
+    //printf("len=%i\n", module->len);
 
     int count_connected = 0, i;
-    for(i=0; i < module->ar_remote_queues.len;i++)
+    for(i=0; i < module->remote_queues_len;i++)
     {
-        remote_queue_t* info_remote_queue = module->ar_remote_queues.remote_queues[i];
+        remote_queue_t* info_remote_queue = module->remote_queues[i];
 
         if(info_remote_queue->f_queue_connected)
         {
@@ -657,10 +656,10 @@ int connect_links(void *p_module)
         count_connected++;
     }
 
-    if(count_connected==module->ar_remote_queues.len)
+    if(count_connected==module->remote_queues_len)
     {
         module->f_connected_links=true;
-        printf("instance %s All queues connected\n", module->instance_name);
+        printf("%s: ALL QUEUES CONNECTED\n", module->instance_name);
     }
 
     return 0;
