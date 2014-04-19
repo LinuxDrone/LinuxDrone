@@ -436,6 +436,8 @@ int stop_instance(char* instance_name)
     // Call function delete
     (*f_delete)(module);
 
+    dlclose(handle);
+
     return 0;
 }
 
