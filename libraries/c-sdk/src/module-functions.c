@@ -114,7 +114,7 @@ int add_queuelink2out(out_object_t* out_object, const char* subscriber_instance_
     out_queue_set->ar_fields_of_remote_obj.remote_obj_fields = realloc(out_queue_set->ar_fields_of_remote_obj.remote_obj_fields, sizeof(remote_obj_field_t*)*out_queue_set->ar_fields_of_remote_obj.len);
     remote_obj_field_t* remote_obj_field = calloc(1, sizeof(remote_obj_field_t));
     remote_obj_field->offset_field_obj = offset_field;
-    remote_obj_field->remote_field_name = malloc(strlen(remote_field_name));
+    remote_obj_field->remote_field_name = malloc(strlen(remote_field_name)+1);
     strcpy(remote_obj_field->remote_field_name, remote_field_name);
     remote_obj_field->type_field_obj = type_field_obj;
     out_queue_set->ar_fields_of_remote_obj.remote_obj_fields[out_queue_set->ar_fields_of_remote_obj.len-1] = remote_obj_field;
@@ -153,7 +153,7 @@ remote_queue_t* add2ar_remote_queues(sized_ar_remote_queues_t* ar_remote_queues,
     ar_remote_queues->len +=1;
     ar_remote_queues->remote_queues = realloc(ar_remote_queues->remote_queues, sizeof(remote_queue_t*)*ar_remote_queues->len);
     remote_queue_t* new_remote_queue = calloc(1, sizeof(remote_queue_t));
-    new_remote_queue->name_instance = malloc(strlen(name_remote_instance));
+    new_remote_queue->name_instance = malloc(strlen(name_remote_instance)+1);
     strcpy(new_remote_queue->name_instance, name_remote_instance);
     ar_remote_queues->remote_queues[ar_remote_queues->len-1] = new_remote_queue;
 
@@ -586,10 +586,6 @@ void get_input_data(void* p_module)
     int res_read = rt_queue_read(&module->in_queue, buf, 256, module->queue_timeout);
     if (res_read > 0)
     {
-        //printf("ofiget' ne vstat'\n");
-
-        // распарсить полученный объект
-
         bson_t bson;
         bson_init_static(&bson, buf, res_read);
 
@@ -601,10 +597,9 @@ void get_input_data(void* p_module)
         }
         else
         {
+            printf("%s: ", module->instance_name);
             (*module->print_input)(module->input_data);
         }
-
-
 
         // destroy bson
     }

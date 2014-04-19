@@ -346,7 +346,7 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
     // Call function Create instance (.so)
     module_t* module = (*create)(handle);
 
-    module->module_type = malloc(strlen(module_type));
+    module->module_type = malloc(strlen(module_type)+1);
     strcpy(module->module_type, module_type);
 
 
