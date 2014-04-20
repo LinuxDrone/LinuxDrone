@@ -27,6 +27,7 @@ target_link_libraries(test-sender-receiver ${EXTRA_LIBS})
 add_custom_command(
     TARGET test-sender-receiver
     PRE_BUILD
+#COMMAND
     COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-sender-receiver/test-sender-receiver.def.json ${MOD_DIR}/test-sender-receiver
 )
 

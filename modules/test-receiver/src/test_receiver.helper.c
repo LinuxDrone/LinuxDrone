@@ -5,6 +5,20 @@
 
 extern t_cycle_function test_receiver_run;
 
+int get_inputmask_by_inputname(char* input_name)
+{
+    if(!strncmp(input_name, "in1", XNOBJECT_NAME_LEN))
+        return in1;
+    if(!strncmp(input_name, "in2", XNOBJECT_NAME_LEN))
+        return in2;
+    if(!strncmp(input_name, "in3", XNOBJECT_NAME_LEN))
+        return in3;
+    if(!strncmp(input_name, "in4", XNOBJECT_NAME_LEN))
+        return in4;
+
+    return 0;
+}
+
 // Convert bson to structure input
 int bson2input(module_t* module, bson_t* bson)
 {
@@ -26,25 +40,25 @@ int bson2input(module_t* module, bson_t* bson)
     {
         const char* key = bson_iter_key (&iter);
 
-        if(!strncmp(key, "in1", 100))
+        if(!strncmp(key, "in1", XNOBJECT_NAME_LEN))
         {
             obj->in1 = bson_iter_int32(&iter);
             module->updated_input_properties |= in1;
             continue;
         }
-        if(!strncmp(key, "in2", 100))
+        if(!strncmp(key, "in2", XNOBJECT_NAME_LEN))
         {
             obj->in2 = bson_iter_int32(&iter);
             module->updated_input_properties |= in2;
             continue;
         }
-        if(!strncmp(key, "in3", 100))
+        if(!strncmp(key, "in3", XNOBJECT_NAME_LEN))
         {
             obj->in3 = bson_iter_int32(&iter);
             module->updated_input_properties |= in3;
             continue;
         }
-        if(!strncmp(key, "in4", 100))
+        if(!strncmp(key, "in4", XNOBJECT_NAME_LEN))
         {
             obj->in4 = bson_iter_int32(&iter);
             module->updated_input_properties |= in4;
@@ -99,6 +113,7 @@ int test_receiver_init(module_test_receiver_t* module, const uint8_t* bson_data,
     memset(&module->input4modul, 0, sizeof(input_t));
     module->module_info.input_data = &module->input4modul;
     module->module_info.input_bson2obj = (p_bson2obj)&bson2input;
+    module->module_info.get_inmask_by_inputname = (p_get_inputmask_by_inputname)&get_inputmask_by_inputname;
 
     module->module_info.func = &test_receiver_run;
 

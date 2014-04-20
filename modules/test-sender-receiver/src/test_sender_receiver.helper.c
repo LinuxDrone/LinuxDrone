@@ -5,6 +5,16 @@
 
 extern t_cycle_function test_sender_receiver_run;
 
+int get_inputmask_by_inputname(char* input_name)
+{
+    if(!strncmp(input_name, "in1", XNOBJECT_NAME_LEN))
+        return in1;
+    if(!strncmp(input_name, "in2", XNOBJECT_NAME_LEN))
+        return in2;
+
+    return 0;
+}
+
 // Convert bson to structure input
 int bson2input(module_t* module, bson_t* bson)
 {
@@ -26,13 +36,13 @@ int bson2input(module_t* module, bson_t* bson)
     {
         const char* key = bson_iter_key (&iter);
 
-        if(!strncmp(key, "in1", 100))
+        if(!strncmp(key, "in1", XNOBJECT_NAME_LEN))
         {
             obj->in1 = bson_iter_int32(&iter);
             module->updated_input_properties |= in1;
             continue;
         }
-        if(!strncmp(key, "in2", 100))
+        if(!strncmp(key, "in2", XNOBJECT_NAME_LEN))
         {
             obj->in2 = bson_iter_int32(&iter);
             module->updated_input_properties |= in2;
@@ -80,13 +90,13 @@ int bson2Output1(module_t* module, bson_t* bson)
     {
         const char* key = bson_iter_key (&iter);
 
-        if(!strncmp(key, "out1", 100))
+        if(!strncmp(key, "out1", XNOBJECT_NAME_LEN))
         {
             obj->out1 = bson_iter_int32(&iter);
             module->updated_input_properties |= out1;
             continue;
         }
-        if(!strncmp(key, "out2", 100))
+        if(!strncmp(key, "out2", XNOBJECT_NAME_LEN))
         {
             obj->out2 = bson_iter_int32(&iter);
             module->updated_input_properties |= out2;
@@ -132,7 +142,7 @@ int bson2Output2(module_t* module, bson_t* bson)
     {
         const char* key = bson_iter_key (&iter);
 
-        if(!strncmp(key, "out3", 100))
+        if(!strncmp(key, "out3", XNOBJECT_NAME_LEN))
         {
             obj->out3 = bson_iter_int32(&iter);
             module->updated_input_properties |= out3;
@@ -167,19 +177,19 @@ out_object_t* get_outobject_by_outpin(module_test_sender_receiver_t* module, cha
 {
     (*offset_field) = 0;
     (*index_port) = 0;
-    if(!strncmp(name_out_pin, "out1", 100))
+    if(!strncmp(name_out_pin, "out1", XNOBJECT_NAME_LEN))
     {
         (*offset_field) = (void*)&module->obj1_Output1.out1 - (void*)&module->obj1_Output1;
         (*index_port) = 0;
         return &module->Output1;
     }
-    if(!strncmp(name_out_pin, "out2", 100))
+    if(!strncmp(name_out_pin, "out2", XNOBJECT_NAME_LEN))
     {
         (*offset_field) = (void*)&module->obj1_Output1.out2 - (void*)&module->obj1_Output1;
         (*index_port) = 1;
         return &module->Output1;
     }
-    if(!strncmp(name_out_pin, "out3", 100))
+    if(!strncmp(name_out_pin, "out3", XNOBJECT_NAME_LEN))
     {
         (*offset_field) = (void*)&module->obj1_Output2.out3 - (void*)&module->obj1_Output2;
         (*index_port) = 0;
@@ -223,6 +233,7 @@ int test_sender_receiver_init(module_test_sender_receiver_t* module, const uint8
     memset(&module->input4modul, 0, sizeof(input_t));
     module->module_info.input_data = &module->input4modul;
     module->module_info.input_bson2obj = (p_bson2obj)&bson2input;
+    module->module_info.get_inmask_by_inputname = (p_get_inputmask_by_inputname)&get_inputmask_by_inputname;
 
     module->module_info.func = &test_sender_receiver_run;
 

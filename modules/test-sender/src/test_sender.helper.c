@@ -34,13 +34,13 @@ int bson2Output1(module_t* module, bson_t* bson)
     {
         const char* key = bson_iter_key (&iter);
 
-        if(!strncmp(key, "out1", 100))
+        if(!strncmp(key, "out1", XNOBJECT_NAME_LEN))
         {
             obj->out1 = bson_iter_int32(&iter);
             module->updated_input_properties |= out1;
             continue;
         }
-        if(!strncmp(key, "out2", 100))
+        if(!strncmp(key, "out2", XNOBJECT_NAME_LEN))
         {
             obj->out2 = bson_iter_int32(&iter);
             module->updated_input_properties |= out2;
@@ -86,7 +86,7 @@ int bson2Output2(module_t* module, bson_t* bson)
     {
         const char* key = bson_iter_key (&iter);
 
-        if(!strncmp(key, "out3", 100))
+        if(!strncmp(key, "out3", XNOBJECT_NAME_LEN))
         {
             obj->out3 = bson_iter_int32(&iter);
             module->updated_input_properties |= out3;
@@ -121,19 +121,19 @@ out_object_t* get_outobject_by_outpin(module_test_sender_t* module, char* name_o
 {
     (*offset_field) = 0;
     (*index_port) = 0;
-    if(!strncmp(name_out_pin, "out1", 100))
+    if(!strncmp(name_out_pin, "out1", XNOBJECT_NAME_LEN))
     {
         (*offset_field) = (void*)&module->obj1_Output1.out1 - (void*)&module->obj1_Output1;
         (*index_port) = 0;
         return &module->Output1;
     }
-    if(!strncmp(name_out_pin, "out2", 100))
+    if(!strncmp(name_out_pin, "out2", XNOBJECT_NAME_LEN))
     {
         (*offset_field) = (void*)&module->obj1_Output1.out2 - (void*)&module->obj1_Output1;
         (*index_port) = 1;
         return &module->Output1;
     }
-    if(!strncmp(name_out_pin, "out3", 100))
+    if(!strncmp(name_out_pin, "out3", XNOBJECT_NAME_LEN))
     {
         (*offset_field) = (void*)&module->obj1_Output2.out3 - (void*)&module->obj1_Output2;
         (*index_port) = 0;

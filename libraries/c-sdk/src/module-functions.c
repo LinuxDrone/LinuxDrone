@@ -123,6 +123,38 @@ int register_out_link(out_object_t* out_object, const char* subscriber_instance_
 }
 
 
+shmem_set_t* register_remote_shmem(module_t* module, const char* name_remote_instance)
+{
+    if(module==NULL)
+    {
+        printf("Function \"register_remote_shmem\" null parameter module\n");
+        return NULL;
+    }
+/*
+    int i=0;
+    for(i=0;i<module->remote_shmems_len;i++)
+    {
+        shmem_set_t* info_remote_shmem = module->remote_shmems[i];
+        if(strcmp(info_remote_shmem->name_instance, name_remote_instance)==0)
+        {
+            // Разделяеимая память уже зарегистрирована
+            return info_remote_shmem;
+        }
+    }
+
+    // Разделяеимая память не зарегистрирована и set следует создать и сохранить на него ссылку в массиве.
+    module->remote_shmems_len +=1;
+    module->remote_shmems = realloc(module->remote_shmems, sizeof(shmem_set_t*)*module->remote_shmems_len);
+    shmem_set_t* new_remote_shmem = calloc(1, sizeof(shmem_set_t));
+    new_remote_shmem->name_instance = malloc(strlen(name_remote_instance)+1);
+    strcpy(new_remote_shmem->name_instance, name_remote_instance);
+    module->remote_shmems[module->remote_shmems_len-1] = new_remote_shmem;
+
+    return new_remote_shmem;
+    */
+}
+
+
 
 /**
  * @brief Фунция проверяет, зарегистрирована ли ссылка на очередь инстанса потребителя (входная очередь модуля потребителя)
@@ -130,11 +162,11 @@ int register_out_link(out_object_t* out_object, const char* subscriber_instance_
  * @param module Массив хранящий ссылки на входные очереди модулей подписчиков
  * @param name_remote_queue Имя входной очереди модуля подписчика
  */
-remote_queue_t* add2module(module_t* module, const char* name_remote_instance)
+remote_queue_t* register_remote_queue(module_t* module, const char* name_remote_instance)
 {
     if(module==NULL)
     {
-        printf("Function \"add2module\" null parameter module\n");
+        printf("Function \"register_remote_queue\" null parameter module\n");
         return NULL;
     }
 
@@ -144,7 +176,7 @@ remote_queue_t* add2module(module_t* module, const char* name_remote_instance)
         remote_queue_t* info_remote_queue = module->remote_queues[i];
         if(strcmp(info_remote_queue->name_instance, name_remote_instance)==0)
         {
-            // Очередь уже зарегестрирована
+            // Очередь уже зарегистрирована
             return info_remote_queue;
         }
     }
@@ -239,7 +271,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         printf("Property \"Main task Period\" not INT32 type");
         return -1;
     }
-    // Умножаем на тысячу, поточу, что время в конфиге указывается в микросекундах, а функция должна примать на вход наносекунды
+    // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна примать на вход наносекунды
     module->transmit_task_period = rt_timer_ns2ticks(bson_iter_int32(&iter) * 1000);
     //fprintf(stdout, "transmit_task_period=%i\n", module->transmit_task_period);
 
@@ -299,7 +331,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             const char* subscriber_instance_name = bson_iter_utf8(&iter_subscriber_instance_name, NULL);
 
             // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-            remote_queue_t* remote_queue = add2module(module, subscriber_instance_name);
+            remote_queue_t* remote_queue = register_remote_queue(module, subscriber_instance_name);
 
             // Получим название выходного пина данного модуля
             bson_iter_t iter_outpin_name;

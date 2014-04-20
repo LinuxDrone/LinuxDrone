@@ -77,7 +77,7 @@ function make_Bson2Structure(properties, portName, module_type) {
     r += "        const char* key = bson_iter_key (&iter);\n\n";
     for (var key in properties) {
         // TODO: Pay attention property type (need realize)
-        r += "        if(!strncmp(key, \"" + key + "\", 100))\n";
+        r += "        if(!strncmp(key, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
         r += "        {\n";
         r += "            obj->" + key + " = bson_iter_int32(&iter);\n";
         r += "            module->updated_input_properties |= " + key + ";\n";
@@ -167,10 +167,18 @@ function Create_C_file(module) {
     else {
         r += "#define count_outs 0\n\n";
     }
-
     r += "extern t_cycle_function " + module_type + "_run;\n\n";
 
+
     if ('inputShema' in module) {
+        r += "int get_inputmask_by_inputname(char* input_name)\n";
+        r += "{\n";
+        for (var key in module.inputShema.properties) {
+            r += "    if(!strncmp(input_name, \""+key+"\", XNOBJECT_NAME_LEN))\n";
+            r += "        return "+key+";\n";
+        }
+        r += "\n    return 0;\n";
+        r += "}\n\n";
         r += make_Bson2Structure(module.inputShema.properties,  "input", module_type);
     }
 
@@ -213,7 +221,7 @@ function Create_C_file(module) {
             var outName = out.name.replace(/\+/g, "");
             var index_port = 0;
             for (var key in out.Schema.properties) {
-                r += "    if(!strncmp(name_out_pin, \""+key+"\", 100))\n";
+                r += "    if(!strncmp(name_out_pin, \""+key+"\", XNOBJECT_NAME_LEN))\n";
                 r += "    {\n";
                 r += "        (*offset_field) = (void*)&module->obj1_" + outName + "."+key+" - (void*)&module->obj1_" + outName + ";\n";
                 r += "        (*index_port) = "+index_port+";\n";
@@ -260,6 +268,7 @@ function Create_C_file(module) {
         r += "    memset(&module->input4modul, 0, sizeof(input_t));\n";
         r += "    module->module_info.input_data = &module->input4modul;\n";
         r += "    module->module_info.input_bson2obj = (p_bson2obj)&bson2input;\n";
+        r += "    module->module_info.get_inmask_by_inputname = (p_get_inputmask_by_inputname)&get_inputmask_by_inputname;\n";
     }
     else {
         r += "    module->module_info.input_data = NULL;\n";
