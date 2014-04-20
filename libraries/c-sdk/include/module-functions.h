@@ -21,6 +21,11 @@
 // данными между основным (главным) потоком модуля и потоком передачи
 #define SUFFIX_CONDITION "_c"
 
+// Тип для хранения битовых маск
+// В данной реализации 32 бита. (ограничивает кол-во входных портов модуля)
+// В случае необходимости может быть переопределен в 64 бита
+#define t_mask unsigned int
+
 typedef enum
 {
     Empty,
@@ -45,7 +50,7 @@ typedef void (*p_print_obj)(void* obj);
 
 typedef void (*p_print_input)(void* obj);
 
-typedef int (*p_get_inputmask_by_inputname)(char* input_name);
+typedef t_mask (*p_get_inputmask_by_inputname)(const char* input_name);
 
 /**
   Структура данных, необходимых для работы с блоком разделяемой памяти
@@ -65,6 +70,26 @@ typedef struct
      * потоков разных модулей
      */
     RT_MUTEX mutex_read_shmem;
+
+    // Все свойства ниже используются только на стороне подписчика
+
+    // Имя инстанса которому принадлежит данная разделяемая память
+    char* name_instance;
+
+    // Имя группы портов которую представляет данная разделяемая память
+    char* name_outgroup;
+
+    // Определяет входные порты ассоциированные с данным блоком разделяемой памяти.
+    // То есть для указанных в маске входных портов, данные должны добываться из данного блока разделяемой памяти
+    t_mask assigned_input_ports_mask;
+
+    // Имя выходного порта удаленного инстанса
+    // Используется при мапинге свойств принятого из разделяемой памяти объекта
+    char* remote_out_pin_name;
+
+    // Имя входного порта данного модуля
+    // Используется при мапинге свойств принятого из разделяемой памяти объекта
+    char* input_pin_name;
 
 } shmem_set_t;
 
@@ -152,7 +177,7 @@ typedef out_object_t* (*p_get_outobj_by_outpin)(void* p_module, const char* name
 
 typedef void (t_cycle_function)(void *cookie);
 typedef t_cycle_function* p_cycle_function;
-#define t_mask unsigned int
+
 
 
 typedef struct

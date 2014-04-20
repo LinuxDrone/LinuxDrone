@@ -123,21 +123,21 @@ int register_out_link(out_object_t* out_object, const char* subscriber_instance_
 }
 
 
-shmem_set_t* register_remote_shmem(module_t* module, const char* name_remote_instance)
+shmem_set_t* register_remote_shmem(module_t* module, const char* name_remote_instance, const char* name_remote_outgroup)
 {
     if(module==NULL)
     {
         printf("Function \"register_remote_shmem\" null parameter module\n");
         return NULL;
     }
-/*
+
     int i=0;
     for(i=0;i<module->remote_shmems_len;i++)
     {
         shmem_set_t* info_remote_shmem = module->remote_shmems[i];
-        if(strcmp(info_remote_shmem->name_instance, name_remote_instance)==0)
+        if(strcmp(info_remote_shmem->name_instance, name_remote_instance)==0 && strcmp(info_remote_shmem->name_outgroup, name_remote_outgroup)==0)
         {
-            // Разделяеимая память уже зарегистрирована
+            // Разделяемая память уже зарегистрирована
             return info_remote_shmem;
         }
     }
@@ -146,12 +146,16 @@ shmem_set_t* register_remote_shmem(module_t* module, const char* name_remote_ins
     module->remote_shmems_len +=1;
     module->remote_shmems = realloc(module->remote_shmems, sizeof(shmem_set_t*)*module->remote_shmems_len);
     shmem_set_t* new_remote_shmem = calloc(1, sizeof(shmem_set_t));
+
     new_remote_shmem->name_instance = malloc(strlen(name_remote_instance)+1);
     strcpy(new_remote_shmem->name_instance, name_remote_instance);
+
+    new_remote_shmem->name_outgroup = malloc(strlen(name_remote_outgroup)+1);
+    strcpy(new_remote_shmem->name_outgroup, name_remote_outgroup);
+
     module->remote_shmems[module->remote_shmems_len-1] = new_remote_shmem;
 
     return new_remote_shmem;
-    */
 }
 
 
@@ -276,7 +280,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     //fprintf(stdout, "transmit_task_period=%i\n", module->transmit_task_period);
 
 
-    // Выделяем память под структуры, представляющие связи с другими модулями
+    // Выделяем память под структуры, представляющие связи с модулями подписчиками
     // Связи через очередь (данный модуль поставщик, другие потреьители данных)
     // Список исходящих связей, должен быть в массиве "out_links" в объекте конфигурации
     // но его может не быть, если модуль не имеет вызодов
@@ -321,11 +325,11 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             // Получим имя инстанса модуля подписчика
             bson_iter_t iter_subscriber_instance_name;
             if (!bson_iter_init_find(&iter_subscriber_instance_name, &bson_out_link, "inInst")) {
-                printf("Not found property \"outPin\" in bson_out_link");
+                printf("Not found property \"inInst\" in bson_out_link");
                 return -1;
             }
             if (!BSON_ITER_HOLDS_UTF8(&iter_subscriber_instance_name)) {
-                printf("Property \"outPin\" in bson_out_link not UTF8 type");
+                printf("Property \"inInst\" in bson_out_link not UTF8 type");
                 return -1;
             }
             const char* subscriber_instance_name = bson_iter_utf8(&iter_subscriber_instance_name, NULL);
@@ -378,6 +382,130 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         //printf("Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
         //debug_print_bson("Function \"init\" module-functions.c on error", &bson);
     }
+
+
+    // Выделяем память под структуры, представляющие связи с модулями поставщиками
+    // Связи через очередь (данный модуль поставщик, другие потреьители данных)
+    // Список исходящих связей, должен быть в массиве "out_links" в объекте конфигурации
+    // но его может не быть, если модуль не имеет вызодов
+    if (bson_iter_init_find(&iter, &bson, "in_links"))
+    {
+        if (!BSON_ITER_HOLDS_ARRAY(&iter)) {
+            printf("Property \"in_links\" not ARRAY type");
+            return -1;
+        }
+
+        const uint8_t *array_buf = NULL;
+        uint32_t array_buf_len = 0;
+        bson_t bson_queue_links;
+        bson_iter_array(&iter, &array_buf_len, &array_buf);
+        bson_init_static(&bson_queue_links, array_buf, array_buf_len);
+
+        //uint32_t count_links = bson_count_keys (&bson_queue_links);
+        //printf("count_links=%i\n", count_links);
+
+        bson_iter_t iter_links;
+        if(!bson_iter_init (&iter_links, &bson_queue_links))
+        {
+            fprintf(stderr, "Error: error create iterator for queue links\n");
+            return -1;
+        }
+
+        const uint8_t *link_buf = NULL;
+        uint32_t link_buf_len = 0;
+        bson_t bson_in_link;
+        while(bson_iter_next(&iter_links))
+        {
+            if(!BSON_ITER_HOLDS_DOCUMENT(&iter_links))
+            {
+                fprintf(stderr, "Function: init, Error: iter_links not a out link document\n");
+                continue;
+            }
+            bson_iter_document(&iter_links, &link_buf_len, &link_buf);
+            bson_init_static(&bson_in_link, link_buf, link_buf_len);
+
+            debug_print_bson("Function \"init\" module-functions.c inside while", &bson_in_link);
+
+            // Получим имя инстанса модуля поставщика
+            bson_iter_t iter_publisher_instance_name;
+            if (!bson_iter_init_find(&iter_publisher_instance_name, &bson_in_link, "outInst")) {
+                printf("Not found property \"outInst\" in bson_out_link");
+                return -1;
+            }
+            if (!BSON_ITER_HOLDS_UTF8(&iter_publisher_instance_name)) {
+                printf("Property \"outInst\" in bson_out_link not UTF8 type");
+                return -1;
+            }
+            const char* publisher_instance_name = bson_iter_utf8(&iter_publisher_instance_name, NULL);
+
+
+            // Получим имя нруппы пинов инстанча поставщика
+            bson_iter_t iter_publisher_nameOutGroup;
+            if (!bson_iter_init_find(&iter_publisher_nameOutGroup, &bson_in_link, "nameOutGroup")) {
+                printf("Not found property \"nameOutGroup\" in bson_out_link");
+                return -1;
+            }
+            if (!BSON_ITER_HOLDS_UTF8(&iter_publisher_nameOutGroup)) {
+                printf("Property \"nameOutGroup\" in bson_out_link not UTF8 type");
+                return -1;
+            }
+            const char* publisher_nameOutGroup = bson_iter_utf8(&iter_publisher_nameOutGroup, NULL);
+
+
+            // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
+            shmem_set_t* remote_shmem = register_remote_shmem(module, publisher_instance_name, publisher_nameOutGroup);
+
+
+            // Получим название выходного пина инстанса поставщика
+            bson_iter_t iter_outpin_name;
+            if (!bson_iter_init_find(&iter_outpin_name, &bson_in_link, "outPin")) {
+                printf("Not found property \"outPin\" in bson_out_link");
+                return -1;
+            }
+            if (!BSON_ITER_HOLDS_UTF8(&iter_outpin_name)) {
+                printf("Property \"outPin\" in bson_out_link not UTF8 type");
+                return -1;
+            }
+            const char* remote_out_pin_name = bson_iter_utf8(&iter_outpin_name, NULL);
+
+
+            // Получим название входного пина данного модуля
+            bson_iter_t iter_remote_inpin_name;
+            if (!bson_iter_init_find(&iter_remote_inpin_name, &bson_in_link, "inPin")) {
+                printf("Not found property \"inPin\" in bson_out_link");
+                return -1;
+            }
+            if (!BSON_ITER_HOLDS_UTF8(&iter_remote_inpin_name)) {
+                printf("Property \"inPin\" in bson_out_link not UTF8 type");
+                return -1;
+            }
+            const char* input_pin_name = bson_iter_utf8(&iter_remote_inpin_name, NULL);
+
+
+            t_mask input_port_mask = (*module->get_inmask_by_inputname)(input_pin_name);
+            if(input_port_mask)
+            {
+                remote_shmem->assigned_input_ports_mask |= input_port_mask;
+
+                remote_shmem->remote_out_pin_name = malloc(strlen(remote_out_pin_name)+1);
+                strcpy(remote_shmem->remote_out_pin_name, remote_out_pin_name);
+
+                remote_shmem->input_pin_name = malloc(strlen(input_pin_name)+1);
+                strcpy(remote_shmem->input_pin_name, input_pin_name);
+            }
+            else
+            {
+                printf("Not found INPUT PIN \"%s\" in instance \"%s\"\n", input_pin_name, module->instance_name);
+            }
+        }
+    }
+    else
+    {
+        //printf("Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
+        //debug_print_bson("Function \"init\" module-functions.c on error", &bson);
+    }
+
+
     return 0;
 }
 
