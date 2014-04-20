@@ -123,7 +123,7 @@ int register_out_link(out_object_t* out_object, const char* subscriber_instance_
 }
 
 
-shmem_set_t* register_remote_shmem(module_t* module, const char* name_remote_instance, const char* name_remote_outgroup)
+shmem_in_set_t* register_remote_shmem(module_t* module, const char* name_remote_instance, const char* name_remote_outgroup)
 {
     if(module==NULL)
     {
@@ -134,7 +134,7 @@ shmem_set_t* register_remote_shmem(module_t* module, const char* name_remote_ins
     int i=0;
     for(i=0;i<module->remote_shmems_len;i++)
     {
-        shmem_set_t* info_remote_shmem = module->remote_shmems[i];
+        shmem_in_set_t* info_remote_shmem = module->remote_shmems[i];
         if(strcmp(info_remote_shmem->name_instance, name_remote_instance)==0 && strcmp(info_remote_shmem->name_outgroup, name_remote_outgroup)==0)
         {
             // Разделяемая память уже зарегистрирована
@@ -144,8 +144,8 @@ shmem_set_t* register_remote_shmem(module_t* module, const char* name_remote_ins
 
     // Разделяеимая память не зарегистрирована и set следует создать и сохранить на него ссылку в массиве.
     module->remote_shmems_len +=1;
-    module->remote_shmems = realloc(module->remote_shmems, sizeof(shmem_set_t*)*module->remote_shmems_len);
-    shmem_set_t* new_remote_shmem = calloc(1, sizeof(shmem_set_t));
+    module->remote_shmems = realloc(module->remote_shmems, sizeof(shmem_in_set_t*)*module->remote_shmems_len);
+    shmem_in_set_t* new_remote_shmem = calloc(1, sizeof(shmem_in_set_t));
 
     new_remote_shmem->name_instance = malloc(strlen(name_remote_instance)+1);
     strcpy(new_remote_shmem->name_instance, name_remote_instance);
@@ -453,7 +453,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 
 
             // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-            shmem_set_t* remote_shmem = register_remote_shmem(module, publisher_instance_name, publisher_nameOutGroup);
+            shmem_in_set_t* remote_shmem = register_remote_shmem(module, publisher_instance_name, publisher_nameOutGroup);
 
 
             // Получим название выходного пина инстанса поставщика
@@ -516,7 +516,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
  * @param data данные копируемые в разделяемую память
  * @param datalen длина копируемых данных
  */
-void write_shmem(shmem_set_t* set, const char* data, unsigned short datalen)
+void write_shmem(shmem_out_set_t* set, const char* data, unsigned short datalen)
 {
     unsigned long after_mask;
     int res = rt_event_clear(&set->eflags, ~SHMEM_WRITER_MASK, &after_mask);
@@ -556,13 +556,13 @@ void write_shmem(shmem_set_t* set, const char* data, unsigned short datalen)
 }
 
 
-void read_shmem(shmem_set_t* set, void* data, unsigned short* datalen)
+void read_shmem(shmem_in_set_t* set, void* data, unsigned short* datalen)
 {
     unsigned long after_mask;
     /**
      * \~russian Подождем, если пишущий поток выставил флаг, что он занят записью
      */
-    int res = rt_event_wait(&set->eflags, ~SHMEM_WRITER_MASK, &after_mask,
+    int res = rt_event_wait(&set->remote_shmem.eflags, ~SHMEM_WRITER_MASK, &after_mask,
                             EV_ALL,
                             TM_INFINITE);
     if (res != 0) {
@@ -574,7 +574,7 @@ void read_shmem(shmem_set_t* set, void* data, unsigned short* datalen)
     /**
      * Залочим мьютекс
      */
-    res = rt_mutex_acquire(&set->mutex_read_shmem, TM_INFINITE);
+    res = rt_mutex_acquire(&set->remote_shmem.mutex_read_shmem, TM_INFINITE);
     if (res != 0)
     {
         printf("error read_shmem: rt_mutex_acquire1\n");
@@ -585,7 +585,7 @@ void read_shmem(shmem_set_t* set, void* data, unsigned short* datalen)
      * Считываем показания счетчика (младших битов флагов)
      */
     RT_EVENT_INFO info;
-    res = rt_event_inquire(&set->eflags, &info);
+    res = rt_event_inquire(&set->remote_shmem.eflags, &info);
     if (res != 0) {
         printf("error read_shmem: rt_event_inquire1\n");
         return;
@@ -604,32 +604,32 @@ void read_shmem(shmem_set_t* set, void* data, unsigned short* datalen)
     //printf("clear mask = 0x%08X\n", count);
 
     // Сбросим флаги в соответствии со значением счетчика
-    res = rt_event_clear(&set->eflags, count, &after_mask);
+    res = rt_event_clear(&set->remote_shmem.eflags, count, &after_mask);
     if (res != 0) {
         printf("error read_shmem: rt_event_clear\n");
         return;
     }
 
-    res = rt_mutex_release(&set->mutex_read_shmem);
+    res = rt_mutex_release(&set->remote_shmem.mutex_read_shmem);
     if (res != 0) {
         printf("error read_shmem:  rt_mutex_release1\n");
         return;
     }
 
     // из первых двух байт считываем блину последующего блока
-    unsigned short buflen = *((unsigned short*) set->shmem);
+    unsigned short buflen = *((unsigned short*) set->remote_shmem.shmem);
     //printf("buflen read_shmem: %i\n", buflen);
 
     if (buflen != 0) {
         // со смещением в два байта читаем следующий блок данных
-        memcpy(data, set->shmem + sizeof(unsigned short), buflen);
+        memcpy(data, set->remote_shmem.shmem + sizeof(unsigned short), buflen);
     }
     *datalen = buflen;
 
     /**
      * Залочим мьютекс
      */
-    res = rt_mutex_acquire(&set->mutex_read_shmem, TM_INFINITE);
+    res = rt_mutex_acquire(&set->remote_shmem.mutex_read_shmem, TM_INFINITE);
     if (res != 0) {
         printf("error read_shmem: rt_mutex_acquire2\n");
         return;
@@ -638,7 +638,7 @@ void read_shmem(shmem_set_t* set, void* data, unsigned short* datalen)
     /**
      * Считываем показания счетчика (младших битов флагов)
      */
-    res = rt_event_inquire(&set->eflags, &info);
+    res = rt_event_inquire(&set->remote_shmem.eflags, &info);
     if (res != 0) {
         printf("error read_shmem: rt_event_inquire1\n");
         return;
@@ -651,13 +651,13 @@ void read_shmem(shmem_set_t* set, void* data, unsigned short* datalen)
     //printf("set mask = 0x%08X\n", count);
 
     // Установим флаги в соответствии со значением счетчика
-    res = rt_event_signal(&set->eflags, count);
+    res = rt_event_signal(&set->remote_shmem.eflags, count);
     if (res != 0) {
         printf("error read_shmem: rt_event_signal\n");
         return;
     }
 
-    res = rt_mutex_release(&set->mutex_read_shmem);
+    res = rt_mutex_release(&set->remote_shmem.mutex_read_shmem);
     if (res != 0)
     {
         printf("error read_shmem:  rt_mutex_release2\n");
@@ -1313,35 +1313,33 @@ int checkin4transmiter(module_t* module, out_object_t* set,  void** obj)
  */
 int refresh_input(void* p_module)
 {
-    return 0;
-
     module_t* module = p_module;
 
     // биты не установлены, обновления данных не требуется
     if(module->refresh_input_mask == 0)
         return 0;
 
-    // Здесь подготовить список сетов, которые необходимо вычитать из разделяемой памяти
-
     //TODO: Определить размер буфера где нибудь в настройках
     // и вынести в структуру
     char buf[300];
 
-    unsigned short retlen;
-    // Данный сет является просто одним из выходных сетов этого же модуля
-    // исключительно для проверки
-    out_object_t* set = module->out_objects[0];
-    read_shmem(&set->shmem_set, buf, &retlen);
-    //printf("retlen=%i\n", retlen);
-
-    bson_t bson;
-    if (retlen > 0) {
-        bson_init_static(&bson, buf, retlen);
-        //debug_print_bson(&bson);
-
-        if(set->bson2obj(module, &bson)==0)
+    // Бежим по всем входящим связям типа разделяемой памяти и если какая то из них
+    // ассоциирована с требуемыми для обновления входами, произведем чтение объекта из разделяемой памяти и мапинг свойств
+    int i=0;
+    for(i=0;i<module->remote_shmems_len;i++)
+    {
+        shmem_in_set_t* remote_shmem = module->remote_shmems[i];
+        if(remote_shmem->assigned_input_ports_mask & module->refresh_input_mask)
         {
-            (*set->print_obj)(module->input_data);
+            unsigned short retlen;
+            read_shmem(remote_shmem, buf, &retlen);
+            //printf("retlen=%i\n", retlen);
+            bson_t bson;
+            if (retlen > 0) {
+                bson_init_static(&bson, buf, retlen);
+                //debug_print_bson(&bson);
+                (*module->print_input)(module->input_data);
+            }
         }
     }
 
