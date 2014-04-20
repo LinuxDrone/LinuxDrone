@@ -545,13 +545,13 @@ void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datale
     RT_HEAP_INFO info;
     rt_heap_inquire	(&shmem->h_shmem, &info);
 
-printf("write to shmem=%s\n", info.name);
+//printf("write to shmem=%s\n", info.name);
 
 
     // в буфер (со смещением в два байта) копируем блок данных
     memcpy(shmem->shmem + sizeof(unsigned short), data, datalen);
 
-printf("datalen write_shmem: %i\n", datalen);
+//printf("datalen write_shmem: %i\n", datalen);
 
     res = rt_event_signal(&shmem->eflags, ~SHMEM_WRITER_MASK);
     if (res != 0)
@@ -621,7 +621,7 @@ void read_shmem(shmem_out_set_t* shmem, void* data, unsigned short* datalen)
 
     // из первых двух байт считываем блину последующего блока
     unsigned short buflen = *((unsigned short*) shmem->shmem);
-    printf("buflen read_shmem: %i\n", buflen);
+    //printf("buflen read_shmem: %i\n", buflen);
 
     if (buflen != 0) {
         // со смещением в два байта читаем следующий блок данных
@@ -973,10 +973,11 @@ void task_transmit(void *p_module)
             int i=0;
             out_object_t* out_object = module->out_objects[i];
             bool time2publish2shmem = rt_timer_read() - time_last_publish_shmem > module->transmit_task_period;
+printf("before cycle\n");
             while(out_object)
             {
-printf("iiiiii=====%i\n",i);
                 checkout4transmiter(module, out_object, &obj);
+printf("outside=%i bool=%i\n",i,time2publish2shmem);
                 if(obj!=NULL)
                 {
                     // Нашли обновившийся в основном потоке объект
@@ -984,8 +985,9 @@ printf("iiiiii=====%i\n",i);
                     send2queues(out_object, obj, &bson_tr);
 
                     // Публикация данных в разделяемую память, не чаще чем в оговоренный период
-                    if(time2publish2shmem)
+                    //if(time2publish2shmem)
                     {
+printf("inside=%i bool=%i\n",i,time2publish2shmem);
                         bson_init (&bson_tr);
                         // Call user convert function
                         (*out_object->obj2bson)(obj, &bson_tr);                        
@@ -997,8 +999,8 @@ printf("iiiiii=====%i\n",i);
                     // Вернуть объект основному потоку на новое заполнение
                     checkin4transmiter(module, out_object, &obj);
                 }
-                i++;
-                out_object = module->out_objects[i];
+                out_object = module->out_objects[++i];
+                printf("out_object = 0x%08X\n", out_object);
             }
             if(time2publish2shmem)
                 time_last_publish_shmem=rt_timer_read();
