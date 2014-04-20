@@ -285,7 +285,7 @@ function Create_C_file(module) {
         module.outputs.forEach(function (out) {
             var outName = out.name.replace(/\+/g, "");
             r += "    // " + outName + "\n";
-            r += "    init_object_set(&module->" + outName + ", module->module_info.instance_name, \"" + outName + "\");\n";
+            r += "    init_object_set(&module->" + outName + ".shmem_set, module->module_info.instance_name, \"" + outName + "\");\n";
         });
     }
     r += "\n    return res;\n";

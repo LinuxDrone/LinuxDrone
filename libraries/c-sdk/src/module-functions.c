@@ -22,7 +22,7 @@
  * @param out_name Имя выходного объекта (имя группы портов, объедененных в логический объект)
  * @return Код ошибки. 0 в случае успеха.
  */
-int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
+int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name)
 {
     if(strlen(instance_name) > XNOBJECT_NAME_LEN-5)
     {
@@ -34,27 +34,28 @@ int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
     char name_shmem[XNOBJECT_NAME_LEN] = "";
     strcat(name_shmem, instance_name);
     strcat(name_shmem, out_name);
-    strcat(name_shmem, "_shmem");
+    strcat(name_shmem, SUFFIX_SHMEM);
 
-    int err = rt_heap_create(&pset->shmem_set.h_shmem, name_shmem, pset->shmem_set.shmem_len,
-                             H_SHARED | H_PRIO);
+    int err = rt_heap_create(&shmem->h_shmem, name_shmem, shmem->shmem_len, H_SHARED | H_PRIO);
     if (err != 0) {
         fprintf(stdout, "Error %i create shared memory \"%s\"\n", err, name_shmem);
+        print_heap_create_error(err);
         return err;
     }
+printf("shmem name=%s\n", name_shmem);
 
     // Alloc shared memory block
-    err = rt_heap_alloc(&pset->shmem_set.h_shmem, 0, TM_INFINITE, &pset->shmem_set.shmem);
+    err = rt_heap_alloc(&shmem->h_shmem, 0, TM_INFINITE, &shmem->shmem);
     if (err != 0)
         printf("Error rt_heap_alloc for block1 err=%i\n", err);
-    memset(pset->shmem_set.shmem, 0, pset->shmem_set.shmem_len);
+    memset(shmem->shmem, 0, shmem->shmem_len);
 
     // Create event service
     char name_eflags[XNOBJECT_NAME_LEN] = "";
     strcat(name_eflags, instance_name);
     strcat(name_eflags, out_name);
-    strcat(name_eflags, "_flags");
-    err = rt_event_create(&pset->shmem_set.eflags, name_eflags, ULONG_MAX, EV_PRIO);
+    strcat(name_eflags, SUFFIX_EVENT);
+    err = rt_event_create(&shmem->eflags, name_eflags, ULONG_MAX, EV_PRIO);
     if (err != 0) {
         fprintf(stdout, "Error create event service \"%s\"\n", name_eflags);
         return err;
@@ -64,8 +65,8 @@ int init_object_set(out_object_t * pset, char* instance_name, char* out_name)
     char name_rmutex[XNOBJECT_NAME_LEN] = "";
     strcat(name_rmutex, instance_name);
     strcat(name_rmutex, out_name);
-    strcat(name_rmutex, "_rmutex");
-    err = rt_mutex_create(&pset->shmem_set.mutex_read_shmem, name_rmutex);
+    strcat(name_rmutex, SUFFIX_MUTEX);
+    err = rt_mutex_create(&shmem->mutex_read_shmem, name_rmutex);
     if (err != 0) {
         fprintf(stdout, "Error create mutex_read_shmem \"%s\"\n", name_rmutex);
         return err;
@@ -487,11 +488,11 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             {
                 remote_shmem->assigned_input_ports_mask |= input_port_mask;
 
-                remote_shmem->remote_out_pin_name = malloc(strlen(remote_out_pin_name)+1);
-                strcpy(remote_shmem->remote_out_pin_name, remote_out_pin_name);
+                //remote_shmem->remote_out_pin_name = malloc(strlen(remote_out_pin_name)+1);
+                //strcpy(remote_shmem->remote_out_pin_name, remote_out_pin_name);
 
-                remote_shmem->input_pin_name = malloc(strlen(input_pin_name)+1);
-                strcpy(remote_shmem->input_pin_name, input_pin_name);
+                //remote_shmem->input_pin_name = malloc(strlen(input_pin_name)+1);
+                //strcpy(remote_shmem->input_pin_name, input_pin_name);
             }
             else
             {
@@ -516,10 +517,10 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
  * @param data данные копируемые в разделяемую память
  * @param datalen длина копируемых данных
  */
-void write_shmem(shmem_out_set_t* set, const char* data, unsigned short datalen)
+void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datalen)
 {
     unsigned long after_mask;
-    int res = rt_event_clear(&set->eflags, ~SHMEM_WRITER_MASK, &after_mask);
+    int res = rt_event_clear(&shmem->eflags, ~SHMEM_WRITER_MASK, &after_mask);
     if (res != 0)
     {
         printf("error write_shmem: rt_event_clear1\n");
@@ -530,9 +531,7 @@ void write_shmem(shmem_out_set_t* set, const char* data, unsigned short datalen)
     /**
      * \~russian Подождем, пока все читающие потоки выйдут из функции чтения и обнулят счетчик читающих потоков
      */
-    res = rt_event_wait(&set->eflags, SHMEM_WRITER_MASK, &after_mask,
-                        EV_ALL,
-                        TM_INFINITE);
+    res = rt_event_wait(&shmem->eflags, SHMEM_WRITER_MASK, &after_mask, EV_ALL, TM_INFINITE);
 
     if (res != 0)
     {
@@ -541,13 +540,20 @@ void write_shmem(shmem_out_set_t* set, const char* data, unsigned short datalen)
     }
 
     // В первые два байта сохраняем длину блока
-    *((unsigned short*) set->shmem) = datalen;
+    *((unsigned short*) shmem->shmem) = datalen;
+
+    RT_HEAP_INFO info;
+    rt_heap_inquire	(&shmem->h_shmem, &info);
+
+printf("write to shmem=%s\n", info.name);
+
 
     // в буфер (со смещением в два байта) копируем блок данных
-    memcpy(set->shmem + sizeof(unsigned short), data, datalen);
-    //printf("datalen write_shmem: %i\n", datalen);
+    memcpy(shmem->shmem + sizeof(unsigned short), data, datalen);
 
-    res = rt_event_signal(&set->eflags, ~SHMEM_WRITER_MASK);
+printf("datalen write_shmem: %i\n", datalen);
+
+    res = rt_event_signal(&shmem->eflags, ~SHMEM_WRITER_MASK);
     if (res != 0)
     {
         printf("error write_shmem: rt_event_signal\n");
@@ -556,15 +562,13 @@ void write_shmem(shmem_out_set_t* set, const char* data, unsigned short datalen)
 }
 
 
-void read_shmem(shmem_in_set_t* set, void* data, unsigned short* datalen)
+void read_shmem(shmem_out_set_t* shmem, void* data, unsigned short* datalen)
 {
     unsigned long after_mask;
     /**
      * \~russian Подождем, если пишущий поток выставил флаг, что он занят записью
      */
-    int res = rt_event_wait(&set->remote_shmem.eflags, ~SHMEM_WRITER_MASK, &after_mask,
-                            EV_ALL,
-                            TM_INFINITE);
+    int res = rt_event_wait(&shmem->eflags, ~SHMEM_WRITER_MASK, &after_mask, EV_ALL, TM_INFINITE);
     if (res != 0) {
         printf("error read_shmem: rt_event_wait\n");
         print_event_wait_error(res);
@@ -574,7 +578,7 @@ void read_shmem(shmem_in_set_t* set, void* data, unsigned short* datalen)
     /**
      * Залочим мьютекс
      */
-    res = rt_mutex_acquire(&set->remote_shmem.mutex_read_shmem, TM_INFINITE);
+    res = rt_mutex_acquire(&shmem->mutex_read_shmem, TM_INFINITE);
     if (res != 0)
     {
         printf("error read_shmem: rt_mutex_acquire1\n");
@@ -585,7 +589,7 @@ void read_shmem(shmem_in_set_t* set, void* data, unsigned short* datalen)
      * Считываем показания счетчика (младших битов флагов)
      */
     RT_EVENT_INFO info;
-    res = rt_event_inquire(&set->remote_shmem.eflags, &info);
+    res = rt_event_inquire(&shmem->eflags, &info);
     if (res != 0) {
         printf("error read_shmem: rt_event_inquire1\n");
         return;
@@ -593,8 +597,7 @@ void read_shmem(shmem_in_set_t* set, void* data, unsigned short* datalen)
     //printf("read raw mask = 0x%08X\n", info.value);
 
     // инкрементируем показания счетчика
-    unsigned long count = (~(info.value & SHMEM_WRITER_MASK))
-            & SHMEM_WRITER_MASK;
+    unsigned long count = (~(info.value & SHMEM_WRITER_MASK)) & SHMEM_WRITER_MASK;
     //printf("masked raw mask = 0x%08X\n", count);
     if (count == 0)
         count = 1;
@@ -604,32 +607,32 @@ void read_shmem(shmem_in_set_t* set, void* data, unsigned short* datalen)
     //printf("clear mask = 0x%08X\n", count);
 
     // Сбросим флаги в соответствии со значением счетчика
-    res = rt_event_clear(&set->remote_shmem.eflags, count, &after_mask);
+    res = rt_event_clear(&shmem->eflags, count, &after_mask);
     if (res != 0) {
         printf("error read_shmem: rt_event_clear\n");
         return;
     }
 
-    res = rt_mutex_release(&set->remote_shmem.mutex_read_shmem);
+    res = rt_mutex_release(&shmem->mutex_read_shmem);
     if (res != 0) {
         printf("error read_shmem:  rt_mutex_release1\n");
         return;
     }
 
     // из первых двух байт считываем блину последующего блока
-    unsigned short buflen = *((unsigned short*) set->remote_shmem.shmem);
-    //printf("buflen read_shmem: %i\n", buflen);
+    unsigned short buflen = *((unsigned short*) shmem->shmem);
+    printf("buflen read_shmem: %i\n", buflen);
 
     if (buflen != 0) {
         // со смещением в два байта читаем следующий блок данных
-        memcpy(data, set->remote_shmem.shmem + sizeof(unsigned short), buflen);
+        memcpy(data, shmem->shmem + sizeof(unsigned short), buflen);
     }
     *datalen = buflen;
 
     /**
      * Залочим мьютекс
      */
-    res = rt_mutex_acquire(&set->remote_shmem.mutex_read_shmem, TM_INFINITE);
+    res = rt_mutex_acquire(&shmem->mutex_read_shmem, TM_INFINITE);
     if (res != 0) {
         printf("error read_shmem: rt_mutex_acquire2\n");
         return;
@@ -638,7 +641,7 @@ void read_shmem(shmem_in_set_t* set, void* data, unsigned short* datalen)
     /**
      * Считываем показания счетчика (младших битов флагов)
      */
-    res = rt_event_inquire(&set->remote_shmem.eflags, &info);
+    res = rt_event_inquire(&shmem->eflags, &info);
     if (res != 0) {
         printf("error read_shmem: rt_event_inquire1\n");
         return;
@@ -651,13 +654,13 @@ void read_shmem(shmem_in_set_t* set, void* data, unsigned short* datalen)
     //printf("set mask = 0x%08X\n", count);
 
     // Установим флаги в соответствии со значением счетчика
-    res = rt_event_signal(&set->remote_shmem.eflags, count);
+    res = rt_event_signal(&shmem->eflags, count);
     if (res != 0) {
         printf("error read_shmem: rt_event_signal\n");
         return;
     }
 
-    res = rt_mutex_release(&set->remote_shmem.mutex_read_shmem);
+    res = rt_mutex_release(&shmem->mutex_read_shmem);
     if (res != 0)
     {
         printf("error read_shmem:  rt_mutex_release2\n");
@@ -727,6 +730,9 @@ void get_input_data(void* p_module)
 {
     module_t* module = p_module;
 
+    RTIME time_attempt_link_modules;
+    time_attempt_link_modules = rt_timer_read();
+
     if(module->input_data==NULL)
     {
         //здесь просто поспать потоку
@@ -772,11 +778,26 @@ void get_input_data(void* p_module)
     //printf("updated_input_properties=0x%08X\n", module->updated_input_properties);
     module->refresh_input_mask ^= (module->refresh_input_mask & module->updated_input_properties);
     //printf("before refresh mask=0x%08X\n", module->refresh_input_mask);
+
+
+    if(!module->f_connected_in_links)
+    {
+        // Если не все связи модуля установлены, то будем пытаться их установить
+        if(rt_timer_read() - time_attempt_link_modules > 100000000)
+        {
+            printf("попытка in связи\n");
+
+            connect_in_links(module);
+
+            time_attempt_link_modules=rt_timer_read();
+        }
+    }
+
     refresh_input(module);
 }
 
 /**
- * @brief connect_links Устанавливает исходящие соединения
+ * @brief connect_links Устанавливает исходящие соединения посредством очередей
  * С входными очередями инстансов подписчиков
  * @param p_module
  * @return
@@ -829,51 +850,92 @@ int connect_out_links(void *p_module)
 }
 
 
-
+/**
+ * @brief connect_in_links Устанавливает входящие соединения посредством разделяемой памяти
+ * с инстансами поставщиками данных
+ * @param p_module
+ * @return
+ */
 int connect_in_links(void *p_module)
 {
     module_t* module = p_module;
-/*
+
     //printf("len=%i\n", module->len);
 
     int count_connected = 0, i;
-    for(i=0; i < module->remote_queues_len;i++)
+    for(i=0; i < module->remote_shmems_len;i++)
     {
-        remote_queue_t* info_remote_queue = module->remote_queues[i];
+        shmem_in_set_t* remote_shmem = module->remote_shmems[i];
 
-        if(info_remote_queue->f_queue_connected)
+        if(!remote_shmem->f_shmem_connected)
         {
-            count_connected++;
-            continue;
+            //printf("attempt connect %s to %s\n", module->instance_name, name_shmem);
+            char name_shmem[XNOBJECT_NAME_LEN] = "";
+            strcat(name_shmem, remote_shmem->name_instance);
+            strcat(name_shmem, remote_shmem->name_outgroup);
+            strcat(name_shmem, SUFFIX_SHMEM);
+            int res = rt_heap_bind	(&remote_shmem->remote_shmem.h_shmem, name_shmem, TM_NONBLOCK);
+            if(res!=0)
+            {
+                printf("Error:%i rt_shmem_bind instance=%s to shmem %s\n", res, module->instance_name, name_shmem);
+                continue;
+            }
+
+            // Alloc shared memory block
+            int err = rt_heap_alloc(&remote_shmem->remote_shmem.h_shmem, 0, TM_INFINITE, &remote_shmem->remote_shmem.shmem);
+            if (err != 0)
+            {
+                printf("Function: connect_in_links, Error rt_heap_alloc for \"%s\", err=%i\n", name_shmem, err);
+                continue;
+            }
+
+            printf("CONNECTED: %s to shmem %s\n", module->instance_name, name_shmem);
+            remote_shmem->f_shmem_connected = true;
         }
 
-        char name_queue[XNOBJECT_NAME_LEN] = "";
-        strcat(name_queue, info_remote_queue->name_instance);
-        strcat(name_queue, SUFFIX_QUEUE);
 
-        //printf("attempt connect %s to %s\n", module->instance_name, name_queue);
-
-        int res = rt_queue_bind	(&info_remote_queue->remote_queue, name_queue, TM_NONBLOCK);
-        if(res!=0)
+        if(!remote_shmem->f_event_connected)
         {
-            //printf("Error:%i rt_queue_bind instance=%s to queue %s\n", res, module->instance_name, name_queue);
-            continue;
+            char name_event[XNOBJECT_NAME_LEN] = "";
+            strcat(name_event, remote_shmem->name_instance);
+            strcat(name_event, remote_shmem->name_outgroup);
+            strcat(name_event, SUFFIX_EVENT);
+            int res = rt_event_bind	(&remote_shmem->remote_shmem.eflags, name_event, TM_NONBLOCK);
+            if(res!=0)
+            {
+                printf("Error:%i rt_event_bind instance=%s to event %s\n", res, module->instance_name, name_event);
+                continue;
+            }
+printf("CONNECTED: %s to event service %s\n", module->instance_name, name_event);
+            remote_shmem->f_event_connected = true;
         }
-        else
+
+
+        if(!remote_shmem->f_mutex_connected)
         {
-            info_remote_queue->f_queue_connected=true;
-            printf("CONNECTED: %s to queue %s\n", module->instance_name, name_queue);
+            char name_mutex[XNOBJECT_NAME_LEN] = "";
+            strcat(name_mutex, remote_shmem->name_instance);
+            strcat(name_mutex, remote_shmem->name_outgroup);
+            strcat(name_mutex, SUFFIX_MUTEX);
+            int res = rt_mutex_bind	(&remote_shmem->remote_shmem.mutex_read_shmem, name_mutex, TM_NONBLOCK);
+            if(res!=0)
+            {
+                printf("Error:%i rt_mutex_bind instance=%s to mutex %s\n", res, module->instance_name, name_mutex);
+                continue;
+            }
+printf("CONNECTED: %s to mutex service %s\n", module->instance_name, name_mutex);
+            remote_shmem->f_mutex_connected = true;
         }
 
         count_connected++;
     }
 
-    if(count_connected==module->remote_queues_len)
+    if(count_connected==module->remote_shmems_len)
     {
-        module->f_connected_out_links=true;
-        printf("%s: ALL QUEUES CONNECTED\n", module->instance_name);
+        module->f_connected_in_links=true;
+        printf("%s: ALL SHMEMS CONNECTED\n", module->instance_name);
     }
-*/
+
     return 0;
 }
 
@@ -910,8 +972,10 @@ void task_transmit(void *p_module)
         {
             int i=0;
             out_object_t* out_object = module->out_objects[i];
+            bool time2publish2shmem = rt_timer_read() - time_last_publish_shmem > module->transmit_task_period;
             while(out_object)
             {
+printf("iiiiii=====%i\n",i);
                 checkout4transmiter(module, out_object, &obj);
                 if(obj!=NULL)
                 {
@@ -919,25 +983,25 @@ void task_transmit(void *p_module)
                     // Пуш в очереди подписчиков
                     send2queues(out_object, obj, &bson_tr);
 
-
-
                     // Публикация данных в разделяемую память, не чаще чем в оговоренный период
-                    if(rt_timer_read() - time_last_publish_shmem > module->transmit_task_period)
+                    if(time2publish2shmem)
                     {
                         bson_init (&bson_tr);
                         // Call user convert function
-                        (*out_object->obj2bson)(obj, &bson_tr);
+                        (*out_object->obj2bson)(obj, &bson_tr);                        
                         write_shmem(&out_object->shmem_set, bson_get_data(&bson_tr), bson_tr.len);
                         //printf("send %i\n", bson_tr.len);
                         bson_destroy(&bson_tr);
-                        time_last_publish_shmem=rt_timer_read();
                     }
 
                     // Вернуть объект основному потоку на новое заполнение
                     checkin4transmiter(module, out_object, &obj);
                 }
-                out_object = module->out_objects[++i];
+                i++;
+                out_object = module->out_objects[i];
             }
+            if(time2publish2shmem)
+                time_last_publish_shmem=rt_timer_read();
         }
         else if (res!=-ETIMEDOUT)
         {
@@ -954,19 +1018,6 @@ void task_transmit(void *p_module)
                 //printf("попытка out связи\n");
 
                 connect_out_links(module);
-
-                time_attempt_link_modules=rt_timer_read();
-            }
-        }
-
-        if(!module->f_connected_in_links)
-        {
-            // Если не все связи модуля установлены, то будем пытаться их установить
-            if(rt_timer_read() - time_attempt_link_modules > 100000000)
-            {
-                printf("попытка in связи\n");
-
-                connect_in_links(module);
 
                 time_attempt_link_modules=rt_timer_read();
             }
@@ -1321,7 +1372,7 @@ int refresh_input(void* p_module)
 
     //TODO: Определить размер буфера где нибудь в настройках
     // и вынести в структуру
-    char buf[300];
+    char buf[500];
 
     // Бежим по всем входящим связям типа разделяемой памяти и если какая то из них
     // ассоциирована с требуемыми для обновления входами, произведем чтение объекта из разделяемой памяти и мапинг свойств
@@ -1332,12 +1383,13 @@ int refresh_input(void* p_module)
         if(remote_shmem->assigned_input_ports_mask & module->refresh_input_mask)
         {
             unsigned short retlen;
-            read_shmem(remote_shmem, buf, &retlen);
+            retlen=0;
+            read_shmem(&remote_shmem->remote_shmem, buf, &retlen);
             //printf("retlen=%i\n", retlen);
             bson_t bson;
             if (retlen > 0) {
                 bson_init_static(&bson, buf, retlen);
-                //debug_print_bson(&bson);
+                debug_print_bson("Receive from shared memory", &bson);
                 (*module->print_input)(module->input_data);
             }
         }

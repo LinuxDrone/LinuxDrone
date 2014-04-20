@@ -71,6 +71,36 @@ void print_task_start_error(int err) {
     }
 }
 
+// rt_heap_create
+void print_heap_create_error(int err) {
+    switch (err)
+    {
+        case -EEXIST:
+            printf("is returned if the name is already in use by some registered object.\n");
+            break;
+
+        case -EINVAL:
+            printf("is returned if heapsize is null, greater than the system limit, or name is null or empty for a mappable heap.\n");
+            break;
+
+        case -ENOMEM:
+            printf("is returned if not enough system memory is available to create or register the heap. Additionally, and if H_MAPPABLE has been passed in mode, errors while mapping the block pool in the caller's address space might beget this return code too.\n");
+            break;
+
+        case -EPERM:
+            printf("is returned if this service was called from an invalid context.\n");
+            break;
+
+        case -ENOSYS:
+            printf("is returned if mode specifies H_MAPPABLE, but the real-time support in user-space is unavailable.\n");
+            break;
+
+        default:
+            printf("Unknown heap_create: %i.\n", err);
+    }
+}
+
+
 void print_event_wait_error(int err) {
     switch (err)
     {

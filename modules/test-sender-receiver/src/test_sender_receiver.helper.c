@@ -244,9 +244,9 @@ int test_sender_receiver_init(module_test_sender_receiver_t* module, const uint8
     // для каждого типа порождаемого объекта инициализируется соответсвующая структура
     // и указываются буферы (для обмена данными между основным и передающим потоком)
     // Output1
-    init_object_set(&module->Output1, module->module_info.instance_name, "Output1");
+    init_object_set(&module->Output1.shmem_set, module->module_info.instance_name, "Output1");
     // Output2
-    init_object_set(&module->Output2, module->module_info.instance_name, "Output2");
+    init_object_set(&module->Output2.shmem_set, module->module_info.instance_name, "Output2");
 
     return res;
 }
