@@ -86,6 +86,18 @@ typedef struct
 
 
 /**
+  Структура данных, содержащая информацию о поле в объекте, который ожидает получить подписчик (через очередь)
+  Список таких описаний используется при формировании bson объекта, передаваемого модулю подписчику
+ */
+typedef struct
+{
+    TypeFieldObj    type_field_obj;     // Тип поля
+    char*           remote_field_name;  // Имя поля в bson принимаемом через разделяемую память объекте
+    unsigned short  offset_field_obj;   // Смещение данных в структуре локального input объекта
+} remote_in_obj_field_t;
+
+
+/**
   Структура данных, необходимых для чтения из блока разделяемой памяти
  */
 typedef struct
@@ -109,13 +121,12 @@ typedef struct
     // То есть для указанных в маске входных портов, данные должны добываться из данного блока разделяемой памяти
     t_mask assigned_input_ports_mask;
 
-    // Имя выходного порта удаленного инстанса
-    // Используется при мапинге свойств принятого из разделяемой памяти объекта
-    //char* remote_out_pin_name;
 
-    // Имя входного порта данного модуля
-    // Используется при мапинге свойств принятого из разделяемой памяти объекта
-    //char* input_pin_name;
+    // Массив указателей на структуры содержащие информацию о входящих связях с инстансом поставщиком (через разделяемую память)
+    remote_in_obj_field_t** remote_in_obj_fields;
+    // Список полей (в составе bson объекта) которые желает получать через очередь модуль подписчик
+    // Текщая длина массива
+    size_t len_remote_in_obj_fields;
 
 } shmem_in_set_t;
 
@@ -128,7 +139,7 @@ typedef struct
     unsigned short  offset_field_obj;    // Смещение данных в структуре объекта источника
     TypeFieldObj    type_field_obj;      // Тип поля (по типу поля определяется длина блока данных представляющих значение данного типа)
     char*           remote_field_name;   // Имя поля в bson объекте (которое ожидает подписчик)
-} remote_obj_field_t;
+} remote_out_obj_field_t;
 
 
 /**
@@ -159,8 +170,8 @@ typedef struct
     // Входная очередь модуля подписчика
     remote_queue_t* out_queue;
 
-    // Массив указателей на структуры содержащие информацию о очередях модулей потребителей
-    remote_obj_field_t** remote_obj_fields;
+    // Массив указателей на структуры содержащие информацию о исходящих связях с удаленным инстансом (через очередь)
+    remote_out_obj_field_t** remote_out_obj_fields;
     // Список полей (в составе bson объекта) которые желает получать через очередь модуль подписчик
     // Текщая длина массива
     size_t len;
@@ -198,6 +209,8 @@ typedef struct
 
 
 typedef out_object_t* (*p_get_outobj_by_outpin)(void* p_module, const char* name_out_pin, unsigned short* size_of_type, unsigned short* index_port);
+
+typedef int (*p_get_offset_in_input_by_inpinname)(void* module, const char* name_inpin);
 
 
 typedef void (t_cycle_function)(void *cookie);
@@ -302,6 +315,10 @@ typedef struct
     // Функция в автогенеренной части модуля,
     // возвращающая метаданные выходного объекта, по имени выходного порта модуля
     p_get_outobj_by_outpin get_outobj_by_outpin;
+
+    // Функция в автогенеренной части модуля,
+    // возвращающая смещение поля в структуре входного объекта модуля
+    p_get_offset_in_input_by_inpinname get_offset_in_input_by_inpinname;
 
     // Флаг показывающий (если true), что все исходящие соединения модуля установлены
     bool f_connected_out_links;

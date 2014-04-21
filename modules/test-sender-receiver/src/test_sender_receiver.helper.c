@@ -199,6 +199,20 @@ out_object_t* get_outobject_by_outpin(module_test_sender_receiver_t* module, cha
     return NULL;
 }
 
+int get_offset_in_input_by_inpinname(module_test_sender_receiver_t* module, char* name_inpin)
+{
+    if(!strncmp(name_inpin, "in1", XNOBJECT_NAME_LEN))
+    {
+        return (void*)&module->input4modul.in1 - (void*)&module->input4modul;
+    }
+    if(!strncmp(name_inpin, "in2", XNOBJECT_NAME_LEN))
+    {
+        return (void*)&module->input4modul.in2 - (void*)&module->input4modul;
+    }
+    printf("Not found property \"%s\" among properties in input object\n", name_inpin);
+    return -1;
+}
+
 // Stop and delete module. Free memory.
 void test_sender_receiver_delete(module_test_sender_receiver_t* module)
 {
@@ -234,6 +248,7 @@ int test_sender_receiver_init(module_test_sender_receiver_t* module, const uint8
     module->module_info.input_data = &module->input4modul;
     module->module_info.input_bson2obj = (p_bson2obj)&bson2input;
     module->module_info.get_inmask_by_inputname = (p_get_inputmask_by_inputname)&get_inputmask_by_inputname;
+    module->module_info.get_offset_in_input_by_inpinname = (p_get_offset_in_input_by_inpinname)&get_offset_in_input_by_inpinname;
 
     module->module_info.func = &test_sender_receiver_run;
 

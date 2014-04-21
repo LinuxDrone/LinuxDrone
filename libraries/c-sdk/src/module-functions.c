@@ -78,7 +78,7 @@ printf("shmem name=%s\n", name_shmem);
 
 
 /**
- * @brief Функция добавляет линк в список линков, связывающих данный модуль с удаленным модулем
+ * @brief Функция добавляет линк в список линков, связывающих данный модуль с удаленным модулем подписчиком (обмен через очередь)
  * Подготавливает структуры необходимые для работы с данными линками (мапинг свойств) в риалтайме
  * @return
  */
@@ -112,16 +112,38 @@ int register_out_link(out_object_t* out_object, const char* subscriber_instance_
 
     // Зарегистрируем линк
     out_queue_set->len += 1;
-    out_queue_set->remote_obj_fields = realloc(out_queue_set->remote_obj_fields, sizeof(remote_obj_field_t*)*out_queue_set->len);
-    remote_obj_field_t* remote_obj_field = calloc(1, sizeof(remote_obj_field_t));
+    out_queue_set->remote_out_obj_fields = realloc(out_queue_set->remote_out_obj_fields, sizeof(remote_out_obj_field_t*)*out_queue_set->len);
+    remote_out_obj_field_t* remote_obj_field = calloc(1, sizeof(remote_out_obj_field_t));
     remote_obj_field->offset_field_obj = offset_field;
     remote_obj_field->remote_field_name = malloc(strlen(remote_field_name)+1);
     strcpy(remote_obj_field->remote_field_name, remote_field_name);
     remote_obj_field->type_field_obj = type_field_obj;
-    out_queue_set->remote_obj_fields[out_queue_set->len-1] = remote_obj_field;
+    out_queue_set->remote_out_obj_fields[out_queue_set->len-1] = remote_obj_field;
 
     return 0;
 }
+
+
+/**
+ * @brief Функция добавляет линк в список линков, связывающих данный модуль с удаленным модулем поставщиком (обмен через разделяемую память)
+ * Подготавливает структуры необходимые для работы с данными линками (мапинг свойств) в риалтайме
+ * @return
+ */
+int register_in_link(shmem_in_set_t* shmem, TypeFieldObj type_field_obj, const char* remote_field_name, unsigned short  offset_field_obj)
+{
+    // Зарегистрируем линк
+    shmem->len_remote_in_obj_fields += 1;
+    shmem->remote_in_obj_fields = realloc(shmem->remote_in_obj_fields, sizeof(remote_in_obj_field_t*)*shmem->len_remote_in_obj_fields);
+    remote_in_obj_field_t* remote_obj_field = calloc(1, sizeof(remote_in_obj_field_t));
+    remote_obj_field->remote_field_name = malloc(strlen(remote_field_name)+1);
+    strcpy(remote_obj_field->remote_field_name, remote_field_name);
+    remote_obj_field->offset_field_obj = offset_field_obj;
+    remote_obj_field->type_field_obj = type_field_obj;
+    shmem->remote_in_obj_fields[shmem->len_remote_in_obj_fields-1] = remote_obj_field;
+
+    return 0;
+}
+
 
 
 shmem_in_set_t* register_remote_shmem(module_t* module, const char* name_remote_instance, const char* name_remote_outgroup)
@@ -282,9 +304,9 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 
 
     // Выделяем память под структуры, представляющие связи с модулями подписчиками
-    // Связи через очередь (данный модуль поставщик, другие потреьители данных)
+    // Связи через очередь (данный модуль поставщик, другие потребители данных)
     // Список исходящих связей, должен быть в массиве "out_links" в объекте конфигурации
-    // но его может не быть, если модуль не имеет вызодов
+    // но его может не быть, если модуль не имеет выходов
     if (bson_iter_init_find(&iter, &bson, "out_links"))
     {
         if (!BSON_ITER_HOLDS_ARRAY(&iter)) {
@@ -386,9 +408,9 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 
 
     // Выделяем память под структуры, представляющие связи с модулями поставщиками
-    // Связи через очередь (данный модуль поставщик, другие потреьители данных)
-    // Список исходящих связей, должен быть в массиве "out_links" в объекте конфигурации
-    // но его может не быть, если модуль не имеет вызодов
+    // Связи через разделяемую память (данный модуль потребитель, другие поставщики данных)
+    // Список входящих связей, должен быть в массиве "in_links" в объекте конфигурации
+    // но его может не быть, если модуль не имеет входа
     if (bson_iter_init_find(&iter, &bson, "in_links"))
     {
         if (!BSON_ITER_HOLDS_ARRAY(&iter)) {
@@ -483,16 +505,19 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             const char* input_pin_name = bson_iter_utf8(&iter_remote_inpin_name, NULL);
 
 
+
+
+
             t_mask input_port_mask = (*module->get_inmask_by_inputname)(input_pin_name);
             if(input_port_mask)
             {
                 remote_shmem->assigned_input_ports_mask |= input_port_mask;
 
-                //remote_shmem->remote_out_pin_name = malloc(strlen(remote_out_pin_name)+1);
-                //strcpy(remote_shmem->remote_out_pin_name, remote_out_pin_name);
+                int offset_field = (*module->get_offset_in_input_by_inpinname)(module, input_pin_name);
 
-                //remote_shmem->input_pin_name = malloc(strlen(input_pin_name)+1);
-                //strcpy(remote_shmem->input_pin_name, input_pin_name);
+
+                //fieldInteger; //TODO: обрабатывать и другие типы
+                register_in_link(remote_shmem, fieldInteger, remote_out_pin_name, offset_field);
             }
             else
             {
@@ -690,7 +715,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
         int cl;
         for(cl=0;cl<out_queue_set->len;cl++)
         {
-            remote_obj_field_t* remote_obj_field = out_queue_set->remote_obj_fields[cl];
+            remote_out_obj_field_t* remote_obj_field = out_queue_set->remote_out_obj_fields[cl];
 
             switch (remote_obj_field->type_field_obj)
             {
@@ -700,7 +725,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
                     break;
 
                 default:
-                    printf("Funcrion \"send2queues\" Unknown type remote field\n");
+                    printf("Function \"send2queues\" Unknown type remote field\n");
                     break;
             }
         }
@@ -941,6 +966,52 @@ printf("CONNECTED: %s to mutex service %s\n", module->instance_name, name_mutex)
 
 
 
+
+int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_queue)
+{
+    void* obj;
+    bson_t bson_tr;
+
+    int i=0;
+    out_object_t* out_object = module->out_objects[i];
+    RTIME time2publish2shmem = rt_timer_read() - *time_last_publish_shmem > module->transmit_task_period;
+    //printf("before cycle\n");
+    while(out_object)
+    {
+        checkout4transmiter(module, out_object, &obj);
+        //printf("outside=%i bool=%i\n",i,time2publish2shmem);
+        if(obj!=NULL)
+        {
+            // Нашли обновившийся в основном потоке объект
+            // Пуш в очереди подписчиков
+            if(to_queue)
+                send2queues(out_object, obj, &bson_tr);
+
+            // Публикация данных в разделяемую память, не чаще чем в оговоренный период
+            if(time2publish2shmem)
+            {
+        //printf("inside=%i bool=%i\n",i,time2publish2shmem);
+                bson_init (&bson_tr);
+                // Call user convert function
+                (*out_object->obj2bson)(obj, &bson_tr);
+                write_shmem(&out_object->shmem_set, bson_get_data(&bson_tr), bson_tr.len);
+printf("send channel=%i, size=%i\n", i, bson_tr.len);
+                bson_destroy(&bson_tr);
+            }
+
+            // Вернуть объект основному потоку на новое заполнение
+
+
+            checkin4transmiter(module, out_object, &obj);
+        }
+        out_object = module->out_objects[++i];
+        //                printf("out_object = 0x%08X\n", out_object);
+    }
+    if(time2publish2shmem)
+        *time_last_publish_shmem=rt_timer_read();
+}
+
+
 /**
  * @brief task_transmit Функция выполняется в потоке задачи передачи данных подписчикам
  * @param p_module Указатель на инстанс модуль
@@ -949,9 +1020,6 @@ void task_transmit(void *p_module)
 {
     module_t* module = p_module;
     int cycle = 0;
-
-    bson_t bson_tr;
-    void* obj;
 
     RTIME time_last_publish_shmem;
     RTIME time_attempt_link_modules;
@@ -970,42 +1038,13 @@ void task_transmit(void *p_module)
         res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, module->transmit_task_period);
         if (res == 0)
         {
-            int i=0;
-            out_object_t* out_object = module->out_objects[i];
-            bool time2publish2shmem = rt_timer_read() - time_last_publish_shmem > module->transmit_task_period;
-printf("before cycle\n");
-            while(out_object)
-            {
-                checkout4transmiter(module, out_object, &obj);
-printf("outside=%i bool=%i\n",i,time2publish2shmem);
-                if(obj!=NULL)
-                {
-                    // Нашли обновившийся в основном потоке объект
-                    // Пуш в очереди подписчиков
-                    send2queues(out_object, obj, &bson_tr);
-
-                    // Публикация данных в разделяемую память, не чаще чем в оговоренный период
-                    //if(time2publish2shmem)
-                    {
-printf("inside=%i bool=%i\n",i,time2publish2shmem);
-                        bson_init (&bson_tr);
-                        // Call user convert function
-                        (*out_object->obj2bson)(obj, &bson_tr);                        
-                        write_shmem(&out_object->shmem_set, bson_get_data(&bson_tr), bson_tr.len);
-                        //printf("send %i\n", bson_tr.len);
-                        bson_destroy(&bson_tr);
-                    }
-
-                    // Вернуть объект основному потоку на новое заполнение
-                    checkin4transmiter(module, out_object, &obj);
-                }
-                out_object = module->out_objects[++i];
-                printf("out_object = 0x%08X\n", out_object);
-            }
-            if(time2publish2shmem)
-                time_last_publish_shmem=rt_timer_read();
+            transmit_object(module, &time_last_publish_shmem,  true);
         }
-        else if (res!=-ETIMEDOUT)
+        else if (res==-ETIMEDOUT)
+        {
+            transmit_object(module, &time_last_publish_shmem, false);
+        }
+        else
         {
             printf("error=%i in task_transmit_body:  rt_cond_wait\n", res);
             return;
@@ -1024,7 +1063,6 @@ printf("inside=%i bool=%i\n",i,time2publish2shmem);
                 time_attempt_link_modules=rt_timer_read();
             }
         }
-
     }
 }
 
@@ -1367,6 +1405,7 @@ int checkin4transmiter(module_t* module, out_object_t* set,  void** obj)
 int refresh_input(void* p_module)
 {
     module_t* module = p_module;
+    void* pval;
 
     // биты не установлены, обновления данных не требуется
     if(module->refresh_input_mask == 0)
@@ -1391,8 +1430,39 @@ int refresh_input(void* p_module)
             bson_t bson;
             if (retlen > 0) {
                 bson_init_static(&bson, buf, retlen);
-                debug_print_bson("Receive from shared memory", &bson);
+debug_print_bson("Receive from shared memory", &bson);
+
+                int f;
+                for(f=0;f<remote_shmem->len_remote_in_obj_fields;f++)
+                {
+                    remote_in_obj_field_t* remote_in_obj_field = remote_shmem->remote_in_obj_fields[f];
+
+
+                    switch (remote_in_obj_field->type_field_obj)
+                    {
+                        case fieldInteger:
+                            pval = module->input_data + remote_in_obj_field->offset_field_obj;
+
+                            bson_iter_t iter;
+                            if (!bson_iter_init_find(&iter, &bson, remote_in_obj_field->remote_field_name)) {
+                                printf("Not found property \"%s\" in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                return -1;
+                            }
+                            if (!BSON_ITER_HOLDS_INT32(&iter)) {
+                                printf("Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                return -1;
+                            }
+                            *((int*)pval) = bson_iter_int32(&iter);
+                            break;
+
+                        default:
+                            printf("Function \"refresh_input\" Unknown type remote field\n");
+                            break;
+                    }
+                }
                 (*module->print_input)(module->input_data);
+
+                bson_destroy(&bson);
             }
         }
     }

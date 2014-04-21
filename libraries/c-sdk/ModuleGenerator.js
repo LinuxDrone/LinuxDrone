@@ -209,32 +209,47 @@ function Create_C_file(module) {
     r += "}\n\n";
 
 
-
-    r += "// Возвращает указатель на структуру выходного объекта, по имени пина\n";
-    r += "// Используется при подготовке списка полей, для мапинга объектов (для передачи в очередь)\n";
-    r += "out_object_t* get_outobject_by_outpin(module_" + module_type + "_t* module, char* name_out_pin, unsigned short* offset_field, unsigned short* index_port)\n";
-    r += "{\n";
-    r += "    (*offset_field) = 0;\n";
-    r += "    (*index_port) = 0;\n";
     if (module.outputs) {
-        module.outputs.forEach(function (out) {
-            var outName = out.name.replace(/\+/g, "");
-            var index_port = 0;
-            for (var key in out.Schema.properties) {
-                r += "    if(!strncmp(name_out_pin, \""+key+"\", XNOBJECT_NAME_LEN))\n";
-                r += "    {\n";
-                r += "        (*offset_field) = (void*)&module->obj1_" + outName + "."+key+" - (void*)&module->obj1_" + outName + ";\n";
-                r += "        (*index_port) = "+index_port+";\n";
-                r += "        return &module->" + outName + ";\n";
-                r += "    }\n";
-                index_port++;
-            };
-        });
+        r += "// Возвращает указатель на структуру выходного объекта, по имени пина\n";
+        r += "// Используется при подготовке списка полей, для мапинга объектов (для передачи в очередь)\n";
+        r += "out_object_t* get_outobject_by_outpin(module_" + module_type + "_t* module, char* name_out_pin, unsigned short* offset_field, unsigned short* index_port)\n";
+        r += "{\n";
+        r += "    (*offset_field) = 0;\n";
+        r += "    (*index_port) = 0;\n";
+        if (module.outputs) {
+            module.outputs.forEach(function (out) {
+                var outName = out.name.replace(/\+/g, "");
+                var index_port = 0;
+                for (var key in out.Schema.properties) {
+                    r += "    if(!strncmp(name_out_pin, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
+                    r += "    {\n";
+                    r += "        (*offset_field) = (void*)&module->obj1_" + outName + "." + key + " - (void*)&module->obj1_" + outName + ";\n";
+                    r += "        (*index_port) = " + index_port + ";\n";
+                    r += "        return &module->" + outName + ";\n";
+                    r += "    }\n";
+                    index_port++;
+                }
+                ;
+            });
+        }
+        r += "    printf(\"Not found property \\\"%s\\\" among properties out objects\\n\", name_out_pin);\n";
+        r += "    return NULL;\n";
+        r += "}\n\n";
     }
-    r += "    printf(\"Not found property \\\"%s\\\" among properties out objects\\n\", name_out_pin);\n";
-    r += "    return NULL;\n";
-    r += "}\n\n";
 
+    if ('inputShema' in module) {
+        r += "int get_offset_in_input_by_inpinname(module_" + module_type + "_t* module, char* name_inpin)\n";
+        r += "{\n";
+        for (var key in module.inputShema.properties) {
+            r += "    if(!strncmp(name_inpin, \""+key+"\", XNOBJECT_NAME_LEN))\n";
+            r += "    {\n";
+            r += "        return (void*)&module->input4modul."+key+" - (void*)&module->input4modul;\n";
+            r += "    }\n";
+        }
+        r += "    printf(\"Not found property \\\"%s\\\" among properties in input object\\n\", name_inpin);\n";
+        r += "    return -1;\n";
+        r += "}\n\n";
+    }
 
 
     r += "// Stop and delete module. Free memory.\n";
@@ -260,8 +275,9 @@ function Create_C_file(module) {
             r += "    module->" + outName + ".bson2obj = (p_bson2obj)&bson2" + outName + ";\n";
             r += "    module->" + outName + ".print_obj = (p_print_obj)&print_" + outName + ";\n\n";
         });
+        r += "    module->module_info.get_outobj_by_outpin = (p_get_outobj_by_outpin)&get_outobject_by_outpin;\n";
     }
-    r += "    module->module_info.get_outobj_by_outpin = (p_get_outobj_by_outpin)&get_outobject_by_outpin;\n";
+
 
     if ('inputShema' in module) {
         r += "    // Input\n";
@@ -269,6 +285,7 @@ function Create_C_file(module) {
         r += "    module->module_info.input_data = &module->input4modul;\n";
         r += "    module->module_info.input_bson2obj = (p_bson2obj)&bson2input;\n";
         r += "    module->module_info.get_inmask_by_inputname = (p_get_inputmask_by_inputname)&get_inputmask_by_inputname;\n";
+        r += "    module->module_info.get_offset_in_input_by_inpinname = (p_get_offset_in_input_by_inpinname)&get_offset_in_input_by_inpinname;\n";
     }
     else {
         r += "    module->module_info.input_data = NULL;\n";
