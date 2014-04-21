@@ -506,8 +506,6 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 
 
 
-
-
             t_mask input_port_mask = (*module->get_inmask_by_inputname)(input_pin_name);
             if(input_port_mask)
             {
@@ -571,7 +569,6 @@ void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datale
     rt_heap_inquire	(&shmem->h_shmem, &info);
 
 //printf("write to shmem=%s\n", info.name);
-
 
     // в буфер (со смещением в два байта) копируем блок данных
     memcpy(shmem->shmem + sizeof(unsigned short), data, datalen);
@@ -691,7 +688,6 @@ void read_shmem(shmem_out_set_t* shmem, void* data, unsigned short* datalen)
         printf("error read_shmem:  rt_mutex_release2\n");
         return;
     }
-
 }
 
 
@@ -785,8 +781,8 @@ void get_input_data(void* p_module)
         }
         else
         {
-            printf("%s: ", module->instance_name);
-            (*module->print_input)(module->input_data);
+printf("%s: ", module->instance_name);
+(*module->print_input)(module->input_data);
         }
         bson_destroy(&bson);
     }
@@ -830,8 +826,6 @@ void get_input_data(void* p_module)
 int connect_out_links(void *p_module)
 {
     module_t* module = p_module;
-
-    //printf("len=%i\n", module->len);
 
     int count_connected = 0, i;
     for(i=0; i < module->remote_queues_len;i++)
@@ -974,10 +968,12 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
 
     int i=0;
     out_object_t* out_object = module->out_objects[i];
-    RTIME time2publish2shmem = rt_timer_read() - *time_last_publish_shmem > module->transmit_task_period;
-    //printf("before cycle\n");
+    bool time2publish2shmem = (rt_timer_read() - *time_last_publish_shmem) > module->transmit_task_period;
     while(out_object)
     {
+        if(!time2publish2shmem && !to_queue)
+            continue;
+
         checkout4transmiter(module, out_object, &obj);
         //printf("outside=%i bool=%i\n",i,time2publish2shmem);
         if(obj!=NULL)
@@ -990,22 +986,17 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
             // Публикация данных в разделяемую память, не чаще чем в оговоренный период
             if(time2publish2shmem)
             {
-        //printf("inside=%i bool=%i\n",i,time2publish2shmem);
                 bson_init (&bson_tr);
                 // Call user convert function
                 (*out_object->obj2bson)(obj, &bson_tr);
                 write_shmem(&out_object->shmem_set, bson_get_data(&bson_tr), bson_tr.len);
-printf("send channel=%i, size=%i\n", i, bson_tr.len);
                 bson_destroy(&bson_tr);
             }
 
             // Вернуть объект основному потоку на новое заполнение
-
-
             checkin4transmiter(module, out_object, &obj);
         }
         out_object = module->out_objects[++i];
-        //                printf("out_object = 0x%08X\n", out_object);
     }
     if(time2publish2shmem)
         *time_last_publish_shmem=rt_timer_read();
@@ -1369,11 +1360,11 @@ int checkin4transmiter(module_t* module, out_object_t* set,  void** obj)
 
     if(set->status_obj1 == Transferring)
     {
-        set->status_obj1 = Empty;
+        set->status_obj1 = Filled;
     }
     else if(set->status_obj2 == Transferring)
     {
-        set->status_obj2 = Empty;
+        set->status_obj2 = Filled;
     }
     else
     {
@@ -1430,7 +1421,7 @@ int refresh_input(void* p_module)
             bson_t bson;
             if (retlen > 0) {
                 bson_init_static(&bson, buf, retlen);
-debug_print_bson("Receive from shared memory", &bson);
+//debug_print_bson("Receive from shared memory", &bson);
 
                 int f;
                 for(f=0;f<remote_shmem->len_remote_in_obj_fields;f++)
@@ -1460,7 +1451,8 @@ debug_print_bson("Receive from shared memory", &bson);
                             break;
                     }
                 }
-                (*module->print_input)(module->input_data);
+printf("%s: ", module->instance_name);
+(*module->print_input)(module->input_data);
 
                 bson_destroy(&bson);
             }
