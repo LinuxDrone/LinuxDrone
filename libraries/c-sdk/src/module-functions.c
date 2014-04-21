@@ -42,7 +42,7 @@ int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name
         print_heap_create_error(err);
         return err;
     }
-printf("shmem name=%s\n", name_shmem);
+//printf("shmem name=%s\n", name_shmem);
 
     // Alloc shared memory block
     err = rt_heap_alloc(&shmem->h_shmem, 0, TM_INFINITE, &shmem->shmem);
@@ -343,7 +343,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             bson_iter_document(&iter_links, &link_buf_len, &link_buf);
             bson_init_static(&bson_out_link, link_buf, link_buf_len);
 
-            debug_print_bson("Function \"init\" module-functions.c inside while", &bson_out_link);
+//debug_print_bson("Function \"init\" module-functions.c inside while", &bson_out_link);
 
             // Получим имя инстанса модуля подписчика
             bson_iter_t iter_subscriber_instance_name;
@@ -447,7 +447,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             bson_iter_document(&iter_links, &link_buf_len, &link_buf);
             bson_init_static(&bson_in_link, link_buf, link_buf_len);
 
-            debug_print_bson("Function \"init\" module-functions.c inside while", &bson_in_link);
+//debug_print_bson("Function \"init\" module-functions.c inside while", &bson_in_link);
 
             // Получим имя инстанса модуля поставщика
             bson_iter_t iter_publisher_instance_name;
@@ -781,7 +781,7 @@ void get_input_data(void* p_module)
         }
         else
         {
-printf("%s: ", module->instance_name);
+printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
 (*module->print_input)(module->input_data);
         }
         bson_destroy(&bson);
@@ -853,7 +853,7 @@ int connect_out_links(void *p_module)
         else
         {
             info_remote_queue->f_queue_connected=true;
-            printf("CONNECTED: %s to queue %s\n", module->instance_name, name_queue);
+            printf("%sCONNECTED: %s to queue %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_queue, ANSI_COLOR_RESET);
         }
 
         count_connected++;
@@ -862,7 +862,7 @@ int connect_out_links(void *p_module)
     if(count_connected==module->remote_queues_len)
     {
         module->f_connected_out_links=true;
-        printf("%s: ALL QUEUES CONNECTED\n", module->instance_name);
+        printf("%s%s: ALL QUEUES CONNECTED%s\n", ANSI_COLOR_GREEN, module->instance_name, ANSI_COLOR_RESET);
     }
 
     return 0;
@@ -908,7 +908,7 @@ int connect_in_links(void *p_module)
                 continue;
             }
 
-            printf("CONNECTED: %s to shmem %s\n", module->instance_name, name_shmem);
+            printf("%sCONNECTED: %s to shmem %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_shmem, ANSI_COLOR_RESET);
             remote_shmem->f_shmem_connected = true;
         }
 
@@ -925,7 +925,7 @@ int connect_in_links(void *p_module)
                 printf("Error:%i rt_event_bind instance=%s to event %s\n", res, module->instance_name, name_event);
                 continue;
             }
-printf("CONNECTED: %s to event service %s\n", module->instance_name, name_event);
+printf("%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_event, ANSI_COLOR_RESET);
             remote_shmem->f_event_connected = true;
         }
 
@@ -942,7 +942,7 @@ printf("CONNECTED: %s to event service %s\n", module->instance_name, name_event)
                 printf("Error:%i rt_mutex_bind instance=%s to mutex %s\n", res, module->instance_name, name_mutex);
                 continue;
             }
-printf("CONNECTED: %s to mutex service %s\n", module->instance_name, name_mutex);
+printf("%sCONNECTED: %s to mutex service %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_mutex, ANSI_COLOR_RESET);
             remote_shmem->f_mutex_connected = true;
         }
 
@@ -952,7 +952,7 @@ printf("CONNECTED: %s to mutex service %s\n", module->instance_name, name_mutex)
     if(count_connected==module->remote_shmems_len)
     {
         module->f_connected_in_links=true;
-        printf("%s: ALL SHMEMS CONNECTED\n", module->instance_name);
+        printf("%s%s: ALL SHMEMS CONNECTED%s\n", ANSI_COLOR_GREEN, module->instance_name, ANSI_COLOR_RESET);
     }
 
     return 0;
@@ -1451,7 +1451,7 @@ int refresh_input(void* p_module)
                             break;
                     }
                 }
-printf("%s: ", module->instance_name);
+printf("%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
 (*module->print_input)(module->input_data);
 
                 bson_destroy(&bson);
