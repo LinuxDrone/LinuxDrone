@@ -27,15 +27,16 @@ target_link_libraries(test-sender-receiver ${EXTRA_LIBS})
 add_custom_command(
     TARGET test-sender-receiver
     PRE_BUILD
-#COMMAND
-    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-sender-receiver/test-sender-receiver.def.json ${MOD_DIR}/test-sender-receiver
+COMMAND
+    #COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-sender-receiver/test-sender-receiver.def.json ${MOD_DIR}/test-sender-receiver
 )
 
 add_custom_command(
     TARGET test-sender-receiver
     POST_BUILD
-    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libtest-sender-receiver.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender-receiver/libtest-sender-receiver.so
-    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/test-sender-receiver/test-sender-receiver.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender-receiver/test-sender-receiver.def.json
+COMMAND
+    #COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libtest-sender-receiver.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender-receiver/libtest-sender-receiver.so
+    #COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/test-sender-receiver/test-sender-receiver.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender-receiver/test-sender-receiver.def.json
 )
 
 install(TARGETS test-sender-receiver DESTINATION modules/test-sender-receiver)

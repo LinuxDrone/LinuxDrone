@@ -14,21 +14,33 @@ file(GLOB_RECURSE INC "include/*")
 file(GLOB_RECURSE SRC "src/*.c")
 
 include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
+include_directories(${RFS_DIR}/usr/local/include/libmongoc-1.0)
+include_directories(${LIB_DIR}/c-sdk/include)
 
 set(EXTRA_LIBS
+    c-sdk
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
     ${RFS_DIR}/usr/local/lib/libbson-1.0.so
+    ${RFS_DIR}/usr/local/lib/libmongoc-1.0.so
+    ${RFS_DIR}/usr/local/lib/libwebsockets.so
+z
+ssl
+crypto
+    rt
+    dl
+    pthread
 )
 
-add_library(c-sdk ${INC} ${SRC})
-
-target_link_libraries(c-sdk ${EXTRA_LIBS})
+add_executable(websocket_service ${INC} ${SRC})
+target_link_libraries(websocket_service ${EXTRA_LIBS})
 
 add_custom_command(
-    TARGET c-sdk
+    TARGET websocket_service
     POST_BUILD
-COMMAND
-    #COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-sdk.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/lib/libc-sdk.so
+#COMMAND
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} websocket_service ${URL_TARGET_SYSTEM}:/root/websocket_service
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${SVC_DIR}/websocket_service/test.html ${URL_TARGET_SYSTEM}:/root/test.html
 )
 
-install(TARGETS c-sdk DESTINATION lib)
+
+install(TARGETS websocket_service DESTINATION bin)

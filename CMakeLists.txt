@@ -42,10 +42,12 @@ set(BUILD_SHARED_LIBS TRUE)
 set(LIB_DIR ${PROJECT_SOURCE_DIR}/libraries)
 set(MOD_DIR ${PROJECT_SOURCE_DIR}/modules)
 set(HST_DIR ${PROJECT_SOURCE_DIR}/host-programs)
+set(SVC_DIR ${PROJECT_SOURCE_DIR}/services)
 set(SYS_DIR ${PROJECT_SOURCE_DIR}/system)
 set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
 set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
 set(RFS_DIR ${TLS_DIR}/rootfs/beaglebone)
+
 
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(SCP ${TLS_DIR}/pscp.exe)
@@ -55,11 +57,11 @@ ELSE()
     SET(NODEJS /opt/local/bin/node)
 ENDIF()
 
-SET(URL_TARGET_SYSTEM root@osen73.dyndns-home.com)
-SET(SSH_PORT_TARGET_SYSTEM 22)
+#SET(URL_TARGET_SYSTEM root@osen73.dyndns-home.com)
+#SET(SSH_PORT_TARGET_SYSTEM 22)
 
-#SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
-#SET(SSH_PORT_TARGET_SYSTEM 1234)
+SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
+SET(SSH_PORT_TARGET_SYSTEM 1234)
 
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}
@@ -101,6 +103,7 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
 #add_subdirectory(${LIB_DIR}/dotnet-sdk)
 add_subdirectory(${LIB_DIR}/c-sdk)
+#add_subdirectory(${LIB_DIR}/libwebsockets)
 
 # Loadable modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
@@ -109,6 +112,7 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
 add_subdirectory(${MOD_DIR}/test-sender)
 add_subdirectory(${MOD_DIR}/test-receiver)
 add_subdirectory(${MOD_DIR}/test-sender-receiver)
+
 #add_subdirectory(${MOD_DIR}/MyModule)
 #add_subdirectory(${MOD_DIR}/bmp180)
 #add_subdirectory(${MOD_DIR}/ms5611)
@@ -120,6 +124,9 @@ add_subdirectory(${MOD_DIR}/test-sender-receiver)
 
 # Host programms
 add_subdirectory(${HST_DIR}/c-host)
+
+# Services
+add_subdirectory(${SVC_DIR}/websocket_service)
 
 # Main project target
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
