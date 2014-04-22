@@ -31,18 +31,16 @@
 #include <fcntl.h>
 #include <assert.h>
 
-#ifdef _WIN32
-#include <io.h>
-#ifdef EXTERNAL_POLL
-#define poll WSAPoll
-#endif
-#else
 #include <syslog.h>
 #include <sys/time.h>
 #include <unistd.h>
-#endif
+
 
 #include "libwebsockets.h"
+
+#include <bcon.h>
+#include <bson.h>
+
 
 static int close_testing;
 int max_poll_elements;
@@ -177,6 +175,10 @@ const char * get_mimetype(const char *file)
 	if (!strcmp(&file[n - 5], ".html"))
 		return "text/html";
 
+    if (!strcmp(&file[n - 3], ".js"))
+        return "application/javascript";
+
+
 	return NULL;
 }
 
@@ -240,11 +242,8 @@ static int callback_http(struct libwebsocket_context *context,
 
 			p = buffer;
 
-#ifdef WIN32
-			pss->fd = open(leaf_path, O_RDONLY | _O_BINARY);
-#else
+
 			pss->fd = open(leaf_path, O_RDONLY);
-#endif
 
 			if (pss->fd < 0)
 				return -1;
@@ -514,6 +513,10 @@ callback_dumb_increment(struct libwebsocket_context *context,
 	unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 	struct per_session_data__dumb_increment *pss = (struct per_session_data__dumb_increment *)user;
 
+    //bson_t bson;
+    bson_oid_t oid;
+    bson_t *doc;
+
 	switch (reason) {
 
 	case LWS_CALLBACK_ESTABLISHED:
@@ -523,6 +526,27 @@ callback_dumb_increment(struct libwebsocket_context *context,
 		break;
 
 	case LWS_CALLBACK_SERVER_WRITEABLE:
+
+
+
+
+
+        // insert a document
+        bson_oid_init (&oid, NULL);
+        doc = BCON_NEW ("_id", BCON_OID (&oid),
+                        "mynumber", BCON_INT32 (pss->number++));
+
+
+        m = libwebsocket_write(wsi, (unsigned char *)bson_get_data(doc), (size_t)doc->len, LWS_WRITE_BINARY);
+        if (m < n) {
+            lwsl_err("ERROR %d writing to di socket\n", n);
+            return -1;
+        }
+
+        bson_destroy (doc);
+
+
+        /*
 		n = sprintf((char *)p, "%d", pss->number++);
 		m = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT);
 		if (m < n) {
@@ -533,6 +557,7 @@ callback_dumb_increment(struct libwebsocket_context *context,
 			lwsl_info("close tesing limit, closing\n");
 			return -1;
 		}
+        */
 		break;
 
 	case LWS_CALLBACK_RECEIVE:
@@ -640,11 +665,8 @@ callback_lws_mirror(struct libwebsocket_context *context,
 			 * for tests with chrome on same machine as client and
 			 * server, this is needed to stop chrome choking
 			 */
-#ifdef _WIN32
-			Sleep(1);
-#else
+
 			usleep(1);
-#endif
 		}
 		break;
 
@@ -717,8 +739,8 @@ static struct libwebsocket_protocols protocols[] = {
 	{
 		"dumb-increment-protocol",
 		callback_dumb_increment,
-		sizeof(struct per_session_data__dumb_increment),
-		10,
+        300,//sizeof(struct per_session_data__dumb_increment),
+        100,
 	},
 	{
 		"lws-mirror-protocol",
@@ -760,9 +782,6 @@ int main(int argc, char **argv)
 	int opts = 0;
 	char interface_name[128] = "";
 	const char *iface = NULL;
-#ifndef WIN32
-	int syslog_options = LOG_PID | LOG_PERROR;
-#endif
 	unsigned int oldus = 0;
 	struct lws_context_creation_info info;
 
@@ -785,9 +804,6 @@ int main(int argc, char **argv)
 #ifndef LWS_NO_DAEMONIZE
 		case 'D':
 			daemonize = 1;
-			#ifndef WIN32
-			syslog_options &= ~LOG_PERROR;
-			#endif
 			break;
 #endif
 		case 'd':
@@ -839,12 +855,6 @@ int main(int argc, char **argv)
 #endif
 
 	signal(SIGINT, sighandler);
-
-#ifndef WIN32
-	/* we will only try to log things according to our debug_level */
-	setlogmask(LOG_UPTO (LOG_DEBUG));
-	openlog("lwsts", syslog_options, LOG_DAEMON);
-#endif
 
 	/* tell the library what debug level to emit and to send it to syslog */
 	lws_set_log_level(debug_level, lwsl_emit_syslog);
@@ -958,10 +968,6 @@ done:
 	libwebsocket_context_destroy(context);
 
 	lwsl_notice("libwebsockets-test-server exited cleanly\n");
-
-#ifndef WIN32
-	closelog();
-#endif
 
 	return 0;
 }

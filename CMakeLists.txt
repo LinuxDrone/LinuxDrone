@@ -57,11 +57,11 @@ ELSE()
     SET(NODEJS /opt/local/bin/node)
 ENDIF()
 
-#SET(URL_TARGET_SYSTEM root@osen73.dyndns-home.com)
-#SET(SSH_PORT_TARGET_SYSTEM 22)
+SET(URL_TARGET_SYSTEM root@osen73.dyndns-home.com)
+SET(SSH_PORT_TARGET_SYSTEM 22)
 
-SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
-SET(SSH_PORT_TARGET_SYSTEM 1234)
+#SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
+#SET(SSH_PORT_TARGET_SYSTEM 1234)
 
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}

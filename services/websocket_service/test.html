@@ -11,6 +11,8 @@
 	.content { vertical-align:top; text-align:center; background:#fffff0; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px; }
 	.canvas { vertical-align:top; text-align:center; background:#efefd0; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px; }
 </style>
+    <script src="bson.js">
+    </script>
 </head>
 
 <body>
@@ -86,6 +88,8 @@ Join the mailing list: ​<a href="http://ml.libwebsockets.org/mailman/listinfo/
 </article>
 
 <script>
+
+var BSON = bson().BSON;
 
 /* BrowserDetect came from http://www.quirksmode.org/js/detect.html */
 
@@ -253,6 +257,8 @@ document.getElementById("number").textContent = get_appropriate_ws_url();
 				   "dumb-increment-protocol");
 	}
 
+    socket_di.binaryType = "arraybuffer";
+
 
 	try {
 		socket_di.onopen = function() {
@@ -261,7 +267,13 @@ document.getElementById("number").textContent = get_appropriate_ws_url();
 		} 
 
 		socket_di.onmessage =function got_packet(msg) {
-			document.getElementById("number").textContent = msg.data + "\n";
+
+            var a = new Uint8Array(msg.data);
+
+            // De serialize it again
+            var doc_2 = BSON.deserialize(a);
+
+			document.getElementById("number").textContent = doc_2.mynumber + "\n";
 		} 
 
 		socket_di.onclose = function(){
