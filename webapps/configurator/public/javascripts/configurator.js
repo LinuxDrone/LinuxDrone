@@ -148,7 +148,10 @@ var paper = new joint.dia.Paper({
      */
 });
 $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
-
+$(paper.el).find('svg').css({
+    width: "100%",
+    height: "99%"
+});
 
 var viewModels = viewModels || {};
 
@@ -905,7 +908,7 @@ socket_di.binaryType = "arraybuffer";
 
 try {
     socket_di.onopen = function() {
-        document.getElementById("wsdi_statustd").style.backgroundColor = "#40ff40";
+        document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
         document.getElementById("wsdi_status").textContent = " websocket connection opened ";
     }
 
@@ -920,7 +923,7 @@ try {
     }
 
     socket_di.onclose = function(){
-        document.getElementById("wsdi_statustd").style.backgroundColor = "#ff4040";
+        document.getElementById("wsdi_status").style.backgroundColor = "#ff4040";
         document.getElementById("wsdi_status").textContent = " websocket connection CLOSED ";
     }
 } catch(exception) {
