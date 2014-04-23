@@ -731,7 +731,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
         int res = rt_queue_write(&out_queue_set->out_queue->remote_queue, bson_get_data(bson_obj), bson_obj->len, Q_NORMAL);
         if(res<0)
         {
-            printf("Warning: %i rt_queue_write\n", res);
+//printf("Warning: %i rt_queue_write\n", res);
             // TODO: если нет коннекта у очереди, то сбросить флаг коннекта всех очередей.
         }
 
@@ -781,8 +781,8 @@ void get_input_data(void* p_module)
         }
         else
         {
-printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
-(*module->print_input)(module->input_data);
+//printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
+//(*module->print_input)(module->input_data);
         }
         bson_destroy(&bson);
     }
@@ -1451,8 +1451,8 @@ int refresh_input(void* p_module)
                             break;
                     }
                 }
-printf("%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
-(*module->print_input)(module->input_data);
+//printf("%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
+//(*module->print_input)(module->input_data);
 
                 bson_destroy(&bson);
             }
