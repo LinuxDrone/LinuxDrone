@@ -47,19 +47,28 @@ set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
 set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
 set(RFS_DIR ${TLS_DIR}/rootfs/beaglebone)
 
+message(STATUS ${CMAKE_HOST_SYSTEM})
+
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(SCP ${TLS_DIR}/pscp.exe)
     SET(NODEJS node)
+ELSE()
+
+IF(${CMAKE_HOST_SYSTEM} MATCHES "Linux")
+    SET(SCP scp)
+    SET(NODEJS nodejs)
 ELSE()
     SET(SCP scp)
     SET(NODEJS /opt/local/bin/node)
 ENDIF()
 
-SET(URL_TARGET_SYSTEM root@osen73.dyndns-home.com)
-SET(SSH_PORT_TARGET_SYSTEM 22)
+ENDIF()
 
-#SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
-#SET(SSH_PORT_TARGET_SYSTEM 1234)
+#SET(URL_TARGET_SYSTEM root@osen73.dyndns-home.com)
+#SET(SSH_PORT_TARGET_SYSTEM 22)
+
+SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
+SET(SSH_PORT_TARGET_SYSTEM 1234)
 
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}
