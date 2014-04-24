@@ -46,6 +46,7 @@ set(SVC_DIR ${PROJECT_SOURCE_DIR}/services)
 set(SYS_DIR ${PROJECT_SOURCE_DIR}/system)
 set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
 set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
+set(WEB_DIR ${PROJECT_SOURCE_DIR}/webapps)
 set(RFS_DIR ${TLS_DIR}/rootfs/beaglebone)
 
 

@@ -897,10 +897,10 @@ var socket_di;
 
 if (typeof MozWebSocket != "undefined") {
     socket_di = new MozWebSocket(get_appropriate_ws_url(),
-        "dumb-increment-protocol");
+        "telemetry-protocol");
 } else {
     socket_di = new WebSocket(get_appropriate_ws_url(),
-        "dumb-increment-protocol");
+        "telemetry-protocol");
 }
 
 socket_di.binaryType = "arraybuffer";

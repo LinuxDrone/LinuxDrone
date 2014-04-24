@@ -39,7 +39,7 @@ add_custom_command(
     POST_BUILD
 #COMMAND
     COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} websocket_service ${URL_TARGET_SYSTEM}:/root/websocket_service
-    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${SVC_DIR}/websocket_service/test.html ${URL_TARGET_SYSTEM}:/root/test.html
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${WEB_DIR}/configurator/public/javascripts/configurator.js ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/webapps/configurator/public/javascripts/configurator.js
 )
 
 
