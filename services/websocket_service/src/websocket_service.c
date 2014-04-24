@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 
+#include <native/pipe.h>
 #include "libwebsockets.h"
 
 #include "../include/websocket_service.h"
@@ -26,6 +27,8 @@ size_t ar_bufs_len=0;
 
 RT_TASK task_read_shmem;
 int priority_task_read_shmem = 50;
+
+int pipe_fd;
 
 enum demo_protocols {
     /* always first */
@@ -81,6 +84,9 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
     bson_oid_t oid;
     bson_t *doc;
 
+    char pipe_buf[500]; // TODO:
+    ssize_t read_len;
+
     int i;
 
     switch (reason) {
@@ -91,76 +97,25 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         break;
 
     case LWS_CALLBACK_SERVER_WRITEABLE:
-/*
-        // insert a document
-        bson_oid_init (&oid, NULL);
-        doc = BCON_NEW ("_id", BCON_OID (&oid),
-                        "mynumber", BCON_INT32 (pss->number++));
 
 
-        m = libwebsocket_write(wsi, (unsigned char *)bson_get_data(doc), (size_t)doc->len, LWS_WRITE_BINARY);
-        if (m < n) {
-            lwsl_err("ERROR %d writing to di socket\n", n);
+        read_len= read(pipe_fd, pipe_buf, sizeof(pipe_buf));
+        if(read_len==-1)
+        {
+            printf("Error read from pipe\n");
             return -1;
         }
-        bson_destroy (doc);
-*/
 
-        if(ar_bufs!=NULL)
-        {
-            unsigned short buflen = *((unsigned short*) ar_bufs[0]);
-            printf("buflen read_shmem: %i\n", buflen);
-
-            if (buflen != 0) {
-                // со смещением в два байта читаем следующий блок данных
-                m = libwebsocket_write(wsi, (unsigned char *)(ar_bufs[0] + sizeof(unsigned short)), buflen, LWS_WRITE_BINARY);
-                if (m < n) {
-                    lwsl_err("ERROR %d writing to di socket\n", n);
-                    return -1;
-                }
+        if (read_len > 0) {
+            // со смещением в два байта читаем следующий блок данных
+            m = libwebsocket_write(wsi, (unsigned char *)pipe_buf, read_len, LWS_WRITE_BINARY);
+            if (m < read_len) {
+                lwsl_err("ERROR %d writing to di socket\n", n);
+                return -1;
             }
         }
-
-
-
-        for(i=0; i < remote_shmems.remote_shmems_len; i++)
-        {
-/*
-            shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[i];
-
-            if(remote_shmem->f_shmem_connected)
-            {
-                //TODO: Определить размер буфера где нибудь в настройках
-                // и вынести в структуру
-                char buf[500];
-                unsigned short retlen;
-                retlen=0;
-                read_shmem(&remote_shmem->remote_shmem, buf, &retlen);
-
-                bson_t bson;
-                if (retlen > 0) {
-                    bson_init_static(&bson, buf, retlen);
-
-                    bson_append_utf8 (&bson, "_from", -1, remote_shmem->name_instance, -1);
-
-
-                    m = libwebsocket_write(wsi, (unsigned char *)bson_get_data(&bson), bson.len, LWS_WRITE_BINARY);
-                    if (m < n) {
-                        lwsl_err("ERROR %d writing to di socket\n", n);
-                        return -1;
-                    }
-                    bson_destroy (&bson);
-                }
-            }
-*/
-        }
-
-
-
-
-
-
         break;
+
 
     case LWS_CALLBACK_RECEIVE:
 //		fprintf(stderr, "rx %d\n", (int)len);
@@ -217,6 +172,15 @@ static struct libwebsocket_protocols protocols[] = {
 
 void run_task_read_shmem (void *module)
 {
+    RT_PIPE pipe_between_rt;
+    int err;
+    err = rt_pipe_create(&pipe_between_rt, "telemetry", 0, 500);
+    if (err)
+    {
+        printf("Error create pipe\n");
+        return;
+    }
+
     while(1)
     {
         int i;
@@ -240,22 +204,12 @@ void run_task_read_shmem (void *module)
                     bson_append_utf8 (bson, "_from", -1, remote_shmem->name_instance, -1);
 debug_print_bson("bson_append_utf8", bson);
 
-                    if(ar_bufs_len==0)
+                    ssize_t send = rt_pipe_write(&pipe_between_rt, bson_get_data(bson), bson->len, P_NORMAL);
+                    if(P_NORMAL<0)
                     {
-                        ar_bufs_len +=1;
-                        ar_bufs = realloc(ar_bufs, sizeof(void*)*ar_bufs_len);
+                        printf("Error rt_pipe_write %i\n", send);
+                        continue;
                     }
-
-                    ar_bufs[0] = malloc(bson->len + sizeof(unsigned short));
-
-
-                    *((unsigned short*) ar_bufs[0]) = bson->len;
-
-                    memcpy(ar_bufs[0] + sizeof(unsigned short), bson_get_data(bson), bson->len);
-
-                    bson_destroy (bson);
-
-                    return;
                 }
             }
         }
@@ -373,6 +327,16 @@ int main(int argc, char **argv)
 
     init_rt_task();
 
+
+
+    pipe_fd = open("/proc/xenomai/registry/native/pipes/telemetry", O_RDWR);
+    if (pipe_fd < 0)
+    {
+        printf("Error open pipe /proc/xenomai/registry/native/pipes/telemetry\n");
+        return -1;
+    }
+
+
     n = 0;
     while (n >= 0 && !force_exit) {
         struct timeval tv;
@@ -410,7 +374,7 @@ int main(int argc, char **argv)
          * If no socket needs service, it'll return anyway after
          * the number of ms in the second argument.
          */
-        n = libwebsocket_service(context, 50);
+        n = libwebsocket_service(context, 20);
     }
 
 

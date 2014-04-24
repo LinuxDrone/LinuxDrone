@@ -890,7 +890,8 @@ document.addEventListener("contextmenu", function (e) {
 
 function get_appropriate_ws_url()
 {
-    return "ws://vrubel.linuxdrone.org:7681/xxx";
+    //return "ws://vrubel.linuxdrone.org:7681/xxx";
+    return "ws://osen73.dyndns-home.com:7681/xxx";
 }
 
 var socket_di;
@@ -919,7 +920,8 @@ try {
         // De serialize it again
         var doc_2 = BSON.deserialize(a);
 
-        document.getElementById("number").textContent = doc_2._from + "\n";
+        //document.getElementById("number").textContent = doc_2._from + "\n";
+        document.getElementById("number").textContent = doc_2.out1 + "\n";
     }
 
     socket_di.onclose = function(){
