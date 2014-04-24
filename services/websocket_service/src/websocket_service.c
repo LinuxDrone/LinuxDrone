@@ -17,6 +17,8 @@
 #include "../include/websocket_service.h"
 
 
+ar_remote_shmems_t remote_shmems;
+
 
 enum demo_protocols {
     /* always first */
@@ -61,11 +63,7 @@ struct per_session_data__telemetry {
 };
 
 
-static int
-callback_telemetry(struct libwebsocket_context *context,
-            struct libwebsocket *wsi,
-            enum libwebsocket_callback_reasons reason,
-                           void *user, void *in, size_t len)
+static int callback_telemetry(struct libwebsocket_context *context, struct libwebsocket *wsi, enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
 {
     int n, m;
     unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
@@ -76,6 +74,8 @@ callback_telemetry(struct libwebsocket_context *context,
     bson_oid_t oid;
     bson_t *doc;
 
+    int i;
+
     switch (reason) {
 
     case LWS_CALLBACK_ESTABLISHED:
@@ -84,7 +84,7 @@ callback_telemetry(struct libwebsocket_context *context,
         break;
 
     case LWS_CALLBACK_SERVER_WRITEABLE:
-
+/*
         // insert a document
         bson_oid_init (&oid, NULL);
         doc = BCON_NEW ("_id", BCON_OID (&oid),
@@ -97,6 +97,43 @@ callback_telemetry(struct libwebsocket_context *context,
             return -1;
         }
         bson_destroy (doc);
+*/
+
+
+        for(i=0; i < remote_shmems.remote_shmems_len; i++)
+        {
+            shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[i];
+
+            if(remote_shmem->f_shmem_connected)
+            {
+                //TODO: Определить размер буфера где нибудь в настройках
+                // и вынести в структуру
+                char buf[500];
+                unsigned short retlen;
+                retlen=0;
+                read_shmem(&remote_shmem->remote_shmem, buf, &retlen);
+
+                bson_t bson;
+                if (retlen > 0) {
+                    bson_init_static(&bson, buf, retlen);
+
+                    bson_append_utf8 (&bson, "_from", -1, remote_shmem->name_instance, -1);
+
+
+                    m = libwebsocket_write(wsi, (unsigned char *)bson_get_data(&bson), bson.len, LWS_WRITE_BINARY);
+                    if (m < n) {
+                        lwsl_err("ERROR %d writing to di socket\n", n);
+                        return -1;
+                    }
+                    bson_destroy (&bson);
+                }
+            }
+        }
+
+
+
+
+
 
         break;
 
@@ -146,7 +183,6 @@ static struct libwebsocket_protocols protocols[] = {
     },
     { NULL, NULL, 0, 0 } /* terminator */
 };
-
 
 
 int main(int argc, char **argv)
@@ -235,6 +271,12 @@ int main(int argc, char **argv)
         return -1;
     }
 
+
+    // Зарегистрируем модули
+    memset(&remote_shmems, 0, sizeof(ar_remote_shmems_t));
+    register_remote_shmem(&remote_shmems, "test-sender-1", "Output1");
+
+
     n = 0;
     while (n >= 0 && !force_exit) {
         struct timeval tv;
@@ -252,6 +294,18 @@ int main(int argc, char **argv)
             oldus = tv.tv_usec;
         }
 
+
+
+        if(!remote_shmems.f_connected_in_links)
+        {
+            printf("попытка in связи %i\n", remote_shmems.f_connected_in_links);
+
+            char* local_instance_name = "telemetry";
+            connect_in_links(&remote_shmems, local_instance_name);
+        }
+
+
+
         /*
          * If libwebsockets sockets are all we care about,
          * you can use this api which takes care of the poll()
@@ -260,7 +314,6 @@ int main(int argc, char **argv)
          * If no socket needs service, it'll return anyway after
          * the number of ms in the second argument.
          */
-
         n = libwebsocket_service(context, 50);
     }
 

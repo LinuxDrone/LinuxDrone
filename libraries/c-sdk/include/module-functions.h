@@ -226,6 +226,21 @@ typedef void (t_cycle_function)(void *cookie);
 typedef t_cycle_function* p_cycle_function;
 
 
+typedef struct
+{
+    // Массив указателей на структуры содержащие информацию о разделяемой памяти, контролируемой инстансами поставщиками
+    // Входящие связи (посредством разделяемой памяти)
+    // При инициализации данного модуля (обработке списка связей из конфигурации), данный массив
+    // заполняется при помощи функции register_remote_shmem
+    shmem_in_set_t** remote_shmems;
+
+    // Длина массива remote_shmems
+    size_t remote_shmems_len;
+
+    // Флаг показывающий (если true), что все входящие (через разделяемую память) соединения модуля установлены
+    bool f_connected_in_links;
+} ar_remote_shmems_t;
+
 
 typedef struct
 {
@@ -269,14 +284,8 @@ typedef struct
     // Длина массива remote_queues
     size_t remote_queues_len;
 
-    // Массив указателей на структуры содержащие информацию о разделяемой памяти, контролируемой инстансами поставщиками
-    // Входящие связи (посредством разделяемой памяти)
-    // При инициализации данного модуля (обработке списка связей из конфигурации), данный массив
-    // заполняется при помощи функции register_remote_shmem
-    shmem_in_set_t** remote_shmems;
-    // Длина массива remote_shmems
-    size_t remote_shmems_len;
-
+    // Массив указателеей на структуры, представляющие разделяемую память модулей поставщиков
+    ar_remote_shmems_t ar_remote_shmems;
 
 
     // Указатель на массив. Список типов объектов, которые пораждает модуль.
@@ -331,8 +340,6 @@ typedef struct
 
     // Флаг показывающий (если true), что все исходящие соединения модуля установлены
     bool f_connected_out_links;
-    // Флаг показывающий (если true), что все входящие (через разделяемую память) соединения модуля установлены
-    bool f_connected_in_links;
 
     // функция (реализованная в автосгенеренном коде модуля)
     // возвращает битовую маску, представляющую указанный (в качестве строкового параметра) по имени входной порт
@@ -369,3 +376,14 @@ int refresh_input(void* p_module);
 char *replace(const char *s, char ch, const char *repl);
 
 
+/**
+ * @brief connect_in_links Устанавливает входящие соединения посредством разделяемой памяти
+ * с инстансами поставщиками данных
+ * @param p_module
+ * @return
+ */
+int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_name);
+
+shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup);
+
+void read_shmem(shmem_out_set_t* shmem, void* data, unsigned short* datalen);

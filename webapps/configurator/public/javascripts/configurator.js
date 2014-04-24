@@ -919,7 +919,7 @@ try {
         // De serialize it again
         var doc_2 = BSON.deserialize(a);
 
-        document.getElementById("number").textContent = doc_2.mynumber + "\n";
+        document.getElementById("number").textContent = doc_2._from + "\n";
     }
 
     socket_di.onclose = function(){

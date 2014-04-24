@@ -27,8 +27,8 @@ target_link_libraries(c-sdk ${EXTRA_LIBS})
 add_custom_command(
     TARGET c-sdk
     POST_BUILD
-COMMAND
-    #COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-sdk.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/lib/libc-sdk.so
+#COMMAND
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-sdk.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/lib/libc-sdk.so
 )
 
 install(TARGETS c-sdk DESTINATION lib)

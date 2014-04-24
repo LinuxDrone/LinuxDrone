@@ -29,7 +29,6 @@ bson_t* get_bson_from_file() {
             fprintf(stderr, "Error in json parsing:\n%s\n", error.message);
             abort();
         }
-
         //fwrite(bson_get_data(b_out), 1, b_out->len, stdout);
 
         bson_json_reader_destroy(reader);
