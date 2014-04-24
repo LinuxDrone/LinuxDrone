@@ -18,6 +18,8 @@
 /downloads
 /tools
 /build.*
+Debug
+
 
 # Ignore cmake-generated files (should not be in the source tree)
 CMakeFiles/
@@ -32,6 +34,9 @@ cmake_install.cmake
 *.diff~
 *.user
 *.project
+*.userprefs
+*.exe*
+*.csproj.*
 
 # Ignore Idea files
 *.idea
