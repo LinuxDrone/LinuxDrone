@@ -24,11 +24,15 @@ CMakeFiles/
 CMakeCache.txt
 Makefile
 cmake_install.cmake
+.metadata
 
 # Ignore patch-related files
 *.rej
 *.orig
 *.diff~
+*.user
+*.project
 
 # Ignore Idea files
 *.idea
+

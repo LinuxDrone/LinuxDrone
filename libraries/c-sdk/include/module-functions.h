@@ -8,6 +8,8 @@
 #include <native/mutex.h>
 #include <native/cond.h>
 
+#define TASK_MODE  0  /* No flags */
+#define TASK_STKSZ 0  /* Stack size (use default one) */
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"

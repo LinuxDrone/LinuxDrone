@@ -4,10 +4,6 @@
 #include <native/event.h>
 #include "../include/module-functions.h"
 
-
-#define TASK_MODE  0  /* No flags */
-#define TASK_STKSZ 0  /* Stack size (use default one) */
-
 #define SHMEM_WRITER_MASK	0x7FFFFFFF
 
 #define SHMEM_HEAP_SIZE		300
