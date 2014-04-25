@@ -684,6 +684,8 @@ viewModels.Editor = (function () {
             }
             res.graphChanged(false);
             res.instnameSelectedModule("Properties");
+
+            PrepareListLinks();
         }
     }
 
@@ -853,7 +855,30 @@ viewModels.Editor = (function () {
 
             cell.attributes["nameOutGroup"] = group.name;
         }
-    })
+    });
+
+
+    res.PreparedLinks = {};
+    // Подготавливает список свзяей в виде объекта, в котором можно добыть связь по имени модуля и имени порта
+    // Для удосбства, при приеме данных из вебсокетов (чтоб не искать каждый раз связь в графе)
+    var PrepareListLinks =function(){
+        res.PreparedLinks = {};
+        graph.attributes.cells.models.forEach(function (cell) {
+            if(cell.attributes.type=="link"){
+                var sourceInstanceName = _.find(graph.attributes.cells.models, function (model) {
+                    return model.id == cell.attributes.source.id;
+                }).attributes.attrs[".label"].text;
+
+                if(!res.PreparedLinks.hasOwnProperty(sourceInstanceName)){
+                    res.PreparedLinks[sourceInstanceName] = {};
+                }
+                if(!res.PreparedLinks[sourceInstanceName][cell.attributes.source.port]){
+                    res.PreparedLinks[sourceInstanceName][cell.attributes.source.port] = new Array();
+                }
+                res.PreparedLinks[sourceInstanceName][cell.attributes.source.port].push(cell);
+            }
+        });
+    };
 
     return res;
 })();
@@ -907,6 +932,10 @@ if (typeof MozWebSocket != "undefined") {
 socket_di.binaryType = "arraybuffer";
 
 
+
+
+
+
 try {
     socket_di.onopen = function() {
         document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
@@ -914,14 +943,35 @@ try {
     }
 
     socket_di.onmessage =function got_packet(msg) {
-
-        var a = new Uint8Array(msg.data);
-
         // De serialize it again
-        var doc_2 = BSON.deserialize(a);
+        var obj = BSON.deserialize(new Uint8Array(msg.data));
+console.log(obj);
+        $.each(obj, function (port, value) {
+            if(port!="_from" && viewModels.Editor.PreparedLinks[obj["_from"]][port])
+            {
+                viewModels.Editor.PreparedLinks[obj["_from"]][port].forEach(function(link){
+                link.label(0, {
+                    position: .5,
+                    attrs: {
+                        text: {
+                            text: value,
+                            fill: 'white',
+                            'font-family': 'sans-serif'
+                        },
+                        rect: {
+                            stroke: '#3498DB',
+                            fill: '#3498DB',
+                            'stroke-width': 10,
+                            rx: 3,
+                            ry: 3
+                        }
+                    }
+                });
+                });
+            }
+        });
 
-        //document.getElementById("number").textContent = doc_2._from + "\n";
-        document.getElementById("number").textContent = doc_2.out1 + "\n";
+        document.getElementById("number").textContent = obj["_from"] + "\n";
     }
 
     socket_di.onclose = function(){

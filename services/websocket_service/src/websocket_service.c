@@ -210,10 +210,11 @@ debug_print_bson("bson_append_utf8", bson);
                         printf("Error rt_pipe_write %i\n", send);
                         continue;
                     }
+                    bson_destroy(bson);
                 }
             }
         }
-        rt_task_sleep(rt_timer_ns2ticks(100000000));
+        rt_task_sleep(rt_timer_ns2ticks(800000000));
     }
 }
 
@@ -323,7 +324,11 @@ int main(int argc, char **argv)
     // Зарегистрируем модули
     memset(&remote_shmems, 0, sizeof(ar_remote_shmems_t));
     register_remote_shmem(&remote_shmems, "test-sender-1", "Output1");
-
+    register_remote_shmem(&remote_shmems, "test-sender-1", "Output2");
+    register_remote_shmem(&remote_shmems, "test-sender-receiver-1", "Output1");
+    register_remote_shmem(&remote_shmems, "test-sender-receiver-1", "Output2");
+    register_remote_shmem(&remote_shmems, "test-sender-receiver-2", "Output1");
+    register_remote_shmem(&remote_shmems, "test-sender-receiver-2", "Output2");
 
     init_rt_task();
 
@@ -374,7 +379,7 @@ int main(int argc, char **argv)
          * If no socket needs service, it'll return anyway after
          * the number of ms in the second argument.
          */
-        n = libwebsocket_service(context, 20);
+        n = libwebsocket_service(context, 5);
     }
 
 
