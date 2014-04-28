@@ -20,12 +20,14 @@
 
 ar_remote_shmems_t remote_shmems;
 
+
 // Массив указателей на блоки памяти, готовые к передаче
 // Первое два байта в блоке памяти - длина последующего блока, предназначенного для передачи (длина лежащего там bson объекта)
 void** ar_bufs = NULL;
 size_t ar_bufs_len=0;
 
 RT_TASK task_read_shmem;
+RT_COND cond;
 int priority_task_read_shmem = 50;
 
 int pipe_fd;
@@ -98,22 +100,31 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
 
     case LWS_CALLBACK_SERVER_WRITEABLE:
 
-
         read_len= read(pipe_fd, pipe_buf, sizeof(pipe_buf));
+//printf("read_len: %i\n", read_len);
         if(read_len==-1)
         {
             printf("Error read from pipe\n");
             return -1;
         }
 
-        if (read_len > 0) {
-            // со смещением в два байта читаем следующий блок данных
+        if(read_len > 0) {
+            //printf("read_len: %i\toffset:%i\n", read_len, offset);
             m = libwebsocket_write(wsi, (unsigned char *)pipe_buf, read_len, LWS_WRITE_BINARY);
             if (m < read_len) {
                 lwsl_err("ERROR %d writing to di socket\n", n);
                 return -1;
             }
+
+            int res = rt_cond_signal(&cond);
+            if (res)
+            {
+                printf("Error rt_cond_signal\n");
+                return;
+            }
         }
+
+        //printf("EXIT WHILE read_len: %i\n", read_len);
         break;
 
 
@@ -173,6 +184,8 @@ static struct libwebsocket_protocols protocols[] = {
 void run_task_read_shmem (void *module)
 {
     RT_PIPE pipe_between_rt;
+    RT_MUTEX 	mutex;
+
     int err;
     err = rt_pipe_create(&pipe_between_rt, "telemetry", 0, 500);
     if (err)
@@ -180,6 +193,23 @@ void run_task_read_shmem (void *module)
         printf("Error create pipe\n");
         return;
     }
+
+    err = rt_mutex_create(&mutex, "telemetry_mutex");
+
+    err = rt_cond_create(&cond, "telemetry_cond");
+    if (err)
+    {
+        printf("Error rt_cond_create\n");
+        return;
+    }
+
+    err = rt_mutex_acquire(&mutex,TM_NONBLOCK);
+    if (err)
+    {
+        printf("Error rt_mutex_acquire\n");
+        return;
+    }
+
 
     while(1)
     {
@@ -202,19 +232,30 @@ void run_task_read_shmem (void *module)
                     bson_t* bson = bson_new_from_data (buf, retlen);
 
                     bson_append_utf8 (bson, "_from", -1, remote_shmem->name_instance, -1);
-debug_print_bson("bson_append_utf8", bson);
+//debug_print_bson("bson_append_utf8", bson);
 
                     ssize_t send = rt_pipe_write(&pipe_between_rt, bson_get_data(bson), bson->len, P_NORMAL);
-                    if(P_NORMAL<0)
+                    if(send<0)
                     {
                         printf("Error rt_pipe_write %i\n", send);
-                        continue;
+                        //continue;
                     }
                     bson_destroy(bson);
+
+                    err = rt_cond_wait(&cond, &mutex, TM_INFINITE );
+                    if (err)
+                    {
+                        printf("Error rt_cond_wait\n");
+                        return;
+                    }
                 }
             }
+            else
+            {
+                rt_task_sleep(rt_timer_ns2ticks(5000000));
+            }
         }
-        rt_task_sleep(rt_timer_ns2ticks(800000000));
+        //rt_task_sleep(rt_timer_ns2ticks(800000000));
     }
 }
 
@@ -344,20 +385,18 @@ int main(int argc, char **argv)
 
     n = 0;
     while (n >= 0 && !force_exit) {
-        struct timeval tv;
-
-        gettimeofday(&tv, NULL);
-
+        //struct timeval tv;
+        //gettimeofday(&tv, NULL);
         /*
          * This provokes the LWS_CALLBACK_SERVER_WRITEABLE for every
          * live websocket connection using the TELEMETRY protocol,
          * as soon as it can take more packets (usually immediately)
          */
 
-        if (((unsigned int)tv.tv_usec - oldus) > 50000) {
+        //if (((unsigned int)tv.tv_usec - oldus) > 1000) {
             libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_TELEMETRY]);
-            oldus = tv.tv_usec;
-        }
+          //  oldus = tv.tv_usec;
+        //}
 
 
 
@@ -379,7 +418,7 @@ int main(int argc, char **argv)
          * If no socket needs service, it'll return anyway after
          * the number of ms in the second argument.
          */
-        n = libwebsocket_service(context, 5);
+        n = libwebsocket_service(context, 10);
     }
 
 

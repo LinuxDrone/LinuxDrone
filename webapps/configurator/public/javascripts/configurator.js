@@ -945,7 +945,7 @@ try {
     socket_di.onmessage =function got_packet(msg) {
         // De serialize it again
         var obj = BSON.deserialize(new Uint8Array(msg.data));
-console.log(obj);
+//console.log(obj);
         $.each(obj, function (port, value) {
             if(port!="_from" && viewModels.Editor.PreparedLinks[obj["_from"]][port])
             {
@@ -971,7 +971,7 @@ console.log(obj);
             }
         });
 
-        document.getElementById("number").textContent = obj["_from"] + "\n";
+        //document.getElementById("number").textContent = obj["_from"] + "\n";
     }
 
     socket_di.onclose = function(){
