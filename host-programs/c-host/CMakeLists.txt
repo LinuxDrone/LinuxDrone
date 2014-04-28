@@ -33,8 +33,8 @@ target_link_libraries(c-host ${EXTRA_LIBS})
 add_custom_command(
     TARGET c-host
     POST_BUILD
-COMMAND
-    #COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-host ${URL_TARGET_SYSTEM}:/root/c-host
+#COMMAND
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-host ${URL_TARGET_SYSTEM}:/root/c-host
     #COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${HST_DIR}/c-host/testConfig.json ${URL_TARGET_SYSTEM}:/root/testConfig.json
 )
 
