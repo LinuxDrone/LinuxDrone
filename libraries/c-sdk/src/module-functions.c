@@ -174,6 +174,8 @@ shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, cons
 
     ar_remote_shmems->remote_shmems[ar_remote_shmems->remote_shmems_len-1] = new_remote_shmem;
 
+    ar_remote_shmems->f_connected_in_links=false;
+
     return new_remote_shmem;
 }
 
@@ -941,7 +943,7 @@ printf("%sCONNECTED: %s to mutex service %s%s\n", ANSI_COLOR_YELLOW, instance_na
         count_connected++;
     }
 
-    if(count_connected==ar_remote_shmems->remote_shmems_len)
+    if(ar_remote_shmems->remote_shmems_len>0 && count_connected==ar_remote_shmems->remote_shmems_len)
     {
         ar_remote_shmems->f_connected_in_links=true;
 printf("%s%s: ALL SHMEMS CONNECTED%s\n", ANSI_COLOR_GREEN, instance_name, ANSI_COLOR_RESET);

@@ -170,7 +170,7 @@ viewModels.Editor = (function () {
         editSchemaMode: ko.observable("main"),
         // Метаинформация модулей
         metaModules: ko.observableArray([]),
-        // Список модулей модулей
+        // Список модулей
         listModules: ko.observableArray([]),
         // Список имен конфигураций
         ConfigNames: ko.observableArray([]),
@@ -282,6 +282,28 @@ viewModels.Editor = (function () {
                     }
                 }
             });
+    }
+
+    // Публичная функция запуска текущей конфигурации
+    res.RunConfig = function() {
+
+        _.find(graph.getElements(), function (el) {
+
+            var moduleType = el.attributes.moduleType;
+
+            var outputs = GetModuleMeta(moduleType).definition().outputs;
+            if(outputs){
+                outputs.forEach(function(output){
+                    var obj = {
+                        cmd:"subscribe",
+                        instance: el.attributes.attrs['.label'].text,
+                        out: output.name
+                    };
+                    var data = BSON.serialize(obj, true, true, false);
+                    socket_di.send(data.buffer);
+                });
+            }
+        })
     }
 
     res.RemoveModule = function RemoveModule() {
@@ -880,6 +902,72 @@ viewModels.Editor = (function () {
         });
     };
 
+    var get_appropriate_ws_url=function()
+    {
+        //return "ws://vrubel.linuxdrone.org:7681/xxx";
+        return "ws://osen73.dyndns-home.com:7681/xxx";
+    }
+
+    var socket_di;
+    res.Init = function(){
+        if (typeof MozWebSocket != "undefined") {
+            socket_di = new MozWebSocket(get_appropriate_ws_url(),
+                "telemetry-protocol");
+        } else {
+            socket_di = new WebSocket(get_appropriate_ws_url(),
+                "telemetry-protocol");
+        }
+        socket_di.binaryType = "arraybuffer";
+
+        try {
+            socket_di.onopen = function() {
+                document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
+                document.getElementById("wsdi_status").textContent = " websocket connection opened ";
+            }
+
+            socket_di.onmessage =function got_packet(msg) {
+                // De serialize it again
+                var obj = BSON.deserialize(new Uint8Array(msg.data));
+//console.log(obj);
+                $.each(obj, function (port, value) {
+                    if(port!="_from" && viewModels.Editor.PreparedLinks[obj["_from"]][port])
+                    {
+                        viewModels.Editor.PreparedLinks[obj["_from"]][port].forEach(function(link){
+                            link.label(0, {
+                                position: .5,
+                                attrs: {
+                                    text: {
+                                        text: value,
+                                        fill: 'white',
+                                        'font-family': 'sans-serif'
+                                    },
+                                    rect: {
+                                        stroke: '#3498DB',
+                                        fill: '#3498DB',
+                                        'stroke-width': 10,
+                                        rx: 3,
+                                        ry: 3
+                                    }
+                                }
+                            });
+                        });
+                    }
+                });
+
+                //document.getElementById("number").textContent = obj["_from"] + "\n";
+            }
+
+            socket_di.onclose = function(){
+                document.getElementById("wsdi_status").style.backgroundColor = "#ff4040";
+                document.getElementById("wsdi_status").textContent = " websocket connection CLOSED ";
+            }
+        } catch(exception) {
+            alert('<p>Error' + exception);
+        }
+
+    }
+
+
     return res;
 })();
 
@@ -899,6 +987,8 @@ $(document).ready(function () {
         ).then(function (a1, a2) {
             //Request OK
             ko.applyBindings(viewModels.Editor);
+
+            viewModels.Editor.Init();
         }, function (err1, err2) {
             alert("error server request");
         });
@@ -910,75 +1000,4 @@ document.addEventListener("contextmenu", function (e) {
     e.preventDefault();
 }, false);
 
-
-/* dumb increment protocol */
-
-function get_appropriate_ws_url()
-{
-    //return "ws://vrubel.linuxdrone.org:7681/xxx";
-    return "ws://osen73.dyndns-home.com:7681/xxx";
-}
-
-var socket_di;
-
-if (typeof MozWebSocket != "undefined") {
-    socket_di = new MozWebSocket(get_appropriate_ws_url(),
-        "telemetry-protocol");
-} else {
-    socket_di = new WebSocket(get_appropriate_ws_url(),
-        "telemetry-protocol");
-}
-
-socket_di.binaryType = "arraybuffer";
-
-
-
-
-
-
-try {
-    socket_di.onopen = function() {
-        document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
-        document.getElementById("wsdi_status").textContent = " websocket connection opened ";
-    }
-
-    socket_di.onmessage =function got_packet(msg) {
-        // De serialize it again
-        var obj = BSON.deserialize(new Uint8Array(msg.data));
-//console.log(obj);
-        $.each(obj, function (port, value) {
-            if(port!="_from" && viewModels.Editor.PreparedLinks[obj["_from"]][port])
-            {
-                viewModels.Editor.PreparedLinks[obj["_from"]][port].forEach(function(link){
-                link.label(0, {
-                    position: .5,
-                    attrs: {
-                        text: {
-                            text: value,
-                            fill: 'white',
-                            'font-family': 'sans-serif'
-                        },
-                        rect: {
-                            stroke: '#3498DB',
-                            fill: '#3498DB',
-                            'stroke-width': 10,
-                            rx: 3,
-                            ry: 3
-                        }
-                    }
-                });
-                });
-            }
-        });
-
-        //document.getElementById("number").textContent = obj["_from"] + "\n";
-    }
-
-    socket_di.onclose = function(){
-        document.getElementById("wsdi_status").style.backgroundColor = "#ff4040";
-        document.getElementById("wsdi_status").textContent = " websocket connection CLOSED ";
-    }
-} catch(exception) {
-    alert('<p>Error' + exception);
-}
 

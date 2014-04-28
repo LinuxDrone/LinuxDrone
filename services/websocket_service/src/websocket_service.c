@@ -58,6 +58,14 @@ static struct option options[] = {
 static volatile int force_exit = 0;
 static struct libwebsocket_context *context;
 
+void debug_print_bson(char* where, bson_t* bson) {
+    printf("%s\n", where);
+    char* str = bson_as_json(bson, NULL);
+    fprintf(stdout, "%s\n", str);
+    bson_free(str);
+    printf("\n");
+}
+
 /* this protocol server (always the first one) just knows how to do HTTP */
 static int callback_http(struct libwebsocket_context *context, struct libwebsocket *wsi, enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
 {
@@ -89,7 +97,10 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
     char pipe_buf[500]; // TODO:
     ssize_t read_len;
 
-    int i;
+    bson_t* bson_request;
+    const char* module_instance_name;
+    const char* module_out_name;
+
 
     switch (reason) {
 
@@ -100,6 +111,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
 
     case LWS_CALLBACK_SERVER_WRITEABLE:
 
+//printf("before read\n");
         read_len= read(pipe_fd, pipe_buf, sizeof(pipe_buf));
 //printf("read_len: %i\n", read_len);
         if(read_len==-1)
@@ -129,18 +141,61 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
 
 
     case LWS_CALLBACK_RECEIVE:
+
+
+        bson_request = bson_new_from_data (in, len);
+
+debug_print_bson("received", bson_request);
+
+
+        // Get Instance Name
+        bson_iter_t iter_instance_name;
+        if (!bson_iter_init_find(&iter_instance_name, bson_request, "instance")) {
+            printf("Not found property \"instance\" in module_instance");
+            return -1;
+        }
+        if (!BSON_ITER_HOLDS_UTF8(&iter_instance_name)) {
+            printf("Property \"instance\" in module_instance not UTF8 type");
+            return -1;
+        }
+        module_instance_name = bson_iter_utf8(&iter_instance_name, NULL);
+
+
+        // Get Instance Name
+        bson_iter_t iter_out_name;
+        if (!bson_iter_init_find(&iter_out_name, bson_request, "out")) {
+            printf("Not found property \"out\" in module_out");
+            return -1;
+        }
+        if (!BSON_ITER_HOLDS_UTF8(&iter_out_name)) {
+            printf("Property \"out\" in module_out not UTF8 type");
+            return -1;
+        }
+        module_out_name = bson_iter_utf8(&iter_out_name, NULL);
+
+
+//printf("module_instance_name: %s\tmodule_out_name: %s\n", module_instance_name, module_out_name);
+
+
+        register_remote_shmem(&remote_shmems, module_instance_name, module_out_name);
+
+
+        bson_destroy(bson_request);
+
+
 //		fprintf(stderr, "rx %d\n", (int)len);
         if (len < 6)
             break;
         if (strcmp((const char *)in, "reset\n") == 0)
             pss->number = 0;
         break;
+
+
     /*
      * this just demonstrates how to use the protocol filter. If you won't
      * study and reject connections based on header content, you don't need
      * to handle this callback
      */
-
     case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
         //dump_handshake_info(wsi);
         /* you could return non-zero here and kill the connection */
@@ -153,13 +208,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
     return 0;
 }
 
-void debug_print_bson(char* where, bson_t* bson) {
-    printf("%s\n", where);
-    char* str = bson_as_json(bson, NULL);
-    fprintf(stdout, "%s\n", str);
-    bson_free(str);
-    printf("\n");
-}
+
 
 /* list of supported protocols and callbacks */
 static struct libwebsocket_protocols protocols[] = {
@@ -210,6 +259,12 @@ void run_task_read_shmem (void *module)
         return;
     }
 
+//    err = rt_cond_wait(&cond, &mutex, TM_INFINITE );
+//    if (err)
+//    {
+//        printf("Error rt_cond_wait\n");
+//        return;
+//    }
 
     while(1)
     {
@@ -255,7 +310,9 @@ void run_task_read_shmem (void *module)
                 rt_task_sleep(rt_timer_ns2ticks(5000000));
             }
         }
-        //rt_task_sleep(rt_timer_ns2ticks(800000000));
+
+        if(remote_shmems.remote_shmems_len==0)
+            rt_task_sleep(rt_timer_ns2ticks(100000000));
     }
 }
 
@@ -364,12 +421,8 @@ int main(int argc, char **argv)
 
     // Зарегистрируем модули
     memset(&remote_shmems, 0, sizeof(ar_remote_shmems_t));
-    register_remote_shmem(&remote_shmems, "test-sender-1", "Output1");
-    register_remote_shmem(&remote_shmems, "test-sender-1", "Output2");
-    register_remote_shmem(&remote_shmems, "test-sender-receiver-1", "Output1");
-    register_remote_shmem(&remote_shmems, "test-sender-receiver-1", "Output2");
-    register_remote_shmem(&remote_shmems, "test-sender-receiver-2", "Output1");
-    register_remote_shmem(&remote_shmems, "test-sender-receiver-2", "Output2");
+    //register_remote_shmem(&remote_shmems, "test-sender-1", "Output1");
+
 
     init_rt_task();
 
@@ -394,20 +447,22 @@ int main(int argc, char **argv)
          */
 
         //if (((unsigned int)tv.tv_usec - oldus) > 1000) {
-            libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_TELEMETRY]);
+//            libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_TELEMETRY]);
           //  oldus = tv.tv_usec;
         //}
 
 
 
-        if(!remote_shmems.f_connected_in_links)
+        if(remote_shmems.f_connected_in_links)
         {
-            printf("попытка in связи %i\n", remote_shmems.f_connected_in_links);
-
+            libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_TELEMETRY]);
+        }
+        else
+        {
+            //printf("попытка in связи %i\n", remote_shmems.f_connected_in_links);
             char* local_instance_name = "telemetry";
             connect_in_links(&remote_shmems, local_instance_name);
         }
-
 
 
         /*

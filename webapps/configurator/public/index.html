@@ -84,9 +84,10 @@
                         visible: viewModels.Editor.Versions().length > 0">Delete
                     </button>
                     <button type="button" class="btn btn-info" disabled title="Not Implemented">Import</button>
-                    <button type="button" class="btn btn-info" disabled
-                            data-bind="visible: viewModels.Editor.Versions().length > 0">Export
-                    </button>
+                    <button type="button" class="btn btn-info" disabled data-bind="visible: viewModels.Editor.Versions().length > 0">Export</button>
+
+                    <button type="button" class="btn btn-success" data-bind="click: RunConfig, visible: viewModels.Editor.Versions().length > 0">Run</button>
+
                 </form>
 
                 <form data-bind="visible: viewModels.Editor.editSchemaMode()=='sub'" class="form-inline">
