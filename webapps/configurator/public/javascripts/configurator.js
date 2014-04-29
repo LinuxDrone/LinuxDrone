@@ -288,9 +288,7 @@ viewModels.Editor = (function () {
     res.RunConfig = function() {
 
         _.find(graph.getElements(), function (el) {
-
             var moduleType = el.attributes.moduleType;
-
             var outputs = GetModuleMeta(moduleType).definition().outputs;
             if(outputs){
                 outputs.forEach(function(output){
@@ -303,7 +301,16 @@ viewModels.Editor = (function () {
                     socket_di.send(data.buffer);
                 });
             }
-        })
+        });
+
+        var data4save = {
+            "name": res.configNameSelected(),
+            "version": res.versionSelected()
+        };
+        $.post("runhosts", data4save,
+            function (data) {
+var f=0;
+            });
     }
 
     res.RemoveModule = function RemoveModule() {

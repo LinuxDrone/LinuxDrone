@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var spawn = require('child_process').spawn;
 var commonModuleParams = require('../public/ModulesCommonParams.def.js');
 
 /*
@@ -71,6 +72,31 @@ exports.getconfigs = function (db) {
         var collection = db.get('visual_configuration');
         collection.find({}, {}, function (e, docs) {
             res.json(docs);
+        });
+    };
+};
+
+exports.runhosts = function (db) {
+    return function (req, res) {
+        var collection = db.get('visual_configuration');
+        res.json(req.body);
+
+        //global.ws_server.send(JSON.stringify(process.memoryUsage()), function() { /* ignore errors */ });
+
+        var chost    = spawn('/root/c-host', ['New Schema', '1']);
+
+        chost.stdout.on('data', function (data) {
+            global.ws_server.send(data, function() { /* ignore errors */ });
+            console.log('stdout: ' + data);
+        });
+
+        chost.stderr.on('data', function (data) {
+            global.ws_server.send(data, function() { /* ignore errors */ });
+            console.log('stderr: ' + data);
+        });
+
+        chost.on('close', function (code) {
+            console.log('c-host child process exited with code ' + code);
         });
     };
 };
