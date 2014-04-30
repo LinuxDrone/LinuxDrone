@@ -9,6 +9,102 @@
 #define SHMEM_HEAP_SIZE		300
 #define SHMEM_BLOCK1_SIZE	200
 
+
+
+/**
+ * @brief checkout4transmiter
+ * /~russian    Заполняет указатель адресом на структуру ,
+ *              данные из которой можно считывать для передачи в разделяемую память
+ * @param obj
+ * @param was_queue Если возаращается объект переданный через очередь
+ * @return
+ * /~russian 0 в случае успеха
+ */
+int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
+{
+    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
+    if (res != 0)
+    {
+        printf("error checkout4transmiter: rt_mutex_acquire\n");
+        return res;
+    }
+
+    if(set->status_obj1 == Filled || (!was_queue && set->status_obj1 == Transferred2Queue))
+    {
+        set->status_obj1 = Transferring;
+        (*obj)=set->obj1;
+    }
+    else if(set->status_obj2 == Filled || (!was_queue && set->status_obj2 == Transferred2Queue))
+    {
+        set->status_obj2 = Transferring;
+        (*obj)=set->obj2;
+    }
+    else
+    {
+        (*obj)=NULL;
+    }
+
+    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
+    if (res1 != 0)
+    {
+        printf("error checkout4transmiter:  rt_mutex_release\n");
+        return res1;
+    }
+    return res;
+}
+
+
+/**
+ * @brief checkin4transmiter
+ * /~ Возвращает объект системе (объект будет помечен как свободный для записи основным потоком)
+ * @param obj
+ * @param was_queue Если возаращается объект переданный через очередь
+ * @return
+ */
+int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
+{
+    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
+    if (res != 0)
+    {
+        printf("error checkin4transmiter: rt_mutex_acquire\n");
+        return res;
+    }
+
+    if(set->status_obj1 == Transferring)
+    {
+        if(was_queue)
+            set->status_obj1 = Transferred2Queue;
+        else
+            set->status_obj1 = Empty;
+    }
+    else if(set->status_obj2 == Transferring)
+    {
+        if(was_queue)
+            set->status_obj2 = Transferred2Queue;
+        else
+            set->status_obj2 = Empty;
+    }
+    else
+    {
+        printf("checkin4transmiter: Error in logic use function checkin4transmiter.\n Impossible combination statuses\n");
+        print_obj_status(1, set->status_obj1);
+        print_obj_status(2, set->status_obj2);
+        printf("\n");
+        res = -1;
+    }
+
+    (*obj)=NULL;
+
+    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
+    if (res1 != 0)
+    {
+        printf("error checkin4transmiter:  rt_mutex_release\n");
+        return res1;
+    }
+    return res;
+}
+
+
 /**
  * @brief init_object_set Инициализируети структуру, представляющую выходной объект инстанса в системе.
  * Каждый тип объекта, который порождает модуль, должен иметь некоторый набор сущностей, требуемых ему для передачи данных объекта другим инстансам.
@@ -749,9 +845,6 @@ void get_input_data(void* p_module)
 {
     module_t* module = p_module;
 
-    RTIME time_attempt_link_modules;
-    time_attempt_link_modules = rt_timer_read();
-
     if(module->input_data==NULL)
     {
         //здесь просто поспать потоку
@@ -802,13 +895,13 @@ printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
     if(!module->ar_remote_shmems.f_connected_in_links)
     {
         // Если не все связи модуля установлены, то будем пытаться их установить
-        if(rt_timer_read() - time_attempt_link_modules > 100000000)
+        if(rt_timer_read() - module->time_attempt_link_modules > 100000000)
         {
-            printf("попытка in связи\n");
+            //printf("попытка in связи\n");
 
             connect_in_links(&module->ar_remote_shmems, module->instance_name);
 
-            time_attempt_link_modules=rt_timer_read();
+            module->time_attempt_link_modules=rt_timer_read();
         }
     }
 
@@ -968,27 +1061,36 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
         if(!time2publish2shmem && !to_queue)
             continue;
 
-        checkout4transmiter(module, out_object, &obj);
         //printf("outside=%i bool=%i\n",i,time2publish2shmem);
-        if(obj!=NULL)
+        // Нашли обновившийся в основном потоке объект
+        // Пуш в очереди подписчиков
+        if(to_queue)
         {
-            // Нашли обновившийся в основном потоке объект
-            // Пуш в очереди подписчиков
-            if(to_queue)
+            checkout4transmiter(module, out_object, &obj, true);
+            if(obj!=NULL)
+            {
                 send2queues(out_object, obj, &bson_tr);
+//printf("send2queues\t");
+//(*out_object->print_obj)(obj);
+                checkin4transmiter(module, out_object, &obj, true);
+            }
+        }
 
-            // Публикация данных в разделяемую память, не чаще чем в оговоренный период
-            if(time2publish2shmem)
+        // Публикация данных в разделяемую память, не чаще чем в оговоренный период
+        if(time2publish2shmem)
+        {
+            checkout4transmiter(module, out_object, &obj, false);
+            if(obj!=NULL)
             {
                 bson_init (&bson_tr);
                 // Call user convert function
                 (*out_object->obj2bson)(obj, &bson_tr);
                 write_shmem(&out_object->shmem_set, bson_get_data(&bson_tr), bson_tr.len);
                 bson_destroy(&bson_tr);
-            }
 
-            // Вернуть объект основному потоку на новое заполнение
-            checkin4transmiter(module, out_object, &obj);
+                // Вернуть объект основному потоку на новое заполнение
+                checkin4transmiter(module, out_object, &obj, false);
+            }
         }
         out_object = module->out_objects[++i];
     }
@@ -1201,22 +1303,12 @@ int checkout4writer(module_t* module, out_object_t* set, void** obj)
         return res;
     }
 
-    if(set->status_obj1 == Empty)
+    if(set->status_obj1 == Empty || set->status_obj1 == Filled || set->status_obj1 == Transferred2Queue)
     {
         set->status_obj1 = Writing;
         (*obj)=set->obj1;
     }
-    else if(set->status_obj2 == Empty)
-    {
-        set->status_obj2 = Writing;
-        (*obj)=set->obj2;
-    }
-    else if(set->status_obj1 == Filled)
-    {
-        set->status_obj1 = Writing;
-        (*obj)=set->obj1;
-    }
-    else if(set->status_obj2 == Filled)
+    else if(set->status_obj2 == Empty || set->status_obj2 == Filled || set->status_obj2 == Transferred2Queue)
     {
         set->status_obj2 = Writing;
         (*obj)=set->obj2;
@@ -1296,92 +1388,6 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
 
 
 /**
- * @brief checkout4transmiter
- * /~russian    Заполняет указатель адресом на структуру ,
- *              данные из которой можно считывать для передачи в разделяемую память
- * @param obj
- * @return
- * /~russian 0 в случае успеха
- */
-int checkout4transmiter(module_t* module, out_object_t* set, void** obj)
-{
-    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
-    if (res != 0)
-    {
-        printf("error checkout4transmiter: rt_mutex_acquire\n");
-        return res;
-    }
-
-    if(set->status_obj1 == Filled)
-    {
-        set->status_obj1 = Transferring;
-        (*obj)=set->obj1;
-    }
-    else if(set->status_obj2 == Filled)
-    {
-        set->status_obj2 = Transferring;
-        (*obj)=set->obj2;
-    }
-    else
-    {
-        (*obj)=NULL;
-    }
-
-    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
-    if (res1 != 0)
-    {
-        printf("error checkout4transmiter:  rt_mutex_release\n");
-        return res1;
-    }
-    return res;
-}
-
-
-/**
- * @brief checkin4transmiter
- * /~ Возвращает объект системе (объект будет помечен как свободный для записи основным потоком)
- * @param obj
- * @return
- */
-int checkin4transmiter(module_t* module, out_object_t* set,  void** obj)
-{
-    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
-    if (res != 0)
-    {
-        printf("error checkin4transmiter: rt_mutex_acquire\n");
-        return res;
-    }
-
-    if(set->status_obj1 == Transferring)
-    {
-        set->status_obj1 = Filled;
-    }
-    else if(set->status_obj2 == Transferring)
-    {
-        set->status_obj2 = Filled;
-    }
-    else
-    {
-        printf("checkin4transmiter: Error in logic use function checkin4transmiter.\n Impossible combination statuses\n");
-        print_obj_status(1, set->status_obj1);
-        print_obj_status(2, set->status_obj2);
-        printf("\n");
-        res = -1;
-    }
-
-    (*obj)=NULL;
-
-    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
-    if (res1 != 0)
-    {
-        printf("error checkin4transmiter:  rt_mutex_release\n");
-        return res1;
-    }
-    return res;
-}
-
-
-/**
  * @brief refresh_input
  * /~russian Функция вычитывает данные из разделяемой памяти и мержит их во входной объект
  * @param p_module
@@ -1447,6 +1453,7 @@ int refresh_input(void* p_module)
                 }
 printf("%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
 (*module->print_input)(module->input_data);
+//fflush(stdout);
 
                 bson_destroy(&bson);
             }

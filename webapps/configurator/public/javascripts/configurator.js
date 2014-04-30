@@ -298,7 +298,7 @@ viewModels.Editor = (function () {
                         out: output.name
                     };
                     var data = BSON.serialize(obj, true, true, false);
-                    socket_di.send(data.buffer);
+                    socketTelemetry.send(data.buffer);
                 });
             }
         });
@@ -915,24 +915,37 @@ var f=0;
         return "ws://osen73.dyndns-home.com:7681/xxx";
     }
 
-    var socket_di;
-    res.Init = function(){
-        if (typeof MozWebSocket != "undefined") {
-            socket_di = new MozWebSocket(get_appropriate_ws_url(),
-                "telemetry-protocol");
-        } else {
-            socket_di = new WebSocket(get_appropriate_ws_url(),
-                "telemetry-protocol");
+    // Вычитывает из бинаря текст
+    var arrayBuffer2String = function (buf, callback) {
+        var f = new FileReader();
+        f.onload = function(e) {
+            callback(e.target.result)
         }
-        socket_di.binaryType = "arraybuffer";
+        f.readAsText(buf);
+    }
+
+
+
+    var socketTelemetry;
+    var socketHostsOut;
+    res.Init = function(){
+        var host = window.document.location.host.replace(/:.*/, '');
+        if (typeof MozWebSocket != "undefined") {
+            socketTelemetry = new MozWebSocket(get_appropriate_ws_url(), "telemetry-protocol");
+            socketHostsOut = new MozWebSocket('ws://' + host + ':3000');
+        } else {
+            socketTelemetry = new WebSocket(get_appropriate_ws_url(), "telemetry-protocol");
+            socketHostsOut = new WebSocket('ws://' + host + ':3000');
+        }
+        socketTelemetry.binaryType = "arraybuffer";
 
         try {
-            socket_di.onopen = function() {
+            socketTelemetry.onopen = function() {
                 document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
                 document.getElementById("wsdi_status").textContent = " websocket connection opened ";
             }
 
-            socket_di.onmessage =function got_packet(msg) {
+            socketTelemetry.onmessage =function got_packet(msg) {
                 // De serialize it again
                 var obj = BSON.deserialize(new Uint8Array(msg.data));
 //console.log(obj);
@@ -964,7 +977,7 @@ var f=0;
                 //document.getElementById("number").textContent = obj["_from"] + "\n";
             }
 
-            socket_di.onclose = function(){
+            socketTelemetry.onclose = function(){
                 document.getElementById("wsdi_status").style.backgroundColor = "#ff4040";
                 document.getElementById("wsdi_status").textContent = " websocket connection CLOSED ";
             }
@@ -972,8 +985,18 @@ var f=0;
             alert('<p>Error' + exception);
         }
 
-    }
+        socketHostsOut.onmessage = function (event) {
 
+
+            document.getElementById('rss').innerHTML = String.fromCharCode.apply(String, JSON.parse(event.data).data).replace(/\n/g, '<br/>');
+
+            /*arrayBuffer2String(new Blob(new Uint8Array(JSON.parse(event.data).data)), function (string) {
+                    document.getElementById('rss').innerHTML = string.replace(/\n/g, '<br/>');
+                    //console.log(string); // returns "abc"
+             });*/
+
+        };
+    }
 
     return res;
 })();

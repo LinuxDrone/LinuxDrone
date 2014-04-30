@@ -52,6 +52,7 @@ typedef enum
     Empty,
     Writing,
     Transferring,
+    Transferred2Queue,
     Filled
 } StatusObj;
 
@@ -347,6 +348,8 @@ typedef struct
     // возвращает битовую маску, представляющую указанный (в качестве строкового параметра) по имени входной порт
     p_get_inputmask_by_inputname get_inmask_by_inputname;
 
+    // Время последней попытки установления связей
+    RTIME time_attempt_link_modules;
 } module_t;
 
 

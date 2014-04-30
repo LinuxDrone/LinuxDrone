@@ -146,7 +146,11 @@ void print_obj_status(int number_obj, StatusObj status) {
         case Transferring:
             printf("Obj%i=Transferring\n", number_obj);
             break;
-            
+
+        case Transferred2Queue:
+            printf("Obj%i=Transferred2Queue\n", number_obj);
+            break;
+
         case Filled:
             printf("Obj%i=Filled\n", number_obj);
             break;

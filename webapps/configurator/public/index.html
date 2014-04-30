@@ -33,41 +33,6 @@
 
     <script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
     <script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>
-
-    <script>
-        function arrayBuffer2String(buf, callback) {
-            var f = new FileReader();
-            f.onload = function(e) {
-                callback(e.target.result)
-            }
-            f.readAsText(buf);
-        }
-
-        function ab2str(buf) {
-            return String.fromCharCode.apply(null, new Uint8Array(buf));
-        }
-
-        function updateStats(memuse) {
-
-            arrayBuffer2String(memuse,
-                    function (string) {
-
-                        document.getElementById('rss').innerHTML = string.replace(/\n/g, '<br/>');
-
-                        console.log(string); // returns "abc"
-                    }
-            );
-
-            //document.getElementById('rss').innerHTML = ab2str(memuse);
-        }
-
-        var host = window.document.location.host.replace(/:.*/, '');
-        var ws = new WebSocket('ws://' + host + ':3000');
-        //ws.binaryType = "arraybuffer";
-        ws.onmessage = function (event) {
-            updateStats(event.data);
-        };
-    </script>
 </head>
 <body class="h100">
 

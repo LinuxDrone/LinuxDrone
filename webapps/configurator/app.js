@@ -97,15 +97,9 @@ var wss = new WebSocketServer({server: server});
 wss.on('connection', function(ws) {
 
     global.ws_server = ws;
-/*
-    var id = setInterval(function() {
-        ws.send(JSON.stringify(process.memoryUsage()), function() {  });
-    }, 100);
-    console.log('started client interval');
-*/
+
     ws.on('close', function() {
-        console.log('stopping client interval');
-        clearInterval(id);
+        console.log('client websocket disconnect');
     });
 });
 

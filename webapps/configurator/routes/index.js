@@ -83,15 +83,25 @@ exports.runhosts = function (db) {
 
         //global.ws_server.send(JSON.stringify(process.memoryUsage()), function() { /* ignore errors */ });
 
-        var chost    = spawn('/root/c-host', ['New Schema', '1']);
+        var chost = spawn('/root/c-host', [req.body.name, req.body.version]);
 
         chost.stdout.on('data', function (data) {
-            global.ws_server.send(data, function() { /* ignore errors */ });
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'c-host',
+                    type: 'stdout',
+                    data:data
+                }), function() {  });
             console.log('stdout: ' + data);
         });
 
         chost.stderr.on('data', function (data) {
-            global.ws_server.send(data, function() { /* ignore errors */ });
+            global.ws_server.send(
+            JSON.stringify({
+                process: 'c-host',
+                type: 'stderr',
+                data:data
+            }), function() { /* ignore errors */ });
             console.log('stderr: ' + data);
         });
 

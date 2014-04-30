@@ -414,6 +414,9 @@ int stop_instance(const char* instance_name)
 
 
 int main(int argc, char *argv[]) {
+
+    setvbuf(stdout, NULL, _IONBF, 0);
+
     if(argc < 3)
     {
         printf( "usage: %s configuration_name configuration_version [instance_name ...]\n", argv[0] );
