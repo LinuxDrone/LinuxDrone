@@ -934,8 +934,8 @@ var f=0;
             socketTelemetry = new MozWebSocket(get_appropriate_ws_url(), "telemetry-protocol");
             socketHostsOut = new MozWebSocket('ws://' + host + ':3000');
         } else {
-            socketTelemetry = new WebSocket(get_appropriate_ws_url(), "telemetry-protocol");
-            socketHostsOut = new WebSocket('ws://' + host + ':3000');
+            socketTelemetry = new ReconnectingWebSocket(get_appropriate_ws_url(), "telemetry-protocol");
+            socketHostsOut = new ReconnectingWebSocket('ws://' + host + ':3000');
         }
         socketTelemetry.binaryType = "arraybuffer";
 
@@ -950,7 +950,7 @@ var f=0;
                 var obj = BSON.deserialize(new Uint8Array(msg.data));
 //console.log(obj);
                 $.each(obj, function (port, value) {
-                    if(port!="_from" && viewModels.Editor.PreparedLinks[obj["_from"]][port])
+                    if(port!="_from" && (obj["_from"] in viewModels.Editor.PreparedLinks) && (port in viewModels.Editor.PreparedLinks[obj["_from"]]))
                     {
                         viewModels.Editor.PreparedLinks[obj["_from"]][port].forEach(function(link){
                             link.label(0, {
@@ -973,8 +973,6 @@ var f=0;
                         });
                     }
                 });
-
-                //document.getElementById("number").textContent = obj["_from"] + "\n";
             }
 
             socketTelemetry.onclose = function(){
@@ -986,15 +984,7 @@ var f=0;
         }
 
         socketHostsOut.onmessage = function (event) {
-
-
-            document.getElementById('rss').innerHTML = String.fromCharCode.apply(String, JSON.parse(event.data).data).replace(/\n/g, '<br/>');
-
-            /*arrayBuffer2String(new Blob(new Uint8Array(JSON.parse(event.data).data)), function (string) {
-                    document.getElementById('rss').innerHTML = string.replace(/\n/g, '<br/>');
-                    //console.log(string); // returns "abc"
-             });*/
-
+            document.getElementById('host_out').innerHTML = String.fromCharCode.apply(String, JSON.parse(event.data).data).replace(/\n/g, '<br/>');
         };
     }
 

@@ -37,6 +37,7 @@ cmake_install.cmake
 *.userprefs
 *.exe*
 *.csproj.*
+*.log
 
 # Ignore Idea files
 *.idea

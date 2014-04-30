@@ -30,6 +30,7 @@
     <script src="javascripts/bootstrap/bootstrap.js"></script>
     <script type='text/javascript' src='javascripts/knockout-3.0.0.js'></script>
     <script src="javascripts/knockout-bootstrap.min.js"></script>
+    <script src="javascripts/reconnecting-websocket.js"></script>
 
     <script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
     <script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>
@@ -232,12 +233,8 @@
 
 <div class="content" style="position: fixed; left: 0; bottom: 0; background-color: #fff; border: 1px solid #000; box-sizing: border-box; width: 1205px;">
     <div id="wsdi_status" style="text-align: center">Not initialized</div>
-    <div id=number> </div>
-
-    <strong>Server Stats</strong><br>
-    RSS: <div id='rss'></div><br>
-    Heap total: <div id='heapTotal'></div><br>
-    Heap used: <div id='heapUsed'></div><br>
+    <strong>Host process out</strong><br>
+    <div id='host_out'></div>
 </div>
 
 </body>
