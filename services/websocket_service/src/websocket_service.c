@@ -100,6 +100,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
     bson_t* bson_request;
     const char* module_instance_name;
     const char* module_out_name;
+    const char* cmd_name;
 
 
     switch (reason) {
@@ -174,21 +175,29 @@ debug_print_bson("received", bson_request);
         module_out_name = bson_iter_utf8(&iter_out_name, NULL);
 
 
-//printf("module_instance_name: %s\tmodule_out_name: %s\n", module_instance_name, module_out_name);
+        // Get Command Name
+        bson_iter_t iter_cmd;
+        if (!bson_iter_init_find(&iter_cmd, bson_request, "cmd")) {
+            printf("Not found property \"cmd\" in module_out");
+            return -1;
+        }
+        if (!BSON_ITER_HOLDS_UTF8(&iter_cmd)) {
+            printf("Property \"cmd\" in module_out not UTF8 type");
+            return -1;
+        }
+        cmd_name = bson_iter_utf8(&iter_cmd, NULL);
 
-
-        register_remote_shmem(&remote_shmems, module_instance_name, module_out_name);
-
+        //printf("module_instance_name: %s\tmodule_out_name: %s\n", module_instance_name, module_out_name);
+        if(strcmp(cmd_name, "subscribe")==0)
+        {
+            register_remote_shmem(&remote_shmems, module_instance_name, module_out_name);
+        }
+        else if(strcmp(cmd_name, "unsubscribe")==0)
+        {
+            unregister_remote_shmem(&remote_shmems, module_instance_name, module_out_name);
+        }
 
         bson_destroy(bson_request);
-
-
-//		fprintf(stderr, "rx %d\n", (int)len);
-        if (len < 6)
-            break;
-        if (strcmp((const char *)in, "reset\n") == 0)
-            pss->number = 0;
-        break;
 
 
     /*

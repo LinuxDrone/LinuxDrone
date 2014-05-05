@@ -181,3 +181,15 @@ char *replace(const char *s, char ch, const char *repl) {
     *ptr = 0;
     return res;
 }
+
+/**
+ * @brief remove_element Remove element from array
+ * @param array
+ * @param index
+ * @param array_length
+ */
+void remove_element(void** array, int index, int array_length)
+{
+   int i;
+   for(i = index; i < array_length - 1; i++) array[i] = array[i + 1];
+}

@@ -301,23 +301,24 @@ viewModels.Editor = (function () {
     // Публичная функция остановки текущей конфигурации
     res.StopConfig = function() {
 
-        /*
-        _.find(graph.getElements(), function (el) {
-            var moduleType = el.attributes.moduleType;
-            var outputs = GetModuleMeta(moduleType).definition().outputs;
-            if(outputs){
-                outputs.forEach(function(output){
-                    var obj = {
-                        cmd:"subscribe",
-                        instance: el.attributes.attrs['.label'].text,
-                        out: output.name
-                    };
-                    var data = BSON.serialize(obj, true, true, false);
-                    socketTelemetry.send(data.buffer);
-                });
-            }
-        });
-        */
+        if(socketTelemetry.readyState==1) {
+            _.find(graph.getElements(), function (el) {
+                var moduleType = el.attributes.moduleType;
+                var outputs = GetModuleMeta(moduleType).definition().outputs;
+                if (outputs) {
+                    outputs.forEach(function (output) {
+                        var obj = {
+                            cmd: "unsubscribe",
+                            instance: el.attributes.attrs['.label'].text,
+                            out: output.name
+                        };
+                        var data = BSON.serialize(obj, true, true, false);
+                        socketTelemetry.send(data.buffer);
+                    });
+                }
+            });
+        }
+
 
         var data4send = {
             "name": res.configNameSelected(),

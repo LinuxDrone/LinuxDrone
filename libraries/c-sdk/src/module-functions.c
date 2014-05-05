@@ -237,7 +237,6 @@ int register_in_link(shmem_in_set_t* shmem, TypeFieldObj type_field_obj, const c
 }
 
 
-
 shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
 {
     if(ar_remote_shmems==NULL)
@@ -273,6 +272,61 @@ shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, cons
     ar_remote_shmems->f_connected_in_links=false;
 
     return new_remote_shmem;
+}
+
+
+
+int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
+{
+    if(ar_remote_shmems==NULL)
+    {
+        printf("Function \"unregister_remote_shmem\" null parameter ar_remote_shmems\n");
+        return 0;
+    }
+
+    int i=0;
+    for(i=0;i<ar_remote_shmems->remote_shmems_len;i++)
+    {
+        shmem_in_set_t* info_remote_shmem = ar_remote_shmems->remote_shmems[i];
+        if(strcmp(info_remote_shmem->name_instance, name_remote_instance)==0 && strcmp(info_remote_shmem->name_outgroup, name_remote_outgroup)==0)
+        {
+            // Разделяемая память уже зарегистрирована
+            // Отконнектить объекты ксеномая и освободить память
+            if(disconnect_in_links(info_remote_shmem)!=0)
+            {
+                fprintf(stderr, "Function \"unregister_remote_shmem\" Error disconnect_in_links()\n");
+                return -1;
+            }
+
+            int f;
+            for(f=0;f<info_remote_shmem->len_remote_in_obj_fields;f++)
+            {
+                remote_in_obj_field_t* remote_in_obj_field = info_remote_shmem->remote_in_obj_fields[f];
+                free(remote_in_obj_field->remote_field_name);
+                free(remote_in_obj_field);
+            }
+            free(info_remote_shmem->remote_in_obj_fields);
+
+            free(info_remote_shmem->name_instance);
+            free(info_remote_shmem->name_outgroup);
+            free(info_remote_shmem);
+
+
+            remove_element(ar_remote_shmems->remote_shmems, i, ar_remote_shmems->remote_shmems_len);  /* First shift the elements, then reallocate */
+            shmem_in_set_t** tmp = realloc(ar_remote_shmems->remote_shmems, (ar_remote_shmems->remote_shmems_len - 1) * sizeof(shmem_in_set_t*) );
+            if (tmp == NULL && ar_remote_shmems->remote_shmems_len > 1) {
+               /* No memory available */
+               fprintf(stderr, "Function \"unregister_remote_shmem\" No memory available\n");
+               exit(EXIT_FAILURE);
+            }
+            ar_remote_shmems->remote_shmems_len = ar_remote_shmems->remote_shmems_len - 1;
+            ar_remote_shmems->remote_shmems = tmp;
+
+            return 0;
+        }
+    }
+
+    return -1;
 }
 
 
@@ -1046,6 +1100,49 @@ printf("%s%s: ALL SHMEMS CONNECTED%s\n", ANSI_COLOR_GREEN, instance_name, ANSI_C
 }
 
 
+int disconnect_in_links(shmem_in_set_t* remote_shmem)
+{
+    if(remote_shmem->f_shmem_connected)
+    {
+        int res = rt_heap_unbind	(&remote_shmem->remote_shmem.h_shmem);
+        if(res!=0)
+        {
+            printf("Error:%i rt_heap_unbind for instance=%s\n", res, remote_shmem->name_instance);
+            return -1;
+        }
+
+        printf("%sDISCONNECTED: %s shmem%s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
+        remote_shmem->f_shmem_connected = false;
+    }
+
+
+    if(remote_shmem->f_event_connected)
+    {
+        int res = rt_event_unbind(&remote_shmem->remote_shmem.eflags);
+        if(res!=0)
+        {
+            printf("Error:%i rt_event_unbind instance=%s\n", res, remote_shmem->name_instance);
+            return -1;
+        }
+        printf("%sDISCONNECTED: %s event service %s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
+        remote_shmem->f_event_connected = false;
+    }
+
+
+    if(remote_shmem->f_mutex_connected)
+    {
+        int res = rt_mutex_unbind(&remote_shmem->remote_shmem.mutex_read_shmem);
+        if(res!=0)
+        {
+            printf("Error:%i rt_mutex_unbind instance=%s\n", res, remote_shmem->name_instance);
+            return -1;
+        }
+        printf("%sDISCONNECTED: %s to mutex service %s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
+        remote_shmem->f_mutex_connected = false;
+    }
+
+    return 0;
+}
 
 
 int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_queue)
@@ -1143,7 +1240,7 @@ void task_transmit(void *p_module)
             // Если не все связи модуля установлены, то будем пытаться их установить
             if(rt_timer_read() - time_attempt_link_modules > 100000000)
             {
-                //printf("попытка out связи\n");
+//printf("попытка out связи\n");
 
                 connect_out_links(module);
 
