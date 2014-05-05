@@ -631,9 +631,7 @@ viewModels.Editor = (function () {
             module.outPorts = new Array();
             $.each(moduleDef.outputs, function (i, output) {
                 var propsCount = Object.keys(output.Schema.properties).length;
-                if (maxPins < propsCount) {
-                    maxPins = propsCount;
-                }
+                maxPins += propsCount;
                 $.each(output.Schema.properties, function (i, pin) {
                     module.outPorts.push(i);
                 });
