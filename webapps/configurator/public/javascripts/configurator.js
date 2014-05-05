@@ -303,15 +303,48 @@ viewModels.Editor = (function () {
             }
         });
 
-        var data4save = {
+        var data4send = {
             "name": res.configNameSelected(),
             "version": res.versionSelected()
         };
-        $.post("runhosts", data4save,
+        $.post("runhosts", data4send,
             function (data) {
-var f=0;
+                var f=0;
             });
     }
+
+
+    // Публичная функция остановки текущей конфигурации
+    res.StopConfig = function() {
+
+        /*
+        _.find(graph.getElements(), function (el) {
+            var moduleType = el.attributes.moduleType;
+            var outputs = GetModuleMeta(moduleType).definition().outputs;
+            if(outputs){
+                outputs.forEach(function(output){
+                    var obj = {
+                        cmd:"subscribe",
+                        instance: el.attributes.attrs['.label'].text,
+                        out: output.name
+                    };
+                    var data = BSON.serialize(obj, true, true, false);
+                    socketTelemetry.send(data.buffer);
+                });
+            }
+        });
+        */
+
+        var data4send = {
+            "name": res.configNameSelected(),
+            "version": res.versionSelected()
+        };
+        $.post("stophosts", data4send,
+            function (data) {
+                var f=0;
+            });
+    }
+
 
     res.RemoveModule = function RemoveModule() {
         if (res.selectedCell()) {
@@ -909,32 +942,16 @@ var f=0;
         });
     };
 
-    var get_appropriate_ws_url=function()
-    {
-        //return "ws://vrubel.linuxdrone.org:7681/xxx";
-        return "ws://osen73.dyndns-home.com:7681/xxx";
-    }
-
-    // Вычитывает из бинаря текст
-    var arrayBuffer2String = function (buf, callback) {
-        var f = new FileReader();
-        f.onload = function(e) {
-            callback(e.target.result)
-        }
-        f.readAsText(buf);
-    }
-
-
 
     var socketTelemetry;
     var socketHostsOut;
     res.Init = function(){
         var host = window.document.location.host.replace(/:.*/, '');
         if (typeof MozWebSocket != "undefined") {
-            socketTelemetry = new MozWebSocket(get_appropriate_ws_url(), "telemetry-protocol");
+            socketTelemetry = new MozWebSocket('ws://' + host + ':7681/xxx', "telemetry-protocol");
             socketHostsOut = new MozWebSocket('ws://' + host + ':3000');
         } else {
-            socketTelemetry = new ReconnectingWebSocket(get_appropriate_ws_url(), "telemetry-protocol");
+            socketTelemetry = new ReconnectingWebSocket('ws://' + host + ':7681/xxx', "telemetry-protocol");
             socketHostsOut = new ReconnectingWebSocket('ws://' + host + ':3000');
         }
         socketTelemetry.binaryType = "arraybuffer";

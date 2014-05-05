@@ -76,14 +76,17 @@ exports.getconfigs = function (db) {
     };
 };
 
+var chost;
 exports.runhosts = function (db) {
     return function (req, res) {
-        var collection = db.get('visual_configuration');
+
+        if(chost){
+            return;
+        }
+
         res.json(req.body);
 
-        //global.ws_server.send(JSON.stringify(process.memoryUsage()), function() { /* ignore errors */ });
-
-        var chost = spawn('/root/c-host', [req.body.name, req.body.version]);
+        chost = spawn('/root/c-host', [req.body.name, req.body.version]);
 
         chost.stdout.on('data', function (data) {
             global.ws_server.send(
@@ -108,6 +111,20 @@ exports.runhosts = function (db) {
         chost.on('close', function (code) {
             console.log('c-host child process exited with code ' + code);
         });
+    };
+};
+
+exports.stophosts = function (db) {
+    return function (req, res) {
+
+        if(!chost){
+            return;
+        }
+
+        res.json(req.body);
+        
+        chost.kill();
+        chost=undefined;
     };
 };
 
