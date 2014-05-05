@@ -104,7 +104,7 @@ void print_event_wait_error(int err) {
     switch (err)
     {
         case -EINVAL:
-            printf("is returned if event is not a event group descriptor.\n");
+//printf("is returned if event is not a event group descriptor.\n");
             break;
             
         case -EIDRM:

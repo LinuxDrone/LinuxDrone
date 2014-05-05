@@ -58,7 +58,7 @@ ELSE()
     SET(NODEJS /opt/local/bin/node)
 ENDIF()
 
-SET(URL_TARGET_SYSTEM root@osen73.dyndns-home.com)
+SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
