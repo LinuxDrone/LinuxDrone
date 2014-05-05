@@ -27,12 +27,14 @@ target_link_libraries(test-receiver ${EXTRA_LIBS})
 add_custom_command(
     TARGET test-receiver
     PRE_BUILD
-    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-receiver/test-receiver.def.json ${MOD_DIR}/test-receiver
+COMMAND
+    #COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-receiver/test-receiver.def.json ${MOD_DIR}/test-receiver
 )
 
 add_custom_command(
     TARGET test-receiver
     POST_BUILD
+#COMMAND
     COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libtest-receiver.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-receiver/libtest-receiver.so
     COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/test-receiver/test-receiver.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-receiver/test-receiver.def.json
 )

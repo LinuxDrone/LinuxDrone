@@ -7,6 +7,7 @@ var express = require('express');
 var routes = require('./routes');
 var http = require('http');
 var path = require('path');
+var WebSocketServer = require('ws').Server;
 
 var mongo = require('mongodb');
 var monk = require('monk');
@@ -40,6 +41,9 @@ app.get('/metamodules', routes.metamodules(db));
 app.post('/saveconfig', routes.saveconfig(db));
 app.get('/getconfigs', routes.getconfigs(db));
 app.post('/delconfig', routes.delconfig(db));
+app.post('/runhosts', routes.runhosts(db));
+app.post('/stophosts', routes.stophosts(db));
+
 
 // Загружает определения модулей из файлов *.def.js из каталогов модулей и запихивает информацию из них в БД mongo
 function loadModuleDefs (dir, done) {
@@ -84,9 +88,19 @@ loadModuleDefs("../../modules", function(err, results) {
     console.log(results);
 });
 
-http.createServer(app).listen(app.get('port'), function(){
+var server = http.createServer(app);
+
+server.listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
 
+var wss = new WebSocketServer({server: server});
+wss.on('connection', function(ws) {
 
+    global.ws_server = ws;
+
+    ws.on('close', function() {
+        console.log('client websocket disconnect');
+    });
+});
 

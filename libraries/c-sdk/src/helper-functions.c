@@ -29,7 +29,6 @@ bson_t* get_bson_from_file() {
             fprintf(stderr, "Error in json parsing:\n%s\n", error.message);
             abort();
         }
-
         //fwrite(bson_get_data(b_out), 1, b_out->len, stdout);
 
         bson_json_reader_destroy(reader);
@@ -147,7 +146,11 @@ void print_obj_status(int number_obj, StatusObj status) {
         case Transferring:
             printf("Obj%i=Transferring\n", number_obj);
             break;
-            
+
+        case Transferred2Queue:
+            printf("Obj%i=Transferred2Queue\n", number_obj);
+            break;
+
         case Filled:
             printf("Obj%i=Filled\n", number_obj);
             break;

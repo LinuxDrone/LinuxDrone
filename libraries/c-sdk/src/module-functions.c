@@ -4,14 +4,106 @@
 #include <native/event.h>
 #include "../include/module-functions.h"
 
-
-#define TASK_MODE  0  /* No flags */
-#define TASK_STKSZ 0  /* Stack size (use default one) */
-
 #define SHMEM_WRITER_MASK	0x7FFFFFFF
 
 #define SHMEM_HEAP_SIZE		300
 #define SHMEM_BLOCK1_SIZE	200
+
+
+
+/**
+ * @brief checkout4transmiter
+ * /~russian    Заполняет указатель адресом на структуру ,
+ *              данные из которой можно считывать для передачи в разделяемую память
+ * @param obj
+ * @param was_queue Если возаращается объект переданный через очередь
+ * @return
+ * /~russian 0 в случае успеха
+ */
+int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
+{
+    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
+    if (res != 0)
+    {
+        printf("error checkout4transmiter: rt_mutex_acquire\n");
+        return res;
+    }
+
+    if(set->status_obj1 == Filled || (!was_queue && set->status_obj1 == Transferred2Queue))
+    {
+        set->status_obj1 = Transferring;
+        (*obj)=set->obj1;
+    }
+    else if(set->status_obj2 == Filled || (!was_queue && set->status_obj2 == Transferred2Queue))
+    {
+        set->status_obj2 = Transferring;
+        (*obj)=set->obj2;
+    }
+    else
+    {
+        (*obj)=NULL;
+    }
+
+    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
+    if (res1 != 0)
+    {
+        printf("error checkout4transmiter:  rt_mutex_release\n");
+        return res1;
+    }
+    return res;
+}
+
+
+/**
+ * @brief checkin4transmiter
+ * /~ Возвращает объект системе (объект будет помечен как свободный для записи основным потоком)
+ * @param obj
+ * @param was_queue Если возаращается объект переданный через очередь
+ * @return
+ */
+int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
+{
+    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
+    if (res != 0)
+    {
+        printf("error checkin4transmiter: rt_mutex_acquire\n");
+        return res;
+    }
+
+    if(set->status_obj1 == Transferring)
+    {
+        if(was_queue)
+            set->status_obj1 = Transferred2Queue;
+        else
+            set->status_obj1 = Empty;
+    }
+    else if(set->status_obj2 == Transferring)
+    {
+        if(was_queue)
+            set->status_obj2 = Transferred2Queue;
+        else
+            set->status_obj2 = Empty;
+    }
+    else
+    {
+        printf("checkin4transmiter: Error in logic use function checkin4transmiter.\n Impossible combination statuses\n");
+        print_obj_status(1, set->status_obj1);
+        print_obj_status(2, set->status_obj2);
+        printf("\n");
+        res = -1;
+    }
+
+    (*obj)=NULL;
+
+    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
+    if (res1 != 0)
+    {
+        printf("error checkin4transmiter:  rt_mutex_release\n");
+        return res1;
+    }
+    return res;
+}
+
 
 /**
  * @brief init_object_set Инициализируети структуру, представляющую выходной объект инстанса в системе.
@@ -146,18 +238,18 @@ int register_in_link(shmem_in_set_t* shmem, TypeFieldObj type_field_obj, const c
 
 
 
-shmem_in_set_t* register_remote_shmem(module_t* module, const char* name_remote_instance, const char* name_remote_outgroup)
+shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
 {
-    if(module==NULL)
+    if(ar_remote_shmems==NULL)
     {
-        printf("Function \"register_remote_shmem\" null parameter module\n");
+        printf("Function \"register_remote_shmem\" null parameter ar_remote_shmems\n");
         return NULL;
     }
 
     int i=0;
-    for(i=0;i<module->remote_shmems_len;i++)
+    for(i=0;i<ar_remote_shmems->remote_shmems_len;i++)
     {
-        shmem_in_set_t* info_remote_shmem = module->remote_shmems[i];
+        shmem_in_set_t* info_remote_shmem = ar_remote_shmems->remote_shmems[i];
         if(strcmp(info_remote_shmem->name_instance, name_remote_instance)==0 && strcmp(info_remote_shmem->name_outgroup, name_remote_outgroup)==0)
         {
             // Разделяемая память уже зарегистрирована
@@ -166,8 +258,8 @@ shmem_in_set_t* register_remote_shmem(module_t* module, const char* name_remote_
     }
 
     // Разделяеимая память не зарегистрирована и set следует создать и сохранить на него ссылку в массиве.
-    module->remote_shmems_len +=1;
-    module->remote_shmems = realloc(module->remote_shmems, sizeof(shmem_in_set_t*)*module->remote_shmems_len);
+    ar_remote_shmems->remote_shmems_len +=1;
+    ar_remote_shmems->remote_shmems = realloc(ar_remote_shmems->remote_shmems, sizeof(shmem_in_set_t*)*ar_remote_shmems->remote_shmems_len);
     shmem_in_set_t* new_remote_shmem = calloc(1, sizeof(shmem_in_set_t));
 
     new_remote_shmem->name_instance = malloc(strlen(name_remote_instance)+1);
@@ -176,7 +268,9 @@ shmem_in_set_t* register_remote_shmem(module_t* module, const char* name_remote_
     new_remote_shmem->name_outgroup = malloc(strlen(name_remote_outgroup)+1);
     strcpy(new_remote_shmem->name_outgroup, name_remote_outgroup);
 
-    module->remote_shmems[module->remote_shmems_len-1] = new_remote_shmem;
+    ar_remote_shmems->remote_shmems[ar_remote_shmems->remote_shmems_len-1] = new_remote_shmem;
+
+    ar_remote_shmems->f_connected_in_links=false;
 
     return new_remote_shmem;
 }
@@ -476,7 +570,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 
 
             // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-            shmem_in_set_t* remote_shmem = register_remote_shmem(module, publisher_instance_name, publisher_nameOutGroup);
+            shmem_in_set_t* remote_shmem = register_remote_shmem(&module->ar_remote_shmems, publisher_instance_name, publisher_nameOutGroup);
 
 
             // Получим название выходного пина инстанса поставщика
@@ -751,9 +845,6 @@ void get_input_data(void* p_module)
 {
     module_t* module = p_module;
 
-    RTIME time_attempt_link_modules;
-    time_attempt_link_modules = rt_timer_read();
-
     if(module->input_data==NULL)
     {
         //здесь просто поспать потоку
@@ -801,16 +892,16 @@ printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
     //printf("before refresh mask=0x%08X\n", module->refresh_input_mask);
 
 
-    if(!module->f_connected_in_links)
+    if(!module->ar_remote_shmems.f_connected_in_links)
     {
         // Если не все связи модуля установлены, то будем пытаться их установить
-        if(rt_timer_read() - time_attempt_link_modules > 100000000)
+        if(rt_timer_read() - module->time_attempt_link_modules > 100000000)
         {
-            printf("попытка in связи\n");
+            //printf("попытка in связи\n");
 
-            connect_in_links(module);
+            connect_in_links(&module->ar_remote_shmems, module->instance_name);
 
-            time_attempt_link_modules=rt_timer_read();
+            module->time_attempt_link_modules=rt_timer_read();
         }
     }
 
@@ -875,20 +966,16 @@ int connect_out_links(void *p_module)
  * @param p_module
  * @return
  */
-int connect_in_links(void *p_module)
+int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_name)
 {
-    module_t* module = p_module;
-
-    //printf("len=%i\n", module->len);
-
     int count_connected = 0, i;
-    for(i=0; i < module->remote_shmems_len;i++)
+    for(i=0; i < ar_remote_shmems->remote_shmems_len;i++)
     {
-        shmem_in_set_t* remote_shmem = module->remote_shmems[i];
+        shmem_in_set_t* remote_shmem = ar_remote_shmems->remote_shmems[i];
 
         if(!remote_shmem->f_shmem_connected)
         {
-            //printf("attempt connect %s to %s\n", module->instance_name, name_shmem);
+            //printf("attempt connect %s to %s\n", instance_name, name_shmem);
             char name_shmem[XNOBJECT_NAME_LEN] = "";
             strcat(name_shmem, remote_shmem->name_instance);
             strcat(name_shmem, remote_shmem->name_outgroup);
@@ -896,7 +983,7 @@ int connect_in_links(void *p_module)
             int res = rt_heap_bind	(&remote_shmem->remote_shmem.h_shmem, name_shmem, TM_NONBLOCK);
             if(res!=0)
             {
-                printf("Error:%i rt_shmem_bind instance=%s to shmem %s\n", res, module->instance_name, name_shmem);
+                printf("Error:%i rt_shmem_bind instance=%s to shmem %s\n", res, instance_name, name_shmem);
                 continue;
             }
 
@@ -908,7 +995,7 @@ int connect_in_links(void *p_module)
                 continue;
             }
 
-            printf("%sCONNECTED: %s to shmem %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_shmem, ANSI_COLOR_RESET);
+            printf("%sCONNECTED: %s to shmem %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_shmem, ANSI_COLOR_RESET);
             remote_shmem->f_shmem_connected = true;
         }
 
@@ -922,10 +1009,10 @@ int connect_in_links(void *p_module)
             int res = rt_event_bind	(&remote_shmem->remote_shmem.eflags, name_event, TM_NONBLOCK);
             if(res!=0)
             {
-                printf("Error:%i rt_event_bind instance=%s to event %s\n", res, module->instance_name, name_event);
+                printf("Error:%i rt_event_bind instance=%s to event %s\n", res, instance_name, name_event);
                 continue;
             }
-printf("%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_event, ANSI_COLOR_RESET);
+printf("%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_event, ANSI_COLOR_RESET);
             remote_shmem->f_event_connected = true;
         }
 
@@ -939,20 +1026,20 @@ printf("%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, module->ins
             int res = rt_mutex_bind	(&remote_shmem->remote_shmem.mutex_read_shmem, name_mutex, TM_NONBLOCK);
             if(res!=0)
             {
-                printf("Error:%i rt_mutex_bind instance=%s to mutex %s\n", res, module->instance_name, name_mutex);
+                printf("Error:%i rt_mutex_bind instance=%s to mutex %s\n", res, instance_name, name_mutex);
                 continue;
             }
-printf("%sCONNECTED: %s to mutex service %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_mutex, ANSI_COLOR_RESET);
+printf("%sCONNECTED: %s to mutex service %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_mutex, ANSI_COLOR_RESET);
             remote_shmem->f_mutex_connected = true;
         }
 
         count_connected++;
     }
 
-    if(count_connected==module->remote_shmems_len)
+    if(ar_remote_shmems->remote_shmems_len>0 && count_connected==ar_remote_shmems->remote_shmems_len)
     {
-        module->f_connected_in_links=true;
-        printf("%s%s: ALL SHMEMS CONNECTED%s\n", ANSI_COLOR_GREEN, module->instance_name, ANSI_COLOR_RESET);
+        ar_remote_shmems->f_connected_in_links=true;
+printf("%s%s: ALL SHMEMS CONNECTED%s\n", ANSI_COLOR_GREEN, instance_name, ANSI_COLOR_RESET);
     }
 
     return 0;
@@ -974,27 +1061,36 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
         if(!time2publish2shmem && !to_queue)
             continue;
 
-        checkout4transmiter(module, out_object, &obj);
         //printf("outside=%i bool=%i\n",i,time2publish2shmem);
-        if(obj!=NULL)
+        // Нашли обновившийся в основном потоке объект
+        // Пуш в очереди подписчиков
+        if(to_queue)
         {
-            // Нашли обновившийся в основном потоке объект
-            // Пуш в очереди подписчиков
-            if(to_queue)
+            checkout4transmiter(module, out_object, &obj, true);
+            if(obj!=NULL)
+            {
                 send2queues(out_object, obj, &bson_tr);
+//printf("send2queues\t");
+//(*out_object->print_obj)(obj);
+                checkin4transmiter(module, out_object, &obj, true);
+            }
+        }
 
-            // Публикация данных в разделяемую память, не чаще чем в оговоренный период
-            if(time2publish2shmem)
+        // Публикация данных в разделяемую память, не чаще чем в оговоренный период
+        if(time2publish2shmem)
+        {
+            checkout4transmiter(module, out_object, &obj, false);
+            if(obj!=NULL)
             {
                 bson_init (&bson_tr);
                 // Call user convert function
                 (*out_object->obj2bson)(obj, &bson_tr);
                 write_shmem(&out_object->shmem_set, bson_get_data(&bson_tr), bson_tr.len);
                 bson_destroy(&bson_tr);
-            }
 
-            // Вернуть объект основному потоку на новое заполнение
-            checkin4transmiter(module, out_object, &obj);
+                // Вернуть объект основному потоку на новое заполнение
+                checkin4transmiter(module, out_object, &obj, false);
+            }
         }
         out_object = module->out_objects[++i];
     }
@@ -1207,22 +1303,12 @@ int checkout4writer(module_t* module, out_object_t* set, void** obj)
         return res;
     }
 
-    if(set->status_obj1 == Empty)
+    if(set->status_obj1 == Empty || set->status_obj1 == Filled || set->status_obj1 == Transferred2Queue)
     {
         set->status_obj1 = Writing;
         (*obj)=set->obj1;
     }
-    else if(set->status_obj2 == Empty)
-    {
-        set->status_obj2 = Writing;
-        (*obj)=set->obj2;
-    }
-    else if(set->status_obj1 == Filled)
-    {
-        set->status_obj1 = Writing;
-        (*obj)=set->obj1;
-    }
-    else if(set->status_obj2 == Filled)
+    else if(set->status_obj2 == Empty || set->status_obj2 == Filled || set->status_obj2 == Transferred2Queue)
     {
         set->status_obj2 = Writing;
         (*obj)=set->obj2;
@@ -1302,92 +1388,6 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
 
 
 /**
- * @brief checkout4transmiter
- * /~russian    Заполняет указатель адресом на структуру ,
- *              данные из которой можно считывать для передачи в разделяемую память
- * @param obj
- * @return
- * /~russian 0 в случае успеха
- */
-int checkout4transmiter(module_t* module, out_object_t* set, void** obj)
-{
-    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
-    if (res != 0)
-    {
-        printf("error checkout4transmiter: rt_mutex_acquire\n");
-        return res;
-    }
-
-    if(set->status_obj1 == Filled)
-    {
-        set->status_obj1 = Transferring;
-        (*obj)=set->obj1;
-    }
-    else if(set->status_obj2 == Filled)
-    {
-        set->status_obj2 = Transferring;
-        (*obj)=set->obj2;
-    }
-    else
-    {
-        (*obj)=NULL;
-    }
-
-    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
-    if (res1 != 0)
-    {
-        printf("error checkout4transmiter:  rt_mutex_release\n");
-        return res1;
-    }
-    return res;
-}
-
-
-/**
- * @brief checkin4transmiter
- * /~ Возвращает объект системе (объект будет помечен как свободный для записи основным потоком)
- * @param obj
- * @return
- */
-int checkin4transmiter(module_t* module, out_object_t* set,  void** obj)
-{
-    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
-    if (res != 0)
-    {
-        printf("error checkin4transmiter: rt_mutex_acquire\n");
-        return res;
-    }
-
-    if(set->status_obj1 == Transferring)
-    {
-        set->status_obj1 = Filled;
-    }
-    else if(set->status_obj2 == Transferring)
-    {
-        set->status_obj2 = Filled;
-    }
-    else
-    {
-        printf("checkin4transmiter: Error in logic use function checkin4transmiter.\n Impossible combination statuses\n");
-        print_obj_status(1, set->status_obj1);
-        print_obj_status(2, set->status_obj2);
-        printf("\n");
-        res = -1;
-    }
-
-    (*obj)=NULL;
-
-    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
-    if (res1 != 0)
-    {
-        printf("error checkin4transmiter:  rt_mutex_release\n");
-        return res1;
-    }
-    return res;
-}
-
-
-/**
  * @brief refresh_input
  * /~russian Функция вычитывает данные из разделяемой памяти и мержит их во входной объект
  * @param p_module
@@ -1409,9 +1409,9 @@ int refresh_input(void* p_module)
     // Бежим по всем входящим связям типа разделяемой памяти и если какая то из них
     // ассоциирована с требуемыми для обновления входами, произведем чтение объекта из разделяемой памяти и мапинг свойств
     int i=0;
-    for(i=0;i<module->remote_shmems_len;i++)
+    for(i=0;i<module->ar_remote_shmems.remote_shmems_len;i++)
     {
-        shmem_in_set_t* remote_shmem = module->remote_shmems[i];
+        shmem_in_set_t* remote_shmem = module->ar_remote_shmems.remote_shmems[i];
         if(remote_shmem->assigned_input_ports_mask & module->refresh_input_mask)
         {
             unsigned short retlen;
@@ -1453,6 +1453,7 @@ int refresh_input(void* p_module)
                 }
 printf("%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
 (*module->print_input)(module->input_data);
+//fflush(stdout);
 
                 bson_destroy(&bson);
             }

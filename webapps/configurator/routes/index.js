@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var spawn = require('child_process').spawn;
 var commonModuleParams = require('../public/ModulesCommonParams.def.js');
 
 /*
@@ -72,6 +73,58 @@ exports.getconfigs = function (db) {
         collection.find({}, {}, function (e, docs) {
             res.json(docs);
         });
+    };
+};
+
+var chost;
+exports.runhosts = function (db) {
+    return function (req, res) {
+
+        if(chost){
+            return;
+        }
+
+        res.json(req.body);
+
+        chost = spawn('/root/c-host', [req.body.name, req.body.version]);
+
+        chost.stdout.on('data', function (data) {
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'c-host',
+                    type: 'stdout',
+                    data:data
+                }), function() {  });
+            console.log('stdout: ' + data);
+        });
+
+        chost.stderr.on('data', function (data) {
+            global.ws_server.send(
+            JSON.stringify({
+                process: 'c-host',
+                type: 'stderr',
+                data:data
+            }), function() { /* ignore errors */ });
+            console.log('stderr: ' + data);
+        });
+
+        chost.on('close', function (code) {
+            console.log('c-host child process exited with code ' + code);
+        });
+    };
+};
+
+exports.stophosts = function (db) {
+    return function (req, res) {
+
+        if(!chost){
+            return;
+        }
+
+        res.json(req.body);
+
+        chost.kill();
+        chost=undefined;
     };
 };
 

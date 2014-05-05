@@ -211,7 +211,7 @@ int add_links2instance(bson_t* bson_configuration, bson_t * module_instance, con
 
 
 
-int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_name)
+int start_instance(bson_t* bson_configuration, bson_t* modules, const char* instance_name)
 {
     bson_iter_t iter_modules;
     if(!bson_iter_init (&iter_modules, modules))
@@ -374,7 +374,7 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, char* instance_n
 
 
 
-int stop_instance(char* instance_name)
+int stop_instance(const char* instance_name)
 {
     // Ищем по имени инстанса, ссылку на него
     bson_iter_t iter_l;
@@ -414,9 +414,12 @@ int stop_instance(char* instance_name)
 
 
 int main(int argc, char *argv[]) {
-    if(argc < 4)
+
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    if(argc < 3)
     {
-        printf( "usage: %s configuration_name configuration_version instance_name [instance_name ...]\n", argv[0] );
+        printf( "usage: %s configuration_name configuration_version [instance_name ...]\n", argv[0] );
         return -1;
     }
 
@@ -451,27 +454,132 @@ int main(int argc, char *argv[]) {
     bson_init_static(&bson_modules, module_buf, module_buf_len);
 
 
-    int im;
-    for(im=3; im<argc; im++)
+    if(argc<4)
     {
-        //printf("instance=%s\n", argv[im]);
-        bson_t * copy_bson_configuration = bson_copy (bson_configuration);
-        bson_t * copy_bson_modules = bson_copy (&bson_modules);
+        // Конкретных инстансов в параметрах запуска хость процесса не указано
+        // Будем запускать все инстансы найденные в конфигурации
 
-        start_instance(copy_bson_configuration, copy_bson_modules, argv[im]);
+        bson_iter_t iter_modules;
+        if(!bson_iter_init (&iter_modules, &bson_modules))
+        {
+            fprintf(stderr, "Error: error create iterator for modules\n");
+            return -1;
+        }
 
-//bson_destroy(copy_bson_configuration);
+        bson_t * module_instance = NULL;
+        const uint8_t *buf = NULL;
+        uint32_t buf_len = 0;
+        const char* module_instance_name;
+
+        // Бежим по списку инстансов в конфигурации
+        while(bson_iter_next(&iter_modules))
+        {
+            if(!BSON_ITER_HOLDS_DOCUMENT(&iter_modules))
+            {
+                fprintf(stderr, "Error: Not document\n");
+                //continue;
+                return -1;
+            }
+            bson_iter_document(&iter_modules, &buf_len, &buf);
+
+            module_instance = bson_new_from_data (buf, buf_len);
+
+            // Get Instance Name
+            bson_iter_t iter_instance_name;
+            if (!bson_iter_init_find(&iter_instance_name, module_instance, "instance")) {
+                printf("Not found property \"instance\" in module_instance");
+                return -1;
+            }
+            if (!BSON_ITER_HOLDS_UTF8(&iter_instance_name)) {
+                printf("Property \"instance\" in module_instance not UTF8 type");
+                return -1;
+            }
+
+            module_instance_name = bson_iter_utf8(&iter_instance_name, NULL);
+
+            bson_t * copy_bson_configuration = bson_copy (bson_configuration);
+            bson_t * copy_bson_modules = bson_copy (&bson_modules);
+
+            start_instance(copy_bson_configuration, copy_bson_modules, module_instance_name);
+        }
     }
+    else
+    {
+        // В апраметрах запуска хость процесса указаны конкретные имена инстансов
+        // Будем запускать только их
+        int im;
+        for(im=3; im<argc; im++)
+        {
+            //printf("instance=%s\n", argv[im]);
+            bson_t * copy_bson_configuration = bson_copy (bson_configuration);
+            bson_t * copy_bson_modules = bson_copy (&bson_modules);
 
-    bson_destroy(bson_configuration);
+            start_instance(copy_bson_configuration, copy_bson_modules, argv[im]);
+
+            //bson_destroy(copy_bson_configuration);
+        }
+
+        bson_destroy(bson_configuration);
+    }
 
 
     printf("\nPress ENTER for exit\n\n");
 	getchar();
 
-    for(im=3; im<argc; im++)
+
+    if(argc<4)
     {
-        stop_instance(argv[im]);
+        // Конкретных инстансов в параметрах запуска хость процесса не указано
+        // Будем освобождать все инстансы найденные в конфигурации
+
+        bson_iter_t iter_modules;
+        if(!bson_iter_init (&iter_modules, &bson_modules))
+        {
+            fprintf(stderr, "Error: error create iterator for modules\n");
+            return -1;
+        }
+
+        bson_t * module_instance = NULL;
+        const uint8_t *buf = NULL;
+        uint32_t buf_len = 0;
+        const char* module_instance_name;
+
+        // Бежим по списку инстансов в конфигурации
+        while(bson_iter_next(&iter_modules))
+        {
+            if(!BSON_ITER_HOLDS_DOCUMENT(&iter_modules))
+            {
+                fprintf(stderr, "Error: Not document\n");
+                //continue;
+                return -1;
+            }
+            bson_iter_document(&iter_modules, &buf_len, &buf);
+
+            module_instance = bson_new_from_data (buf, buf_len);
+
+            // Get Instance Name
+            bson_iter_t iter_instance_name;
+            if (!bson_iter_init_find(&iter_instance_name, module_instance, "instance")) {
+                printf("Not found property \"instance\" in module_instance");
+                return -1;
+            }
+            if (!BSON_ITER_HOLDS_UTF8(&iter_instance_name)) {
+                printf("Property \"instance\" in module_instance not UTF8 type");
+                return -1;
+            }
+
+            module_instance_name = bson_iter_utf8(&iter_instance_name, NULL);
+
+            stop_instance(module_instance_name);
+        }
+    }
+    else
+    {
+        int im;
+        for(im=3; im<argc; im++)
+        {
+            stop_instance(argv[im]);
+        }
     }
 
     exit(EXIT_SUCCESS);

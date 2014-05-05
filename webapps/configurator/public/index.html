@@ -30,6 +30,7 @@
     <script src="javascripts/bootstrap/bootstrap.js"></script>
     <script type='text/javascript' src='javascripts/knockout-3.0.0.js'></script>
     <script src="javascripts/knockout-bootstrap.min.js"></script>
+    <script src="javascripts/reconnecting-websocket.js"></script>
 
     <script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
     <script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>
@@ -37,7 +38,7 @@
 <body class="h100">
 
 <div class="main-region clearfix">
-    <div class="module-panel panel panel-info h100">
+    <div class="module-panel panel panel-info h100" style="margin: 0">
         <div class="panel-heading tools-region">
             <h3 class="panel-title">Modules</h3>
         </div>
@@ -45,7 +46,7 @@
             <div data-bind="template: { name: 'listModulesButtonsTemplate', foreach: listModules }"></div>
         </div>
     </div>
-    <div class="board panel panel-primary">
+    <div class="board panel panel-primary" style="margin: 0">
         <div class="panel-heading h10">
             <!--h3 class="panel-title">Schema</h3-->
             <div class="tools-region">
@@ -84,9 +85,11 @@
                         visible: viewModels.Editor.Versions().length > 0">Delete
                     </button>
                     <button type="button" class="btn btn-info" disabled title="Not Implemented">Import</button>
-                    <button type="button" class="btn btn-info" disabled
-                            data-bind="visible: viewModels.Editor.Versions().length > 0">Export
-                    </button>
+                    <button type="button" class="btn btn-info" disabled data-bind="visible: viewModels.Editor.Versions().length > 0">Export</button>
+
+                    <button type="button" class="btn btn-success" data-bind="click: RunConfig, visible: viewModels.Editor.Versions().length > 0">Run</button>
+                    <button type="button" class="btn btn-success" data-bind="click: StopConfig, visible: viewModels.Editor.Versions().length > 0">Stop</button>
+
                 </form>
 
                 <form data-bind="visible: viewModels.Editor.editSchemaMode()=='sub'" class="form-inline">
@@ -107,7 +110,7 @@
             <div id="paper" class="h100"></div>
         </div>
     </div>
-    <div class="properties-panel panel panel-default">
+    <div class="properties-panel panel panel-default" style="margin: 0">
         <div class="panel-heading  tools-region">
             <h3 class="panel-title" data-bind="text: viewModels.Editor.instnameSelectedModule"></h3>
         </div>
@@ -225,9 +228,15 @@
     </ul>
 </div>
 
+<script src="javascripts/bson.js"></script>
 <script src="ModulesCommonParams.def.js"></script>
 <script src="javascripts/configurator.js"></script>
 
+<div class="content" style="position: fixed; left: 0; bottom: 0; background-color: #fff; border: 1px solid #000; box-sizing: border-box; width: 1205px;">
+    <div id="wsdi_status" style="text-align: center">Not initialized</div>
+    <strong>Host process out</strong><br>
+    <div id='host_out'></div>
+</div>
 
 </body>
 </html>

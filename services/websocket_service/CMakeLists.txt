@@ -22,21 +22,26 @@ set(EXTRA_LIBS
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
     ${RFS_DIR}/usr/local/lib/libbson-1.0.so
     ${RFS_DIR}/usr/local/lib/libmongoc-1.0.so
+    ${RFS_DIR}/usr/local/lib/libwebsockets.so
+z
+ssl
+crypto
     rt
     dl
     pthread
 )
 
-add_executable(c-host ${INC} ${SRC})
-target_link_libraries(c-host ${EXTRA_LIBS})
+add_executable(websocket_service ${INC} ${SRC})
+target_link_libraries(websocket_service ${EXTRA_LIBS})
 
 add_custom_command(
-    TARGET c-host
+    TARGET websocket_service
     POST_BUILD
 #COMMAND
-    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-host ${URL_TARGET_SYSTEM}:/root/c-host
-    #COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${HST_DIR}/c-host/testConfig.json ${URL_TARGET_SYSTEM}:/root/testConfig.json
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} websocket_service ${URL_TARGET_SYSTEM}:/root/websocket_service
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${WEB_DIR}/configurator/public/javascripts/configurator.js ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/webapps/configurator/public/javascripts/configurator.js
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${WEB_DIR}/configurator/public/index.html ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/webapps/configurator/public/index.html
 )
 
 
-install(TARGETS c-host DESTINATION bin)
+install(TARGETS websocket_service DESTINATION bin)

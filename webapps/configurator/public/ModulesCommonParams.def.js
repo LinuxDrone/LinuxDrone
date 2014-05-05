@@ -36,16 +36,6 @@
             description: {ru: "время между двумя вызовами бизнес функции (микросекунд) 0  - не зависать на очереди в ожидании данных -1 - зависать навечно, до факта появления данных в очереди"},
             unitMeasured: "Ms",
             defaultValue: 20
-        },
-        {
-            name: "Notify on change",
-            "displayName": {
-                "en": "Notify on change",
-                "ru": "Notify on change"
-            },
-            type: "boolean",
-            unitMeasured: "",
-            defaultValue: true
         }
     ];
 

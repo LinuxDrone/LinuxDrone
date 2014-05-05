@@ -34,6 +34,7 @@ add_custom_command(
 add_custom_command(
     TARGET test-sender-receiver
     POST_BUILD
+#COMMAND
     COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libtest-sender-receiver.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender-receiver/libtest-sender-receiver.so
     COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/test-sender-receiver/test-sender-receiver.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender-receiver/test-sender-receiver.def.json
 )
