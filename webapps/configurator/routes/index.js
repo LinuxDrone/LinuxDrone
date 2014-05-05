@@ -122,7 +122,7 @@ exports.stophosts = function (db) {
         }
 
         res.json(req.body);
-        
+
         chost.kill();
         chost=undefined;
     };

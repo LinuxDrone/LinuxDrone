@@ -287,22 +287,6 @@ viewModels.Editor = (function () {
     // Публичная функция запуска текущей конфигурации
     res.RunConfig = function() {
 
-        _.find(graph.getElements(), function (el) {
-            var moduleType = el.attributes.moduleType;
-            var outputs = GetModuleMeta(moduleType).definition().outputs;
-            if(outputs){
-                outputs.forEach(function(output){
-                    var obj = {
-                        cmd:"subscribe",
-                        instance: el.attributes.attrs['.label'].text,
-                        out: output.name
-                    };
-                    var data = BSON.serialize(obj, true, true, false);
-                    socketTelemetry.send(data.buffer);
-                });
-            }
-        });
-
         var data4send = {
             "name": res.configNameSelected(),
             "version": res.versionSelected()
@@ -960,6 +944,24 @@ viewModels.Editor = (function () {
             socketTelemetry.onopen = function() {
                 document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
                 document.getElementById("wsdi_status").textContent = " websocket connection opened ";
+
+                if(socketTelemetry.readyState===1) {
+                    _.find(graph.getElements(), function (el) {
+                        var moduleType = el.attributes.moduleType;
+                        var outputs = GetModuleMeta(moduleType).definition().outputs;
+                        if (outputs) {
+                            outputs.forEach(function (output) {
+                                var obj = {
+                                    cmd: "subscribe",
+                                    instance: el.attributes.attrs['.label'].text,
+                                    out: output.name
+                                };
+                                var data = BSON.serialize(obj, true, true, false);
+                                socketTelemetry.send(data.buffer);
+                            });
+                        }
+                    });
+                }
             }
 
             socketTelemetry.onmessage =function got_packet(msg) {
