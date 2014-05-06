@@ -288,7 +288,7 @@ void run_task_read_shmem (void *module)
             char buf[500];
             unsigned short retlen;
             retlen=0;
-            read_shmem(&remote_shmem->remote_shmem, buf, &retlen);
+            read_shmem(remote_shmem, buf, &retlen);
             if (retlen < 1)
                 continue;
 

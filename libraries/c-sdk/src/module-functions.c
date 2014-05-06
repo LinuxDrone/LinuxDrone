@@ -732,8 +732,16 @@ void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datale
 }
 
 
-void read_shmem(shmem_out_set_t* shmem, void* data, unsigned short* datalen)
+void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datalen)
 {
+    if(!remote_shmem->f_event_connected || !remote_shmem->f_mutex_connected || !remote_shmem->f_shmem_connected)
+    {
+        *datalen = 0;
+        return;
+    }
+
+    shmem_out_set_t* shmem = &remote_shmem->remote_shmem;
+
     unsigned long after_mask;
     /**
      * \~russian Подождем, если пишущий поток выставил флаг, что он занят записью
@@ -1037,7 +1045,8 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
             int res = rt_heap_bind	(&remote_shmem->remote_shmem.h_shmem, name_shmem, TM_NONBLOCK);
             if(res!=0)
             {
-                printf("Error:%i rt_shmem_bind instance=%s to shmem %s\n", res, instance_name, name_shmem);
+                if(res!=-EWOULDBLOCK)
+                    print_rt_heap_bind_error(res);
                 continue;
             }
 
@@ -1063,7 +1072,8 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
             int res = rt_event_bind	(&remote_shmem->remote_shmem.eflags, name_event, TM_NONBLOCK);
             if(res!=0)
             {
-                printf("Error:%i rt_event_bind instance=%s to event %s\n", res, instance_name, name_event);
+                if(res!=-EWOULDBLOCK)
+                    print_rt_event_bind_error(res);
                 continue;
             }
 printf("%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_event, ANSI_COLOR_RESET);
@@ -1080,10 +1090,11 @@ printf("%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, instance_na
             int res = rt_mutex_bind	(&remote_shmem->remote_shmem.mutex_read_shmem, name_mutex, TM_NONBLOCK);
             if(res!=0)
             {
-                printf("Error:%i rt_mutex_bind instance=%s to mutex %s\n", res, instance_name, name_mutex);
+                if(res!=-EWOULDBLOCK)
+                    print_rt_mutex_bind_error(res);
                 continue;
             }
-printf("%sCONNECTED: %s to mutex service %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_mutex, ANSI_COLOR_RESET);
+printf("%sCONNECTED: %s to mutex service %s%s\n\n", ANSI_COLOR_YELLOW, instance_name, name_mutex, ANSI_COLOR_RESET);
             remote_shmem->f_mutex_connected = true;
         }
 
@@ -1137,7 +1148,7 @@ int disconnect_in_links(shmem_in_set_t* remote_shmem)
             printf("Error:%i rt_mutex_unbind instance=%s\n", res, remote_shmem->name_instance);
             return -1;
         }
-        printf("%sDISCONNECTED: %s to mutex service %s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
+        printf("%sDISCONNECTED: %s to mutex service %s\n\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
         remote_shmem->f_mutex_connected = false;
     }
 
@@ -1513,7 +1524,7 @@ int refresh_input(void* p_module)
         {
             unsigned short retlen;
             retlen=0;
-            read_shmem(&remote_shmem->remote_shmem, buf, &retlen);
+            read_shmem(remote_shmem, buf, &retlen);
             //printf("retlen=%i\n", retlen);
             bson_t bson;
             if (retlen > 0) {

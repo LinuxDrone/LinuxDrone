@@ -100,7 +100,98 @@ void print_rt_pipe_write_error(int err) {
 }
 
 
-// rt_heap_create
+void print_rt_heap_bind_error(int err) {
+    switch (err)
+    {
+        case -EFAULT:
+            printf("is returned if heap or name is referencing invalid memory.\n");
+            break;
+
+        case -EINTR:
+            printf("is returned if rt_task_unblock() has been called for the waiting task before the retrieval has completed.\n");
+            break;
+
+        case -EWOULDBLOCK:
+            printf("is returned if timeout is equal to TM_NONBLOCK and the searched object is not registered on entry.\n");
+            break;
+
+        case -ETIMEDOUT:
+            printf("is returned if the object cannot be retrieved within the specified amount of time.\n");
+            break;
+
+        case -EPERM:
+            printf("is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime context).\n");
+            break;
+
+        case -ENOENT:
+            printf("is returned if the special file /dev/rtheap (character-mode, major 10, minor 254) is not available from the filesystem. This device is needed to map the shared heap memory into the caller's address space. udev-based systems should not need manual creation of such device entry.\n");
+            break;
+
+        default:
+            printf("Unknown rt_heap_bind error: %i.\n", err);
+    }
+}
+
+
+void print_rt_mutex_bind_error(int err) {
+    switch (err)
+    {
+        case -EFAULT:
+            printf("is returned if mutex or name is referencing invalid memory.\n");
+            break;
+
+        case -EINTR:
+            printf("is returned if rt_task_unblock() has been called for the waiting task before the retrieval has completed.\n");
+            break;
+
+        case -EWOULDBLOCK:
+            printf("is returned if timeout is equal to TM_NONBLOCK and the searched object is not registered on entry.\n");
+            break;
+
+        case -ETIMEDOUT:
+            printf("is returned if the object cannot be retrieved within the specified amount of time.\n");
+            break;
+
+        case -EPERM:
+            printf("is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime context).\n");
+            break;
+
+        default:
+            printf("Unknown rt_mutex_bind error: %i.\n", err);
+    }
+}
+
+
+void print_rt_event_bind_error(int err) {
+    switch (err)
+    {
+        case -EFAULT:
+            printf("is returned if event or name is referencing invalid memory.\n");
+            break;
+
+        case -EINTR:
+            printf("is returned if rt_task_unblock() has been called for the waiting task before the retrieval has completed.\n");
+            break;
+
+        case -EWOULDBLOCK:
+            printf("is returned if timeout is equal to TM_NONBLOCK and the searched object is not registered on entry.\n");
+            break;
+
+        case -ETIMEDOUT:
+            printf("is returned if the object cannot be retrieved within the specified amount of time.\n");
+            break;
+
+        case -EPERM:
+            printf("is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime context).\n");
+            break;
+
+        default:
+            printf("Unknown rt_event_bind error: %i.\n", err);
+    }
+}
+
+
+
 void print_heap_create_error(int err) {
     switch (err)
     {
