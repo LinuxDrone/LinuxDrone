@@ -43,6 +43,7 @@ app.get('/getconfigs', routes.getconfigs(db));
 app.post('/delconfig', routes.delconfig(db));
 app.post('/runhosts', routes.runhosts(db));
 app.post('/stophosts', routes.stophosts(db));
+app.get('/gethoststatus', routes.gethoststatus);
 
 
 // Загружает определения модулей из файлов *.def.js из каталогов модулей и запихивает информацию из них в БД mongo

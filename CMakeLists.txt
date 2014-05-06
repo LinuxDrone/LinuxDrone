@@ -127,7 +127,7 @@ add_subdirectory(${MOD_DIR}/test-sender-receiver)
 add_subdirectory(${HST_DIR}/c-host)
 
 # Services
-add_subdirectory(${SVC_DIR}/websocket_service)
+add_subdirectory(${SVC_DIR}/telemetry)
 
 # Main project target
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")

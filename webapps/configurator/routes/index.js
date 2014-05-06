@@ -76,7 +76,21 @@ exports.getconfigs = function (db) {
     };
 };
 
+
 var chost;
+exports.gethoststatus = function () {
+    return function (req, res) {
+        var hoststatus;
+        if(chost) {
+            hoststatus = 'running';
+        }else{
+            hoststatus = 'stopped';
+        }
+        res.json(hoststatus);
+    };
+};
+
+
 exports.runhosts = function (db) {
     return function (req, res) {
 
@@ -109,8 +123,24 @@ exports.runhosts = function (db) {
         });
 
         chost.on('close', function (code) {
+            chost=undefined;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'c-host',
+                    type: 'status',
+                    data: 'stopped'
+                }), function() {  });
             console.log('c-host child process exited with code ' + code);
         });
+
+        if(chost){
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'c-host',
+                    type: 'status',
+                    data: 'running'
+                }), function() {  });
+        }
     };
 };
 
@@ -124,7 +154,6 @@ exports.stophosts = function (db) {
         res.json(req.body);
 
         chost.kill();
-        chost=undefined;
     };
 };
 

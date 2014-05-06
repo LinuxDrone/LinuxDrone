@@ -200,7 +200,11 @@ viewModels.Editor = (function () {
         // Общие свойства выбранного в схеме инстанса модуля
         instanceCommonProperties: ko.observableArray([]),
         // Специфические свойства выбранного в схеме инстанса модуля
-        instanceSpecificProperties: ko.observableArray([])
+        instanceSpecificProperties: ko.observableArray([]),
+
+        // Статус хост программы
+        // running, stopped
+        hostStatus:ko.observable()
     };
 
 
@@ -990,7 +994,18 @@ viewModels.Editor = (function () {
         }
 
         socketHostsOut.onmessage = function (event) {
-            document.getElementById('host_out').innerHTML = String.fromCharCode.apply(String, JSON.parse(event.data).data).replace(/\n/g, '<br/>');
+            var resp = JSON.parse(event.data);
+
+            switch (resp.type) {
+                case 'stdout':
+                    document.getElementById('host_out').innerHTML = String.fromCharCode.apply(String, resp.data).replace(/\n/g, '<br/>');
+                break;
+
+                case 'status':
+                    res.hostStatus(resp.data);
+                    document.getElementById('host_out').innerHTML = resp.data;
+                break;
+            }
         };
     }
 
@@ -1001,16 +1016,21 @@ viewModels.Editor = (function () {
 $(document).ready(function () {
 
     $.when(
-            $.getJSON("metamodules",
-                function (data) {
-                    viewModels.Editor.LoadMetaModules(data);
-                }),
-
-            $.getJSON("getconfigs",
-                function (data) {
-                    viewModels.Editor.LoadConfigurations(data);
-                })
-        ).then(function (a1, a2) {
+        $.getJSON("metamodules",
+            function (data) {
+                viewModels.Editor.LoadMetaModules(data);
+            }),
+        $.getJSON("getconfigs",
+            function (data) {
+                viewModels.Editor.LoadConfigurations(data);
+            })
+        /*,
+        $.getJSON("gethoststatus",
+            function (data) {
+                res.hostStatus(data);
+            })
+            */
+    ).then(function (a1, a2) {
             //Request OK
             ko.applyBindings(viewModels.Editor);
 
