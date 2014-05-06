@@ -293,14 +293,12 @@ viewModels.Editor = (function () {
         };
         $.post("runhosts", data4send,
             function (data) {
-                var f=0;
+                Subscribe2Telemetry("subscribe");
             });
     }
 
-
-    // Публичная функция остановки текущей конфигурации
-    res.StopConfig = function() {
-
+    // Приватная. Подписаться, отписаться на телеметрию всех инстансов
+    var Subscribe2Telemetry = function(cmd){
         if(socketTelemetry.readyState==1) {
             _.find(graph.getElements(), function (el) {
                 var moduleType = el.attributes.moduleType;
@@ -308,7 +306,7 @@ viewModels.Editor = (function () {
                 if (outputs) {
                     outputs.forEach(function (output) {
                         var obj = {
-                            cmd: "unsubscribe",
+                            cmd: cmd,
                             instance: el.attributes.attrs['.label'].text,
                             out: output.name
                         };
@@ -318,7 +316,13 @@ viewModels.Editor = (function () {
                 }
             });
         }
+    }
 
+
+    // Публичная функция остановки текущей конфигурации
+    res.StopConfig = function() {
+
+        Subscribe2Telemetry("unsubscribe");
 
         var data4send = {
             "name": res.configNameSelected(),
@@ -944,23 +948,7 @@ viewModels.Editor = (function () {
                 document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
                 document.getElementById("wsdi_status").textContent = " websocket connection opened ";
 
-                if(socketTelemetry.readyState===1) {
-                    _.find(graph.getElements(), function (el) {
-                        var moduleType = el.attributes.moduleType;
-                        var outputs = GetModuleMeta(moduleType).definition().outputs;
-                        if (outputs) {
-                            outputs.forEach(function (output) {
-                                var obj = {
-                                    cmd: "subscribe",
-                                    instance: el.attributes.attrs['.label'].text,
-                                    out: output.name
-                                };
-                                var data = BSON.serialize(obj, true, true, false);
-                                socketTelemetry.send(data.buffer);
-                            });
-                        }
-                    });
-                }
+                Subscribe2Telemetry("subscribe");
             }
 
             socketTelemetry.onmessage =function got_packet(msg) {

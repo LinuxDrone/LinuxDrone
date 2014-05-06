@@ -115,10 +115,13 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
 //printf("before read\n");
         read_len= read(pipe_fd, pipe_buf, sizeof(pipe_buf));
 //printf("read_len: %i\n", read_len);
-        if(read_len==-1)
-        {
-            printf("Error read from pipe\n");
-            return -1;
+
+        if(read_len < 0) {
+            // If this condition passes, there is no data to be read
+            if(errno != EAGAIN) {
+                printf("Error read from pipe\n");
+                return -1;
+            }
         }
 
         if(read_len > 0) {
@@ -135,6 +138,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
                 printf("Error rt_cond_signal\n");
                 return;
             }
+
         }
 
         //printf("EXIT WHILE read_len: %i\n", read_len);
@@ -142,12 +146,9 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
 
 
     case LWS_CALLBACK_RECEIVE:
-
-
         bson_request = bson_new_from_data (in, len);
 
-debug_print_bson("received", bson_request);
-
+//debug_print_bson("received", bson_request);
 
         // Get Instance Name
         bson_iter_t iter_instance_name;
@@ -161,7 +162,6 @@ debug_print_bson("received", bson_request);
         }
         module_instance_name = bson_iter_utf8(&iter_instance_name, NULL);
 
-
         // Get Instance Name
         bson_iter_t iter_out_name;
         if (!bson_iter_init_find(&iter_out_name, bson_request, "out")) {
@@ -173,7 +173,6 @@ debug_print_bson("received", bson_request);
             return -1;
         }
         module_out_name = bson_iter_utf8(&iter_out_name, NULL);
-
 
         // Get Command Name
         bson_iter_t iter_cmd;
@@ -187,6 +186,7 @@ debug_print_bson("received", bson_request);
         }
         cmd_name = bson_iter_utf8(&iter_cmd, NULL);
 
+
         //printf("module_instance_name: %s\tmodule_out_name: %s\n", module_instance_name, module_out_name);
         if(strcmp(cmd_name, "subscribe")==0)
         {
@@ -198,6 +198,7 @@ debug_print_bson("received", bson_request);
         }
 
         bson_destroy(bson_request);
+        break;
 
 
     /*
@@ -252,6 +253,7 @@ void run_task_read_shmem (void *module)
         return;
     }
 
+
     err = rt_mutex_create(&mutex, "telemetry_mutex");
 
     err = rt_cond_create(&cond, "telemetry_cond");
@@ -261,6 +263,7 @@ void run_task_read_shmem (void *module)
         return;
     }
 
+
     err = rt_mutex_acquire(&mutex,TM_NONBLOCK);
     if (err)
     {
@@ -268,60 +271,48 @@ void run_task_read_shmem (void *module)
         return;
     }
 
-//    err = rt_cond_wait(&cond, &mutex, TM_INFINITE );
-//    if (err)
-//    {
-//        printf("Error rt_cond_wait\n");
-//        return;
-//    }
 
     while(1)
     {
+        bool was_data = false;
         int i;
         for(i=0; i < remote_shmems.remote_shmems_len; i++)
         {
             shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[i];
 
-            if(remote_shmem->f_shmem_connected)
+            if(!remote_shmem->f_shmem_connected)
+                continue;
+
+            //TODO: Определить размер буфера где нибудь в настройках
+            // и вынести в структуру
+            char buf[500];
+            unsigned short retlen;
+            retlen=0;
+            read_shmem(&remote_shmem->remote_shmem, buf, &retlen);
+            if (retlen < 1)
+                continue;
+
+            bson_t* bson = bson_new_from_data (buf, retlen);
+            bson_append_utf8 (bson, "_from", -1, remote_shmem->name_instance, -1);
+            //debug_print_bson("bson_append_utf8", bson);
+            ssize_t send = rt_pipe_write(&pipe_between_rt, bson_get_data(bson), bson->len, P_NORMAL);
+            if(send<0 && send!=-ENOMEM)
             {
-                //TODO: Определить размер буфера где нибудь в настройках
-                // и вынести в структуру
-                char buf[500];
-                unsigned short retlen;
-                retlen=0;
-                read_shmem(&remote_shmem->remote_shmem, buf, &retlen);
-
-
-                if (retlen > 0) {
-                    bson_t* bson = bson_new_from_data (buf, retlen);
-
-                    bson_append_utf8 (bson, "_from", -1, remote_shmem->name_instance, -1);
-//debug_print_bson("bson_append_utf8", bson);
-
-                    ssize_t send = rt_pipe_write(&pipe_between_rt, bson_get_data(bson), bson->len, P_NORMAL);
-                    if(send<0)
-                    {
-                        printf("Error rt_pipe_write %i\n", send);
-                        //continue;
-                    }
-                    bson_destroy(bson);
-
-                    err = rt_cond_wait(&cond, &mutex, TM_INFINITE );
-                    if (err)
-                    {
-                        printf("Error rt_cond_wait\n");
-                        return;
-                    }
-                }
+                print_rt_pipe_write_error(send);
             }
-            else
+            bson_destroy(bson);
+
+            err = rt_cond_wait(&cond, &mutex, TM_INFINITE );
+            if (err)
             {
-                rt_task_sleep(rt_timer_ns2ticks(5000000));
+                printf("Error rt_cond_wait\n");
+                return;
             }
+            was_data = true;
         }
 
-        if(remote_shmems.remote_shmems_len==0)
-            rt_task_sleep(rt_timer_ns2ticks(100000000));
+        if(!was_data)
+            rt_task_sleep(rt_timer_ns2ticks(5000000));
     }
 }
 
@@ -432,9 +423,7 @@ int main(int argc, char **argv)
     memset(&remote_shmems, 0, sizeof(ar_remote_shmems_t));
     //register_remote_shmem(&remote_shmems, "test-sender-1", "Output1");
 
-
     init_rt_task();
-
 
 
     pipe_fd = open("/proc/xenomai/registry/native/pipes/telemetry", O_RDWR);
@@ -444,24 +433,16 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    int flags = fcntl(pipe_fd, F_GETFL, 0);
+    if(fcntl(pipe_fd, F_SETFL, flags | O_NONBLOCK))
+    {
+        fprintf(stderr, "Error fcntl for pipe_fd\n");
+        return -1;
+    }
+
 
     n = 0;
     while (n >= 0 && !force_exit) {
-        //struct timeval tv;
-        //gettimeofday(&tv, NULL);
-        /*
-         * This provokes the LWS_CALLBACK_SERVER_WRITEABLE for every
-         * live websocket connection using the TELEMETRY protocol,
-         * as soon as it can take more packets (usually immediately)
-         */
-
-        //if (((unsigned int)tv.tv_usec - oldus) > 1000) {
-//            libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_TELEMETRY]);
-          //  oldus = tv.tv_usec;
-        //}
-
-
-
         if(remote_shmems.f_connected_in_links)
         {
             libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_TELEMETRY]);

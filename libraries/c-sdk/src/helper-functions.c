@@ -70,6 +70,36 @@ void print_task_start_error(int err) {
     }
 }
 
+
+void print_rt_pipe_write_error(int err) {
+    switch (err)
+    {
+        case -EINVAL:
+            printf("is returned if pipe is not a pipe descriptor.\n");
+            break;
+
+        case -ENOMEM:
+            printf("is returned if not enough buffer space is available to complete the operation.\n");
+            break;
+
+        case -EIDRM:
+            printf("is returned if pipe is a closed pipe descriptor.\n");
+            break;
+
+        case -ENODEV:
+            printf("are returned if pipe is scrambled.\n");
+            break;
+
+        case -EBADF:
+            printf("are returned if pipe is scrambled.\n");
+            break;
+
+        default:
+            printf("Unknown pipe error: %i.\n", err);
+    }
+}
+
+
 // rt_heap_create
 void print_heap_create_error(int err) {
     switch (err)
