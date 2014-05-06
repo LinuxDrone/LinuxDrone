@@ -23,25 +23,25 @@ set(EXTRA_LIBS
     ${RFS_DIR}/usr/local/lib/libbson-1.0.so
     ${RFS_DIR}/usr/local/lib/libmongoc-1.0.so
     ${RFS_DIR}/usr/local/lib/libwebsockets.so
-z
-ssl
-crypto
+    z
+    ssl
+    crypto
     rt
     dl
     pthread
 )
 
-add_executable(websocket_service ${INC} ${SRC})
-target_link_libraries(websocket_service ${EXTRA_LIBS})
+add_executable(telemetry ${INC} ${SRC})
+target_link_libraries(telemetry ${EXTRA_LIBS})
 
 add_custom_command(
-    TARGET websocket_service
+    TARGET telemetry
     POST_BUILD
 #COMMAND
-    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} websocket_service ${URL_TARGET_SYSTEM}:/root/websocket_service
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} telemetry ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/services/telemetry
     COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${WEB_DIR}/configurator/public/javascripts/configurator.js ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/webapps/configurator/public/javascripts/configurator.js
     COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${WEB_DIR}/configurator/public/index.html ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/webapps/configurator/public/index.html
 )
 
 
-install(TARGETS websocket_service DESTINATION bin)
+install(TARGETS telemetry DESTINATION bin)

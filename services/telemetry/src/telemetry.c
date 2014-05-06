@@ -15,7 +15,7 @@
 #include <native/pipe.h>
 #include "libwebsockets.h"
 
-#include "../include/websocket_service.h"
+#include "../include/telemetry.h"
 
 
 ar_remote_shmems_t remote_shmems;
