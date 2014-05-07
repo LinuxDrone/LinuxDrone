@@ -71,6 +71,57 @@ void print_task_start_error(int err) {
 }
 
 
+
+void print_task_receive_error(int err) {
+    switch (err)
+    {
+        case -ENOBUFS:
+            printf("is returned if mcb_r does not point at a message area large enough to collect the remote task's message.\n");
+            break;
+
+        case -EWOULDBLOCK:
+            printf("is returned if timeout is equal to TM_NONBLOCK and no remote task is currently waiting for sending a message to the caller.\n");
+            break;
+
+        case -ETIMEDOUT:
+            printf("is returned if no message was received within the timeout.\n");
+            break;
+
+        case -EINTR:
+            printf("is returned if rt_task_unblock() has been called for the caller before any message was available.\n");
+            break;
+
+        case -EPERM:
+            printf("is returned if this service was called from a context which cannot sleep (e.g. interrupt, non-realtime or scheduler locked).\n");
+            break;
+
+        default:
+            printf("Unknown task_receive error: %i.\n", err);
+    }
+}
+
+
+void print_task_reply_error(int err) {
+    switch (err)
+    {
+        case -EINVAL:
+            printf("is returned if flowid is invalid.\n");
+            break;
+
+        case -ENXIO:
+            printf("is returned if flowid does not match the expected identifier returned from the latest call of the current task to rt_task_receive(), or if the remote task stopped waiting for the reply in the meantime (e.g. the client could have been deleted or forcibly unblocked).\n");
+            break;
+
+        case -EPERM:
+            printf("is returned if this service was called from an invalid context (e.g. interrupt, or non-primary).\n");
+            break;
+
+        default:
+            printf("Unknown task_reply error: %i.\n", err);
+    }
+}
+
+
 void print_rt_pipe_write_error(int err) {
     switch (err)
     {

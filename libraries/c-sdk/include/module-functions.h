@@ -394,3 +394,6 @@ shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, cons
 int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup);
 
 void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datalen);
+
+void print_task_receive_error(int err);
+void print_task_reply_error(int err);

@@ -18,7 +18,7 @@ include_directories(${RFS_DIR}/usr/local/include/libmongoc-1.0)
 include_directories(${LIB_DIR}/c-sdk/include)
 
 set(EXTRA_LIBS
-#    c-sdk
+    c-sdk
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
 #    ${RFS_DIR}/usr/local/lib/libbson-1.0.so
 #    ${RFS_DIR}/usr/local/lib/libmongoc-1.0.so
