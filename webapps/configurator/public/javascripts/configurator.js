@@ -1007,7 +1007,13 @@ viewModels.Editor = (function () {
 
             switch (resp.type) {
                 case 'stdout':
-                    document.getElementById('host_out').innerHTML = String.fromCharCode.apply(String, resp.data).replace(/\n/g, '<br/>');
+                    var text = String.fromCharCode.apply(String, resp.data).replace(/\n/g, '<br/>');
+
+                    var text = text.replace(/\x1b\[34m/g, '<span style="color: blue">');
+                    var text = text.replace(/\x1b\[31m/g, '<span style="color: red">');
+                    var text = text.replace(/\x1b\[0m/g, '</span>');
+
+                    document.getElementById('host_out').innerHTML =text;
                 break;
 
                 case 'status':

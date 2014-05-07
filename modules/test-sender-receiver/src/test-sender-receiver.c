@@ -16,10 +16,12 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
             // вышел таймаут
         }
 
+        input_t* input = (input_t*)module->module_info.input_data;
+
         Output1_t* objOutput1;
         checkout_Output1(module, &objOutput1);
-        objOutput1->out1 = cycle;
-        objOutput1->out2 = cycle;
+        objOutput1->out1 = input->in1*2;
+        objOutput1->out2 = input->in1*3+cycle;
         checkin_Output1(module, &objOutput1);
 
         Output2_t* objOutput2;

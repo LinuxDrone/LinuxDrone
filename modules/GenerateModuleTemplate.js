@@ -182,28 +182,42 @@ function CreateModuleCFile(obj_def){
     r += "            // вышел таймаут\n";
     r += "        }\n\n";
 
-    obj_def.outputs.forEach(function (out) {
-        var outName = out.name.replace(/\+/g, "");
-        r += "        "+outName+"_t* obj"+outName+";\n";
-        r += "        checkout_"+outName+"(module, &obj"+outName+");\n";
-        for (var key in out.Schema.properties) {
-            r += "        obj"+outName+"->"+key+" = cycle;\n";
-        }
-        r += "        checkin_"+outName+"(module, &obj"+outName+");\n\n";
-    });
-
-    var mask="";
-    for (var key in obj_def.inputShema.properties) {
-        if(mask!=""){
-            mask += " | ";
-        }
-        mask += key;
+    if ('inputShema' in obj_def) {
+        r += "        input_t* input = (input_t*)module->module_info.input_data;\n\n";
     }
 
-    r += "        // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу\n";
-    r += "        module->module_info.refresh_input_mask = "+mask+";\n\n";
-    r += "        // Наглое считывание данных из разделяемой памяти\n";
-    r += "        //int res = refresh_input(module);\n\n";
+    if ('outputs' in obj_def) {
+        obj_def.outputs.forEach(function (out) {
+            var outName = out.name.replace(/\+/g, "");
+            r += "        " + outName + "_t* obj" + outName + ";\n";
+            r += "        checkout_" + outName + "(module, &obj" + outName + ");\n";
+            var i=2;
+            for (var key in out.Schema.properties) {
+                if ('inputShema' in obj_def) {
+                    r += "        obj" + outName + "->" + key + " = input->in1*"+i+"+cycle;\n";
+                    i++;
+                }else{
+                    r += "        obj" + outName + "->" + key + " = cycle;\n";
+                }
+            }
+            r += "        checkin_" + outName + "(module, &obj" + outName + ");\n\n";
+        });
+    }
+
+    if ('inputShema' in obj_def) {
+        var mask = "";
+        for (var key in obj_def.inputShema.properties) {
+            if (mask != "") {
+                mask += " | ";
+            }
+            mask += key;
+        }
+
+        r += "        // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу\n";
+        r += "        module->module_info.refresh_input_mask = " + mask + ";\n\n";
+        r += "        // Принудительное считывание данных из разделяемой памяти\n";
+        r += "        //int res = refresh_input(module);\n\n";
+    }
     r += "        cycle++;\n";
     r += "    }\n";
     r += "}\n";
