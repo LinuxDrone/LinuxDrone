@@ -18,24 +18,28 @@ include_directories(${RFS_DIR}/usr/local/include/libmongoc-1.0)
 include_directories(${LIB_DIR}/c-sdk/include)
 
 set(EXTRA_LIBS
-    c-sdk
+#    c-sdk
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
-    ${RFS_DIR}/usr/local/lib/libbson-1.0.so
-    ${RFS_DIR}/usr/local/lib/libmongoc-1.0.so
-    rt
-    dl
-    pthread
+#    ${RFS_DIR}/usr/local/lib/libbson-1.0.so
+#    ${RFS_DIR}/usr/local/lib/libmongoc-1.0.so
+#    ${RFS_DIR}/usr/local/lib/libwebsockets.so
+#    z
+#    ssl
+#    crypto
+#    rt
+#    dl
+#    pthread
 )
 
-add_executable(c-host ${INC} ${SRC})
-target_link_libraries(c-host ${EXTRA_LIBS})
+add_executable(i2c ${INC} ${SRC})
+target_link_libraries(i2c ${EXTRA_LIBS})
 
 add_custom_command(
-    TARGET c-host
+    TARGET i2c
     POST_BUILD
-COMMAND
-    #COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-host ${URL_TARGET_SYSTEM}:/root/c-host
+#COMMAND
+    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} i2c ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/services/i2c
 )
 
 
-install(TARGETS c-host DESTINATION bin)
+install(TARGETS i2c DESTINATION bin)

@@ -97,14 +97,8 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 #add_subdirectory(${LIB_DIR}/core)
 #add_subdirectory(${LIB_DIR}/sdk)
-
-#add_subdirectory(${LIB_DIR}/libbson)
-#add_subdirectory(${LIB_DIR}/mongo-c-driver/src/libbson)
-#add_subdirectory(${LIB_DIR}/mongo-c-driver)
-
 #add_subdirectory(${LIB_DIR}/dotnet-sdk)
 add_subdirectory(${LIB_DIR}/c-sdk)
-#add_subdirectory(${LIB_DIR}/libwebsockets)
 
 # Loadable modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
@@ -113,7 +107,6 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
 add_subdirectory(${MOD_DIR}/test-sender)
 add_subdirectory(${MOD_DIR}/test-receiver)
 add_subdirectory(${MOD_DIR}/test-sender-receiver)
-
 #add_subdirectory(${MOD_DIR}/MyModule)
 #add_subdirectory(${MOD_DIR}/bmp180)
 #add_subdirectory(${MOD_DIR}/ms5611)
@@ -128,6 +121,7 @@ add_subdirectory(${HST_DIR}/c-host)
 
 # Services
 add_subdirectory(${SVC_DIR}/telemetry)
+add_subdirectory(${SVC_DIR}/i2c)
 
 # Main project target
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
