@@ -26,9 +26,9 @@ set(EXTRA_LIBS
 #    z
 #    ssl
 #    crypto
-#    rt
+    rt
 #    dl
-#    pthread
+    pthread
 )
 
 add_executable(i2c ${INC} ${SRC})

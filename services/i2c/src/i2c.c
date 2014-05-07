@@ -28,11 +28,12 @@ void run_task_i2c (void *module)
 {
     while(1)
     {
-        int flowid = rt_task_receive(&request_block, TM_INFINITE);
+        int flowid = rt_task_receive(&request_block, rt_timer_ns2ticks(200000000));
         if(flowid<0)
         {
             print_task_receive_error(flowid);
             rt_task_sleep(rt_timer_ns2ticks(200000000));
+            continue;
         }
 
 

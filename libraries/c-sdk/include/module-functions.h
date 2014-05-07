@@ -397,3 +397,5 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
 
 void print_task_receive_error(int err);
 void print_task_reply_error(int err);
+void print_task_bind_error(int err);
+void print_task_send_error(int err);

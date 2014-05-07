@@ -37,9 +37,9 @@ void test_receiver_run (module_test_receiver_t *module)
             int err = rt_task_bind	(&task_i2c_service, TASK_NAME_I2C, TM_INFINITE);
             if(err!=0)
             {
-                rt_task_sleep(rt_timer_ns2ticks(100000000));
-                // TODO: print error
+                print_task_bind_error(err);
 
+                rt_task_sleep(rt_timer_ns2ticks(100000000));
                 continue;
             }
             else
@@ -52,10 +52,9 @@ void test_receiver_run (module_test_receiver_t *module)
         ssize_t received = rt_task_send(&task_i2c_service, &request_block, &response_block, TM_INFINITE);
         if(received<0)
         {
-            //TODO: print error
+            print_task_send_error(received);
             continue;
         }
-
 
         // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу
         module->module_info.refresh_input_mask = in1 | in2 | in3 | in4;
