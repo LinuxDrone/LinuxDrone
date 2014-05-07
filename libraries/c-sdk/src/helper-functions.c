@@ -212,6 +212,68 @@ void print_rt_mutex_bind_error(int err) {
     }
 }
 
+void print_task_bind_error(int err) {
+    switch (err)
+    {
+        case -EFAULT:
+            printf("is returned if task or name is referencing invalid memory.\n");
+            break;
+
+        case -EINTR:
+            printf("is returned if rt_task_unblock() has been called for the waiting task before the retrieval has completed.\n");
+            break;
+
+        case -EWOULDBLOCK:
+            printf("is returned if timeout is equal to TM_NONBLOCK and the searched object is not registered on entry.\n");
+            break;
+
+        case -ETIMEDOUT:
+            printf("is returned if the object cannot be retrieved within the specified amount of time.\n");
+            break;
+
+        case -EPERM:
+            printf("is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime context).\n");
+            break;
+
+        default:
+            printf("Unknown task_bind error: %i.\n", err);
+    }
+}
+
+
+void print_task_send_error(int err) {
+    switch (err)
+    {
+        case -ENOBUFS:
+            printf("is returned if mcb_r does not point at a message area large enough to collect the remote task's reply. This includes the case where mcb_r is NULL on entry albeit the remote task attempts to send a reply message.\n");
+            break;
+
+        case -EWOULDBLOCK:
+            printf("is returned if timeout is equal to TM_NONBLOCK and task is not currently blocked on the rt_task_receive() service.\n");
+            break;
+
+        case -EIDRM:
+            printf("is returned if task has been deleted while waiting for a reply.\n");
+            break;
+
+        case -EINTR:
+            printf("is returned if rt_task_unblock() has been called for the caller before any reply was available.\n");
+            break;
+
+        case -EPERM:
+            printf("is returned if this service should block, but was called from a context which cannot sleep (e.g. interrupt, non-realtime context).\n");
+            break;
+
+        case -ESRCH:
+            printf("is returned if task cannot be found (when called from user-space only).\n");
+            break;
+
+        default:
+            printf("Unknown task_send error: %i.\n", err);
+    }
+}
+
+
 
 void print_rt_event_bind_error(int err) {
     switch (err)
