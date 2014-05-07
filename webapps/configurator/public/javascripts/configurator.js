@@ -204,7 +204,9 @@ viewModels.Editor = (function () {
 
         // Статус хост программы
         // running, stopped
-        hostStatus:ko.observable()
+        hostStatus:ko.observable(),
+
+        cssClass4ButtonsRunStop:ko.observable()
     };
 
 
@@ -937,6 +939,9 @@ viewModels.Editor = (function () {
     var socketTelemetry;
     var socketHostsOut;
     res.Init = function(){
+        // Пока не установдлно соединение веюсокета, кнопки старта и стопа будут красными
+        res.cssClass4ButtonsRunStop('btn btn-danger');
+
         var host = window.document.location.host.replace(/:.*/, '');
         if (typeof MozWebSocket != "undefined") {
             socketTelemetry = new MozWebSocket('ws://' + host + ':7681/xxx', "telemetry-protocol");
@@ -951,6 +956,8 @@ viewModels.Editor = (function () {
             socketTelemetry.onopen = function() {
                 document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
                 document.getElementById("wsdi_status").textContent = " websocket connection opened ";
+
+                res.cssClass4ButtonsRunStop('btn btn-success');
 
                 Subscribe2Telemetry("subscribe");
             }
@@ -988,6 +995,8 @@ viewModels.Editor = (function () {
             socketTelemetry.onclose = function(){
                 document.getElementById("wsdi_status").style.backgroundColor = "#ff4040";
                 document.getElementById("wsdi_status").textContent = " websocket connection CLOSED ";
+
+                res.cssClass4ButtonsRunStop('btn btn-danger');
             }
         } catch(exception) {
             alert('<p>Error' + exception);
