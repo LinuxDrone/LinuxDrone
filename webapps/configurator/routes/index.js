@@ -77,24 +77,23 @@ exports.getconfigs = function (db) {
 };
 
 
-var chost;
-exports.gethoststatus = function () {
-    return function (req, res) {
-        var hoststatus;
-        if(chost) {
-            hoststatus = 'running';
-        }else{
-            hoststatus = 'stopped';
-        }
-        res.json(hoststatus);
-    };
+var chost=undefined;
+exports.gethoststatus = function (req, res) {
+console.log(chost);
+    var hoststatus;
+    if (chost!=undefined) {
+        hoststatus = 'running';
+    } else {
+        hoststatus = 'stopped';
+    }
+    res.json(hoststatus);
 };
 
 
 exports.runhosts = function (db) {
     return function (req, res) {
 
-        if(chost){
+        if(chost!=undefined){
             return;
         }
 
@@ -133,7 +132,7 @@ exports.runhosts = function (db) {
             console.log('c-host child process exited with code ' + code);
         });
 
-        if(chost){
+        if(chost!=undefined){
             global.ws_server.send(
                 JSON.stringify({
                     process: 'c-host',
@@ -147,7 +146,7 @@ exports.runhosts = function (db) {
 exports.stophosts = function (db) {
     return function (req, res) {
 
-        if(!chost){
+        if(chost==undefined){
             return;
         }
 

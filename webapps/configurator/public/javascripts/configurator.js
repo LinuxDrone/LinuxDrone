@@ -1023,13 +1023,11 @@ $(document).ready(function () {
         $.getJSON("getconfigs",
             function (data) {
                 viewModels.Editor.LoadConfigurations(data);
-            })
-        /*,
+            }),
         $.getJSON("gethoststatus",
             function (data) {
-                res.hostStatus(data);
+                viewModels.Editor.hostStatus(data);
             })
-            */
     ).then(function (a1, a2) {
             //Request OK
             ko.applyBindings(viewModels.Editor);

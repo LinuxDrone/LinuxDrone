@@ -87,10 +87,8 @@
                     <button type="button" class="btn btn-info" disabled title="Not Implemented">Import</button>
                     <button type="button" class="btn btn-info" disabled data-bind="visible: viewModels.Editor.Versions().length > 0">Export</button>
 
-                    <button type="button" class="btn btn-success" data-bind="click: RunConfig">Run</button>
-                    <button type="button" class="btn btn-success" data-bind="click: StopConfig">Stop</button>
-                    <!-- , visible: viewModels.Editor.hostStatus()=='running' , visible: viewModels.Editor.hostStatus()=='stopped' -->
-
+                    <button type="button" class="btn btn-success" data-bind="click: RunConfig, visible: viewModels.Editor.hostStatus()=='stopped'">Run</button>
+                    <button type="button" class="btn btn-success" data-bind="click: StopConfig, visible: viewModels.Editor.hostStatus()=='running'">Stop</button>
                 </form>
 
                 <form data-bind="visible: viewModels.Editor.editSchemaMode()=='sub'" class="form-inline">
