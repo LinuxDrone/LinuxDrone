@@ -11,7 +11,8 @@ CMAKE="cmake"
 "$CMAKE" -E remove "$ROOT_DIR/CMakeCache.txt"
 "$CMAKE" -E remove_directory "$ROOT_DIR/CMakeFiles/"
 
-TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/beaglebone.cmake
+#TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/beaglebone.cmake
+TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/linux.cmake
 BUILD_TYPE=Debug
 #BUILD_TYPE=Release
 

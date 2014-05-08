@@ -33,7 +33,7 @@ project(linuxdrone)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME})
 
 # Compiler options
-add_definitions(-mfpu=neon ${XENOMAI_DEFINITIONS}) #-std=c++11
+add_definitions(${XENOMAI_DEFINITIONS}) #-std=c++11 -mfpu=neon
 
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
@@ -47,7 +47,7 @@ set(SYS_DIR ${PROJECT_SOURCE_DIR}/system)
 set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
 set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
 set(WEB_DIR ${PROJECT_SOURCE_DIR}/webapps)
-set(RFS_DIR ${TLS_DIR}/rootfs/beaglebone)
+set(RFS_DIR /)
 
 
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
@@ -69,14 +69,14 @@ SET(SSH_PORT_TARGET_SYSTEM 22)
 
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}
-find_package(MongoDB REQUIRED)
-include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
+#find_package(MongoDB REQUIRED)
+#include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 
 # Boost
 # Libraries: ${Boost_LIBRARIES}
-set(Boost_USE_STATIC_LIBS OFF) 
-find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
-include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
+#set(Boost_USE_STATIC_LIBS OFF)
+#find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
+#include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
 
 # Xenomai libraries
 # Libraries: ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
