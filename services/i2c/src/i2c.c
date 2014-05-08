@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -53,6 +54,7 @@ printf("rt_task_receive end\n");
 
 int main(int argc, char **argv)
 {
+    mlockall(MCL_CURRENT|MCL_FUTURE);
     int err = rt_task_create(&task_i2c, TASK_NAME_I2C, TASK_STKSZ, priority_task_i2c, TASK_MODE);
     if (err != 0)
     {

@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -334,6 +335,8 @@ int init_rt_task()
 
 int main(int argc, char **argv)
 {
+    mlockall(MCL_CURRENT|MCL_FUTURE);
+
     int n = 0;
     int use_ssl = 0;
     int opts = 0;
