@@ -22,18 +22,21 @@
 RT_TASK task_i2c;
 int priority_task_i2c = 99;
 
+RT_TASK task_i2c_service;
+bool binded_task_i2c_service = false;
+
 RT_TASK_MCB request_block;
 RT_TASK_MCB response_block;
+
 
 void run_task_i2c (void *module)
 {
     while(1)
     {
-        int flowid = rt_task_receive(&request_block, rt_timer_ns2ticks(200000000));
+        int flowid = rt_task_receive(&request_block, TM_INFINITE);
         if(flowid<0)
         {
             print_task_receive_error(flowid);
-            rt_task_sleep(rt_timer_ns2ticks(200000000));
             continue;
         }
 
@@ -52,15 +55,11 @@ printf("rt_task_receive end\n");
 }
 
 
+
+
 int main(int argc, char **argv)
 {
     mlockall(MCL_CURRENT|MCL_FUTURE);
-    int err = rt_task_create(&task_i2c, TASK_NAME_I2C, TASK_STKSZ, priority_task_i2c, TASK_MODE);
-    if (err != 0)
-    {
-        fprintf(stdout, "Error create task_i2c \n");
-        return err;
-    }
 
 
     // Подготовим буфер для приема запроса
@@ -72,9 +71,11 @@ int main(int argc, char **argv)
     response_block.size = sizeof(i2c_res_t);
 
 
-    err = rt_task_start(&task_i2c, &run_task_i2c, NULL);
+
+    int err = rt_task_spawn(&task_i2c, TASK_NAME_I2C, TASK_STKSZ, priority_task_i2c, TASK_MODE, &run_task_i2c, NULL);
     if (err != 0)
         printf("Error start service task\n");
+
 
 
     printf("\nPress ENTER for exit\n\n");
