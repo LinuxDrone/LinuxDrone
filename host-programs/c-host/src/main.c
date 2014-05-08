@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include <dlfcn.h>
 #include <stdio.h>
 #include <bcon.h>
@@ -414,6 +415,8 @@ int stop_instance(const char* instance_name)
 
 
 int main(int argc, char *argv[]) {
+
+    mlockall(MCL_CURRENT|MCL_FUTURE);
 
     setvbuf(stdout, NULL, _IONBF, 0);
 
