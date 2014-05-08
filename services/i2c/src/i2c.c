@@ -84,12 +84,12 @@ int main(int argc, char **argv)
 
 
     // Подготовим буфер для приема запроса
-    request_block.data = calloc(1, sizeof(i2c_req_t));
-    request_block.size = sizeof(i2c_req_t);
+    request_block.data = calloc(1, 0);
+    request_block.size = 0;
 
     // Подготовим буфер для отправки ответа
-    response_block.data = calloc(1, sizeof(i2c_res_t));
-    response_block.size = sizeof(i2c_res_t);
+    response_block.data = calloc(1, 0);
+    response_block.size = 0;
 
 
 
