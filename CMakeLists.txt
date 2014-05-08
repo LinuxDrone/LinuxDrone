@@ -33,7 +33,7 @@ project(linuxdrone)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME})
 
 # Compiler options
-add_definitions(-mfpu=neon ${XENOMAI_DEFINITIONS}) #-std=c++11
+add_definitions(-mfpu=neon -std=c++11 ${XENOMAI_DEFINITIONS})
 
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
@@ -98,14 +98,14 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
 # Project libraries
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-#add_subdirectory(${LIB_DIR}/core)
-#add_subdirectory(${LIB_DIR}/sdk)
+add_subdirectory(${LIB_DIR}/core)
+add_subdirectory(${LIB_DIR}/sdk)
 #add_subdirectory(${LIB_DIR}/dotnet-sdk)
 add_subdirectory(${LIB_DIR}/c-sdk)
 
 # Loadable modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
-#add_subdirectory(${MOD_DIR}/gy87)
+add_subdirectory(${MOD_DIR}/gy87)
 #add_subdirectory(${MOD_DIR}/c-gy87)
 add_subdirectory(${MOD_DIR}/test-sender)
 add_subdirectory(${MOD_DIR}/test-receiver)

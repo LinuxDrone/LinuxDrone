@@ -8,6 +8,9 @@
 #include <fcntl.h>
 #include <assert.h>
 
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
+
 #include <syslog.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -29,6 +32,9 @@ RT_TASK_MCB request_block;
 RT_TASK_MCB response_block;
 
 
+int m_file;
+unsigned int slave;
+
 void run_task_i2c (void *module)
 {
     while(1)
@@ -40,13 +46,28 @@ void run_task_i2c (void *module)
             continue;
         }
 
+        char* busName;
+        m_file = open(busName, O_RDWR);
+        if (m_file < 0) {
+            printf("Failed to open the bus (\" %s \")",busName);
+            m_file = 0;
+        }
+
+        int err = ioctl(m_file, I2C_SLAVE, slave);
+
+        char data[12];
+        int size = 12;
+        int len = write(m_file, data, size);
+        len = read(m_file, data, size);
+
+        close(m_file);
 
 printf("rt_task_receive begin\n");
 rt_task_sleep(rt_timer_ns2ticks(200000000));
 printf("rt_task_receive end\n");
 
 
-        int err = rt_task_reply(flowid, &response_block);
+        err = rt_task_reply(flowid, &response_block);
         if(err!=0)
         {
             print_task_reply_error(err);
