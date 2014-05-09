@@ -15,7 +15,7 @@ RT_TASK_MCB response_data_block;
  * @param bus_name Имя шины. Имя файла девайса i2c
  * @return  > 0 - Идентификатор сессии
  *          ==0 - Недоступен сервис i2c. Следует пытаться снова открыть сессию
- *          < 0 - Ошибка. Распечатать ошибку можно при помощи функции print_task_bind_error
+ *          < 0 - Ошибка. Распечатать ошибку можно при помощи функции print_task_send_error
  */
 int open_i2c(char* bus_name)
 {
@@ -34,8 +34,8 @@ int open_i2c(char* bus_name)
 
     request_open_block.data = bus_name;
     request_open_block.size = strlen(bus_name);
+    ssize_t received = rt_task_send(&task_i2c_service, &request_open_block, &response_data_block, TM_INFINITE);
 
-    ssize_t received = rt_task_send(&task_i2c_service, &request_data_block, &response_data_block, TM_INFINITE);
     if(received<0)
     {
         if(received==-ESRCH)
@@ -49,6 +49,7 @@ int open_i2c(char* bus_name)
         }
     }
 
+    printf("file_d:%i\n",response_data_block.opcode);
     // return session id
     return response_data_block.opcode;
 }
@@ -117,10 +118,11 @@ void test_receiver_run (module_test_receiver_t *module)
 
         if(session_id<1)
         {
-            session_id = open_i2c("/dev/");
+            session_id = open_i2c("/dev/i2c-1");
             if(session_id<0)
             {
-                print_task_bind_error(session_id);
+                printf("Function: test_receiver_run, print_task_send_error:");
+                print_task_send_error(session_id);
             }
             continue;
         }
@@ -128,12 +130,21 @@ void test_receiver_run (module_test_receiver_t *module)
 
         char* data;
         data_request_i2c_t request;
+
+        request.session_id = session_id;
+        request.dev_id = 0x68;
+        request.port = 0x75;
+        request.len_requested_data = 1;
+
         int res = read_i2c(&request, &data);
         if(res<0)
         {
             print_task_send_error(res);
         }
-
+        else if(res>0)
+        {
+            printf("mpuId = 0x%02X\n", *data);
+        }
 
 
         // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу
