@@ -34,6 +34,7 @@ int open_i2c(char* bus_name)
 
     request_open_block.data = bus_name;
     request_open_block.size = strlen(bus_name);
+    request_open_block.opcode = op_open_i2c;
     response_data_block.size = 256;
     ssize_t received = rt_task_send(&task_i2c_service, &request_open_block, &response_data_block, TM_INFINITE);
 
@@ -50,7 +51,7 @@ int open_i2c(char* bus_name)
         }
     }
 
-    printf("file_d:%i\n",response_data_block.opcode);
+printf("file_d:%i\n",response_data_block.opcode);
     // return session id
     return response_data_block.opcode;
 }
@@ -91,6 +92,33 @@ int read_i2c(data_request_i2c_t* request, char** data)
 }
 
 
+int close_i2c(int* file_d)
+{
+    request_open_block.opcode = op_close_i2c;
+    request_open_block.data = (caddr_t)file_d;
+    request_open_block.size = sizeof(int);
+    response_data_block.size = 256;
+
+    ssize_t received = rt_task_send(&task_i2c_service, &request_open_block, &response_data_block, TM_INFINITE);
+    if(received<0)
+    {
+        if(received==-ESRCH)
+        {
+            binded_task_i2c_service=false;
+            return 0;
+        }
+        else
+        {
+            return received;
+        }
+    }
+
+    *file_d=0;
+
+    return response_data_block.size;
+}
+
+
 void test_receiver_run (module_test_receiver_t *module)
 {
     // Подготовим буфер для передачи запроса открытия сессии
@@ -121,7 +149,9 @@ void test_receiver_run (module_test_receiver_t *module)
 
         if(session_id<1)
         {
+printf("before open\n");
             session_id = open_i2c("/dev/i2c-1");
+printf("after open session_id=%i\n", session_id);
             if(session_id<0)
             {
                 printf("Function: test_receiver_run, print_task_send_error:");
@@ -139,7 +169,9 @@ void test_receiver_run (module_test_receiver_t *module)
         request.port = 0x75;
         request.len_requested_data = 1;
 
+printf("before read\n");
         int res = read_i2c(&request, &data);
+printf("after read\n");
         if(res<0)
         {
             print_task_send_error(res);
@@ -148,6 +180,10 @@ void test_receiver_run (module_test_receiver_t *module)
         {
             printf("mpuId = 0x%02X\n", *data);
         }
+
+printf("before close\n");
+        close_i2c(&session_id);
+printf("after close\n");
 
 
         // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу

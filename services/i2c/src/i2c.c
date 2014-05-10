@@ -85,7 +85,7 @@ int open_bus(const char* bus_name)
 
         bus_info->bus_name = malloc(strlen(bus_name)+1);
         strcpy(bus_info->bus_name, bus_name);
-
+printf("open bus %s\n", bus_info->bus_name);
         bus_info->m_file = open(bus_info->bus_name, O_RDWR);
         if (bus_info->m_file < 0) {
             printf("Failed to open the bus (\" %s \")", bus_info->bus_name);
@@ -134,6 +134,7 @@ void close_bus(int m_file)
 
 
     close(bus_info->m_file);
+    current_dev_id=0;
     free(bus_info->bus_name);
     free(bus_info);
 
@@ -157,9 +158,10 @@ void run_task_i2c (void *module)
 
     while(1)
     {
-//printf("before receive\n");
+printf("before receive\n");
+        request_block.size=256;
         int flowid = rt_task_receive(&request_block, TM_INFINITE);
-//printf("flowid=%i\n",flowid);
+printf("flowid=%i\n",flowid);
         if(flowid<0)
         {
             printf("Function: run_task_i2c, print_task_receive_error:");
@@ -171,19 +173,21 @@ void run_task_i2c (void *module)
         switch (request_block.opcode)
         {
             case op_open_i2c:
+printf("open\n");
                 response_block.opcode = open_bus(request_block.data);
                 response_block.size=0;
                 break;
 
 
             case op_data_request_i2c:
+printf("read\n");
                 request = (data_request_i2c_t*)request_block.data;
 
 //printf("receivet data request session_id %i:\n", request->session_id);
 
                 if(current_dev_id!=request->dev_id)
                 {
-//printf("before ioctl dev=%i\n", request->dev_id);
+printf("before ioctl dev=%i\n", request->dev_id);
                     int err = ioctl(request->session_id, I2C_SLAVE, request->dev_id);
                     if(err<0)
                     {
@@ -192,26 +196,27 @@ void run_task_i2c (void *module)
                     current_dev_id=request->dev_id;
                 }
 
-//printf("before write port=0x%02X len=%i\n", request->port, sizeof(request->port));
+printf("before write port=0x%02X len=%i\n", request->port, sizeof(request->port));
                 int len = write(request->session_id, &request->port, sizeof(request->port));
                 if(len!=sizeof(request->port))
                 {
-//printf("error write to i2c port=0x%02X writed=%i\n", request->port, len);
-                    //response_block.data = NULL;
+printf("error write to i2c port=0x%02X writed=%i\n", request->port, len);
                     response_block.size=0;
                 }
                 else
                 {
-//printf("read from i2c file=%i, len_requested_data=%i response_block.data=0x%08X\n", request->session_id, request->len_requested_data, response_block.data);
+printf("read from i2c file=%i, len_requested_data=%i response_block.data=0x%08X\n", request->session_id, request->len_requested_data, response_block.data);
                     response_block.size = read(request->session_id, response_block.data, request->len_requested_data);
                     char* ddd = response_block.data;
-//printf("readed size=%i mpuId = 0x%02X\n", response_block.size, *ddd);
+printf("readed size=%i mpuId = 0x%02X\n", response_block.size, *ddd);
                 }
                 break;
 
 
             case op_close_i2c:
-                close_bus(request->session_id);
+printf("close\n")            ;
+                int* file_d = (int*)request_block.data;
+                close_bus(*file_d);
                 break;
 
             default:
