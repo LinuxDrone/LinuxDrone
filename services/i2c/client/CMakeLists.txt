@@ -27,12 +27,12 @@ set(EXTRA_LIBS
 add_library(i2c_client ${INC} ${SRC})
 target_link_libraries(i2c_client ${EXTRA_LIBS})
 
-add_custom_command(
-    TARGET i2c_client
-    POST_BUILD
-#COMMAND
-    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libi2c_client.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/lib/libi2c_client.so
-)
-
+IF(${DO_POST_BUILD})
+    add_custom_command(
+        TARGET i2c_client
+        POST_BUILD
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libi2c_client.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/lib/libi2c_client.so
+    )
+ENDIF()
 
 install(TARGETS i2c_client DESTINATION bin)

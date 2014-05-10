@@ -27,12 +27,11 @@ int bus_list_len;
 RT_TASK task_i2c;
 int priority_task_i2c = 99;
 
-RT_TASK task_i2c_service;
-bool binded_task_i2c_service = false;
-
 RT_TASK_MCB request_block;
 RT_TASK_MCB response_block;
 
+char response_block_buf[MAX_TRANSFER_BLOCK];
+char request_block_buf[MAX_TRANSFER_BLOCK];
 
 // Девайс выбранный для общений на шине в текущий момент
 unsigned int current_dev_id=0;
@@ -257,8 +256,7 @@ void run_task_i2c (void *module)
     }
 }
 
-char response_block_buf[MAX_TRANSFER_BLOCK];
-char request_block_buf[MAX_TRANSFER_BLOCK];
+
 
 int main(int argc, char **argv)
 {

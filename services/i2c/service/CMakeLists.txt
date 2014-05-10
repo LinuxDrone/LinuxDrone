@@ -27,12 +27,12 @@ set(EXTRA_LIBS
 add_executable(i2c_service ${INC} ${SRC})
 target_link_libraries(i2c_service ${EXTRA_LIBS})
 
-add_custom_command(
-    TARGET i2c_service
-    POST_BUILD
-#COMMAND
-    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} i2c_service ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/services/i2c_service
-)
-
+IF(${DO_POST_BUILD})
+    add_custom_command(
+        TARGET i2c_service
+        POST_BUILD
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} i2c_service ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/services/i2c_service
+    )
+ENDIF()
 
 install(TARGETS i2c_service DESTINATION bin)

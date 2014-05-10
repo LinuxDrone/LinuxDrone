@@ -34,14 +34,16 @@ set(EXTRA_LIBS
 add_executable(telemetry ${INC} ${SRC})
 target_link_libraries(telemetry ${EXTRA_LIBS})
 
-add_custom_command(
-    TARGET telemetry
-    POST_BUILD
-COMMAND
-#    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} telemetry ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/services/telemetry
-#    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${WEB_DIR}/configurator/public/javascripts/configurator.js ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/webapps/configurator/public/javascripts/configurator.js
-#    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${WEB_DIR}/configurator/public/index.html ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/webapps/configurator/public/index.html
-)
+IF(${DO_POST_BUILD})
+    add_custom_command(
+        TARGET telemetry
+        POST_BUILD
+    COMMAND
+    #    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} telemetry ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/services/telemetry
+    #    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${WEB_DIR}/configurator/public/javascripts/configurator.js ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/webapps/configurator/public/javascripts/configurator.js
+    #    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${WEB_DIR}/configurator/public/index.html ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/webapps/configurator/public/index.html
+    )
+ENDIF()
 
 
 install(TARGETS telemetry DESTINATION bin)
