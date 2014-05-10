@@ -319,7 +319,7 @@ int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* na
                fprintf(stderr, "Function \"unregister_remote_shmem\" No memory available\n");
                exit(EXIT_FAILURE);
             }
-            ar_remote_shmems->remote_shmems_len = ar_remote_shmems->remote_shmems_len - 1;
+            ar_remote_shmems->remote_shmems_len--;
             ar_remote_shmems->remote_shmems = tmp;
 
             return 0;

@@ -34,6 +34,7 @@ int open_i2c(char* bus_name)
 
     request_open_block.data = bus_name;
     request_open_block.size = strlen(bus_name);
+    response_data_block.size = 256;
     ssize_t received = rt_task_send(&task_i2c_service, &request_open_block, &response_data_block, TM_INFINITE);
 
     if(received<0)
@@ -67,6 +68,8 @@ int open_i2c(char* bus_name)
 int read_i2c(data_request_i2c_t* request, char** data)
 {
     request_data_block.data = (caddr_t)request;
+    request_data_block.size = sizeof(data_request_i2c_t);
+    response_data_block.size = 256;
 
     ssize_t received = rt_task_send(&task_i2c_service, &request_data_block, &response_data_block, TM_INFINITE);
     if(received<0)
