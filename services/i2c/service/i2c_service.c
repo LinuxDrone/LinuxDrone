@@ -15,7 +15,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "../include/i2c.h"
+#include "i2c_service.h"
+#include "../client/i2c_client.h"
 
 
 // Структура содержащая информацию о количестве подписчиков на шину
@@ -159,7 +160,7 @@ void run_task_i2c (void *module)
     while(1)
     {
 printf("before receive\n");
-        request_block.size=256;
+        request_block.size=MAX_TRANSFER_BLOCK;
         int flowid = rt_task_receive(&request_block, TM_INFINITE);
 printf("flowid=%i\n",flowid);
         if(flowid<0)
@@ -202,6 +203,7 @@ printf("before write port=0x%02X len=%i\n", request->port, sizeof(request->port)
                 {
 printf("error write to i2c port=0x%02X writed=%i\n", request->port, len);
                     response_block.size=0;
+                    response_block.opcode=res_error_write_to_i2c;
                 }
                 else
                 {
@@ -209,6 +211,7 @@ printf("read from i2c file=%i, len_requested_data=%i response_block.data=0x%08X\
                     response_block.size = read(request->session_id, response_block.data, request->len_requested_data);
                     char* ddd = response_block.data;
 printf("readed size=%i mpuId = 0x%02X\n", response_block.size, *ddd);
+                    response_block.opcode=res_successfully;
                 }
                 break;
 
@@ -241,10 +244,10 @@ int main(int argc, char **argv)
     mlockall(MCL_CURRENT|MCL_FUTURE);
 
     // Подготовим буфер для приема запроса
-    request_block.data = malloc(256);
+    request_block.data = malloc(MAX_TRANSFER_BLOCK);
 
     // Подготовим буфер для отправки ответа
-    response_block.data = malloc(256);
+    response_block.data = malloc(MAX_TRANSFER_BLOCK);
 
 
     int err = rt_task_spawn(&task_i2c, TASK_NAME_I2C, TASK_STKSZ, priority_task_i2c, TASK_MODE, &run_task_i2c, NULL);
