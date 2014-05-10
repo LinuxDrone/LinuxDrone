@@ -22,7 +22,8 @@ typedef struct
 typedef enum
 {
     res_successfully = 0,
-    res_error_write_to_i2c = -1001
+    res_error_write_to_i2c = -1001,
+    res_error_ioctl = -1002
 
 } i2c_resp_status;
 

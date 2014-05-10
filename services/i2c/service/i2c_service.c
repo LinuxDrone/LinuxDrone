@@ -86,7 +86,7 @@ int open_bus(const char* bus_name)
 
         bus_info->bus_name = malloc(strlen(bus_name)+1);
         strcpy(bus_info->bus_name, bus_name);
-printf("open bus %s\n", bus_info->bus_name);
+//printf("open bus %s\n", bus_info->bus_name);
         bus_info->m_file = open(bus_info->bus_name, O_RDWR);
         if (bus_info->m_file < 0) {
             printf("Failed to open the bus (\" %s \")", bus_info->bus_name);
@@ -159,10 +159,10 @@ void run_task_i2c (void *module)
 
     while(1)
     {
-printf("before receive\n");
+//printf("before receive\n");
         request_block.size=MAX_TRANSFER_BLOCK;
         int flowid = rt_task_receive(&request_block, TM_INFINITE);
-printf("flowid=%i\n",flowid);
+//printf("flowid=%i\n",flowid);
         if(flowid<0)
         {
             printf("Function: run_task_i2c, print_task_receive_error:");
@@ -174,52 +174,45 @@ printf("flowid=%i\n",flowid);
         switch (request_block.opcode)
         {
             case op_open_i2c:
-printf("open\n");
+//printf("open\n");
                 response_block.opcode = open_bus(request_block.data);
                 response_block.size=0;
                 break;
 
 
             case op_data_request_i2c:
-printf("read\n");
                 request = (data_request_i2c_t*)request_block.data;
 
-//printf("receivet data request session_id %i:\n", request->session_id);
-
+                int ioctl_err;
                 if(current_dev_id!=request->dev_id)
                 {
-printf("before ioctl dev=%i\n", request->dev_id);
-                    int err = ioctl(request->session_id, I2C_SLAVE, request->dev_id);
-                    if(err<0)
-                    {
-                        printf("ioctl error:%i\n", err);
-                    }
+                    ioctl_err = ioctl(request->session_id, I2C_SLAVE, request->dev_id);
                     current_dev_id=request->dev_id;
                 }
 
-printf("before write port=0x%02X len=%i\n", request->port, sizeof(request->port));
-                int len = write(request->session_id, &request->port, sizeof(request->port));
-                if(len!=sizeof(request->port))
+                if(ioctl_err<0)
                 {
-printf("error write to i2c port=0x%02X writed=%i\n", request->port, len);
-                    response_block.size=0;
-                    response_block.opcode=res_error_write_to_i2c;
+                    response_block.opcode=res_error_ioctl;
                 }
                 else
                 {
-printf("read from i2c file=%i, len_requested_data=%i response_block.data=0x%08X\n", request->session_id, request->len_requested_data, response_block.data);
-                    response_block.size = read(request->session_id, response_block.data, request->len_requested_data);
-                    char* ddd = response_block.data;
-printf("readed size=%i mpuId = 0x%02X\n", response_block.size, *ddd);
-                    response_block.opcode=res_successfully;
+                    int len = write(request->session_id, &request->port, sizeof(request->port));
+                    if(len!=sizeof(request->port))
+                    {
+                        response_block.size=0;
+                        response_block.opcode=res_error_write_to_i2c;
+                    }
+                    else
+                    {
+                        response_block.size = read(request->session_id, response_block.data, request->len_requested_data);
+                        response_block.opcode=res_successfully;
+                    }
                 }
                 break;
 
 
             case op_close_i2c:
-printf("close\n")            ;
-                int* file_d = (int*)request_block.data;
-                close_bus(*file_d);
+                close_bus(*(int*)request_block.data);
                 break;
 
             default:
@@ -237,17 +230,18 @@ printf("close\n")            ;
     }
 }
 
-
+char response_block_buf[MAX_TRANSFER_BLOCK];
+char request_block_buf[MAX_TRANSFER_BLOCK];
 
 int main(int argc, char **argv)
 {
     mlockall(MCL_CURRENT|MCL_FUTURE);
 
     // Подготовим буфер для приема запроса
-    request_block.data = malloc(MAX_TRANSFER_BLOCK);
+    request_block.data = request_block_buf;
 
     // Подготовим буфер для отправки ответа
-    response_block.data = malloc(MAX_TRANSFER_BLOCK);
+    response_block.data = response_block_buf;
 
 
     int err = rt_task_spawn(&task_i2c, TASK_NAME_I2C, TASK_STKSZ, priority_task_i2c, TASK_MODE, &run_task_i2c, NULL);
@@ -255,14 +249,10 @@ int main(int argc, char **argv)
         printf("Error start service task\n");
 
 
-
     printf("\nPress ENTER for exit\n\n");
     getchar();
 
     rt_task_delete(&task_i2c);
-
-    free(request_block.data);
-    free(response_block.data);
 
     return 0;
 }

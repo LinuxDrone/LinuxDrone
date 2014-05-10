@@ -80,7 +80,6 @@ int open_i2c(i2c_service_t* service, char* bus_name)
         }
     }
 
-printf("file_d:%i\n",service->response_data_block.opcode);
     // return session id
     return service->response_data_block.opcode;
 }

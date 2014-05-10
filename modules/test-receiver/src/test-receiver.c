@@ -41,23 +41,29 @@ void test_receiver_run (module_test_receiver_t *module)
 
 
         char* data;
-
         char dev = 0x68;
         char port = 0x75;
         int len_requested_data = 1;
         int ret_len;
 
-printf("before read\n");
         int res = read_i2c(&i2c_service, session_id, dev, port, len_requested_data, &data, &ret_len);
-printf("after read\n");
         if(res<0)
         {
-            if(res==res_error_write_to_i2c)
+            switch (res)
             {
+            case res_error_write_to_i2c:
                 printf("Error wtite to i2c device\n");
-            }
-            else
+                break;
+
+            case res_error_ioctl:
+                printf("ioctl error:%i\n", res);
+                break;
+
+            default:
                 print_task_send_error(res);
+                break;
+            }
+
         }
 
         if(ret_len>0)
@@ -65,9 +71,8 @@ printf("after read\n");
             printf("mpuId = 0x%02X\n", *data);
         }
 
-printf("before close\n");
+
         close_i2c(&i2c_service, &session_id);
-printf("after close\n");
 
 
         // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу
