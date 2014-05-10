@@ -1,23 +1,8 @@
 #include <sys/mman.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <getopt.h>
-#include <signal.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <assert.h>
-
 #include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-
-#include <syslog.h>
-#include <sys/time.h>
-#include <unistd.h>
 
 #include "i2c_service.h"
 #include "../client/i2c_client.h"
-
 
 // Структура содержащая информацию о количестве подписчиков на шину
 typedef struct
@@ -86,7 +71,6 @@ int open_bus(const char* bus_name)
 
         bus_info->bus_name = malloc(strlen(bus_name)+1);
         strcpy(bus_info->bus_name, bus_name);
-//printf("open bus %s\n", bus_info->bus_name);
         bus_info->m_file = open(bus_info->bus_name, O_RDWR);
         if (bus_info->m_file < 0) {
             printf("Failed to open the bus (\" %s \")", bus_info->bus_name);
@@ -156,13 +140,12 @@ void close_bus(int m_file)
 void run_task_i2c (void *module)
 {
     data_request_i2c_t* request;
+    address_i2c_t* address_i2c;
 
     while(1)
     {
-//printf("before receive\n");
         request_block.size=MAX_TRANSFER_BLOCK;
         int flowid = rt_task_receive(&request_block, TM_INFINITE);
-//printf("flowid=%i\n",flowid);
         if(flowid<0)
         {
             printf("Function: run_task_i2c, print_task_receive_error:");
@@ -174,20 +157,20 @@ void run_task_i2c (void *module)
         switch (request_block.opcode)
         {
             case op_open_i2c:
-//printf("open\n");
                 response_block.opcode = open_bus(request_block.data);
                 response_block.size=0;
                 break;
 
 
-            case op_data_request_i2c:
+            case op_data_read_i2c:
+            {
                 request = (data_request_i2c_t*)request_block.data;
 
                 int ioctl_err;
-                if(current_dev_id!=request->dev_id)
+                if(current_dev_id!=request->addr_and_port.dev_id)
                 {
-                    ioctl_err = ioctl(request->session_id, I2C_SLAVE, request->dev_id);
-                    current_dev_id=request->dev_id;
+                    ioctl_err = ioctl(request->addr_and_port.session_id, I2C_SLAVE, request->addr_and_port.dev_id);
+                    current_dev_id=request->addr_and_port.dev_id;
                 }
 
                 if(ioctl_err<0)
@@ -196,24 +179,68 @@ void run_task_i2c (void *module)
                 }
                 else
                 {
-                    int len = write(request->session_id, &request->port, sizeof(request->port));
-                    if(len!=sizeof(request->port))
+                    int len = write(request->addr_and_port.session_id, &request->addr_and_port.port, sizeof(char));
+                    if(len!=sizeof(request->addr_and_port.port))
                     {
                         response_block.size=0;
                         response_block.opcode=res_error_write_to_i2c;
                     }
                     else
                     {
-                        response_block.size = read(request->session_id, response_block.data, request->len_requested_data);
+                        response_block.size = read(request->addr_and_port.session_id, response_block.data, request->len_requested_data);
                         response_block.opcode=res_successfully;
                     }
                 }
-                break;
+            }
+            break;
+
+
+            case op_data_write_i2c:
+                // В принятых данных, первый байт - адрес девайса на шине
+                // Второй байт - номер порта
+                // Остальные данные - на передачу в порт
+                address_i2c = (address_i2c_t*)request_block.data;
+                int ioctl_err;
+                if(current_dev_id!=address_i2c->dev_id)
+                {
+                    ioctl_err = ioctl(address_i2c->session_id, I2C_SLAVE, address_i2c->dev_id);
+                    current_dev_id=address_i2c->dev_id;
+                }
+
+                if(ioctl_err<0)
+                {
+                    response_block.opcode=res_error_ioctl;
+                }
+                else
+                {
+                    int size_for_write = request_block.size - sizeof(address_i2c_t);
+
+                    int writen=0;
+                    if(address_i2c->port==0)
+                    {
+                        // Не пишем номер порта. только сырые данные
+                        writen = write(address_i2c->session_id, request_block.data + sizeof(address_i2c_t), size_for_write);
+                    }
+                    else
+                    {
+                        // Здесь первым записываемым байтом в поток уходит номер порта
+                        size_for_write += sizeof(char); // Увеличим для этого длину передаваемых данных
+                        writen = write(address_i2c->session_id, request_block.data + sizeof(address_i2c_t) - sizeof(char), size_for_write);
+                    }
+
+                    if(writen!=size_for_write)
+                    {
+                        response_block.size=0;
+                        response_block.opcode=res_error_write_to_i2c;
+                    }
+                }
+            break;
 
 
             case op_close_i2c:
                 close_bus(*(int*)request_block.data);
                 break;
+
 
             default:
                 printf("Unknown request to i2c service: %i\n", request_block.opcode);

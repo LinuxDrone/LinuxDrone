@@ -934,8 +934,8 @@ void get_input_data(void* p_module)
         }
         else
         {
-printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
-(*module->print_input)(module->input_data);
+//printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
+//(*module->print_input)(module->input_data);
         }
         bson_destroy(&bson);
     }
@@ -1559,10 +1559,8 @@ int refresh_input(void* p_module)
                             break;
                     }
                 }
-printf("%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
-(*module->print_input)(module->input_data);
-//fflush(stdout);
-
+//printf("%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
+//(*module->print_input)(module->input_data);
                 bson_destroy(&bson);
             }
         }

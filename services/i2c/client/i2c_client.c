@@ -1,25 +1,13 @@
-#include <sys/mman.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <getopt.h>
-#include <signal.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <assert.h>
-
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-
-#include <syslog.h>
-#include <sys/time.h>
-#include <unistd.h>
-
 #include "i2c_client.h"
 #include "../service/i2c_service.h"
 
 
 
+/**
+ * @brief connect_i2c_service Устанавливает соединение с сервисом I2C
+ * @param service Указатель на структуру сервиса
+ * @return TRUE в случае успешного соединения
+ */
 bool connect_i2c_service(i2c_service_t* service)
 {
     if(service->connected)
@@ -35,25 +23,28 @@ bool connect_i2c_service(i2c_service_t* service)
     // Подготовим буфер для передачи запроса открытия сессии
     service->request_open_block.opcode = op_open_i2c;
 
-    // Подготовим буфер для передачи запроса на данные
-    service->request_data_block.size = sizeof(data_request_i2c_t);
-    service->request_data_block.opcode = op_data_request_i2c;
-
     // Подготовим буфер для приема считываемых по i2c данных
-    service->response_data_block.data = service->response_buf;
+    service->response_data_block.data = service->data_buf;
 
     return true;
 }
 
 
+
+/**
+ * @brief disconnect_i2c_service Разраывает соединение с сервисом i2c
+ * @param service
+ */
 void disconnect_i2c_service(i2c_service_t* service)
 {
     rt_task_unbind(&service->task_i2c_service);
 }
 
 
+
 /**
  * @brief open_i2c Открывает сессию с шиной i2c
+ * @param service Указатель на структуру сервиса
  * @param bus_name Имя шины. Имя файла девайса i2c
  * @return  > 0 - Идентификатор сессии
  *          ==0 - Недоступен сервис i2c. Следует пытаться снова открыть сессию
@@ -87,24 +78,29 @@ int open_i2c(i2c_service_t* service, char* bus_name)
 
 
 /**
- * @brief read_i2c Считываеи блок данных с девайса i2c по указанному порту
- * @param request Данные специфицирующие запрос
- * @param data    Считанные с девайса i2c данные
- * @return  > 0 - Длина считанных данных
- *          ==0 - Недоступен сервис i2c. Следует снова открыть сессию
- *          < 0 - Ошибка. Распечатать ошибку можно при помощи функции print_task_send_error
+ * @brief read_i2c Считываеи блок данных с указанного девайса i2c, запрашиваемой длины,
+ * начиная с указанного внутреннего порта девайса.
+ * @param service Указатель на структуру сервиса
+ * @param session_id Идентификатор шины (сессии)
+ * @param dev_id Адрес девайса на шине i2c
+ * @param port Внутренний порт девайса
+ * @param len_requested_data Запрашиваемая длина считываемых данных (необходимо считать)
+ * @param ret_data Блок считанных данных
+ * @param ret_len Длина считанных данных (фактически считано)
+ * @return < 0 - Ошибка. Распечатать ошибку можно при помощи функции print_task_send_error
  */
 int read_i2c(i2c_service_t* service, int session_id, char dev_id, char port, int len_requested_data, char** ret_data, int* ret_len)
 {
     data_request_i2c_t request;
-    request.dev_id = dev_id;
-    request.port = port;
+    request.addr_and_port.dev_id = dev_id;
+    request.addr_and_port.port = port;
     request.len_requested_data = len_requested_data;
-    request.session_id = session_id;
+    request.addr_and_port.session_id = session_id;
 
     service->request_data_block.data = (caddr_t)&request;
     service->request_data_block.size = sizeof(data_request_i2c_t);
     service->response_data_block.size = MAX_TRANSFER_BLOCK;
+    service->request_data_block.opcode = op_data_read_i2c;
 
     ssize_t received = rt_task_send(&service->task_i2c_service, &service->request_data_block, &service->response_data_block, TM_INFINITE);
     if(received<0)
@@ -127,6 +123,62 @@ int read_i2c(i2c_service_t* service, int session_id, char dev_id, char port, int
 }
 
 
+
+/**
+ * @brief write_i2c Записывает блок данных в указанное устройство i2с, в указанный порт
+ * @param service Указатель на структуру сервиса
+ * @param session_id Идентификатор сессии
+ * @param dev_id Адрес девайса на шине i2c
+ * @param port Внутренний порт девайса
+ * @param len_data Длина блока записываемых данных
+ * @param data Указатель на блок записываемых данных
+ * @return < 0 - Ошибка.
+ */
+int write_i2c(i2c_service_t* service, int session_id, char dev_id, char port, int len_data, char* data)
+{
+    if(len_data>MAX_TRANSFER_BLOCK-sizeof(address_i2c_t))
+    {
+        printf("Length of transfered data > MAX_TRANSFER_BLOCK-sizeof(address_i2c_t)\n");
+        return -1;
+    }
+
+    address_i2c_t* address_i2c = (address_i2c_t*)service->data_buf;
+    address_i2c->session_id=session_id;
+    address_i2c->dev_id = dev_id;
+    address_i2c->port = port;
+
+    memcpy(service->data_buf+sizeof(address_i2c_t), data, len_data);
+
+    service->request_data_block.data = service->data_buf;
+    service->request_data_block.size = sizeof(address_i2c_t)+len_data;
+    service->response_data_block.size = MAX_TRANSFER_BLOCK;
+    service->request_data_block.opcode = op_data_write_i2c;
+
+    ssize_t received = rt_task_send(&service->task_i2c_service, &service->request_data_block, &service->response_data_block, TM_INFINITE);
+    if(received<0)
+    {
+        if(received==-ESRCH)
+        {
+            service->connected=false;
+            return 0;
+        }
+        else
+        {
+            return received;
+        }
+    }
+
+    return service->response_data_block.opcode;
+}
+
+
+
+/**
+ * @brief close_i2c Закрывает сессию взаимодействия с шиной i2c
+ * @param service Указатель на структуру сервиса
+ * @param session_id Идентификатор сессии
+ * @return
+ */
 int close_i2c(i2c_service_t* service, int* session_id)
 {
     service->request_open_block.opcode = op_close_i2c;
