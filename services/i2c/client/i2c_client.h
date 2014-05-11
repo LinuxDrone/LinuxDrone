@@ -75,13 +75,13 @@ int open_i2c(i2c_service_t* service, char* bus_name);
  * @param service Указатель на структуру сервиса
  * @param session_id Идентификатор сессии
  * @param dev_id Адрес девайса на шине i2c
- * @param port Внутренний порт девайса
+ * @param dev_register Внутренний порт девайса
  * @param len_requested_data Запрашиваемая длина считываемых данных (необходимо считать)
  * @param ret_data Блок считанных данных
  * @param ret_len Длина считанных данных (фактически считано)
  * @return < 0 - Ошибка. Распечатать ошибку можно при помощи функции print_task_send_error
  */
-int read_i2c(i2c_service_t* service, int session_id, char dev_id, char port, int len_requested_data, char** ret_data, int* ret_len);
+int read_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_register, int len_requested_data, char** ret_data, int* ret_len);
 
 
 /**
@@ -89,12 +89,12 @@ int read_i2c(i2c_service_t* service, int session_id, char dev_id, char port, int
  * @param service Указатель на структуру сервиса
  * @param session_id Идентификатор сессии
  * @param dev_id Адрес девайса на шине i2c
- * @param port Внутренний порт девайса
+ * @param dev_register Внутренний порт девайса
  * @param len_data Длина блока записываемых данных
  * @param data Указатель на блок записываемых данных
  * @return < 0 - Ошибка.
  */
-int write_i2c(i2c_service_t* service, int session_id, char dev_id, char port, int len_data, char* data);
+int write_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_register, int len_data, char* data);
 
 
 /**
@@ -104,3 +104,9 @@ int write_i2c(i2c_service_t* service, int session_id, char dev_id, char port, in
  * @return
  */
 int close_i2c(i2c_service_t* service, int* session_id);
+
+/**
+ * @brief print_i2c_error Выводит в stdout ошибку возвращаемую функциями read_i2c или write_i2c
+ * @param err Номер ошибки (отрицательное число)
+ */
+void print_i2c_error(int err);

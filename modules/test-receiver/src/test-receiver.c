@@ -42,29 +42,14 @@ void test_receiver_run (module_test_receiver_t *module)
 
         char* data;
         char dev = 0x68;
-        char port = 0x75;
+        char reg = 0x75;
         int len_requested_data = 1;
         int ret_len;
 
-        int res = read_i2c(&i2c_service, session_id, dev, port, len_requested_data, &data, &ret_len);
+        int res = read_i2c(&i2c_service, session_id, dev, reg, len_requested_data, &data, &ret_len);
         if(res<0)
-        {
-            switch (res)
-            {
-            case res_error_write_to_i2c:
-                printf("Error wtite to i2c device\n");
-                break;
+            print_i2c_error(res);
 
-            case res_error_ioctl:
-                printf("ioctl error:%i\n", res);
-                break;
-
-            default:
-                print_task_send_error(res);
-                break;
-            }
-
-        }
 
         if(ret_len>0)
         {
@@ -73,29 +58,15 @@ void test_receiver_run (module_test_receiver_t *module)
 
 
         dev = 0x29;
-        port = 0;
+        reg = 0;
         char motor = cycle/30;
         if(motor>245)
             motor=245;
 printf("motor=%i\n", motor);
-        res = write_i2c(&i2c_service, session_id, dev, port, sizeof(char), &motor);
+
+        res = write_i2c(&i2c_service, session_id, dev, reg, sizeof(char), &motor);
         if(res<0)
-        {
-            switch (res)
-            {
-            case res_error_write_to_i2c:
-                printf("Error wtite to i2c device\n");
-                break;
-
-            case res_error_ioctl:
-                printf("ioctl error:%i\n", res);
-                break;
-
-            default:
-                print_task_send_error(res);
-                break;
-            }
-        }
+            print_i2c_error(res);
 
 
         close_i2c(&i2c_service, &session_id);

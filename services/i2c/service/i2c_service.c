@@ -166,10 +166,10 @@ void run_task_i2c (void *module)
                 request = (data_request_i2c_t*)request_block.data;
 
                 int ioctl_err;
-                if(current_dev_id!=request->addr_and_port.dev_id)
+                if(current_dev_id!=request->addr_and_dev_register.dev_id)
                 {
-                    ioctl_err = ioctl(request->addr_and_port.session_id, I2C_SLAVE, request->addr_and_port.dev_id);
-                    current_dev_id=request->addr_and_port.dev_id;
+                    ioctl_err = ioctl(request->addr_and_dev_register.session_id, I2C_SLAVE, request->addr_and_dev_register.dev_id);
+                    current_dev_id=request->addr_and_dev_register.dev_id;
                 }
 
                 if(ioctl_err<0)
@@ -178,15 +178,15 @@ void run_task_i2c (void *module)
                 }
                 else
                 {
-                    int len = write(request->addr_and_port.session_id, &request->addr_and_port.port, sizeof(char));
-                    if(len!=sizeof(request->addr_and_port.port))
+                    int len = write(request->addr_and_dev_register.session_id, &request->addr_and_dev_register.dev_register, sizeof(char));
+                    if(len!=sizeof(request->addr_and_dev_register.dev_register))
                     {
                         response_block.size=0;
                         response_block.opcode=res_error_write_to_i2c;
                     }
                     else
                     {
-                        response_block.size = read(request->addr_and_port.session_id, response_block.data, request->len_requested_data);
+                        response_block.size = read(request->addr_and_dev_register.session_id, response_block.data, request->len_requested_data);
                         response_block.opcode=res_successfully;
                     }
                 }
@@ -215,7 +215,7 @@ void run_task_i2c (void *module)
                     int size_for_write = request_block.size - sizeof(address_i2c_t);
 
                     int writen=0;
-                    if(address_i2c->port==0)
+                    if(address_i2c->dev_register==0)
                     {
                         // Не пишем номер порта. только сырые данные
                         writen = write(address_i2c->session_id, request_block.data + sizeof(address_i2c_t), size_for_write);

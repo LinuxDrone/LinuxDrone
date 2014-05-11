@@ -35,7 +35,7 @@ typedef struct
     // идентификатор девайса на шине
     char dev_id;
 
-    char port;
+    char dev_register;
 
 } address_i2c_t;
 
@@ -44,7 +44,7 @@ typedef struct
 // Клиент запрашивает данные, указывая идентификатор девайса на шине, порт и длину данных, которые он желает прочитать
 typedef struct
 {
-    address_i2c_t addr_and_port;
+    address_i2c_t addr_and_dev_register;
 
     // длина данных, которые желает получить клиент сервиса
     int len_requested_data;

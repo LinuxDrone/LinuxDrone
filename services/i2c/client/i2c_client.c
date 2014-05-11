@@ -83,19 +83,19 @@ int open_i2c(i2c_service_t* service, char* bus_name)
  * @param service Указатель на структуру сервиса
  * @param session_id Идентификатор шины (сессии)
  * @param dev_id Адрес девайса на шине i2c
- * @param port Внутренний порт девайса
+ * @param dev_register Внутренний порт девайса
  * @param len_requested_data Запрашиваемая длина считываемых данных (необходимо считать)
  * @param ret_data Блок считанных данных
  * @param ret_len Длина считанных данных (фактически считано)
  * @return < 0 - Ошибка. Распечатать ошибку можно при помощи функции print_task_send_error
  */
-int read_i2c(i2c_service_t* service, int session_id, char dev_id, char port, int len_requested_data, char** ret_data, int* ret_len)
+int read_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_register, int len_requested_data, char** ret_data, int* ret_len)
 {
     data_request_i2c_t request;
-    request.addr_and_port.dev_id = dev_id;
-    request.addr_and_port.port = port;
+    request.addr_and_dev_register.dev_id = dev_id;
+    request.addr_and_dev_register.dev_register = dev_register;
     request.len_requested_data = len_requested_data;
-    request.addr_and_port.session_id = session_id;
+    request.addr_and_dev_register.session_id = session_id;
 
     service->request_data_block.data = (caddr_t)&request;
     service->request_data_block.size = sizeof(data_request_i2c_t);
@@ -129,12 +129,12 @@ int read_i2c(i2c_service_t* service, int session_id, char dev_id, char port, int
  * @param service Указатель на структуру сервиса
  * @param session_id Идентификатор сессии
  * @param dev_id Адрес девайса на шине i2c
- * @param port Внутренний порт девайса
+ * @param dev_register Внутренний порт девайса
  * @param len_data Длина блока записываемых данных
  * @param data Указатель на блок записываемых данных
  * @return < 0 - Ошибка.
  */
-int write_i2c(i2c_service_t* service, int session_id, char dev_id, char port, int len_data, char* data)
+int write_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_register, int len_data, char* data)
 {
     if(len_data>MAX_TRANSFER_BLOCK-sizeof(address_i2c_t))
     {
@@ -145,7 +145,7 @@ int write_i2c(i2c_service_t* service, int session_id, char dev_id, char port, in
     address_i2c_t* address_i2c = (address_i2c_t*)service->data_buf;
     address_i2c->session_id=session_id;
     address_i2c->dev_id = dev_id;
-    address_i2c->port = port;
+    address_i2c->dev_register = dev_register;
 
     memcpy(service->data_buf+sizeof(address_i2c_t), data, len_data);
 
@@ -203,4 +203,24 @@ int close_i2c(i2c_service_t* service, int* session_id)
     *session_id=0;
 
     return service->response_data_block.size;
+}
+
+
+
+void print_i2c_error(int err)
+{
+    switch (err)
+    {
+    case res_error_write_to_i2c:
+        printf("Error wtite to i2c device\n");
+        break;
+
+    case res_error_ioctl:
+        printf("ioctl error:%i\n", err);
+        break;
+
+    default:
+        print_task_send_error(err);
+        break;
+    }
 }
