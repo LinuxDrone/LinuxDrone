@@ -29,7 +29,7 @@ bool check_mpu6050_id(i2c_service_t* i2c_service, int i2c_session)
 
     if(ret_len>0)
     {
-        //printf("mpuId = 0x%02X\n", *data);
+        printf("mpuId = 0x%02X\n", *data);
         // Check magic number for mpu6050
         if(*data == 0x68)
             return true;
@@ -187,8 +187,21 @@ void c_gy87_run (module_c_gy87_t *module)
     char* data;
     int ret_len;
 
+    RTIME last_print_time = rt_timer_read();
+    int count_reads=0;
+    SRTIME print_period = rt_timer_ns2ticks(1000000000);
+
     while(1) {
         get_input_data(module);
+
+        count_reads++;
+        if(rt_timer_read() - last_print_time > print_period)
+        {
+            //printf("count_reads=%i", count_reads);
+
+            last_print_time = rt_timer_read();
+            count_reads=0;
+        }
 
 
         if(!mpu_initialized)
@@ -225,7 +238,6 @@ void c_gy87_run (module_c_gy87_t *module)
             continue;
         }
 
-
         // unpack received data
         GyroAccelMagTemp_t* GyroAccelMagTemp;
         checkout_GyroAccelMagTemp(module, &GyroAccelMagTemp);
@@ -237,6 +249,8 @@ void c_gy87_run (module_c_gy87_t *module)
         GyroAccelMagTemp->accelY = data[CGY87_ACCEL_Y_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_ACCEL_Y_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
         GyroAccelMagTemp->accelZ = data[CGY87_ACCEL_Z_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_ACCEL_Z_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
         GyroAccelMagTemp->temperature = data[CGY87_TEMP_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_TEMP_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
+
+        //print_GyroAccelMagTemp(GyroAccelMagTemp);
 
         checkin_GyroAccelMagTemp(module, &GyroAccelMagTemp);
     }

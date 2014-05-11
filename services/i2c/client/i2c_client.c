@@ -147,7 +147,7 @@ int write_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_regi
     address_i2c->dev_id = dev_id;
     address_i2c->dev_register = dev_register;
 
-    memcpy(service->data_buf+sizeof(address_i2c_t), data, len_data);
+    memcpy(&address_i2c->dev_register+1, data, len_data);
 
     service->request_data_block.data = service->data_buf;
     service->request_data_block.size = sizeof(address_i2c_t)+len_data;

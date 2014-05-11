@@ -18,6 +18,7 @@ include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
 
 set(EXTRA_LIBS
     c-sdk
+    i2c_client
 )
 
 add_library(c-gy87 MODULE ${INC} ${SRC})

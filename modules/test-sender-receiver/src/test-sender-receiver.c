@@ -2,6 +2,10 @@
 
 void test_sender_receiver_run (module_test_sender_receiver_t *module)
 {
+    RTIME last_print_time = rt_timer_read();
+    int count_reads=0;
+    SRTIME print_period = rt_timer_ns2ticks(1000000000);
+
     int cycle=0;
     while(1) {
         get_input_data(module);
@@ -10,6 +14,14 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
         if(module->module_info.updated_input_properties!=0)
         {
             // есть новые данные
+            count_reads++;
+            if(rt_timer_read() - last_print_time > print_period)
+            {
+                printf("count_reads=%i", count_reads);
+
+                last_print_time = rt_timer_read();
+                count_reads=0;
+            }
         }
         else
         {

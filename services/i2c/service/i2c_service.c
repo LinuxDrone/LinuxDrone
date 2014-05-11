@@ -199,7 +199,7 @@ void run_task_i2c (void *module)
                 // Второй байт - номер порта
                 // Остальные данные - на передачу в порт
                 address_i2c = (address_i2c_t*)request_block.data;
-                int ioctl_err;
+                int ioctl_err=0;
                 if(current_dev_id!=address_i2c->dev_id)
                 {
                     ioctl_err = ioctl(address_i2c->session_id, I2C_SLAVE, address_i2c->dev_id);
@@ -224,7 +224,7 @@ void run_task_i2c (void *module)
                     {
                         // Здесь первым записываемым байтом в поток уходит номер порта
                         size_for_write += sizeof(char); // Увеличим для этого длину передаваемых данных
-                        writen = write(address_i2c->session_id, request_block.data + sizeof(address_i2c_t) - sizeof(char), size_for_write);
+                        writen = write(address_i2c->session_id, &address_i2c->dev_register, size_for_write);
                     }
 
                     if(writen!=size_for_write)
