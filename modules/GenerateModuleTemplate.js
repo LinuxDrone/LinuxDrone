@@ -32,12 +32,14 @@ function CreateCMakeLists(module_name) {
     r += "    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/" + module_name + "/" + module_name + ".def.json ${MOD_DIR}/" + module_name + "\n";
     r += ")\n\n";
 
-    r += "add_custom_command(\n";
-    r += "    TARGET " + module_name + "\n";
-    r += "    POST_BUILD\n";
-    r += "    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} lib" + module_name + ".so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/" + module_name + "/lib" + module_name + ".so\n";
-    r += "    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/" + module_name + "/" + module_name + ".def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/" + module_name + "/" + module_name + ".def.json\n";
-    r += ")\n\n";
+    r += "IF(${DO_POST_BUILD})\n"
+    r += "    add_custom_command(\n";
+    r += "        TARGET " + module_name + "\n";
+    r += "        POST_BUILD\n";
+    r += "        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} lib" + module_name + ".so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/" + module_name + "/lib" + module_name + ".so\n";
+    r += "        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/" + module_name + "/" + module_name + ".def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/" + module_name + "/" + module_name + ".def.json\n";
+    r += "    )\n";
+    r += "ENDIF()\n\n";
 
     r += "install(TARGETS " + module_name + " DESTINATION modules/" + module_name + ")\n";
     r += "install(FILES " + module_name + ".def.json DESTINATION modules/" + module_name + ")\n";
