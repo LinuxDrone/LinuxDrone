@@ -27,7 +27,6 @@ function make_structures(properties, portName) {
     r += "typedef struct\n";
     r += "{\n";
     for (var key in properties) {
-        // TODO: Pay attention property type (need realize)
         r += "\t" + properties[key].type + " " + key + ";\n";
     }
     r += "} " + portName + "_t;\n\n";
@@ -40,8 +39,32 @@ function make_Structure2Bson(properties, portName) {
     r += "int " + portName + "2bson(" + portName + "_t* obj, bson_t* bson)\n";
     r += "{\n";
     for (var key in properties) {
-        // TODO: Pay attention property type (need realize)
-        r += "\tbson_append_int32 (bson, \"" + key + "\", -1, obj->" + key + ");\n";
+        switch (properties[key].type) {
+            case "char":
+            case "short":
+            case "int":
+            case "long":
+                r += "\tbson_append_int32 (bson, \"" + key + "\", -1, obj->" + key + ");\n";
+                break;
+
+            case "long long":
+                r += "\tbson_append_int64 (bson, \"" + key + "\", -1, obj->" + key + ");\n";
+                break;
+
+            case "float":
+            case "double":
+                r += "\tbson_append_double (bson, \"" + key + "\", -1, obj->" + key + ");\n";
+                break;
+
+            case "const char*":
+                // TODO: Возможна проблема с тем, что строка не копируется
+                r += "\tbson_append_utf8 (bson, \"" + key + "\", -1, obj->" + key + ", -1);\n";
+                break;
+
+            default:
+                console.log("Unknown type " + properties[key].type + " for port " + key);
+                break;
+        }
     }
     r += "\treturn 0;\n";
     r += "}\n\n";
@@ -76,10 +99,35 @@ function make_Bson2Structure(properties, portName, module_type) {
     r += "    {\n";
     r += "        const char* key = bson_iter_key (&iter);\n\n";
     for (var key in properties) {
-        // TODO: Pay attention property type (need realize)
         r += "        if(!strncmp(key, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
         r += "        {\n";
-        r += "            obj->" + key + " = bson_iter_int32(&iter);\n";
+        switch (properties[key].type) {
+            case "char":
+            case "short":
+            case "int":
+            case "long":
+                r += "            obj->" + key + " = bson_iter_int32(&iter);\n";
+                break;
+
+            case "long long":
+                r += "            obj->" + key + " = bson_iter_int64(&iter);\n";
+                break;
+
+            case "float":
+            case "double":
+                r += "            obj->" + key + " = bson_iter_double(&iter);\n";
+                break;
+
+            case "const char*":
+                // TODO: Возможна проблема с тем, что строка не копируется
+                r += "            uint32_t len;\n";
+                r += "            obj->" + key + " = bson_iter_utf8(&iter, &len);\n";
+                break;
+
+            default:
+                console.log("Unknown type " + properties[key].type + " for port " + key);
+                break;
+        }
         r += "            module->updated_input_properties |= " + key + ";\n";
         r += "            continue;\n";
         r += "        }\n";
@@ -98,7 +146,29 @@ function make_Bson2Structure(properties, portName, module_type) {
         r += "{\n";
     }
     for (var key in properties) {
-        r += "    printf(\"" + key + "=%i\\t\", obj->" + key + ");\n";
+        switch (properties[key].type) {
+            case "char":
+            case "short":
+            case "int":
+            case "long":
+            case "long long":
+                r += "    printf(\"" + key + "=%i\\t\", obj->" + key + ");\n";
+                break;
+
+            case "float":
+            case "double":
+                r += "    printf(\"" + key + "=%lf\\t\", obj->" + key + ");\n";
+                break;
+
+            case "const char*":
+                r += "    printf(\"" + key + "=%s\\t\", obj->" + key + ");\n";
+                break;
+
+            default:
+                console.log("Unknown type " + properties[key].type + " for port " + key);
+                break;
+        }
+
     }
     r += "    printf(\"\\n\");\n";
     r += "}\n\n";

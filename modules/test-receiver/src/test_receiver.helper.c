@@ -42,25 +42,25 @@ int bson2input(module_t* module, bson_t* bson)
 
         if(!strncmp(key, "in1", XNOBJECT_NAME_LEN))
         {
-            obj->in1 = bson_iter_int32(&iter);
+            obj->in1 = bson_iter_double(&iter);
             module->updated_input_properties |= in1;
             continue;
         }
         if(!strncmp(key, "in2", XNOBJECT_NAME_LEN))
         {
-            obj->in2 = bson_iter_int32(&iter);
+            obj->in2 = bson_iter_double(&iter);
             module->updated_input_properties |= in2;
             continue;
         }
         if(!strncmp(key, "in3", XNOBJECT_NAME_LEN))
         {
-            obj->in3 = bson_iter_int32(&iter);
+            obj->in3 = bson_iter_double(&iter);
             module->updated_input_properties |= in3;
             continue;
         }
         if(!strncmp(key, "in4", XNOBJECT_NAME_LEN))
         {
-            obj->in4 = bson_iter_int32(&iter);
+            obj->in4 = bson_iter_double(&iter);
             module->updated_input_properties |= in4;
             continue;
         }
@@ -72,10 +72,10 @@ int bson2input(module_t* module, bson_t* bson)
 void print_test_receiver(void* obj1)
 {
     input_t* obj=obj1;
-    printf("in1=%i\t", obj->in1);
-    printf("in2=%i\t", obj->in2);
-    printf("in3=%i\t", obj->in3);
-    printf("in4=%i\t", obj->in4);
+    printf("in1=%lf\t", obj->in1);
+    printf("in2=%lf\t", obj->in2);
+    printf("in3=%lf\t", obj->in3);
+    printf("in4=%lf\t", obj->in4);
     printf("\n");
 }
 

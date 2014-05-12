@@ -85,6 +85,10 @@
             "type": "long",
             "required": true
           },
+          "long_long_out": {
+            "type": "long long",
+            "required": true
+          },
           "float_out": {
             "type": "float",
             "required": true

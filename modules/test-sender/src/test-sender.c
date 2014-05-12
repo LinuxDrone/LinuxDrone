@@ -20,8 +20,19 @@ void test_sender_run (module_test_sender_t *module)
 
         Output1_t* objOutput1;
         checkout_Output1(module, &objOutput1);
-        //objOutput1->out1 = cycle;
-        //objOutput1->out2 = cycle*2;
+        objOutput1->char_out = cycle;
+        objOutput1->short_out = cycle*2;
+        objOutput1->int_out = cycle*3;
+        objOutput1->long_out = cycle*4;
+        objOutput1->long_long_out = cycle*6;
+        objOutput1->float_out = cycle*7;
+        objOutput1->double_out = cycle*8;
+
+        char buffer [33];
+        printf ("Enter a number: ");
+        itoa (objOutput1->short_out,buffer,10);
+        objOutput1->string_out = buffer;
+
         checkin_Output1(module, &objOutput1);
 
         Output2_t* objOutput2;

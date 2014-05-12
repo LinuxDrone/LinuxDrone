@@ -38,13 +38,13 @@ int bson2input(module_t* module, bson_t* bson)
 
         if(!strncmp(key, "in1", XNOBJECT_NAME_LEN))
         {
-            obj->in1 = bson_iter_int32(&iter);
+            obj->in1 = bson_iter_double(&iter);
             module->updated_input_properties |= in1;
             continue;
         }
         if(!strncmp(key, "in2", XNOBJECT_NAME_LEN))
         {
-            obj->in2 = bson_iter_int32(&iter);
+            obj->in2 = bson_iter_double(&iter);
             module->updated_input_properties |= in2;
             continue;
         }
@@ -56,16 +56,16 @@ int bson2input(module_t* module, bson_t* bson)
 void print_test_sender_receiver(void* obj1)
 {
     input_t* obj=obj1;
-    printf("in1=%i\t", obj->in1);
-    printf("in2=%i\t", obj->in2);
+    printf("in1=%lf\t", obj->in1);
+    printf("in2=%lf\t", obj->in2);
     printf("\n");
 }
 
 // Convert structure Output1 to bson
 int Output12bson(Output1_t* obj, bson_t* bson)
 {
-	bson_append_int32 (bson, "out1", -1, obj->out1);
-	bson_append_int32 (bson, "out2", -1, obj->out2);
+	bson_append_double (bson, "out1", -1, obj->out1);
+	bson_append_double (bson, "out2", -1, obj->out2);
 	return 0;
 }
 
@@ -92,13 +92,13 @@ int bson2Output1(module_t* module, bson_t* bson)
 
         if(!strncmp(key, "out1", XNOBJECT_NAME_LEN))
         {
-            obj->out1 = bson_iter_int32(&iter);
+            obj->out1 = bson_iter_double(&iter);
             module->updated_input_properties |= out1;
             continue;
         }
         if(!strncmp(key, "out2", XNOBJECT_NAME_LEN))
         {
-            obj->out2 = bson_iter_int32(&iter);
+            obj->out2 = bson_iter_double(&iter);
             module->updated_input_properties |= out2;
             continue;
         }
@@ -109,15 +109,15 @@ int bson2Output1(module_t* module, bson_t* bson)
 // Helper function. Print structure Output1
 void print_Output1(Output1_t* obj)
 {
-    printf("out1=%i\t", obj->out1);
-    printf("out2=%i\t", obj->out2);
+    printf("out1=%lf\t", obj->out1);
+    printf("out2=%lf\t", obj->out2);
     printf("\n");
 }
 
 // Convert structure Output2 to bson
 int Output22bson(Output2_t* obj, bson_t* bson)
 {
-	bson_append_int32 (bson, "out3", -1, obj->out3);
+	bson_append_double (bson, "out3", -1, obj->out3);
 	return 0;
 }
 
@@ -144,7 +144,7 @@ int bson2Output2(module_t* module, bson_t* bson)
 
         if(!strncmp(key, "out3", XNOBJECT_NAME_LEN))
         {
-            obj->out3 = bson_iter_int32(&iter);
+            obj->out3 = bson_iter_double(&iter);
             module->updated_input_properties |= out3;
             continue;
         }
@@ -155,7 +155,7 @@ int bson2Output2(module_t* module, bson_t* bson)
 // Helper function. Print structure Output2
 void print_Output2(Output2_t* obj)
 {
-    printf("out3=%i\t", obj->out3);
+    printf("out3=%lf\t", obj->out3);
     printf("\n");
 }
 

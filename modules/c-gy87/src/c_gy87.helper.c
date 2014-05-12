@@ -8,16 +8,16 @@ extern t_cycle_function c_gy87_run;
 // Convert structure GyroAccelMagTemp to bson
 int GyroAccelMagTemp2bson(GyroAccelMagTemp_t* obj, bson_t* bson)
 {
-	bson_append_int32 (bson, "accelX", -1, obj->accelX);
-	bson_append_int32 (bson, "accelY", -1, obj->accelY);
-	bson_append_int32 (bson, "accelZ", -1, obj->accelZ);
-	bson_append_int32 (bson, "gyroX", -1, obj->gyroX);
-	bson_append_int32 (bson, "gyroY", -1, obj->gyroY);
-	bson_append_int32 (bson, "gyroZ", -1, obj->gyroZ);
-	bson_append_int32 (bson, "magX", -1, obj->magX);
-	bson_append_int32 (bson, "magY", -1, obj->magY);
-	bson_append_int32 (bson, "magZ", -1, obj->magZ);
-	bson_append_int32 (bson, "temperature", -1, obj->temperature);
+	bson_append_double (bson, "accelX", -1, obj->accelX);
+	bson_append_double (bson, "accelY", -1, obj->accelY);
+	bson_append_double (bson, "accelZ", -1, obj->accelZ);
+	bson_append_double (bson, "gyroX", -1, obj->gyroX);
+	bson_append_double (bson, "gyroY", -1, obj->gyroY);
+	bson_append_double (bson, "gyroZ", -1, obj->gyroZ);
+	bson_append_double (bson, "magX", -1, obj->magX);
+	bson_append_double (bson, "magY", -1, obj->magY);
+	bson_append_double (bson, "magZ", -1, obj->magZ);
+	bson_append_double (bson, "temperature", -1, obj->temperature);
 	return 0;
 }
 
@@ -44,61 +44,61 @@ int bson2GyroAccelMagTemp(module_t* module, bson_t* bson)
 
         if(!strncmp(key, "accelX", XNOBJECT_NAME_LEN))
         {
-            obj->accelX = bson_iter_int32(&iter);
+            obj->accelX = bson_iter_double(&iter);
             module->updated_input_properties |= accelX;
             continue;
         }
         if(!strncmp(key, "accelY", XNOBJECT_NAME_LEN))
         {
-            obj->accelY = bson_iter_int32(&iter);
+            obj->accelY = bson_iter_double(&iter);
             module->updated_input_properties |= accelY;
             continue;
         }
         if(!strncmp(key, "accelZ", XNOBJECT_NAME_LEN))
         {
-            obj->accelZ = bson_iter_int32(&iter);
+            obj->accelZ = bson_iter_double(&iter);
             module->updated_input_properties |= accelZ;
             continue;
         }
         if(!strncmp(key, "gyroX", XNOBJECT_NAME_LEN))
         {
-            obj->gyroX = bson_iter_int32(&iter);
+            obj->gyroX = bson_iter_double(&iter);
             module->updated_input_properties |= gyroX;
             continue;
         }
         if(!strncmp(key, "gyroY", XNOBJECT_NAME_LEN))
         {
-            obj->gyroY = bson_iter_int32(&iter);
+            obj->gyroY = bson_iter_double(&iter);
             module->updated_input_properties |= gyroY;
             continue;
         }
         if(!strncmp(key, "gyroZ", XNOBJECT_NAME_LEN))
         {
-            obj->gyroZ = bson_iter_int32(&iter);
+            obj->gyroZ = bson_iter_double(&iter);
             module->updated_input_properties |= gyroZ;
             continue;
         }
         if(!strncmp(key, "magX", XNOBJECT_NAME_LEN))
         {
-            obj->magX = bson_iter_int32(&iter);
+            obj->magX = bson_iter_double(&iter);
             module->updated_input_properties |= magX;
             continue;
         }
         if(!strncmp(key, "magY", XNOBJECT_NAME_LEN))
         {
-            obj->magY = bson_iter_int32(&iter);
+            obj->magY = bson_iter_double(&iter);
             module->updated_input_properties |= magY;
             continue;
         }
         if(!strncmp(key, "magZ", XNOBJECT_NAME_LEN))
         {
-            obj->magZ = bson_iter_int32(&iter);
+            obj->magZ = bson_iter_double(&iter);
             module->updated_input_properties |= magZ;
             continue;
         }
         if(!strncmp(key, "temperature", XNOBJECT_NAME_LEN))
         {
-            obj->temperature = bson_iter_int32(&iter);
+            obj->temperature = bson_iter_double(&iter);
             module->updated_input_properties |= temperature;
             continue;
         }
@@ -109,16 +109,16 @@ int bson2GyroAccelMagTemp(module_t* module, bson_t* bson)
 // Helper function. Print structure GyroAccelMagTemp
 void print_GyroAccelMagTemp(GyroAccelMagTemp_t* obj)
 {
-    printf("accelX=%i\t", obj->accelX);
-    printf("accelY=%i\t", obj->accelY);
-    printf("accelZ=%i\t", obj->accelZ);
-    printf("gyroX=%i\t", obj->gyroX);
-    printf("gyroY=%i\t", obj->gyroY);
-    printf("gyroZ=%i\t", obj->gyroZ);
-    printf("magX=%i\t", obj->magX);
-    printf("magY=%i\t", obj->magY);
-    printf("magZ=%i\t", obj->magZ);
-    printf("temperature=%i\t", obj->temperature);
+    printf("accelX=%lf\t", obj->accelX);
+    printf("accelY=%lf\t", obj->accelY);
+    printf("accelZ=%lf\t", obj->accelZ);
+    printf("gyroX=%lf\t", obj->gyroX);
+    printf("gyroY=%lf\t", obj->gyroY);
+    printf("gyroZ=%lf\t", obj->gyroZ);
+    printf("magX=%lf\t", obj->magX);
+    printf("magY=%lf\t", obj->magY);
+    printf("magZ=%lf\t", obj->magZ);
+    printf("temperature=%lf\t", obj->temperature);
     printf("\n");
 }
 
