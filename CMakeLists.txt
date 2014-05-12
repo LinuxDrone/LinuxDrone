@@ -33,7 +33,7 @@ project(linuxdrone)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME})
 
 # Compiler options
-add_definitions(${XENOMAI_DEFINITIONS}) #-std=c++11 -mfpu=neon
+add_definitions( -std=c++11 ${XENOMAI_DEFINITIONS}) #-mfpu=neon
 
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
@@ -61,7 +61,10 @@ ELSE()
     SET(NODEJS /opt/local/bin/node)
 ENDIF()
 
-SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
+#SET(DO_POST_BUILD YES)
+
+#SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
+SET(URL_TARGET_SYSTEM root@192.168.1.2)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
@@ -69,8 +72,8 @@ SET(SSH_PORT_TARGET_SYSTEM 22)
 
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}
-#find_package(MongoDB REQUIRED)
-#include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
+find_package(MongoDB REQUIRED)
+include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 
 # Boost
 # Libraries: ${Boost_LIBRARIES}
@@ -98,7 +101,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
 # Project libraries
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-#add_subdirectory(${LIB_DIR}/core)
+add_subdirectory(${LIB_DIR}/core)
 #add_subdirectory(${LIB_DIR}/sdk)
 #add_subdirectory(${LIB_DIR}/dotnet-sdk)
 add_subdirectory(${LIB_DIR}/c-sdk)
@@ -106,7 +109,8 @@ add_subdirectory(${LIB_DIR}/c-sdk)
 # Loadable modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
 #add_subdirectory(${MOD_DIR}/gy87)
-#add_subdirectory(${MOD_DIR}/c-gy87)
+add_subdirectory(${MOD_DIR}/c-gy87)
+#add_subdirectory(${MOD_DIR}/test-params)
 add_subdirectory(${MOD_DIR}/test-sender)
 add_subdirectory(${MOD_DIR}/test-receiver)
 add_subdirectory(${MOD_DIR}/test-sender-receiver)

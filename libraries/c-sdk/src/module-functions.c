@@ -319,7 +319,7 @@ int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* na
                fprintf(stderr, "Function \"unregister_remote_shmem\" No memory available\n");
                exit(EXIT_FAILURE);
             }
-            ar_remote_shmems->remote_shmems_len = ar_remote_shmems->remote_shmems_len - 1;
+            ar_remote_shmems->remote_shmems_len--;
             ar_remote_shmems->remote_shmems = tmp;
 
             return 0;
@@ -934,8 +934,8 @@ void get_input_data(void* p_module)
         }
         else
         {
-printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
-(*module->print_input)(module->input_data);
+//printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
+//(*module->print_input)(module->input_data);
         }
         bson_destroy(&bson);
     }
@@ -1559,10 +1559,8 @@ int refresh_input(void* p_module)
                             break;
                     }
                 }
-printf("%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
-(*module->print_input)(module->input_data);
-//fflush(stdout);
-
+//printf("%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
+//(*module->print_input)(module->input_data);
                 bson_destroy(&bson);
             }
         }

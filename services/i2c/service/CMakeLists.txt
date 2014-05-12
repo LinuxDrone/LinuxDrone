@@ -10,26 +10,29 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-file(GLOB_RECURSE INC "include/*")
-file(GLOB_RECURSE SRC "src/*.c")
+file(GLOB_RECURSE INC "*.h")
+file(GLOB_RECURSE SRC "*.c")
 
 include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
+include_directories(${RFS_DIR}/usr/local/include/libmongoc-1.0)
+include_directories(${LIB_DIR}/c-sdk/include)
 
 set(EXTRA_LIBS
+    c-sdk
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
-    ${RFS_DIR}/usr/local/lib/libbson-1.0.so
+    rt
+    pthread
 )
 
-add_library(c-sdk ${INC} ${SRC})
-
-target_link_libraries(c-sdk ${EXTRA_LIBS})
+add_executable(i2c_service ${INC} ${SRC})
+target_link_libraries(i2c_service ${EXTRA_LIBS})
 
 IF(${DO_POST_BUILD})
     add_custom_command(
-        TARGET c-sdk
+        TARGET i2c_service
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-sdk.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/lib/libc-sdk.so
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} i2c_service ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/services/i2c_service
     )
 ENDIF()
 
-install(TARGETS c-sdk DESTINATION lib)
+install(TARGETS i2c_service DESTINATION bin)

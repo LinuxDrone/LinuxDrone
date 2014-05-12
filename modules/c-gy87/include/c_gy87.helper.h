@@ -31,17 +31,6 @@ typedef struct
 	int temperature;
 } GyroAccelMagTemp_t;
 
-// Enum and Structure for port Baro
-typedef enum
-{
-	pressure =	0b00000000000000000000000000000001
-} fields_Baro_t;
-
-typedef struct
-{
-	int pressure;
-} Baro_t;
-
 
 // Module Structure
 typedef struct {
@@ -51,11 +40,6 @@ typedef struct {
 	out_object_t  GyroAccelMagTemp;
 	GyroAccelMagTemp_t obj1_GyroAccelMagTemp;
 	GyroAccelMagTemp_t obj2_GyroAccelMagTemp;
-
-	// набор данных для выхода Baro
-	out_object_t  Baro;
-	Baro_t obj1_Baro;
-	Baro_t obj2_Baro;
 } module_c_gy87_t;
 
 

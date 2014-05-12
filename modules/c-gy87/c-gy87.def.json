@@ -3,8 +3,7 @@
     "name": "c-gy87",
     "version": 1,
     "Task Priority": 80,
-    "Task Period": 200,
-    "Notify on change": false,
+    "Task Period": 1000,
     "description": {
         "en": "GY-87 sensors set",
         "ru": "Набор датчиков на плате GY-87"
@@ -17,44 +16,17 @@
                 "ru": "Имя шины"
             },
             "description": {
-                "ru": "Название девайса"
+                "ru": "Путь к файлу i2c устройства"
             },
             "type": "string",
             "defaultValue": "/dev/i2c-1",
             "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
             "unitMeasured": ""
-        },
-        {
-            "name": "Test Number Param",
-            "displayName": {
-                "en": "Bus Name",
-                "ru": "Имя шины"
-            },
-            "description": {
-                "ru": "Название девайса"
-            },
-            "type": "number",
-            "defaultValue": 123,
-            "validValues" : [56,123],
-            "unitMeasured": "int"
-        },
-        {
-            "name": "Test Boolean Param",
-            "displayName": {
-                "en": "Bus Name",
-                "ru": "Имя шины"
-            },
-            "description": {
-                "ru": "Название девайса"
-            },
-            "type": "boolean",
-            "defaultValue": false,
-            "unitMeasured": "bool"
         }
     ],
     "outputs": [
         {
-            "name": "Gyro+Accel+Mag+Temp",
+            "name": "GyroAccelMagTemp",
             "Schema": {
                 "type": "object",
                 "id": "http://jsonschema.net",
@@ -96,19 +68,6 @@
                         "required": true
                     },
                     "temperature": {
-                        "type": "number",
-                        "required": true
-                    }
-                }
-            }
-        },
-        {
-            "name": "Baro",
-            "Schema": {
-                "type": "object",
-                "id": "http://jsonschema.net",
-                "properties": {
-                    "pressure": {
                         "type": "number",
                         "required": true
                     }

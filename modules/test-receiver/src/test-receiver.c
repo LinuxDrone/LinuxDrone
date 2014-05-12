@@ -1,23 +1,13 @@
 #include "../include/test_receiver.helper.h"
-#include "../../../services/i2c/include/i2c.h"
+#include "../../../services/i2c/client/i2c_client.h"
 
-RT_TASK task_i2c_service;
-bool binded_task_i2c_service = false;
 
-RT_TASK_MCB request_block2;
-RT_TASK_MCB response_block2;
 
 void test_receiver_run (module_test_receiver_t *module)
 {
-
-    // Подготовим буфер для передачи запроса
-    request_block2.data = calloc(1, sizeof(i2c_req_t));
-    request_block2.size = sizeof(i2c_req_t);
-
-    // Подготовим буфер для приема ответа
-    response_block2.data = calloc(1, sizeof(i2c_res_t));
-    response_block2.size = sizeof(i2c_res_t);
-
+    i2c_service_t i2c_service;
+    memset(&i2c_service, 0, sizeof(i2c_service_t));
+    int session_id=0;
 
     int cycle=0;
     while(1) {
@@ -34,34 +24,52 @@ void test_receiver_run (module_test_receiver_t *module)
         }
 
 
-        if(!binded_task_i2c_service)
+        if(!i2c_service.connected)
         {
-            int err = rt_task_bind(&task_i2c_service, TASK_NAME_I2C, TM_NONBLOCK);
-            if(err!=0)
-            {
-                //print_task_bind_error(err);
-                continue;
-            }
-            else
-            {
-                binded_task_i2c_service=true;
-                //rt_task_sleep(rt_timer_ns2ticks(2000));
-            }
+            connect_i2c_service(&i2c_service);
+            continue;
         }
 
-        ssize_t received = rt_task_send(&task_i2c_service, &request_block2, &response_block2, TM_INFINITE);
-        if(received<0)
+
+        if(session_id<1)
         {
-            if(received==-ESRCH)
-            {
-                binded_task_i2c_service=false;
-            }
-            else
-            {
-                print_task_send_error(received);
-                continue;
-            }
+            session_id = open_i2c(&i2c_service, "/dev/i2c-1");
+            continue;
         }
+
+
+
+
+        char* data;
+        char dev = 0x68;
+        char reg = 0x75;
+        int len_requested_data = 1;
+        int ret_len;
+
+        int res = read_i2c(&i2c_service, session_id, dev, reg, len_requested_data, &data, &ret_len);
+        if(res<0)
+            print_i2c_error(res);
+
+
+        if(ret_len>0)
+        {
+            //printf("mpuId = 0x%02X\n", *data);
+        }
+
+
+        dev = 0x29;
+        reg = 0;
+        char motor = cycle/30;
+        if(motor>245)
+            motor=245;
+printf("motor=%i\n", motor);
+
+        res = write_i2c(&i2c_service, session_id, dev, reg, sizeof(char), &motor);
+        if(res<0)
+            print_i2c_error(res);
+
+
+        close_i2c(&i2c_service, &session_id);
 
 
         // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу
