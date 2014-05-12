@@ -32,43 +32,43 @@
                 "id": "http://jsonschema.net",
                 "properties": {
                     "accelX": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "accelY": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "accelZ": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "gyroX": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "gyroY": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "gyroZ": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "magX": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "magY": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "magZ": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "temperature": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     }
                 }

@@ -28,7 +28,7 @@ function make_structures(properties, portName) {
     r += "{\n";
     for (var key in properties) {
         // TODO: Pay attention property type (need realize)
-        r += "\tint " + key + ";\n";
+        r += "\t" + properties[key].type + " " + key + ";\n";
     }
     r += "} " + portName + "_t;\n\n";
     return r;

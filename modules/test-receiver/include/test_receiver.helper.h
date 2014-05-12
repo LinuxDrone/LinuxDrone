@@ -13,10 +13,10 @@ typedef enum
 
 typedef struct
 {
-	int in1;
-	int in2;
-	int in3;
-	int in4;
+	float in1;
+	float in2;
+	float in3;
+	float in4;
 } input_t;
 
 

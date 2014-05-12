@@ -30,7 +30,7 @@
       "unitMeasured": ""
     },
     {
-      "name": "Test Number Param",
+      "name": "Test float Param",
       "displayName": {
         "en": "param 2",
         "ru": "параметр 2"
@@ -39,7 +39,7 @@
         "en": "en description",
         "ru": "русское описание"
       },
-      "type": "number",
+      "type": "float",
       "defaultValue": 123,
       "validValues": [
         56,
@@ -70,11 +70,11 @@
         "id": "http://jsonschema.net",
         "properties": {
           "out1": {
-            "type": "number",
+            "type": "float",
             "required": true
           },
           "out2": {
-            "type": "number",
+            "type": "float",
             "required": true
           }
         }
@@ -87,7 +87,7 @@
         "id": "http://jsonschema.net",
         "properties": {
           "out3": {
-            "type": "number",
+            "type": "float",
             "required": true
           }
         }
@@ -99,7 +99,7 @@
     "id": "http://jsonschema.net",
     "properties": {
       "in1": {
-        "type": "number",
+        "type": "float",
         "required": true,
         "description": {
           "en": "input 1",
@@ -107,7 +107,7 @@
         }
       },
       "in2": {
-        "type": "number",
+        "type": "float",
         "required": true,
         "description": {
           "en": "input 2",

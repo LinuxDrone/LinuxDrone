@@ -11,8 +11,8 @@ typedef enum
 
 typedef struct
 {
-	int in1;
-	int in2;
+	float in1;
+	float in2;
 } input_t;
 
 // Enum and Structure for port Output1
@@ -24,8 +24,8 @@ typedef enum
 
 typedef struct
 {
-	int out1;
-	int out2;
+	float out1;
+	float out2;
 } Output1_t;
 
 // Enum and Structure for port Output2
@@ -36,7 +36,7 @@ typedef enum
 
 typedef struct
 {
-	int out3;
+	float out3;
 } Output2_t;
 
 

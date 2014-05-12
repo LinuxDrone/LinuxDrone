@@ -39,7 +39,7 @@
         "en": "en description",
         "ru": "русское описание"
       },
-      "type": "number",
+      "type": "int",
       "defaultValue": 123,
       "validValues": [
         56,
@@ -69,12 +69,32 @@
         "type": "object",
         "id": "http://jsonschema.net",
         "properties": {
-          "out1": {
-            "type": "number",
+          "char_out": {
+            "type": "char",
             "required": true
           },
-          "out2": {
-            "type": "number",
+          "short_out": {
+            "type": "short",
+            "required": true
+          },
+          "int_out": {
+            "type": "int",
+            "required": true
+          },
+          "long_out": {
+            "type": "long",
+            "required": true
+          },
+          "float_out": {
+            "type": "float",
+            "required": true
+          },
+          "double_out": {
+            "type": "double",
+            "required": true
+          },
+          "string_out": {
+            "type": "const char*",
             "required": true
           }
         }
@@ -87,7 +107,7 @@
         "id": "http://jsonschema.net",
         "properties": {
           "out3": {
-            "type": "number",
+            "type": "int",
             "required": true
           }
         }

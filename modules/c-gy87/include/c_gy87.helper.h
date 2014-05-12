@@ -19,16 +19,16 @@ typedef enum
 
 typedef struct
 {
-	int accelX;
-	int accelY;
-	int accelZ;
-	int gyroX;
-	int gyroY;
-	int gyroZ;
-	int magX;
-	int magY;
-	int magZ;
-	int temperature;
+	float accelX;
+	float accelY;
+	float accelZ;
+	float gyroX;
+	float gyroY;
+	float gyroZ;
+	float magX;
+	float magY;
+	float magZ;
+	float temperature;
 } GyroAccelMagTemp_t;
 
 

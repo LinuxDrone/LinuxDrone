@@ -33,7 +33,7 @@ project(linuxdrone)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME})
 
 # Compiler options
-add_definitions(-mfpu=neon -std=c++11 ${XENOMAI_DEFINITIONS})
+add_definitions(-mfpu=neon ${XENOMAI_DEFINITIONS}) #-std=c++11
 
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
@@ -61,7 +61,7 @@ ELSE()
     SET(NODEJS /opt/local/bin/node)
 ENDIF()
 
-SET(DO_POST_BUILD YES)
+#SET(DO_POST_BUILD YES)
 
 #SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 SET(URL_TARGET_SYSTEM root@192.168.1.2)
@@ -101,8 +101,8 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
 # Project libraries
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-add_subdirectory(${LIB_DIR}/core)
-add_subdirectory(${LIB_DIR}/sdk)
+#add_subdirectory(${LIB_DIR}/core)
+#add_subdirectory(${LIB_DIR}/sdk)
 #add_subdirectory(${LIB_DIR}/dotnet-sdk)
 add_subdirectory(${LIB_DIR}/c-sdk)
 

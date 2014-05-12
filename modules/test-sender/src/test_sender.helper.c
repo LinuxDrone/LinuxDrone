@@ -8,8 +8,13 @@ extern t_cycle_function test_sender_run;
 // Convert structure Output1 to bson
 int Output12bson(Output1_t* obj, bson_t* bson)
 {
-	bson_append_int32 (bson, "out1", -1, obj->out1);
-	bson_append_int32 (bson, "out2", -1, obj->out2);
+	bson_append_int32 (bson, "char_out", -1, obj->char_out);
+	bson_append_int32 (bson, "short_out", -1, obj->short_out);
+	bson_append_int32 (bson, "int_out", -1, obj->int_out);
+	bson_append_int32 (bson, "long_out", -1, obj->long_out);
+	bson_append_int32 (bson, "float_out", -1, obj->float_out);
+	bson_append_int32 (bson, "double_out", -1, obj->double_out);
+	bson_append_int32 (bson, "string_out", -1, obj->string_out);
 	return 0;
 }
 
@@ -34,16 +39,46 @@ int bson2Output1(module_t* module, bson_t* bson)
     {
         const char* key = bson_iter_key (&iter);
 
-        if(!strncmp(key, "out1", XNOBJECT_NAME_LEN))
+        if(!strncmp(key, "char_out", XNOBJECT_NAME_LEN))
         {
-            obj->out1 = bson_iter_int32(&iter);
-            module->updated_input_properties |= out1;
+            obj->char_out = bson_iter_int32(&iter);
+            module->updated_input_properties |= char_out;
             continue;
         }
-        if(!strncmp(key, "out2", XNOBJECT_NAME_LEN))
+        if(!strncmp(key, "short_out", XNOBJECT_NAME_LEN))
         {
-            obj->out2 = bson_iter_int32(&iter);
-            module->updated_input_properties |= out2;
+            obj->short_out = bson_iter_int32(&iter);
+            module->updated_input_properties |= short_out;
+            continue;
+        }
+        if(!strncmp(key, "int_out", XNOBJECT_NAME_LEN))
+        {
+            obj->int_out = bson_iter_int32(&iter);
+            module->updated_input_properties |= int_out;
+            continue;
+        }
+        if(!strncmp(key, "long_out", XNOBJECT_NAME_LEN))
+        {
+            obj->long_out = bson_iter_int32(&iter);
+            module->updated_input_properties |= long_out;
+            continue;
+        }
+        if(!strncmp(key, "float_out", XNOBJECT_NAME_LEN))
+        {
+            obj->float_out = bson_iter_int32(&iter);
+            module->updated_input_properties |= float_out;
+            continue;
+        }
+        if(!strncmp(key, "double_out", XNOBJECT_NAME_LEN))
+        {
+            obj->double_out = bson_iter_int32(&iter);
+            module->updated_input_properties |= double_out;
+            continue;
+        }
+        if(!strncmp(key, "string_out", XNOBJECT_NAME_LEN))
+        {
+            obj->string_out = bson_iter_int32(&iter);
+            module->updated_input_properties |= string_out;
             continue;
         }
     }
@@ -53,8 +88,13 @@ int bson2Output1(module_t* module, bson_t* bson)
 // Helper function. Print structure Output1
 void print_Output1(Output1_t* obj)
 {
-    printf("out1=%i\t", obj->out1);
-    printf("out2=%i\t", obj->out2);
+    printf("char_out=%i\t", obj->char_out);
+    printf("short_out=%i\t", obj->short_out);
+    printf("int_out=%i\t", obj->int_out);
+    printf("long_out=%i\t", obj->long_out);
+    printf("float_out=%i\t", obj->float_out);
+    printf("double_out=%i\t", obj->double_out);
+    printf("string_out=%i\t", obj->string_out);
     printf("\n");
 }
 
@@ -121,16 +161,46 @@ out_object_t* get_outobject_by_outpin(module_test_sender_t* module, char* name_o
 {
     (*offset_field) = 0;
     (*index_port) = 0;
-    if(!strncmp(name_out_pin, "out1", XNOBJECT_NAME_LEN))
+    if(!strncmp(name_out_pin, "char_out", XNOBJECT_NAME_LEN))
     {
-        (*offset_field) = (void*)&module->obj1_Output1.out1 - (void*)&module->obj1_Output1;
+        (*offset_field) = (void*)&module->obj1_Output1.char_out - (void*)&module->obj1_Output1;
         (*index_port) = 0;
         return &module->Output1;
     }
-    if(!strncmp(name_out_pin, "out2", XNOBJECT_NAME_LEN))
+    if(!strncmp(name_out_pin, "short_out", XNOBJECT_NAME_LEN))
     {
-        (*offset_field) = (void*)&module->obj1_Output1.out2 - (void*)&module->obj1_Output1;
+        (*offset_field) = (void*)&module->obj1_Output1.short_out - (void*)&module->obj1_Output1;
         (*index_port) = 1;
+        return &module->Output1;
+    }
+    if(!strncmp(name_out_pin, "int_out", XNOBJECT_NAME_LEN))
+    {
+        (*offset_field) = (void*)&module->obj1_Output1.int_out - (void*)&module->obj1_Output1;
+        (*index_port) = 2;
+        return &module->Output1;
+    }
+    if(!strncmp(name_out_pin, "long_out", XNOBJECT_NAME_LEN))
+    {
+        (*offset_field) = (void*)&module->obj1_Output1.long_out - (void*)&module->obj1_Output1;
+        (*index_port) = 3;
+        return &module->Output1;
+    }
+    if(!strncmp(name_out_pin, "float_out", XNOBJECT_NAME_LEN))
+    {
+        (*offset_field) = (void*)&module->obj1_Output1.float_out - (void*)&module->obj1_Output1;
+        (*index_port) = 4;
+        return &module->Output1;
+    }
+    if(!strncmp(name_out_pin, "double_out", XNOBJECT_NAME_LEN))
+    {
+        (*offset_field) = (void*)&module->obj1_Output1.double_out - (void*)&module->obj1_Output1;
+        (*index_port) = 5;
+        return &module->Output1;
+    }
+    if(!strncmp(name_out_pin, "string_out", XNOBJECT_NAME_LEN))
+    {
+        (*offset_field) = (void*)&module->obj1_Output1.string_out - (void*)&module->obj1_Output1;
+        (*index_port) = 6;
         return &module->Output1;
     }
     if(!strncmp(name_out_pin, "out3", XNOBJECT_NAME_LEN))

@@ -3,6 +3,7 @@
 void test_sender_run (module_test_sender_t *module)
 {
     int cycle=0;
+
     while(1) {
         get_input_data(module);
 
@@ -19,8 +20,8 @@ void test_sender_run (module_test_sender_t *module)
 
         Output1_t* objOutput1;
         checkout_Output1(module, &objOutput1);
-        objOutput1->out1 = cycle;
-        objOutput1->out2 = cycle*2;
+        //objOutput1->out1 = cycle;
+        //objOutput1->out2 = cycle*2;
         checkin_Output1(module, &objOutput1);
 
         Output2_t* objOutput2;

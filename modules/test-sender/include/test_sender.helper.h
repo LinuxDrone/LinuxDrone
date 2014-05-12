@@ -5,14 +5,24 @@
 // Enum and Structure for port Output1
 typedef enum
 {
-	out1 =	0b00000000000000000000000000000001,
-	out2 =	0b00000000000000000000000000000010
+	char_out =	0b00000000000000000000000000000001,
+	short_out =	0b00000000000000000000000000000010,
+	int_out =	0b00000000000000000000000000000100,
+	long_out =	0b00000000000000000000000000001000,
+	float_out =	0b00000000000000000000000000010000,
+	double_out =	0b00000000000000000000000000100000,
+	string_out =	0b00000000000000000000000001000000
 } fields_Output1_t;
 
 typedef struct
 {
-	int out1;
-	int out2;
+	char char_out;
+	short short_out;
+	int int_out;
+	long long_out;
+	float float_out;
+	double double_out;
+	const char* string_out;
 } Output1_t;
 
 // Enum and Structure for port Output2
