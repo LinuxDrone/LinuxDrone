@@ -10,26 +10,25 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-file(GLOB_RECURSE INC "include/*")
-file(GLOB_RECURSE SRC "src/*.c")
+file(GLOB_RECURSE INC "*.h")
+file(GLOB_RECURSE SRC "*.c")
 
-include_directories(${LIB_DIR}/c-sdk/include)
+include_directories(${LIB_DIR}/c-sdk/include ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
 
 set(EXTRA_LIBS
     c-sdk
 )
 
-add_library(test-sender MODULE ${INC} ${SRC})
+ADD_CUSTOM_COMMAND(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test-sender.helper.c
+    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/test-sender.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-sender.def.json
+)
+
+add_library(test-sender MODULE ${INC} ${SRC} test-sender.helper.c)
 
 target_link_libraries(test-sender ${EXTRA_LIBS})
-
-add_custom_command(
-    TARGET test-sender
-    PRE_BUILD
-#COMMAND
-    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-sender/test-sender.def.json ${MOD_DIR}/test-sender
-)
 
 IF(${DO_POST_BUILD})
     add_custom_command(

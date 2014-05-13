@@ -1,4 +1,4 @@
-#include "../include/test_sender_receiver.helper.h"
+#include "test-sender-receiver.helper.h"
 
 void test_sender_receiver_run (module_test_sender_receiver_t *module)
 {

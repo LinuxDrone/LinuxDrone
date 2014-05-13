@@ -10,26 +10,25 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-file(GLOB_RECURSE INC "include/*")
-file(GLOB_RECURSE SRC "src/*.c")
+file(GLOB_RECURSE INC "*.h")
+file(GLOB_RECURSE SRC "*.c")
 
-include_directories(${LIB_DIR}/c-sdk/include)
+include_directories(${LIB_DIR}/c-sdk/include ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
 
 set(EXTRA_LIBS
     c-sdk
-    i2c_client
 )
 
-add_library(test-receiver MODULE ${INC} ${SRC})
+ADD_CUSTOM_COMMAND(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test-receiver.helper.c
+    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/test-receiver.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-receiver.def.json
+)
+
+add_library(test-receiver MODULE ${INC} ${SRC} test-receiver.helper.c)
 
 target_link_libraries(test-receiver ${EXTRA_LIBS})
-
-add_custom_command(
-    TARGET test-receiver
-    PRE_BUILD
-    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/test-receiver/test-receiver.def.json ${MOD_DIR}/test-receiver
-)
 
 IF(${DO_POST_BUILD})
     add_custom_command(

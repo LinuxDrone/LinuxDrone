@@ -1,5 +1,5 @@
-#include "../include/c-gy87.h"
-#include "../include/c_gy87.helper.h"
+#include "c-gy87.h"
+#include "c-gy87.helper.h"
 #include "../../../services/i2c/client/i2c_client.h"
 
 

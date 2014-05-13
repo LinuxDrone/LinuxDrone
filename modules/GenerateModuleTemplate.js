@@ -12,25 +12,25 @@ function CreateCMakeLists(module_name) {
     r += "# license: http://creativecommons.org/licenses/by-sa/4.0/\n";
     r += "#--------------------------------------------------------------------\n\n";
 
-    r += "file(GLOB_RECURSE INC \"include/*\")\n";
-    r += "file(GLOB_RECURSE SRC \"src/*.c\")\n\n";
+    r += "file(GLOB_RECURSE INC \"*.h\")\n";
+    r += "file(GLOB_RECURSE SRC \"*.c\")\n\n";
 
-    r += "include_directories(${LIB_DIR}/c-sdk/include)\n";
+    r += "include_directories(${LIB_DIR}/c-sdk/include ${CMAKE_CURRENT_BINARY_DIR})\n";
     r += "include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)\n\n";
 
     r += "set(EXTRA_LIBS\n";
     r += "    c-sdk\n";
     r += ")\n\n";
 
-    r += "add_library(" + module_name + " MODULE ${INC} ${SRC})\n\n";
+    r += "ADD_CUSTOM_COMMAND(\n";
+    r += "    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/" + module_name + ".helper.c\n";
+    r += "    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/" + module_name + ".def.json ${CMAKE_CURRENT_BINARY_DIR}\n";
+    r += "    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/" + module_name + ".def.json\n";
+    r += ")\n\n";
+
+    r += "add_library(" + module_name + " MODULE ${INC} ${SRC} " + module_name + ".helper.c)\n\n";
 
     r += "target_link_libraries(" + module_name + " ${EXTRA_LIBS})\n\n";
-
-    r += "add_custom_command(\n";
-    r += "    TARGET " + module_name + "\n";
-    r += "    PRE_BUILD\n";
-    r += "    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${MOD_DIR}/" + module_name + "/" + module_name + ".def.json ${MOD_DIR}/" + module_name + "\n";
-    r += ")\n\n";
 
     r += "IF(${DO_POST_BUILD})\n"
     r += "    add_custom_command(\n";
@@ -49,126 +49,135 @@ function CreateCMakeLists(module_name) {
 
 function CreateModuleDefinition(module_name) {
     var obj_def = {
-        "type": "module_def",
-        "name": module_name,
-        "version": 1,
-        "Task Priority": 80,
-        "Task Period": 200000,
-        "Transfer task period" : 200000,
-        "Notify on change": false,
-        "description": {
-            "en": "en description",
-            "ru": "русское описание"
-        },
-        "paramsDefinitions": [
-            {
-                "name": "I2C Device",
-                "displayName": {
-                    "en": "param 1",
-                    "ru": "параметр 1"
-                },
-                "description": {
-                    "en": "en description",
-                    "ru": "русское описание"
-                },
-                "type": "string",
-                "defaultValue": "default value",
-                "validValues": ["str1", "str2"],
-                "unitMeasured": ""
-            },
-            {
-                "name": "Test Number Param",
-                "displayName": {
-                    "en": "param 2",
-                    "ru": "параметр 2"
-                },
-                "description": {
-                    "en": "en description",
-                    "ru": "русское описание"
-                },
-                "type": "number",
-                "defaultValue": 123,
-                "validValues": [56, 123],
-                "unitMeasured": "Ms"
-            },
-            {
-                "name": "Test Boolean Param",
-                "displayName": {
-                    "en": "param 3",
-                    "ru": "параметр 3"
-                },
-                "description": {
-                    "en": "en description",
-                    "ru": "русское описание"
-                },
-                "type": "boolean",
-                "defaultValue": false,
-                "unitMeasured": "bool"
-            }
-        ],
-        "outputs": [
-            {
-                "name": "Output1",
-                "Schema": {
-                    "type": "object",
-                    "id": "http://jsonschema.net",
-                    "properties": {
-                        "out1": {
-                            "type": "number",
-                            "required": true
-                        },
-                        "out2": {
-                            "type": "number",
-                            "required": true
-                        }
-                    }
-                }
-            },
-            {
-                "name": "Output2",
-                "Schema": {
-                    "type": "object",
-                    "id": "http://jsonschema.net",
-                    "properties": {
-                        "out3": {
-                            "type": "number",
-                            "required": true
-                        }
-                    }
-                }
-            }
-        ],
-        "inputShema": {
-            "type": "object",
-            "id": "http://jsonschema.net",
-            "properties": {
-                "in1": {
-                    "type": "number",
-                    "required": true,
-                    "description": {
-                        "en": "input 1",
-                        "ru": "Вход 1"
-                    }
-                },
-                "in2": {
-                    "type": "number",
-                    "required": true,
-                    "description": {
-                        "en": "input 2",
-                        "ru": "Вход 2"
-                    }
-                }
-            }
+  "type": "module_def",
+  "name": module_name,
+  "version": 2,
+  "Task Priority": 80,
+  "Task Period": 200000,
+  "Transfer task period": 200000,
+  "Notify on change": false,
+  "description": {
+    "en": "en description",
+    "ru": "русское описание"
+  },
+  "paramsDefinitions": [
+    {
+      "name": "I2C Device",
+      "displayName": {
+        "en": "param 1",
+        "ru": "параметр 1"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "string",
+      "defaultValue": "default value",
+      "validValues": [
+        "str1",
+        "str2"
+      ],
+      "unitMeasured": ""
+    },
+    {
+      "name": "Test Number Param",
+      "displayName": {
+        "en": "param 2",
+        "ru": "параметр 2"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "int",
+      "defaultValue": 123,
+      "validValues": [
+        56,
+        123
+      ],
+      "unitMeasured": "Ms"
+    },
+    {
+      "name": "Test Boolean Param",
+      "displayName": {
+        "en": "param 3",
+        "ru": "параметр 3"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "boolean",
+      "defaultValue": false,
+      "unitMeasured": "bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Output1",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "char_out": {
+            "type": "char",
+            "required": true
+          },
+          "short_out": {
+            "type": "short",
+            "required": true
+          },
+          "int_out": {
+            "type": "int",
+            "required": true
+          },
+          "long_out": {
+            "type": "long",
+            "required": true
+          },
+          "long_long_out": {
+            "type": "long long",
+            "required": true
+          },
+          "float_out": {
+            "type": "float",
+            "required": true
+          },
+          "double_out": {
+            "type": "double",
+            "required": true
+          },
+          "string_out": {
+            "type": "const char*",
+            "required": true
+          }
         }
-    };
+      }
+    },
+    {
+      "name": "Output2",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "out3": {
+            "type": "int",
+            "required": true
+          }
+        }
+      }
+    }
+  ]
+};
 
     return obj_def;
 }
 
 function CreateModuleCFile(obj_def){
-    var module_name = obj_def.name.replace(/-/g, "_");
+    var module_name = obj_def.name;
     var r = "";
-    r += "#include \"../include/"+module_name +".helper.h\"\n\n";
+    r += "#include \"" + module_name + ".helper.h\"\n\n";
+    module_name = module_name.replace(/-/g, "_");
     r += "void "+module_name+"_run (module_"+module_name+"_t *module)\n";
     r += "{\n";
     r += "    int cycle=0;\n";
@@ -195,11 +204,17 @@ function CreateModuleCFile(obj_def){
             r += "        checkout_" + outName + "(module, &obj" + outName + ");\n";
             var i=2;
             for (var key in out.Schema.properties) {
-                if ('inputShema' in obj_def) {
-                    r += "        obj" + outName + "->" + key + " = input->in1*"+i+"+cycle;\n";
-                    i++;
+                if(out.Schema.properties[key].type=="const char*"){
+                    r += "        char buffer_" + key + " [32];\n";
+                    r += "        itoa (cycle, buffer_" + key+ ", 10);\n";
+                    r += "        obj" + outName + "->" + key + " = buffer_" + key + ";\n";
                 }else{
-                    r += "        obj" + outName + "->" + key + " = cycle;\n";
+                    if ('inputShema' in obj_def) {
+                        r += "        obj" + outName + "->" + key + " = input->in1*"+i+"+cycle;\n";
+                        i++;
+                    }else{
+                        r += "        obj" + outName + "->" + key + " = cycle;\n";
+                    }
                 }
             }
             r += "        checkin_" + outName + "(module, &obj" + outName + ");\n\n";
@@ -258,33 +273,14 @@ function main() {
         if (err) return console.log(err);
     });
 
-    var src_folder = module_name + "/src";
-    if (!fs.existsSync(src_folder)) {
-        fs.mkdirSync(src_folder, 0766, function (err) {
-            if (err) {
-                console.log(err);
-                response.send("ERROR! Can't make the directory! `\n");    // echo the result back
-            }
-        });
-    }
 
-    var include_folder = module_name + "/include";
-    if (!fs.existsSync(include_folder)) {
-        fs.mkdirSync(include_folder, 0766, function (err) {
-            if (err) {
-                console.log(err);
-                response.send("ERROR! Can't make the directory! `\n");    // echo the result back
-            }
-        });
-    }
-
-    fs.writeFile(module_name + "/src/" + module_name + '.c', CreateModuleCFile(obj_def), function (err) {
+    fs.writeFile(module_name + "/" + module_name + '.c', CreateModuleCFile(obj_def), function (err) {
         if (err) return console.log(err);
     });
 
-    process.argv[2] = module_name + "/" + module_name + '.def.json';
-    process.argv[3] = module_name;
-    require('../libraries/c-sdk/ModuleGenerator.js');
+    //process.argv[2] = module_name + "/" + module_name + '.def.json';
+    //process.argv[3] = module_name;
+    //require('../libraries/c-sdk/ModuleGenerator.js');
 }
 
 

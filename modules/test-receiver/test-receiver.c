@@ -1,4 +1,4 @@
-#include "../include/test_receiver.helper.h"
+#include "test-receiver.helper.h"
 #include "../../../services/i2c/client/i2c_client.h"
 
 

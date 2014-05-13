@@ -63,8 +63,8 @@ ENDIF()
 
 SET(DO_POST_BUILD YES)
 
-#SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
-SET(URL_TARGET_SYSTEM root@192.168.1.2)
+SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
+#SET(URL_TARGET_SYSTEM root@192.168.1.2)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)

@@ -182,7 +182,7 @@ function Create_H_file(module) {
 
     r += "#pragma once\n\n";
 
-    r += "#include \"../../../libraries/c-sdk/include/module-functions.h\"\n\n";
+    r += "#include \"module-functions.h\"\n\n";
 
     if ('inputShema' in module) {
         r += make_structures(module.inputShema.properties, "input");
@@ -225,10 +225,12 @@ function Create_H_file(module) {
 }
 
 function Create_C_file(module) {
-    var module_type = module.name.replace(/-/g, "_");
+    var module_type = module.name;
     var r = "";
 
-    r += "#include \"../include/" + module_type + ".helper.h\"\n\n";
+    r += "#include \"" + module_type + ".helper.h\"\n\n";
+
+    module_type = module_type.replace(/-/g, "_");
 
     r += "// количество типов выходных объектов\n";
     if (module.outputs) {
@@ -437,17 +439,17 @@ function main() {
         }
 
         var module = JSON.parse(data);
-        var module_type = module.name.replace(/-/g, "_");
+        var module_type = module.name;
 
         var text_H_file = Create_H_file(module);
         //console.log(text_H_file);
-        fs.writeFile(out_dir + "/include/" + module_type + ".helper.h", text_H_file, function (err) {
+        fs.writeFile(out_dir + "/" + module_type + ".helper.h", text_H_file, function (err) {
             if (err) return console.log(err);
         });
 
         var text_C_file = Create_C_file(module);
         //console.log(text_H_file);
-        fs.writeFile(out_dir + "/src/" + module_type + ".helper.c", text_C_file, function (err) {
+        fs.writeFile(out_dir + "/" + module_type + ".helper.c", text_C_file, function (err) {
             if (err) return console.log(err);
         });
     });
