@@ -19,7 +19,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "string",
+            "type": "const char*",
             "defaultValue": "/dev/i2c-1",
             "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
             "unitMeasured": ""
@@ -33,7 +33,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "number",
+            "type": "float",
             "defaultValue": 123,
             "validValues" : [56,123],
             "unitMeasured": "int"
@@ -47,7 +47,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "boolean",
+            "type": "bool",
             "defaultValue": false,
             "unitMeasured": "bool"
         }
@@ -60,43 +60,43 @@
                 "id": "http://jsonschema.net",
                 "properties": {
                     "accelX": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "accelY": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "accelZ": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "gyroX": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "gyroY": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "gyroZ": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "magX": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "magY": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "magZ": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "temperature": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     }
                 }
@@ -109,7 +109,7 @@
                 "id": "http://jsonschema.net",
                 "properties": {
                     "pressure": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     }
                 }

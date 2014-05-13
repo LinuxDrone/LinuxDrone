@@ -168,7 +168,6 @@ function make_Bson2Structure(properties, portName, module_type) {
                 console.log("Unknown type " + properties[key].type + " for port " + key);
                 break;
         }
-
     }
     r += "    printf(\"\\n\");\n";
     r += "}\n\n";

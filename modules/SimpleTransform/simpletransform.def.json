@@ -10,15 +10,15 @@
         "id": "http://jsonschema.net",
         "properties": {
             "in_x": {
-                "type": "number",
+                "type": "float",
                 "required": true
             },
             "in_y": {
-                "type": "number",
+                "type": "float",
                 "required": true
             },
             "in_z": {
-                "type": "number",
+                "type": "float",
                 "required": true
             }
         }
@@ -31,15 +31,15 @@
                 "id": "http://jsonschema.net",
                 "properties": {
                     "out_x": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "out_y": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "out_z": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     }
                 }
@@ -61,7 +61,7 @@
                         "description": {
                             "ru": "угол"
                         },
-                        "type": "number",
+                        "type": "float",
                         "defaultValue": 0,
                         "validValues": [0, 360],
                         "unitMeasured": "градусы"
@@ -74,7 +74,7 @@
                         "description": {
                             "ru": "ось x"
                         },
-                        "type": "boolean",
+                        "type": "bool",
                         "defaultValue": false,
                         "unitMeasured": "факт"
                     },
@@ -86,7 +86,7 @@
                         "description": {
                             "ru": "ось y"
                         },
-                        "type": "boolean",
+                        "type": "bool",
                         "defaultValue": false,
                         "unitMeasured": "факт"
                     },
@@ -98,7 +98,7 @@
                         "description": {
                             "ru": "ось z"
                         },
-                        "type": "boolean",
+                        "type": "bool",
                         "defaultValue": false,
                         "unitMeasured": "факт"
                     }
@@ -108,7 +108,7 @@
                     "id": "http://jsonschema.net",
                     "properties": {
                         "in": {
-                            "type": "number",
+                            "type": "float",
                             "required": false,
                             "description": {
                                 "en": "input",
@@ -125,7 +125,7 @@
                             "id": "http://jsonschema.net",
                             "properties": {
                                 "out": {
-                                    "type": "number",
+                                    "type": "float",
                                     "required": false,
                                     "description": {
                                         "en": "out",
@@ -150,7 +150,7 @@
                         "description": {
                             "ru": "ось x"
                         },
-                        "type": "number",
+                        "type": "float",
                         "defaultValue": 0,
                         "unitMeasured": "parrot"
                     },
@@ -162,7 +162,7 @@
                         "description": {
                             "ru": "ось y"
                         },
-                        "type": "number",
+                        "type": "float",
                         "defaultValue": 0,
                         "unitMeasured": "parrot"
                     },
@@ -174,7 +174,7 @@
                         "description": {
                             "ru": "ось z"
                         },
-                        "type": "number",
+                        "type": "float",
                         "defaultValue": 0,
                         "unitMeasured": "parrot"
                     }
@@ -184,7 +184,7 @@
                     "id": "http://jsonschema.net",
                     "properties": {
                         "in": {
-                            "type": "number",
+                            "type": "float",
                             "required": false,
                             "description": {
                                 "en": "input",
@@ -201,7 +201,7 @@
                             "id": "http://jsonschema.net",
                             "properties": {
                                 "out": {
-                                    "type": "number",
+                                    "type": "float",
                                     "required": false,
                                     "description": {
                                         "en": "out",
@@ -226,7 +226,7 @@
                         "description": {
                             "ru": "ось x"
                         },
-                        "type": "number",
+                        "type": "float",
                         "defaultValue": 0,
                         "validValues": [0, 360],
                         "unitMeasured": "%"
@@ -239,7 +239,7 @@
                         "description": {
                             "ru": "ось y"
                         },
-                        "type": "number",
+                        "type": "float",
                         "defaultValue": 0,
                         "validValues": [0, 360],
                         "unitMeasured": "%"
@@ -252,7 +252,7 @@
                         "description": {
                             "ru": "ось z"
                         },
-                        "type": "number",
+                        "type": "float",
                         "defaultValue": 0,
                         "validValues": [0, 360],
                         "unitMeasured": "%"
@@ -263,7 +263,7 @@
                     "id": "http://jsonschema.net",
                     "properties": {
                         "in": {
-                            "type": "number",
+                            "type": "float",
                             "required": false,
                             "description": {
                                 "en": "input",
@@ -280,7 +280,7 @@
                             "id": "http://jsonschema.net",
                             "properties": {
                                 "out": {
-                                    "type": "number",
+                                    "type": "float",
                                     "required": false,
                                     "description": {
                                         "en": "out",

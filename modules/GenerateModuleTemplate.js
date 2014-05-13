@@ -206,7 +206,7 @@ function CreateModuleCFile(obj_def){
             for (var key in out.Schema.properties) {
                 if(out.Schema.properties[key].type=="const char*"){
                     r += "        char buffer_" + key + " [32];\n";
-                    r += "        itoa (cycle, buffer_" + key+ ", 10);\n";
+                    r += "        snprintf(buffer_" + key + ", 32, \"data: %d\", cycle);\n";
                     r += "        obj" + outName + "->" + key + " = buffer_" + key + ";\n";
                 }else{
                     if ('inputShema' in obj_def) {
@@ -277,10 +277,6 @@ function main() {
     fs.writeFile(module_name + "/" + module_name + '.c', CreateModuleCFile(obj_def), function (err) {
         if (err) return console.log(err);
     });
-
-    //process.argv[2] = module_name + "/" + module_name + '.def.json';
-    //process.argv[3] = module_name;
-    //require('../libraries/c-sdk/ModuleGenerator.js');
 }
 
 

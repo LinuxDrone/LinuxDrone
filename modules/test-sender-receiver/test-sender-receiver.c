@@ -17,7 +17,7 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
             count_reads++;
             if(rt_timer_read() - last_print_time > print_period)
             {
-                printf("count_reads=%i", count_reads);
+                printf("count_reads=%i\n", count_reads);
 
                 last_print_time = rt_timer_read();
                 count_reads=0;

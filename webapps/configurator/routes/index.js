@@ -175,10 +175,20 @@ function ConvertGraph2Configuration(graph, modulesParams, metaModules) {
 
 function CastValue2Type(value, type) {
     switch (type) {
-        case "number":
+        case "char":
+        case "short":
+        case "int":
+        case "long":
+        case "long long":
+        case "float":
+        case "double":
             value = Number(value);
             break;
-        case "boolean":
+
+        case "const char*":
+            break;
+
+        case "bool":
             if (_.isString(value) && value === "false") {
                 value = false;
             }
@@ -186,13 +196,12 @@ function CastValue2Type(value, type) {
                 value = Boolean(value);
             }
             break;
-        case "string":
-            value = String(value);
-            break;
+
         default:
-            return undefined;
+            console.log("CastValue2Type Unknown type: " + type);
             break;
     }
+
     return value;
 }
 
