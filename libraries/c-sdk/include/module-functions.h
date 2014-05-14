@@ -299,15 +299,17 @@ typedef struct
 	p_cycle_function func;
 
     /**
-     * @brief mutex_obj_exchange
-     * /~russian мьютех используемый для синхронизации при обмене основного потока с потоком передачи
-     * в разделяемую память
+     * @brief
+     * \~russian мьютех используемый для синхронизации при обмене основного потока с потоком передачи
+     * Вторая строка для проверки генерации доки из комментариев на русском
+     * \~english mutex used for the exchange of synchronization with the main flow stream transmission
+     * Second row to test generation docs of the comments in English
      */
     RT_MUTEX mutex_obj_exchange;
 
     /**
-     * @brief obj_cond
-     * /~russian для синхронизации при обмене основного потока с потоком передачи
+     * @brief
+     * \~russian для синхронизации при обмене основного потока с потоком передачи
      * в разделяемую память
      */
     RT_COND obj_cond;

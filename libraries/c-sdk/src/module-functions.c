@@ -1,3 +1,10 @@
+/**
+  * @file
+  * @brief
+  * \~russian Файл содержит функции, необходимые для реализации модуля.
+  * \~english This file contains the functions necessary to implement the module.
+  */
+
 #include <stdio.h>
 #include <native/queue.h>
 #include <native/heap.h>
@@ -12,13 +19,14 @@
 
 
 /**
- * @brief checkout4transmiter
- * /~russian    Заполняет указатель адресом на структуру ,
+ * @brief
+ * \~russian    Заполняет указатель адресом на структуру,
  *              данные из которой можно считывать для передачи в разделяемую память
+ * \~english Fills the pointer location on the structure, the data from which can be read to transfer into the shared memory
  * @param obj
- * @param was_queue Если возаращается объект переданный через очередь
+ * @param was_queue \~russian Если возаращается объект переданный через очередь
  * @return
- * /~russian 0 в случае успеха
+ * \~russian 0 в случае успеха
  */
 int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
 {
@@ -55,10 +63,11 @@ int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool wa
 
 
 /**
- * @brief checkin4transmiter
- * /~ Возвращает объект системе (объект будет помечен как свободный для записи основным потоком)
+ * @brief
+ * \~russian Возвращает объект системе (объект будет помечен как свободный для записи основным потоком)
+ * \~english Returns to the system (to be marked as free to record the main thread)
  * @param obj
- * @param was_queue Если возаращается объект переданный через очередь
+ * @param was_queue \~russian Если возаращается объект переданный через очередь \~english If the returned object is passed through the queue
  * @return
  */
 int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
@@ -1406,11 +1415,11 @@ int create_xenomai_services(module_t* module)
 
 /**
  * @brief checkout4writer
- * /~russian    Заполняет указатель адресом на структуру ,
+ * \~russian    Заполняет указатель адресом на структуру ,
  *              которую можно заполнять данными для последующей передачи в разделяемую память
  * @param obj
  * @return
- * /~russian 0 в случае успеха
+ * \~russian 0 в случае успеха
  */
 int checkout4writer(module_t* module, out_object_t* set, void** obj)
 {
@@ -1452,10 +1461,11 @@ int checkout4writer(module_t* module, out_object_t* set, void** obj)
 
 
 /**
- * @brief checkin4writer
- * /~ Возвращает объект системе (данные будут переданы в разделяемую память)
- * @param set
- * @param obj
+ * @brief
+ * \~russian Возвращает объект системе (данные будут переданы в разделяемую память)
+ * \~english Returns to the system (the data will be transferred to the shared memory)
+ * @param set \~russian Набор данных \~english Data set
+ * @param obj \~russian Объект
  * @return
  */
 int checkin4writer(module_t* module, out_object_t* set, void** obj)
@@ -1507,7 +1517,7 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
 
 /**
  * @brief refresh_input
- * /~russian Функция вычитывает данные из разделяемой памяти и мержит их во входной объект
+ * \~russian Функция вычитывает данные из разделяемой памяти и мержит их во входной объект
  * @param p_module
  * @return
  */
