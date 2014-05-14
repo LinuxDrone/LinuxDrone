@@ -1231,6 +1231,16 @@ void task_transmit(void *p_module)
         }
         // Если нет заполненных объектов, то поспим пока они не появятся
         res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, module->transmit_task_period);
+
+
+        int res1 = rt_mutex_release(&module->mutex_obj_exchange);
+        if (res1 != 0)
+        {
+            printf("task_transmit: error: %i rt_mutex_release\n", res1);
+            return;
+        }
+
+
         if (res == 0)
         {
             transmit_object(module, &time_last_publish_shmem,  true);
