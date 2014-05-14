@@ -187,9 +187,9 @@ void c_gy87_run (module_c_gy87_t *module)
     char* data;
     int ret_len;
 
-    RTIME last_print_time = rt_timer_read();
+    long last_print_time = rt_timer_read();
     int count_reads=0;
-    SRTIME print_period = rt_timer_ns2ticks(1000000000);
+    long print_period = rt_timer_ns2ticks(1000000000);
 
     while(1) {
         get_input_data(module);

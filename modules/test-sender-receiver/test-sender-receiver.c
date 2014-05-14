@@ -2,9 +2,9 @@
 
 void test_sender_receiver_run (module_test_sender_receiver_t *module)
 {
-    RTIME last_print_time = rt_timer_read();
+    long last_print_time = rt_timer_read();
     int count_reads=0;
-    SRTIME print_period = rt_timer_ns2ticks(1000000000);
+    long print_period = rt_timer_ns2ticks(1000000000);
 
     int cycle=0;
     while(1) {

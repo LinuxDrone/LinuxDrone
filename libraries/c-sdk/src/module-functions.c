@@ -37,12 +37,12 @@ int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool wa
         return res;
     }
 
-    if(set->status_obj1 == Filled || (!was_queue && set->status_obj1 == Transferred2Queue))
+    if(set->status_obj1 == Filled || (!was_queue && (set->status_obj1 == Transferred2Queue)))
     {
         set->status_obj1 = Transferring;
         (*obj)=set->obj1;
     }
-    else if(set->status_obj2 == Filled || (!was_queue && set->status_obj2 == Transferred2Queue))
+    else if(set->status_obj2 == Filled || (!was_queue && (set->status_obj2 == Transferred2Queue)))
     {
         set->status_obj2 = Transferring;
         (*obj)=set->obj2;
