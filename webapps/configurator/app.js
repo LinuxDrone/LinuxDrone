@@ -96,6 +96,7 @@ server.listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
 
+var timerProcStat = undefined;
 var wss = new WebSocketServer({server: server});
 global.ws_server=undefined;
 wss.on('connection', function(ws) {
@@ -103,19 +104,59 @@ wss.on('connection', function(ws) {
     global.ws_server = ws;
 
     ws.on('close', function() {
+        global.ws_server = undefined;
         console.log('client websocket disconnect');
     });
+
+    if(timerProcStat===undefined){
+        timerProcStat = setInterval(function() {
+
+
+            fs.readFile('/proc/xenomai/stat', 'utf8', function (err, data) {
+                if (err) {
+                    console.log('Not read file /proc/xenomai/stat. Error:' + err);
+                    return;
+                }
+                if(global.ws_server==undefined) return;
+                global.ws_server.send(
+                    JSON.stringify({
+                        process: 'OS',
+                        type: 'stat',
+                        data:{
+                            proc: (100 - data.split('\n')[1].split(' ')[32]).toFixed(1)
+                        }
+                    }), function() {  });
+            });
+
+
+        }, 1000);
+    }
 });
 
 
 var telemetry_service;
 var i2c_service;
-function StartTelemetryServices() {
+function StartTelemetryService() {
         if(telemetry_service!=undefined){
             return;
         }
 
-        telemetry_service = spawn('/usr/local/linuxdrone/services/telemetry');
+    var servicePath = '/usr/local/linuxdrone/services/telemetry';
+    telemetry_service = spawn(servicePath);
+
+    telemetry_service.on('error', function (data) {
+        if(data.code==="ENOENT"){
+            console.log('Not run service' + servicePath);
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'nodejs',
+                    type: 'error',
+                    data:'error run telemetry'
+                }), function() {  });
+        }
+    });
+
 
         telemetry_service.stdout.on('data', function (data) {
             if(global.ws_server==undefined) return;
@@ -162,12 +203,27 @@ function StartTelemetryServices() {
         }
 };
 
-function Starti2cServices() {
+function Starti2cService() {
     if(i2c_service!=undefined){
         return;
     }
 
-    i2c_service = spawn('/usr/local/linuxdrone/services/i2c_service');
+    var servicePath = '/usr/local/linuxdrone/services/i2c_service';
+    i2c_service = spawn(servicePath);
+
+    telemetry_service.on('error', function (data) {
+        if(data.code==="ENOENT"){
+            console.log('Not run service' + servicePath);
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'nodejs',
+                    type: 'error',
+                    data:'error run i2c_service'
+                }), function() {  });
+        }
+    });
+
 
     i2c_service.stdout.on('data', function (data) {
         if(global.ws_server==undefined) return;
@@ -215,7 +271,5 @@ function Starti2cServices() {
 };
 
 
-StartTelemetryServices();
-Starti2cServices();
-
-
+StartTelemetryService();
+Starti2cService();
