@@ -103,8 +103,8 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
     const char* module_out_name;
     const char* cmd_name;
 
-
-    switch (reason) {
+    switch (reason)
+    {
 
     case LWS_CALLBACK_ESTABLISHED:
         lwsl_info("callback_telemetry: " "LWS_CALLBACK_ESTABLISHED\n");
@@ -136,13 +136,11 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
                 printf("Error rt_cond_signal\n");
                 return;
             }
-
         }
         else
         {
             usleep(10000);
         }
-
         //printf("EXIT WHILE read_len: %i\n", read_len);
         break;
 
@@ -224,14 +222,12 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
 /* list of supported protocols and callbacks */
 static struct libwebsocket_protocols protocols[] = {
     /* first protocol must always be HTTP handler */
-
     {
         "http-only",
         callback_http,
         0,
         0,
     },
-
     {
         "telemetry-protocol",
         callback_telemetry,
@@ -255,7 +251,6 @@ void run_task_read_shmem (void *module)
         printf("Error create pipe\n");
         return;
     }
-
 
     err = rt_mutex_create(&mutex, "telemetry_mutex");
 
@@ -449,7 +444,6 @@ int main(int argc, char **argv)
         return -1;
     }
 
-
     n = 0;
     while (n >= 0 && !force_exit) {
         if(remote_shmems.f_connected_in_links)
@@ -462,7 +456,6 @@ int main(int argc, char **argv)
             connect_in_links(&remote_shmems, local_instance_name);
         }
 
-
         /*
          * If libwebsockets sockets are all we care about,
          * you can use this api which takes care of the poll()
@@ -473,8 +466,6 @@ int main(int argc, char **argv)
          */
         n = libwebsocket_service(context, 5);
     }
-
-
     libwebsocket_context_destroy(context);
 
     lwsl_notice("libwebsockets-test-server exited cleanly\n");

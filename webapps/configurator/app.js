@@ -8,6 +8,7 @@ var routes = require('./routes');
 var http = require('http');
 var path = require('path');
 var WebSocketServer = require('ws').Server;
+var spawn = require('child_process').spawn;
 
 var mongo = require('mongodb');
 var monk = require('monk');
@@ -96,6 +97,7 @@ server.listen(app.get('port'), function(){
 });
 
 var wss = new WebSocketServer({server: server});
+global.ws_server=undefined;
 wss.on('connection', function(ws) {
 
     global.ws_server = ws;
@@ -104,4 +106,116 @@ wss.on('connection', function(ws) {
         console.log('client websocket disconnect');
     });
 });
+
+
+var telemetry_service;
+var i2c_service;
+function StartTelemetryServices() {
+        if(telemetry_service!=undefined){
+            return;
+        }
+
+        telemetry_service = spawn('/usr/local/linuxdrone/services/telemetry');
+
+        telemetry_service.stdout.on('data', function (data) {
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'telemetry',
+                    type: 'stdout',
+                    data:data
+                }), function() {  });
+            console.log('stdout: ' + data);
+        });
+
+        telemetry_service.stderr.on('data', function (data) {
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'telemetry',
+                    type: 'stderr',
+                    data:data
+                }), function() { /* ignore errors */ });
+            console.log('stderr: ' + data);
+        });
+
+        telemetry_service.on('close', function (code) {
+            telemetry_service=undefined;
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'telemetry',
+                    type: 'status',
+                    data: 'stopped'
+                }), function() {  });
+            console.log('telemetry child process exited with code ' + code);
+        });
+
+        if(telemetry_service!=undefined){
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'telemetry',
+                    type: 'status',
+                    data: 'running'
+                }), function() {  });
+        }
+};
+
+function Starti2cServices() {
+    if(i2c_service!=undefined){
+        return;
+    }
+
+    i2c_service = spawn('/usr/local/linuxdrone/services/i2c_service');
+
+    i2c_service.stdout.on('data', function (data) {
+        if(global.ws_server==undefined) return;
+        global.ws_server.send(
+            JSON.stringify({
+                process: 'i2c_service',
+                type: 'stdout',
+                data:data
+            }), function() {  });
+        console.log('stdout: ' + data);
+    });
+
+    i2c_service.stderr.on('data', function (data) {
+        if(global.ws_server==undefined) return;
+        global.ws_server.send(
+            JSON.stringify({
+                process: 'i2c_service',
+                type: 'stderr',
+                data:data
+            }), function() { /* ignore errors */ });
+        console.log('stderr: ' + data);
+    });
+
+    i2c_service.on('close', function (code) {
+        if(global.ws_server==undefined) return;
+        i2c_service=undefined;
+        global.ws_server.send(
+            JSON.stringify({
+                process: 'i2c_service',
+                type: 'status',
+                data: 'stopped'
+            }), function() {  });
+        console.log('i2c_service child process exited with code ' + code);
+    });
+
+    if(i2c_service!=undefined){
+        if(global.ws_server==undefined) return;
+        global.ws_server.send(
+            JSON.stringify({
+                process: 'i2c_service',
+                type: 'status',
+                data: 'running'
+            }), function() {  });
+    }
+};
+
+
+StartTelemetryServices();
+Starti2cServices();
+
 

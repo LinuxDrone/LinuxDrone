@@ -99,7 +99,7 @@ exports.runhosts = function (db) {
 
         res.json(req.body);
 
-        chost = spawn('/root/c-host', [req.body.name, req.body.version]);
+        chost = spawn('/usr/local/linuxdrone/bin/c-host', [req.body.name, req.body.version]);
 
         chost.stdout.on('data', function (data) {
             global.ws_server.send(

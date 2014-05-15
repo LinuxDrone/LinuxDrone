@@ -92,7 +92,7 @@ find_package(Threads)
 
 
 #option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
-#IF(BUILD_DOCUMENTATION)
+IF(BUILD_DOCUMENTATION)
 
     FIND_PACKAGE(Doxygen)
     IF(NOT DOXYGEN_FOUND)
@@ -104,8 +104,8 @@ find_package(Threads)
 
     SET( doxyfile_ru      ${PROJECT_BINARY_DIR}/Doxyfile.ru)
     SET( doxy_ru_index    ${PROJECT_BINARY_DIR}/ru/html/index.html)
-    SET( DOXY_OUTPUT_DIR  ${PROJECT_BINARY_DIR}/ru)     # Pasted into Doxyfile
-    SET( DOXY_OUT_LANG    Russian)                      # Pasted into Doxyfile
+    SET( DOXY_OUTPUT_DIR  ${PROJECT_BINARY_DIR}/ru)     # Pasted into Doxyfile.ru
+    SET( DOXY_OUT_LANG    Russian)                      # Pasted into Doxyfile.ru
     CONFIGURE_FILE(${doxyfile_in} ${doxyfile_ru} @ONLY IMMEDIATE)
     ADD_CUSTOM_COMMAND(
         OUTPUT ${doxy_ru_index}
@@ -118,8 +118,8 @@ find_package(Threads)
 
     SET( doxyfile_en      ${PROJECT_BINARY_DIR}/Doxyfile.en)
     SET( doxy_en_index    ${PROJECT_BINARY_DIR}/en/html/index.html)
-    SET( DOXY_OUTPUT_DIR  ${PROJECT_BINARY_DIR}/en)     # Pasted into Doxyfile
-    SET( DOXY_OUT_LANG    English)                      # Pasted into Doxyfile
+    SET( DOXY_OUTPUT_DIR  ${PROJECT_BINARY_DIR}/en)     # Pasted into Doxyfile.en
+    SET( DOXY_OUT_LANG    English)                      # Pasted into Doxyfile.en
     CONFIGURE_FILE(${doxyfile_in} ${doxyfile_en} @ONLY IMMEDIATE)
     ADD_CUSTOM_COMMAND(
         OUTPUT ${doxy_en_index}
@@ -133,7 +133,7 @@ find_package(Threads)
     ADD_CUSTOM_TARGET( doc ALL DEPENDS ${doxy_ru_index} ${doxy_en_index})
 
     INSTALL( DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION share/doc )
-#ENDIF()
+ENDIF()
 
 
 
