@@ -206,7 +206,10 @@ viewModels.Editor = (function () {
         // running, stopped
         hostStatus:ko.observable(),
 
-        cssClass4ButtonsRunStop:ko.observable()
+        cssClass4ButtonsRunStop:ko.observable(),
+
+        // Загрузка процессора задачами ксеномая
+        XenoCPU:ko.observable()
     };
 
 
@@ -974,7 +977,7 @@ viewModels.Editor = (function () {
                                 position: .5,
                                 attrs: {
                                     text: {
-                                        text: value,
+                                        text: value.toFixed(2),
                                         fill: 'white',
                                         'font-family': 'sans-serif'
                                     },
@@ -1005,21 +1008,29 @@ viewModels.Editor = (function () {
         socketHostsOut.onmessage = function (event) {
             var resp = JSON.parse(event.data);
 
-            switch (resp.type) {
-                case 'stdout':
-                    var text = String.fromCharCode.apply(String, resp.data).replace(/\n/g, '<br/>');
+            switch (resp.process) {
+                case 'OS':
+                    res.XenoCPU(resp.data.proc + "%");
+                    break;
 
-                    var text = text.replace(/\x1b\[34m/g, '<span style="color: blue">');
-                    var text = text.replace(/\x1b\[31m/g, '<span style="color: red">');
-                    var text = text.replace(/\x1b\[0m/g, '</span>');
+                default:
+                    switch (resp.type) {
+                        case 'stdout':
+                            var text = String.fromCharCode.apply(String, resp.data).replace(/\n/g, '<br/>');
 
-                    document.getElementById('host_out').innerHTML =text;
-                break;
+                            var text = text.replace(/\x1b\[34m/g, '<span style="color: blue">');
+                            var text = text.replace(/\x1b\[31m/g, '<span style="color: red">');
+                            var text = text.replace(/\x1b\[0m/g, '</span>');
 
-                case 'status':
-                    res.hostStatus(resp.data);
-                    document.getElementById('host_out').innerHTML = resp.data;
-                break;
+                            document.getElementById('host_out').innerHTML =text;
+                            break;
+
+                        case 'status':
+                            res.hostStatus(resp.data);
+                            document.getElementById('host_out').innerHTML = resp.data;
+                            break;
+                    }
+                    break
             }
         };
     }

@@ -194,16 +194,6 @@ void c_gy87_run (module_c_gy87_t *module)
     while(1) {
         get_input_data(module);
 
-        count_reads++;
-        if(rt_timer_read() - last_print_time > print_period)
-        {
-            //printf("count_reads=%i", count_reads);
-
-            last_print_time = rt_timer_read();
-            count_reads=0;
-        }
-
-
         if(!mpu_initialized)
         {
             // Открываем сессию с i2c шиной
@@ -239,18 +229,37 @@ void c_gy87_run (module_c_gy87_t *module)
         }
 
         // unpack received data
+        int16_t gyro_x = data[CGY87_GYRO_X_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_GYRO_X_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
+        int16_t gyro_y = data[CGY87_GYRO_Y_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_GYRO_Y_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
+        int16_t gyro_z = data[CGY87_GYRO_Z_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_GYRO_Z_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
+        int16_t accel_x = data[CGY87_ACCEL_X_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_ACCEL_X_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
+        int16_t accel_y = data[CGY87_ACCEL_Y_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_ACCEL_Y_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
+        int16_t accel_z = data[CGY87_ACCEL_Z_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_ACCEL_Z_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
+        int16_t temp = data[CGY87_TEMP_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_TEMP_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
+
+
         GyroAccelMagTemp_t* GyroAccelMagTemp;
         checkout_GyroAccelMagTemp(module, &GyroAccelMagTemp);
 
-        GyroAccelMagTemp->gyroX = data[CGY87_GYRO_X_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_GYRO_X_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
-        GyroAccelMagTemp->gyroY = data[CGY87_GYRO_Y_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_GYRO_Y_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
-        GyroAccelMagTemp->gyroZ = data[CGY87_GYRO_Z_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_GYRO_Z_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
-        GyroAccelMagTemp->accelX = data[CGY87_ACCEL_X_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_ACCEL_X_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
-        GyroAccelMagTemp->accelY = data[CGY87_ACCEL_Y_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_ACCEL_Y_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
-        GyroAccelMagTemp->accelZ = data[CGY87_ACCEL_Z_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_ACCEL_Z_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
-        GyroAccelMagTemp->temperature = data[CGY87_TEMP_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_TEMP_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
+        GyroAccelMagTemp->gyroX = gyro_x * (1.0f / 16.4f);
+        GyroAccelMagTemp->gyroY = gyro_y * (1.0f / 16.4f);
+        GyroAccelMagTemp->gyroZ = gyro_z * (1.0f / 16.4f);
+        GyroAccelMagTemp->accelX = accel_x * (9.81f / 4096.0f);
+        GyroAccelMagTemp->accelY = accel_y * (9.81f / 4096.0f);
+        GyroAccelMagTemp->accelZ = accel_z * (9.81f / 4096.0f);
+        GyroAccelMagTemp->temperature = 35.0f + (temp + 512.0f) / 340.0f;
 
-        //print_GyroAccelMagTemp(GyroAccelMagTemp);
+
+        count_reads++;
+        if(rt_timer_read() - last_print_time > print_period)
+        {
+            //printf("count_reads=%i", count_reads);
+            print_GyroAccelMagTemp(GyroAccelMagTemp);
+
+            last_print_time = rt_timer_read();
+            count_reads=0;
+        }
+
 
         checkin_GyroAccelMagTemp(module, &GyroAccelMagTemp);
     }
