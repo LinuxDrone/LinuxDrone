@@ -126,7 +126,7 @@ wss.on('connection', function(ws) {
                         process: 'OS',
                         type: 'stat',
                         data:{
-                            proc: (100-data.split('\n')[1].match(/([1-9]*)\.([1-9])/g)[0]).toFixed(1)
+                            proc: (100-data.split('\n')[1].match(/(\d)+(\.)?(\d)?(?=(\ )+ROOT\/0)/g)[0]).toFixed(1)
                         }
                     }), function() {  });
             });
