@@ -112,10 +112,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         break;
 
     case LWS_CALLBACK_SERVER_WRITEABLE:
-
-//printf("before read\n");
         read_len= read(pipe_fd, pipe_buf, sizeof(pipe_buf));
-//printf("read_len: %i\n", read_len);
 
         if(read_len < 0) {
             // If this condition passes, there is no data to be read
@@ -141,6 +138,10 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
             }
 
         }
+        else
+        {
+            usleep(10000);
+        }
 
         //printf("EXIT WHILE read_len: %i\n", read_len);
         break;
@@ -148,7 +149,6 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
 
     case LWS_CALLBACK_RECEIVE:
         bson_request = bson_new_from_data (in, len);
-
 //debug_print_bson("received", bson_request);
 
         // Get Instance Name
@@ -241,6 +241,8 @@ static struct libwebsocket_protocols protocols[] = {
     { NULL, NULL, 0, 0 } /* terminator */
 };
 
+
+
 void run_task_read_shmem (void *module)
 {
     RT_PIPE pipe_between_rt;
@@ -313,9 +315,14 @@ void run_task_read_shmem (void *module)
         }
 
         if(!was_data)
+        {
+            //printf("remote_shmems.remote_shmems_len:%i\n", remote_shmems.remote_shmems_len);
             rt_task_sleep(rt_timer_ns2ticks(5000000));
+        }
     }
 }
+
+
 
 int init_rt_task()
 {
@@ -332,6 +339,8 @@ int init_rt_task()
 
     return 0;
 }
+
+
 
 int main(int argc, char **argv)
 {
@@ -421,10 +430,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
-
-    // Зарегистрируем модули
     memset(&remote_shmems, 0, sizeof(ar_remote_shmems_t));
-    //register_remote_shmem(&remote_shmems, "test-sender-1", "Output1");
 
     init_rt_task();
 
@@ -452,7 +458,6 @@ int main(int argc, char **argv)
         }
         else
         {
-            //printf("попытка in связи %i\n", remote_shmems.f_connected_in_links);
             char* local_instance_name = "telemetry";
             connect_in_links(&remote_shmems, local_instance_name);
         }
@@ -466,7 +471,7 @@ int main(int argc, char **argv)
          * If no socket needs service, it'll return anyway after
          * the number of ms in the second argument.
          */
-        n = libwebsocket_service(context, 10);
+        n = libwebsocket_service(context, 5);
     }
 
 
