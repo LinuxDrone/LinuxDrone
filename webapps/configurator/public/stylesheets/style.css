@@ -27,6 +27,10 @@
     height: 65px;
 }
 
+.panel-body {
+    padding: 15px 5px;
+}
+
 #moduleContextMenu {
     position: absolute;
     display:none;
