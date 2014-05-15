@@ -977,7 +977,7 @@ viewModels.Editor = (function () {
                                 position: .5,
                                 attrs: {
                                     text: {
-                                        text: value,
+                                        text: value.toFixed(2),
                                         fill: 'white',
                                         'font-family': 'sans-serif'
                                     },
