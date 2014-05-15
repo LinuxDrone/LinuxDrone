@@ -15,6 +15,8 @@
     <script src="javascripts/joint/lib/lodash.js"></script>
     <script src="javascripts/joint/lib/backbone.js"></script>
 
+    <script src="javascripts/ld/admin.js"></script>
+
     <script src="javascripts/joint/src/core.js"></script>
     <script src="javascripts/joint/src/vectorizer.js"></script>
     <script src="javascripts/joint/src/geometry.js"></script>
@@ -215,27 +217,44 @@
 <div id="moduleContextMenu" class="dropdown clearfix">
     <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu"
         style="display:block;position:static;margin-bottom:5px;">
-        <li><a tabindex="-1" href="#" data-bind="click: RemoveModule">Delete</a></li>
+        <li><a tabindex="-1" href="javascript:void(0)" data-bind="click: RemoveModule">Delete</a></li>
     </ul>
 </div>
 
 <div id="linkContextMenu" class="dropdown clearfix">
     <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu"
         style="display:block;position:static;margin-bottom:5px;">
-        <li><a tabindex="-1" href="#" data-bind="click: SetLinkAsPipe">Push delivery</a></li>
-        <li><a tabindex="-1" href="#" data-bind="click: SetLinkAsSharedMemory">Pull delivery</a></li>
+        <li><a tabindex="-1" href="javascript:void(0)" data-bind="click: SetLinkAsPipe">Push delivery</a></li>
+        <li><a tabindex="-1" href="javascript:void(0)" data-bind="click: SetLinkAsSharedMemory">Pull delivery</a></li>
     </ul>
 </div>
 
 <script src="javascripts/bson.js"></script>
 <script src="ModulesCommonParams.def.js"></script>
 <script src="javascripts/configurator.js"></script>
-
-<div class="content" style="position: fixed; left: 0; bottom: 0; background-color: #fff; border: 1px solid #000; box-sizing: border-box; width: 1205px;">
-    <div id="wsdi_status" style="text-align: center">Not initialized</div>
+<div class="cpu-info content">
     CPU utilization:<input data-bind="value: viewModels.Editor.XenoCPU"/>
     <strong>Host process out</strong><br>
     <div id='host_out'></div>
+</div>
+<div id="js-admin-panel" class="panel panel-default admin-panel">
+    <div class="panel-heading js-admin-toggle link">
+        <div id="wsdi_status" style="text-align: center">Not initialized</div>
+    </div>
+    <div class="panel-body">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#home" data-toggle="tab">Home</a></li>
+            <li><a href="#profile" data-toggle="tab">Profile</a></li>
+            <li><a href="#messages" data-toggle="tab">Messages</a></li>
+            <li><a href="#settings" data-toggle="tab">Settings</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="home">...</div>
+            <div class="tab-pane" id="profile">...</div>
+            <div class="tab-pane" id="messages">...</div>
+            <div class="tab-pane" id="settings">...</div>
+        </div>
+    </div>
 </div>
 
 </body>
