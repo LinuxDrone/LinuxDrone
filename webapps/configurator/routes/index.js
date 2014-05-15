@@ -102,6 +102,7 @@ exports.runhosts = function (db) {
         chost = spawn('/usr/local/linuxdrone/bin/c-host', [req.body.name, req.body.version]);
 
         chost.stdout.on('data', function (data) {
+            if(global.ws_server==undefined) return;
             global.ws_server.send(
                 JSON.stringify({
                     process: 'c-host',
@@ -112,6 +113,7 @@ exports.runhosts = function (db) {
         });
 
         chost.stderr.on('data', function (data) {
+            if(global.ws_server==undefined) return;
             global.ws_server.send(
             JSON.stringify({
                 process: 'c-host',
@@ -123,6 +125,7 @@ exports.runhosts = function (db) {
 
         chost.on('close', function (code) {
             chost=undefined;
+            if(global.ws_server==undefined) return;
             global.ws_server.send(
                 JSON.stringify({
                     process: 'c-host',
@@ -133,6 +136,7 @@ exports.runhosts = function (db) {
         });
 
         if(chost!=undefined){
+            if(global.ws_server==undefined) return;
             global.ws_server.send(
                 JSON.stringify({
                     process: 'c-host',
