@@ -250,6 +250,15 @@ void c_gy87_run (module_c_gy87_t *module)
         GyroAccelMagTemp->accelZ = data[CGY87_ACCEL_Z_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_ACCEL_Z_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
         GyroAccelMagTemp->temperature = data[CGY87_TEMP_OUT_MSB - CGY87_ACCEL_X_OUT_MSB] << 8 | data[CGY87_TEMP_OUT_LSB - CGY87_ACCEL_X_OUT_MSB];
 
+        GyroAccelMagTemp->gyroX *= (1.0f / 16.4f);
+        GyroAccelMagTemp->gyroY *= (1.0f / 16.4f);
+        GyroAccelMagTemp->gyroZ *= (1.0f / 16.4f);
+        GyroAccelMagTemp->accelX *= (9.81f / 4096.0f);
+        GyroAccelMagTemp->accelY *= (9.81f / 4096.0f);
+        GyroAccelMagTemp->accelZ *= (9.81f / 4096.0f);
+        GyroAccelMagTemp->temperature = 35.0f + (GyroAccelMagTemp->temperature + 512.0f) / 340.0f;
+
+
         //print_GyroAccelMagTemp(GyroAccelMagTemp);
 
         checkin_GyroAccelMagTemp(module, &GyroAccelMagTemp);
