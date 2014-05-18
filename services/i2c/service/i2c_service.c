@@ -175,21 +175,22 @@ void run_task_i2c (void *module)
                 if(ioctl_err<0)
                 {
                     response_block.opcode=res_error_ioctl;
+                    break;
                 }
-                else
+
+                if(request->addr_and_dev_register.dev_register>0)
                 {
+                    // Если читаем не просто из девайса, а указывая предварительно номера порта
                     int len = write(request->addr_and_dev_register.session_id, &request->addr_and_dev_register.dev_register, sizeof(char));
                     if(len!=sizeof(request->addr_and_dev_register.dev_register))
                     {
                         response_block.size=0;
                         response_block.opcode=res_error_write_to_i2c;
-                    }
-                    else
-                    {
-                        response_block.size = read(request->addr_and_dev_register.session_id, response_block.data, request->len_requested_data);
-                        response_block.opcode=res_successfully;
+                        break;
                     }
                 }
+                response_block.size = read(request->addr_and_dev_register.session_id, response_block.data, request->len_requested_data);
+                response_block.opcode=res_successfully;
             }
             break;
 

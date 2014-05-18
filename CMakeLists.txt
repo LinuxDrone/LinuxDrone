@@ -64,14 +64,14 @@ ENDIF()
 SET(DO_POST_BUILD YES)
 
 #SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
-#SET(URL_TARGET_SYSTEM root@192.168.1.2)
-#SET(SSH_PORT_TARGET_SYSTEM 22)
+SET(URL_TARGET_SYSTEM root@192.168.1.2)
+SET(SSH_PORT_TARGET_SYSTEM 22)
 
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
 #SET(SSH_PORT_TARGET_SYSTEM 1234)
 
-SET(URL_TARGET_SYSTEM root@192.168.1.43)
-SET(SSH_PORT_TARGET_SYSTEM 22)
+#SET(URL_TARGET_SYSTEM root@192.168.1.43)
+#SET(SSH_PORT_TARGET_SYSTEM 22)
 
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}
@@ -159,6 +159,8 @@ add_subdirectory(${LIB_DIR}/c-sdk)
 # Loadable modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
 #add_subdirectory(${MOD_DIR}/gy87)
+add_subdirectory(${MOD_DIR}/rx-openlrs)
+add_subdirectory(${MOD_DIR}/short_terminator)
 add_subdirectory(${MOD_DIR}/c-gy87)
 #add_subdirectory(${MOD_DIR}/test-params)
 add_subdirectory(${MOD_DIR}/test-sender)
