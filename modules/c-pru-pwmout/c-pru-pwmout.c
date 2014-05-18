@@ -29,11 +29,31 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
     uint32_t m_pwm[12];
     uint32_t m_period[12];
     uint8_t *m_sharedMem;
-
+    // true если инициализация модуля прошла успешно
+    bool     bPruInit = false;
     int i;
 
+    long last_print_time = rt_timer_read();
+    long print_period = rt_timer_ns2ticks(1000000000);
+
     while(1) {
+
+        // Читаем входные данные модуля
         get_input_data(module);
+
+        // Инициализация модуля PRU
+        if (!bPruInit) {
+            if(!initPwmOutput(pru_info, m_sharedMem, "pru-pwmout.bin", m_pwm, m_period))
+            {
+                if(rt_timer_read() - last_print_time > print_period)
+                {
+                    printf("Failed initPwmOutput\n");
+                    last_print_time = rt_timer_read();
+                }
+                continue;
+            }
+            bPruInit = true;
+        }
 
         // проверим, обновились ли данные
         if(module->module_info.updated_input_properties!=0)

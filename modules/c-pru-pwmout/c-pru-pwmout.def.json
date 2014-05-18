@@ -36,7 +36,7 @@
         "ru": "Путь к файлу с кодом для модуля PRU"
       },
       "type": "const char*",
-      "defaultValue": "/usr/local/linuxdrone/modules/c-pru-pwmout/pwmout.bin",
+      "defaultValue": "/usr/local/linuxdrone/modules/c-pru-pwmout/pru-pwmout.bin",
       "unitMeasured": ""
     }
   ],
