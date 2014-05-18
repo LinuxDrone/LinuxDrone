@@ -53,7 +53,7 @@ void EnablePru(pru_info_t *pru_info);
 void DisablePru(pru_info_t *pru_info);
 
 // init the Pru
-bool Init(pru_info_t *pru_info);
+bool InitPRU(pru_info_t *pru_info);
 
 // load Image file to Pru, the image will not run until ResetPru0 is called
 bool LoadImageToPru(pru_info_t *pru_info);

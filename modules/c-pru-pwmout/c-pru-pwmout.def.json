@@ -131,6 +131,14 @@
               "en": "input 11",
               "ru": "Вход 11"
             }
+          },
+          "pwm12": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 12",
+              "ru": "Вход 12"
+            }
           }
 
         }

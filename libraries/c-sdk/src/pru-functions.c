@@ -59,7 +59,7 @@ void DisablePru(pru_info_t *pru_info)
 }
 
 // init the Pru
-bool Init(pru_info_t *pru_info)
+bool InitPRU(pru_info_t *pru_info)
 {
     if(pru_info->enabled)
     {
