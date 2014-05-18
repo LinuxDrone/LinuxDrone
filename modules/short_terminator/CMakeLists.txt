@@ -39,5 +39,5 @@ IF(${DO_POST_BUILD})
     )
 ENDIF()
 
-install(TARGETS short_terminator DESTINATION modules/short_terminator)
+install(TARGETS short_terminator DESTINATION lib)
 install(FILES short_terminator.def.json DESTINATION modules/short_terminator)

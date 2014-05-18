@@ -41,5 +41,5 @@ IF(${DO_POST_BUILD})
     )
 ENDIF()
 
-install(TARGETS c-bmp180 DESTINATION modules/c-bmp180)
+install(TARGETS c-bmp180 DESTINATION lib)
 install(FILES c-bmp180.def.json DESTINATION modules/c-bmp180)

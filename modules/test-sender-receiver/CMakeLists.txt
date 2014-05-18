@@ -39,5 +39,5 @@ IF(${DO_POST_BUILD})
     )
 ENDIF()
 
-install(TARGETS test-sender-receiver DESTINATION modules/test-sender-receiver)
+install(TARGETS test-sender-receiver DESTINATION lib)
 install(FILES test-sender-receiver.def.json DESTINATION modules/test-sender-receiver)

@@ -40,5 +40,5 @@ IF(${DO_POST_BUILD})
     )
 ENDIF()
 
-install(TARGETS rx-openlrs DESTINATION modules/rx-openlrs)
+install(TARGETS rx-openlrs DESTINATION lib)
 install(FILES rx-openlrs.def.json DESTINATION modules/rx-openlrs)

@@ -23,9 +23,9 @@ set(EXTRA_LIBS
     ${RFS_DIR}/usr/local/lib/libbson-1.0.so
     ${RFS_DIR}/usr/local/lib/libmongoc-1.0.so
     ${RFS_DIR}/usr/local/lib/libwebsockets.so
-    ${RFS_DIR}/usr/local/lib/libz.so
-    ${RFS_DIR}/usr/local/lib/libssl.so
-    ${RFS_DIR}/usr/local/lib/libcrypto.so
+    ${RFS_DIR}/usr/lib/arm-linux-gnueabihf/libz.so
+    ${RFS_DIR}/usr/lib/arm-linux-gnueabihf/libssl.so
+    ${RFS_DIR}/usr/lib/arm-linux-gnueabihf/libcrypto.so
     rt
     dl
     pthread
@@ -46,4 +46,4 @@ IF(${DO_POST_BUILD})
 ENDIF()
 
 
-install(TARGETS telemetry DESTINATION bin)
+install(TARGETS telemetry DESTINATION services)

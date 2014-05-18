@@ -3,7 +3,7 @@
 #include "../../../services/i2c/client/i2c_client.h"
 
 
-#define I2CBusName "/dev/i2c-1"
+#define I2CBusName "/dev/i2c-2"
 
 
 
