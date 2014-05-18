@@ -79,20 +79,18 @@ PWM_OUT_INTERVAL:
 #endif
 
 #ifdef PRU1
-	CreatePulse	0x200, 13		// 1st channel			//PRU0_R30_13	P8-20
-	CreatePulse	0x210, 12		// 2nd channel			//PRU0_R30_12	P8-21
-	CreatePulse	0x220, 8		// 3rd channel			//PRU0_R30_8	P8-27
-	CreatePulse	0x230, 10		// 4th channel			//PRU0_R30_10	P8-28
-	CreatePulse	0x240, 9		// 5th channel			//PRU0_R30_9	P8-29
-	CreatePulse	0x250, 11		// 6th channel			//PRU0_R30_11	P8-30
-	CreatePulse	0x260, 6		// 7th channel			//PRU0_R30_6	P8-39
-	CreatePulse	0x270, 7		// 8th channel			//PRU0_R30_7	P8-40
-	CreatePulse	0x280, 4		// 9th channel			//PRU0_R30_4	P8-41
-	CreatePulse	0x290, 5		// 10th channel			//PRU0_R30_5	P8-42
-	CreatePulse	0x2A0, 2		// 11th channel			//PRU0_R30_2	P8-43
-	CreatePulse	0x2B0, 3		// 12th channel			//PRU0_R30_3	P8-44
-//	CreatePulse	0x2C0, 0		// 13th channel			//PRU0_R30_0	P8-45
-//	CreatePulse	0x2D0, 1		// 14th channel			//PRU0_R30_1	P8-46
+        CreatePulse	0x200, 8		// 1rd channel			//PRU0_R30_8	P8-27
+        CreatePulse	0x210, 10		// 2th channel			//PRU0_R30_10	P8-28
+        CreatePulse	0x220, 9		// 3th channel			//PRU0_R30_9	P8-29
+        CreatePulse	0x230, 11		// 4th channel			//PRU0_R30_11	P8-30
+        CreatePulse	0x240, 6		// 5th channel			//PRU0_R30_6	P8-39
+        CreatePulse	0x250, 7		// 6th channel			//PRU0_R30_7	P8-40
+        CreatePulse	0x260, 4		// 7th channel			//PRU0_R30_4	P8-41
+        CreatePulse	0x270, 5		// 8th channel			//PRU0_R30_5	P8-42
+        CreatePulse	0x280, 2		// 9th channel			//PRU0_R30_2	P8-43
+        CreatePulse	0x290, 3		// 10th channel			//PRU0_R30_3	P8-44
+        CreatePulse	0x2A0, 0		// 11th channel			//PRU0_R30_0	P8-45
+        CreatePulse	0x2B0, 1		// 12th channel			//PRU0_R30_1	P8-46
 #endif
 	// update R30
 	//MOV R30, R9
