@@ -55,7 +55,7 @@ IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(NODEJS node)
 ELSEIF(${CMAKE_HOST_SYSTEM} MATCHES "Linux")
     SET(SCP scp)
-    SET(NODEJS nodejs)
+    SET(NODEJS node)
 ELSE()
     SET(SCP scp)
     SET(NODEJS /opt/local/bin/node)
@@ -63,12 +63,15 @@ ENDIF()
 
 SET(DO_POST_BUILD YES)
 
-SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
+#SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 #SET(URL_TARGET_SYSTEM root@192.168.1.2)
-SET(SSH_PORT_TARGET_SYSTEM 22)
+#SET(SSH_PORT_TARGET_SYSTEM 22)
 
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
 #SET(SSH_PORT_TARGET_SYSTEM 1234)
+
+SET(URL_TARGET_SYSTEM root@192.168.1.43)
+SET(SSH_PORT_TARGET_SYSTEM 22)
 
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}
@@ -161,6 +164,7 @@ add_subdirectory(${MOD_DIR}/c-gy87)
 add_subdirectory(${MOD_DIR}/test-sender)
 add_subdirectory(${MOD_DIR}/test-receiver)
 add_subdirectory(${MOD_DIR}/test-sender-receiver)
+add_subdirectory(${MOD_DIR}/c-pru-pwmout)
 #add_subdirectory(${MOD_DIR}/MyModule)
 #add_subdirectory(${MOD_DIR}/bmp180)
 #add_subdirectory(${MOD_DIR}/ms5611)

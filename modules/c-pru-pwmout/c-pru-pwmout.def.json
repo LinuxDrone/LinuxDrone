@@ -1,0 +1,138 @@
+{
+  "type": "module_def",
+  "name": "c-pru-pwmout",
+  "version": 1,
+  "Task Priority": 80,
+  "Task Period": 20000,
+  "Transfer task period": 200000,
+  "Notify on change": false,
+  "description": {
+    "en": "pru pwm output",
+    "ru": "Модуль формирования pwm сигнала блоком PRU"
+  },
+  "paramsDefinitions": [
+    {
+      "name": "Pru Device",
+      "displayName": {
+        "en": "Pru Device num",
+        "ru": "Номер блока PRU"
+      },
+      "description": {
+        "en": "Pru Device number",
+        "ru": "Номер блока PRU"
+      },
+      "type": "uint",
+      "defaultValue": 1,
+      "validValues" : [0,1],
+      "unitMeasured": ""
+    },
+    {
+      "name": "Pru Binary",
+      "displayName": {
+        "en": "Pru Binary"
+      },
+      "description": {
+        "en": "Path to code PRU",
+        "ru": "Путь к файлу с кодом для модуля PRU"
+      },
+      "type": "const char*",
+      "defaultValue": "/usr/local/linuxdrone/modules/c-pru-pwmout/pwmout.bin",
+      "unitMeasured": ""
+    }
+  ],
+  "inputShema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "pwm1": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 1",
+              "ru": "Вход 1"
+            }
+          },
+          "pwm2": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 2",
+              "ru": "Вход 2"
+            }
+          },
+          "pwm3": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 3",
+              "ru": "Вход 3"
+            }
+          },
+          "pwm4": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 4",
+              "ru": "Вход 4"
+            }
+          },
+          "pwm5": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 5",
+              "ru": "Вход 5"
+            }
+          },
+          "pwm6": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 6",
+              "ru": "Вход 6"
+            }
+          },
+          "pwm7": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 7",
+              "ru": "Вход 7"
+            }
+          },
+          "pwm8": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 8",
+              "ru": "Вход 8"
+            }
+          },
+          "pwm9": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 9",
+              "ru": "Вход 9"
+            }
+          },
+          "pwm10": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 10",
+              "ru": "Вход 10"
+            }
+          },
+          "pwm11": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "input 11",
+              "ru": "Вход 11"
+            }
+          }
+
+        }
+  }
+}
