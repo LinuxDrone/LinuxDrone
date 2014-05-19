@@ -13,7 +13,7 @@
 #include "c-pru-pwmout.helper.h"
 #include "pru-functions.h"
 
-bool initPwmOutput(pru_info_t *pru_info, uint8_t *m_sharedMem, char *pathBin, uint32_t *m_pwm, uint32_t *m_period);
+bool initPwmOutput(pru_info_t *pru_info, uint8_t **m_sharedMem, char *pathBin, uint32_t *m_pwm, uint32_t *m_period);
 void setChannelPeriod(uint8_t *m_sharedMem, int channel, uint32_t period);
 void setChannelPulseWidth(uint8_t *m_sharedMem, int channel, uint32_t pw);
 
@@ -43,7 +43,7 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
 
         // Инициализация модуля PRU
          if (!bPruInit) {
-           if(!initPwmOutput(pru_info, m_sharedMem, "/usr/local/linuxdrone/modules/c-pru-pwmout/pru-pwmout.bin", m_pwm, m_period))
+           if(!initPwmOutput(pru_info, &m_sharedMem, "/usr/local/linuxdrone/modules/c-pru-pwmout/pru-pwmout.bin", m_pwm, m_period))
             {
                 if(rt_timer_read() - last_print_time > print_period)
                 {
@@ -117,7 +117,7 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
  * @param pathBin - указатель на строку с путем к коду для PRU
  * @return Возвращает true если успех
  */
-bool initPwmOutput(pru_info_t *pru_info, uint8_t *m_sharedMem, char *pathBin, uint32_t *m_pwm, uint32_t *m_period)
+bool initPwmOutput(pru_info_t *pru_info, uint8_t **m_sharedMem, char *pathBin, uint32_t *m_pwm, uint32_t *m_period)
 {
     SetPathBinPru(pru_info, pathBin);
     EnablePru(pru_info);
@@ -127,28 +127,29 @@ bool initPwmOutput(pru_info_t *pru_info, uint8_t *m_sharedMem, char *pathBin, ui
         return false;
     }
 
-    m_sharedMem = (uint8_t *)GetSharedMem(pru_info);
+    *m_sharedMem = (uint8_t *)GetSharedMem(pru_info);
 
     int i;
+
     for(i=0;i<12;i++) {
         m_pwm[i]=1500;
-        setChannelPulseWidth(m_sharedMem, i,m_pwm[i]);
+        setChannelPulseWidth(*m_sharedMem, i,m_pwm[i]);
     }
 
     for(i=0;i<4;i++) {
         // 50Hz
         m_period[i]=20000;
-        setChannelPeriod(m_sharedMem, i,m_period[i]);
+        setChannelPeriod(*m_sharedMem, i,m_period[i]);
     }
     for(i=4;i<8;i++) {
         // 400Hz
         m_period[i]=2500;
-        setChannelPeriod(m_sharedMem, i,m_period[i]);
+        setChannelPeriod(*m_sharedMem, i,m_period[i]);
     }
     for(i=8;i<12;i++) {
         // 200Hz
         m_period[i]=5000;
-        setChannelPeriod(m_sharedMem, i,m_period[i]);
+        setChannelPeriod(*m_sharedMem, i,m_period[i]);
     }
 
 
