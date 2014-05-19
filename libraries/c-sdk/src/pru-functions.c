@@ -158,7 +158,7 @@ bool RunPru(pru_info_t *pru_info)
 bool ResetPru(pru_info_t *pru_info)
 {
     printf("Reset Pru%d\n", pru_info->pruNum);
-    return WriteUInt32(pru_info, 0x4a322000+(0x2000*pru_info->pruNum), 0x10a);
+    return WriteUInt32(pru_info, 0x4a322000+(0x2000*pru_info->pruNum), 0x0);
 }
 
 // Get shared memory
