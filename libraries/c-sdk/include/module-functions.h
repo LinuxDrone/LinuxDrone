@@ -58,8 +58,15 @@ typedef enum
 
 typedef enum
 {
-    fieldInteger,
-    fieldBoolean
+    field_char,
+    field_short,
+    field_int,
+    field_long,
+    field_long_long,
+    field_float,
+    field_double,
+    field_const_char,
+    field_bool
 } TypeFieldObj;
 
 

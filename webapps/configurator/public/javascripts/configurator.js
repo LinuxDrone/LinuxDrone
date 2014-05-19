@@ -295,7 +295,7 @@ viewModels.Editor = (function () {
 
     // Публичная функция запуска текущей конфигурации
     res.RunConfig = function() {
-
+        paper.scale(0.5, 0.5);
         var data4send = {
             "name": res.configNameSelected(),
             "version": res.versionSelected()
@@ -330,7 +330,6 @@ viewModels.Editor = (function () {
 
     // Публичная функция остановки текущей конфигурации
     res.StopConfig = function() {
-
         Subscribe2Telemetry("unsubscribe");
 
         var data4send = {
@@ -912,6 +911,7 @@ viewModels.Editor = (function () {
             });
 
             cell.attributes["nameOutGroup"] = group.name;
+            cell.attributes["portType"] = group.Schema.properties[cell.attributes.source.port].type;
         }
     });
 

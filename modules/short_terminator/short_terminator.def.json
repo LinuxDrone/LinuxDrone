@@ -1,0 +1,135 @@
+{
+  "type": "module_def",
+  "name": "short_terminator",
+  "version": 2,
+  "Task Priority": 80,
+  "Task Period": 200000,
+  "Transfer task period": 200000,
+  "Notify on change": false,
+  "description": {
+    "en": "en description",
+    "ru": "русское описание"
+  },
+  "paramsDefinitions": [
+    {
+      "name": "I2C Device",
+      "displayName": {
+        "en": "param 1",
+        "ru": "параметр 1"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "string",
+      "defaultValue": "default value",
+      "validValues": [
+        "str1",
+        "str2"
+      ],
+      "unitMeasured": ""
+    },
+    {
+      "name": "Test Number Param",
+      "displayName": {
+        "en": "param 2",
+        "ru": "параметр 2"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "int",
+      "defaultValue": 123,
+      "validValues": [
+        56,
+        123
+      ],
+      "unitMeasured": "Ms"
+    },
+    {
+      "name": "Test Boolean Param",
+      "displayName": {
+        "en": "param 3",
+        "ru": "параметр 3"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "boolean",
+      "defaultValue": false,
+      "unitMeasured": "bool"
+    }
+  ],
+    "inputShema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+            "in1": {
+                "type": "short",
+                "required": true,
+                "description": {
+                    "en": "input 1",
+                    "ru": "Вход 1"
+                }
+            },
+            "in2": {
+                "type": "short",
+                "required": true,
+                "description": {
+                    "en": "input 2",
+                    "ru": "Вход 2"
+                }
+            },
+            "in3": {
+                "type": "short",
+                "required": true,
+                "description": {
+                    "en": "input 3",
+                    "ru": "Вход 3"
+                }
+            },
+            "in4": {
+                "type": "short",
+                "required": true,
+                "description": {
+                    "en": "input 4",
+                    "ru": "Вход 4"
+                }
+            },
+            "in5": {
+                "type": "short",
+                "required": true,
+                "description": {
+                    "en": "input 5",
+                    "ru": "Вход 5"
+                }
+            },
+            "in6": {
+                "type": "short",
+                "required": true,
+                "description": {
+                    "en": "input 6",
+                    "ru": "Вход 6"
+                }
+            },
+            "in7": {
+                "type": "short",
+                "required": true,
+                "description": {
+                    "en": "input 7",
+                    "ru": "Вход 7"
+                }
+            },
+            "in8": {
+                "type": "short",
+                "required": true,
+                "description": {
+                    "en": "input 8",
+                    "ru": "Вход 8"
+                }
+            }
+        }
+    }
+}

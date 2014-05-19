@@ -26,7 +26,7 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-sender-receiver.def.json
 )
 
-add_library(test-sender-receiver MODULE ${INC} ${SRC} test-sender-receiver.helper.c)
+add_library(test-sender-receiver MODULE ${INC} ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/test-sender-receiver.helper.c)
 
 target_link_libraries(test-sender-receiver ${EXTRA_LIBS})
 
