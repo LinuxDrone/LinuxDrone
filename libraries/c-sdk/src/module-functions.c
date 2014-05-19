@@ -1005,15 +1005,15 @@ void get_input_data(void* p_module)
     {
         bson_t bson;
         bson_init_static(&bson, buf, res_read);
-debug_print_bson("get_input_data", &bson);
+//debug_print_bson("get_input_data", &bson);
         if ((*module->input_bson2obj)(module, &bson) != 0)
         {
             printf("Error: func get_input_data, input_bson2obj\n");
         }
         else
         {
-printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
-(*module->print_input)(module->input_data);
+//printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
+//(*module->print_input)(module->input_data);
         }
         bson_destroy(&bson);
     }
@@ -1634,6 +1634,7 @@ int refresh_input(void* p_module)
                         return -1;
                     }
 
+                    uint32_t length;
                     switch (remote_in_obj_field->type_field_obj)
                     {
                         case field_char:
@@ -1678,34 +1679,38 @@ int refresh_input(void* p_module)
                             *((long long*)pval) = bson_iter_int64(&iter);
                             break;
 
-                    case field_float:
-                        if (!BSON_ITER_HOLDS_DOUBLE(&iter)) {
-                            printf("Property \"%s\" not INT64 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
-                            return -1;
-                        }
-                        *((float*)pval) = bson_iter_int64(&iter);
-                        break;
+                        case field_float:
+                            if (!BSON_ITER_HOLDS_DOUBLE(&iter)) {
+                                printf("Property \"%s\" not DOUBLE type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                return -1;
+                            }
+                            *((float*)pval) = bson_iter_double(&iter);
+                            break;
 
-                    case field_double:
-                        if (!BSON_ITER_HOLDS_DOUBLE(&iter)) {
-                            printf("Property \"%s\" not INT64 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
-                            return -1;
-                        }
-                        *((double*)pval) = bson_iter_int64(&iter);
-                        break;
+                        case field_double:
+                            if (!BSON_ITER_HOLDS_DOUBLE(&iter)) {
+                                printf("Property \"%s\" not DOUBLE type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                return -1;
+                            }
+                            *((double*)pval) = bson_iter_double(&iter);
+                            break;
 
+                        case field_const_char:
+                            if (!BSON_ITER_HOLDS_UTF8(&iter)) {
+                                printf("Property \"%s\" not UTF8 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                return -1;
+                            }
+                            //pval = bson_iter_utf8(&iter, &length);
+                            //TODO: malloc for string
+                            break;
 
-/*
-                    case field_const_char:
-                        bson_append_utf8  (bson_obj, remote_obj_field->remote_field_name, -1, (const char*)pval, -1);
-                    break;
-
-                    case field_bool:
-                        bson_append_bool   (bson_obj, remote_obj_field->remote_field_name, -1, *((bool*)pval));
-                    break;
-*/
-
-
+                        case field_bool:
+                            if (!BSON_ITER_HOLDS_BOOL(&iter)) {
+                                printf("Property \"%s\" not BOOL type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                return -1;
+                            }
+                            *((bool*)pval) = bson_iter_bool(&iter);
+                            break;
 
                         default:
                             printf("Function \"refresh_input\" Unknown type remote field\n");

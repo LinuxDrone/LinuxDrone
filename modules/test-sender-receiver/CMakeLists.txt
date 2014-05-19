@@ -20,11 +20,11 @@ set(EXTRA_LIBS
     c-sdk
 )
 
-#ADD_CUSTOM_COMMAND(
-#    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test-sender-receiver.helper.c
-#    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/test-sender-receiver.def.json ${CMAKE_CURRENT_BINARY_DIR}
-#    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-sender-receiver.def.json
-#)
+ADD_CUSTOM_COMMAND(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test-sender-receiver.helper.c
+    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/test-sender-receiver.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-sender-receiver.def.json
+)
 
 add_library(test-sender-receiver MODULE ${INC} ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/test-sender-receiver.helper.c)
 
