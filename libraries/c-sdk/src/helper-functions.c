@@ -46,6 +46,7 @@ void debug_print_bson(char* where, bson_t* bson) {
     printf("\n");
 }
 
+
 void print_task_start_error(int err) {
     switch (err)
     {
@@ -69,7 +70,6 @@ void print_task_start_error(int err) {
             printf("Unknown task error: %i.\n", err);
     }
 }
-
 
 
 void print_task_receive_error(int err) {
@@ -212,6 +212,7 @@ void print_rt_mutex_bind_error(int err) {
     }
 }
 
+
 void print_task_bind_error(int err) {
     switch (err)
     {
@@ -274,7 +275,6 @@ void print_task_send_error(int err) {
 }
 
 
-
 void print_rt_event_bind_error(int err) {
     switch (err)
     {
@@ -302,7 +302,6 @@ void print_rt_event_bind_error(int err) {
             printf("Unknown rt_event_bind error: %i.\n", err);
     }
 }
-
 
 
 void print_heap_create_error(int err) {
@@ -366,6 +365,7 @@ void print_event_wait_error(int err) {
     }
 }
 
+
 void print_obj_status(int number_obj, StatusObj status) {
     switch (status)
     {
@@ -394,6 +394,7 @@ void print_obj_status(int number_obj, StatusObj status) {
     }
 }
 
+
 /* return a new string with every instance of ch replaced by repl */
 char *replace(const char *s, char ch, const char *repl) {
     int count = 0;
@@ -416,6 +417,7 @@ char *replace(const char *s, char ch, const char *repl) {
     return res;
 }
 
+
 /**
  * @brief remove_element Remove element from array
  * @param array
@@ -426,4 +428,37 @@ void remove_element(void** array, int index, int array_length)
 {
    int i;
    for(i = index; i < array_length - 1; i++) array[i] = array[i + 1];
+}
+
+
+TypeFieldObj convert_port_type_str2type(const char* str_type)
+{
+    if(strcmp(str_type, "char")==0)
+        return field_char;
+
+    if(strcmp(str_type, "short")==0)
+        return field_short;
+
+    if(strcmp(str_type, "int")==0)
+        return field_int;
+
+    if(strcmp(str_type, "long")==0)
+        return field_long;
+
+    if(strcmp(str_type, "long long")==0)
+        return field_long_long;
+
+    if(strcmp(str_type, "float")==0)
+        return field_float;
+
+    if(strcmp(str_type, "double")==0)
+        return field_double;
+
+    if(strcmp(str_type, "const char*")==0)
+        return field_const_char;
+
+    if(strcmp(str_type, "bool")==0)
+        return field_bool;
+
+    return -1;
 }

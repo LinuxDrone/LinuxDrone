@@ -280,6 +280,7 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
     if (cell.type == "link") {
         arLinks.links.push({
             "type": cell.mode,
+            "portType": cell.portType, // Тип значения порта
             "outInst": GetInstanceName(graph, cell.source.id),
             "inInst": GetInstanceName(graph, cell.target.id),
             "outPin": cell.source.port,
