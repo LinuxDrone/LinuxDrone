@@ -63,7 +63,6 @@ bool InitPRU(pru_info_t *pru_info)
 {
     if(pru_info->enabled)
     {
-
         /* open the device */
         // map the device and init the varible before use it
         pru_info->mem_fd = open("/dev/mem", O_RDWR);
@@ -102,9 +101,9 @@ bool LoadImageToPru(pru_info_t *pru_info)
             // Open an File from the hard drive
             fPtr = fopen(pru_info->pathBin, "rb");
             if (fPtr == NULL) {
-                printf("Image File  %s open failed", pru_info->pathBin);
+                printf("Image File  %s open failed\n", pru_info->pathBin);
             } else {
-                printf("Image File  %s open passed", pru_info->pathBin);
+                printf("Image File  %s open passed\n", pru_info->pathBin);
             }
             // Read file size
             fseek(fPtr, 0, SEEK_END);
@@ -114,7 +113,7 @@ bool LoadImageToPru(pru_info_t *pru_info)
             fileSize = ftell(fPtr);
 
             if (fileSize == 0) {
-                printf("File read failed.. Closing program");
+                printf("File read failed.. Closing program\n");
                 fclose(fPtr);
                 return -1;
             }
@@ -123,7 +122,7 @@ bool LoadImageToPru(pru_info_t *pru_info)
 
             if (fileSize !=
                 fread((unsigned char *) fileDataArray, 1, fileSize, fPtr)) {
-                printf("WARNING: File Size mismatch");
+                printf("WARNING: File Size mismatch\n");
             }
             fclose(fPtr);
             /* Initialize example */
@@ -140,7 +139,7 @@ bool LoadImageToPru(pru_info_t *pru_info)
             {
                 *(p + i) = fileDataArray[i];
             }
-            printf("write file to memory");
+            printf("write file to memory\n");
             munmap(pMem, 0x2000);
             return true;
 
@@ -151,7 +150,7 @@ bool LoadImageToPru(pru_info_t *pru_info)
 // Run image on Pru
 bool RunPru(pru_info_t *pru_info)
 {
-    printf("Run Pru%d", pru_info->pruNum);
+    printf("Run Pru%d\n", pru_info->pruNum);
     return WriteUInt32(pru_info, 0x4a322000+(0x2000*pru_info->pruNum), 0xa);
 }
 
@@ -183,7 +182,7 @@ bool WriteUInt32(pru_info_t *pru_info, unsigned long addr, unsigned long data)
             return false;
         }
         *(unsigned long *)(pMem) = data;
-        printf("write data to memory");
+        printf("write data to memory\n");
         munmap(pMem, 0x2000);
         return true;
 
@@ -206,7 +205,7 @@ bool ReadUInt32(pru_info_t *pru_info, unsigned long addr, unsigned long *data)
             return false;
         }
         *data = *(unsigned long *)(pMem);
-        printf("read data from memory");
+        printf("read data from memory\n");
         munmap(pMem, 0x4);
         return true;
     }
