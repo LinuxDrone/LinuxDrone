@@ -44,7 +44,7 @@
         "type": "object",
         "id": "http://jsonschema.net",
         "properties": {
-          "pwm1": {
+          "ch1": {
             "type": "float",
             "required": true,
             "description": {
@@ -52,7 +52,7 @@
               "ru": "Вход 1"
             }
           },
-          "pwm2": {
+          "ch2": {
             "type": "float",
             "required": true,
             "description": {
@@ -60,7 +60,7 @@
               "ru": "Вход 2"
             }
           },
-          "pwm3": {
+          "ch3": {
             "type": "float",
             "required": true,
             "description": {
@@ -68,7 +68,7 @@
               "ru": "Вход 3"
             }
           },
-          "pwm4": {
+          "ch4": {
             "type": "float",
             "required": true,
             "description": {
@@ -76,7 +76,7 @@
               "ru": "Вход 4"
             }
           },
-          "pwm5": {
+          "ch5": {
             "type": "float",
             "required": true,
             "description": {
@@ -84,7 +84,7 @@
               "ru": "Вход 5"
             }
           },
-          "pwm6": {
+          "ch6": {
             "type": "float",
             "required": true,
             "description": {
@@ -92,7 +92,7 @@
               "ru": "Вход 6"
             }
           },
-          "pwm7": {
+          "ch7": {
             "type": "float",
             "required": true,
             "description": {
@@ -100,7 +100,7 @@
               "ru": "Вход 7"
             }
           },
-          "pwm8": {
+          "ch8": {
             "type": "float",
             "required": true,
             "description": {
@@ -108,7 +108,7 @@
               "ru": "Вход 8"
             }
           },
-          "pwm9": {
+          "ch9": {
             "type": "float",
             "required": true,
             "description": {
@@ -116,7 +116,7 @@
               "ru": "Вход 9"
             }
           },
-          "pwm10": {
+          "ch10": {
             "type": "float",
             "required": true,
             "description": {
@@ -124,7 +124,7 @@
               "ru": "Вход 10"
             }
           },
-          "pwm11": {
+          "ch11": {
             "type": "float",
             "required": true,
             "description": {
@@ -132,7 +132,7 @@
               "ru": "Вход 11"
             }
           },
-          "pwm12": {
+          "ch12": {
             "type": "float",
             "required": true,
             "description": {

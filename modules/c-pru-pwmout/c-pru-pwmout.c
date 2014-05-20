@@ -61,18 +61,18 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
             // есть новые данные
             input = (input_t*)module->module_info.input_data;
 
-            m_pwm[0] = (uint32_t)input->pwm1;
-            m_pwm[1] = (uint32_t)input->pwm2;
-            m_pwm[2] = (uint32_t)input->pwm3;
-            m_pwm[3] = (uint32_t)input->pwm4;
-            m_pwm[4] = (uint32_t)input->pwm5;
-            m_pwm[5] = (uint32_t)input->pwm6;
-            m_pwm[6] = (uint32_t)input->pwm7;
-            m_pwm[7] = (uint32_t)input->pwm8;
-            m_pwm[8] = (uint32_t)input->pwm9;
-            m_pwm[9] = (uint32_t)input->pwm10;
-            m_pwm[10] = (uint32_t)input->pwm11;
-            m_pwm[11] = (uint32_t)input->pwm12;
+            m_pwm[0] = 1000+100*(uint32_t)input->ch1;
+            m_pwm[1] = (uint32_t)input->ch2;
+            m_pwm[2] = (uint32_t)input->ch3;
+            m_pwm[3] = (uint32_t)input->ch4;
+            m_pwm[4] = (uint32_t)input->ch5;
+            m_pwm[5] = (uint32_t)input->ch6;
+            m_pwm[6] = (uint32_t)input->ch7;
+            m_pwm[7] = (uint32_t)input->ch8;
+            m_pwm[8] = (uint32_t)input->ch9;
+            m_pwm[9] = (uint32_t)input->ch10;
+            m_pwm[10] = (uint32_t)input->ch11;
+            m_pwm[11] = (uint32_t)input->ch12;
 
         }
         else
@@ -90,18 +90,18 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
 
         // Эти данные следует добыть из разделяемой памяти, если они не придут через трубу
         module->module_info.refresh_input_mask =
-                pwm1  |
-                pwm2  |
-                pwm3  |
-                pwm4  |
-                pwm5  |
-                pwm6  |
-                pwm7  |
-                pwm8  |
-                pwm9  |
-                pwm10 |
-                pwm11 |
-                pwm12;
+                ch1  |
+                ch2  |
+                ch3  |
+                ch4  |
+                ch5  |
+                ch6  |
+                ch7  |
+                ch8  |
+                ch9  |
+                ch10 |
+                ch11 |
+                ch12;
 
         cycle++;
     }
