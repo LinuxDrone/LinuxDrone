@@ -61,7 +61,7 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
             // есть новые данные
             input = (input_t*)module->module_info.input_data;
 
-            m_pwm[0] = 1000+100*(uint32_t)input->ch1;
+            m_pwm[0] = (uint32_t)input->ch1;
             m_pwm[1] = (uint32_t)input->ch2;
             m_pwm[2] = (uint32_t)input->ch3;
             m_pwm[3] = (uint32_t)input->ch4;
