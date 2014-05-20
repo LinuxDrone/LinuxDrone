@@ -31,6 +31,7 @@ add_library(c-pru-pwmout MODULE ${INC} ${SRC} c-pru-pwmout.helper.c)
 ADD_CUSTOM_COMMAND(
     TARGET c-pru-pwmout
     COMMAND ${PASM} -V3 -b ${CMAKE_CURRENT_SOURCE_DIR}/pru-pwmout.p ${CMAKE_CURRENT_BINARY_DIR}/pru-pwmout
+    COMMAND ${DTC} -I dts -O dtb ${CMAKE_CURRENT_SOURCE_DIR}/BB-BONE-PRU-LD-00A0.dts > ${CMAKE_CURRENT_BINARY_DIR}/BB-BONE-PRU-LD-00A0.dtbo
 )
 
 target_link_libraries(c-pru-pwmout ${EXTRA_LIBS})
@@ -39,6 +40,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-pru-pwmout
         POST_BUILD
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} BB-BONE-PRU-LD-00A0.dtbo ${URL_TARGET_SYSTEM}:/lib/firmware/BB-BONE-PRU-LD-00A0.dtbo
         COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} pru-pwmout.bin ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pru-pwmout/pru-pwmout.bin
         COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-pru-pwmout.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pru-pwmout/libc-pru-pwmout.so
         COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-pru-pwmout/c-pru-pwmout.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pru-pwmout/c-pru-pwmout.def.json
@@ -48,3 +50,4 @@ ENDIF()
 install(TARGETS c-pru-pwmout DESTINATION modules/c-pru-pwmout)
 install(FILES c-pru-pwmout.def.json DESTINATION modules/c-pru-pwmout)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pru-pwmout.bin DESTINATION modules/c-pru-pwmout)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/BB-BONE-PRU-LD-00A0.dtbo DESTINATION ../../../lib/firmware)
