@@ -121,6 +121,7 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
 bool initPwmOutput(pru_info_t *pru_info, uint8_t **m_sharedMem, char *pathBin, uint32_t *m_pwm, uint32_t *m_period)
 {
     SetPathBinPru(pru_info, pathBin);
+    SetNumPru(pru_info, 1);
     EnablePru(pru_info);
 
     if (!InitPRU(pru_info)) {
