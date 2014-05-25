@@ -29,6 +29,7 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
     uint32_t m_pwm[12];
     uint32_t m_period[12];
     uint8_t *m_sharedMem;
+    char *pathBin = "/usr/local/linuxdrone/modules/c-pru-pwmout/pru-pwmout.bin";
     // true если инициализация модуля прошла успешно
     bool     bPruInit = false;
     int i;
@@ -43,7 +44,7 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
 
         // Инициализация модуля PRU
          if (!bPruInit) {
-           if(!initPwmOutput(pru_info, &m_sharedMem, "/usr/local/linuxdrone/modules/c-pru-pwmout/pru-pwmout.bin", m_pwm, m_period))
+           if(!initPwmOutput(pru_info, &m_sharedMem, pathBin, m_pwm, m_period))
             {
                 if(rt_timer_read() - last_print_time > print_period)
                 {
