@@ -254,7 +254,7 @@ void c_gy87_run (module_c_gy87_t *module)
         if(rt_timer_read() - last_print_time > print_period)
         {
             //printf("count_reads=%i", count_reads);
-            print_GyroAccelMagTemp(GyroAccelMagTemp);
+            //print_GyroAccelMagTemp(GyroAccelMagTemp);
 
             last_print_time = rt_timer_read();
             count_reads=0;

@@ -295,7 +295,7 @@ viewModels.Editor = (function () {
 
     // Публичная функция запуска текущей конфигурации
     res.RunConfig = function() {
-        paper.scale(0.5, 0.5);
+        //paper.scale(0.5, 0.5);
         var data4send = {
             "name": res.configNameSelected(),
             "version": res.versionSelected()
