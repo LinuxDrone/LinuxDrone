@@ -24,7 +24,8 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
     // Указатель на структуру с входными данными модуля.
     input_t* input;
     // Указатель на обслуживающую структуру блока PRU
-    pru_info_t *pru_info;
+    pru_info_t *pru_info, m_pru_info;
+    pru_info = &m_pru_info;
 
     uint32_t m_pwm[12];
     uint32_t m_period[12];

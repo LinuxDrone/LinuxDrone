@@ -23,11 +23,12 @@ void c_pru_pwmin_run (module_c_pru_pwmin_t *module)
     // Указатель на структуру с выходными данными модуля.
     PWM_out_t* mPWMout;
     // Указатель на обслуживающую структуру блока PRU
-    pru_info_t *pru_info;
+    pru_info_t *pru_info, m_pru_info;
+    pru_info = &m_pru_info;
 
     uint32_t m_pwm[12];
     uint8_t *m_sharedMem;
-    char *pathBin = "/usr/local/linuxdrone/modules/c-pru-pwmout/pru-pwmout.bin";
+    char *pathBin = "/usr/local/linuxdrone/modules/c-pru-pwmin/pru-pwmin.bin";
     // true если инициализация модуля прошла успешно
     bool     bPruInit = false;
     int i;
@@ -131,7 +132,7 @@ uint32_t readChannel(uint8_t *m_sharedMem,int ch)
         if((channelData < 2100) && (channelData > 900)) {
             return channelData;
         }
-        printf("readChannel out off range data input ch%d = %lu", ch, channelData);
+        //printf("readChannel out off range data input ch%d = %lu", ch, channelData);
     }
     return 0;
 }
