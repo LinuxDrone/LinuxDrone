@@ -1,4 +1,123 @@
 var graph = new joint.dia.Graph;
+var BSON = bson().BSON;
+
+var BrowserDetect = {
+    init: function () {
+        this.browser = this.searchString(this.dataBrowser) || "An unknown browser";
+        this.version = this.searchVersion(navigator.userAgent)
+            || this.searchVersion(navigator.appVersion)
+            || "an unknown version";
+        this.OS = this.searchString(this.dataOS) || "an unknown OS";
+    },
+    searchString: function (data) {
+        for (var i=0;i<data.length;i++)	{
+            var dataString = data[i].string;
+            var dataProp = data[i].prop;
+            this.versionSearchString = data[i].versionSearch || data[i].identity;
+            if (dataString) {
+                if (dataString.indexOf(data[i].subString) != -1)
+                    return data[i].identity;
+            }
+            else if (dataProp)
+                return data[i].identity;
+        }
+    },
+    searchVersion: function (dataString) {
+        var index = dataString.indexOf(this.versionSearchString);
+        if (index == -1) return;
+        return parseFloat(dataString.substring(index+this.versionSearchString.length+1));
+    },
+    dataBrowser: [
+        {
+            string: navigator.userAgent,
+            subString: "Chrome",
+            identity: "Chrome"
+        },
+        { 	string: navigator.userAgent,
+            subString: "OmniWeb",
+            versionSearch: "OmniWeb/",
+            identity: "OmniWeb"
+        },
+        {
+            string: navigator.vendor,
+            subString: "Apple",
+            identity: "Safari",
+            versionSearch: "Version"
+        },
+        {
+            prop: window.opera,
+            identity: "Opera",
+            versionSearch: "Version"
+        },
+        {
+            string: navigator.vendor,
+            subString: "iCab",
+            identity: "iCab"
+        },
+        {
+            string: navigator.vendor,
+            subString: "KDE",
+            identity: "Konqueror"
+        },
+        {
+            string: navigator.userAgent,
+            subString: "Firefox",
+            identity: "Firefox"
+        },
+        {
+            string: navigator.vendor,
+            subString: "Camino",
+            identity: "Camino"
+        },
+        {		// for newer Netscapes (6+)
+            string: navigator.userAgent,
+            subString: "Netscape",
+            identity: "Netscape"
+        },
+        {
+            string: navigator.userAgent,
+            subString: "MSIE",
+            identity: "Explorer",
+            versionSearch: "MSIE"
+        },
+        {
+            string: navigator.userAgent,
+            subString: "Gecko",
+            identity: "Mozilla",
+            versionSearch: "rv"
+        },
+        { 		// for older Netscapes (4-)
+            string: navigator.userAgent,
+            subString: "Mozilla",
+            identity: "Netscape",
+            versionSearch: "Mozilla"
+        }
+    ],
+    dataOS : [
+        {
+            string: navigator.platform,
+            subString: "Win",
+            identity: "Windows"
+        },
+        {
+            string: navigator.platform,
+            subString: "Mac",
+            identity: "Mac"
+        },
+        {
+            string: navigator.userAgent,
+            subString: "iPhone",
+            identity: "iPhone/iPod"
+        },
+        {
+            string: navigator.platform,
+            subString: "Linux",
+            identity: "Linux"
+        }
+    ]
+
+};
+BrowserDetect.init();
 
 var paper = new joint.dia.Paper({
     el: $('#paper'),
@@ -29,7 +148,10 @@ var paper = new joint.dia.Paper({
      */
 });
 $(paper.el).find('svg').attr('preserveAspectRatio', 'xMinYMin');
-
+$(paper.el).find('svg').css({
+    width: "100%",
+    height: "99%"
+});
 
 var viewModels = viewModels || {};
 
@@ -48,7 +170,7 @@ viewModels.Editor = (function () {
         editSchemaMode: ko.observable("main"),
         // Метаинформация модулей
         metaModules: ko.observableArray([]),
-        // Список модулей модулей
+        // Список модулей
         listModules: ko.observableArray([]),
         // Список имен конфигураций
         ConfigNames: ko.observableArray([]),
@@ -78,7 +200,16 @@ viewModels.Editor = (function () {
         // Общие свойства выбранного в схеме инстанса модуля
         instanceCommonProperties: ko.observableArray([]),
         // Специфические свойства выбранного в схеме инстанса модуля
-        instanceSpecificProperties: ko.observableArray([])
+        instanceSpecificProperties: ko.observableArray([]),
+
+        // Статус хост программы
+        // running, stopped
+        hostStatus:ko.observable(),
+
+        cssClass4ButtonsRunStop:ko.observable(),
+
+        // Загрузка процессора задачами ксеномая
+        XenoCPU:ko.observable()
     };
 
 
@@ -161,6 +292,56 @@ viewModels.Editor = (function () {
                 }
             });
     }
+
+    // Публичная функция запуска текущей конфигурации
+    res.RunConfig = function() {
+        paper.scale(0.5, 0.5);
+        var data4send = {
+            "name": res.configNameSelected(),
+            "version": res.versionSelected()
+        };
+        $.post("runhosts", data4send,
+            function (data) {
+                Subscribe2Telemetry("subscribe");
+            });
+    }
+
+    // Приватная. Подписаться, отписаться на телеметрию всех инстансов
+    var Subscribe2Telemetry = function(cmd){
+        if(socketTelemetry.readyState==1) {
+            _.find(graph.getElements(), function (el) {
+                var moduleType = el.attributes.moduleType;
+                var outputs = GetModuleMeta(moduleType).definition().outputs;
+                if (outputs) {
+                    outputs.forEach(function (output) {
+                        var obj = {
+                            cmd: cmd,
+                            instance: el.attributes.attrs['.label'].text,
+                            out: output.name
+                        };
+                        var data = BSON.serialize(obj, true, true, false);
+                        socketTelemetry.send(data.buffer);
+                    });
+                }
+            });
+        }
+    }
+
+
+    // Публичная функция остановки текущей конфигурации
+    res.StopConfig = function() {
+        Subscribe2Telemetry("unsubscribe");
+
+        var data4send = {
+            "name": res.configNameSelected(),
+            "version": res.versionSelected()
+        };
+        $.post("stophosts", data4send,
+            function (data) {
+                var f=0;
+            });
+    }
+
 
     res.RemoveModule = function RemoveModule() {
         if (res.selectedCell()) {
@@ -463,9 +644,7 @@ viewModels.Editor = (function () {
             module.outPorts = new Array();
             $.each(moduleDef.outputs, function (i, output) {
                 var propsCount = Object.keys(output.Schema.properties).length;
-                if (maxPins < propsCount) {
-                    maxPins = propsCount;
-                }
+                maxPins += propsCount;
                 $.each(output.Schema.properties, function (i, pin) {
                     module.outPorts.push(i);
                 });
@@ -562,7 +741,18 @@ viewModels.Editor = (function () {
             }
             res.graphChanged(false);
             res.instnameSelectedModule("Properties");
+
+            PrepareListLinks();
         }
+    }
+
+    // Приватная
+    // Возвращает имя типа модйля по идентификатору модуля в графической схеме
+    var GetModuleTypeByGraphId = function(IdModelInGraph)
+    {
+        return _.find(graph.attributes.cells.models, function (model) {
+            return model.id == IdModelInGraph;
+        }).attributes.moduleType;
     }
 
     // Загрузка метаданных общих свойств модулей в observable переменную
@@ -713,8 +903,137 @@ viewModels.Editor = (function () {
         if (cell.attributes.type == "link") {
             // При создании нового линка, ему по умолчанию устанавливается тип и цвет.
             cell.attributes["mode"] = "queue";
+
+            var moduleType = GetModuleTypeByGraphId(cell.attributes.source.id);
+            var moduleDef=GetModuleMeta(moduleType).definition();
+            var group = _.find(moduleDef.outputs, function (group) {
+                return cell.attributes.source.port in group.Schema.properties;
+            });
+
+            cell.attributes["nameOutGroup"] = group.name;
+            cell.attributes["portType"] = group.Schema.properties[cell.attributes.source.port].type;
         }
-    })
+    });
+
+
+    res.PreparedLinks = {};
+    // Подготавливает список свзяей в виде объекта, в котором можно добыть связь по имени модуля и имени порта
+    // Для удосбства, при приеме данных из вебсокетов (чтоб не искать каждый раз связь в графе)
+    var PrepareListLinks =function(){
+        res.PreparedLinks = {};
+        graph.attributes.cells.models.forEach(function (cell) {
+            if(cell.attributes.type=="link"){
+                var sourceInstanceName = _.find(graph.attributes.cells.models, function (model) {
+                    return model.id == cell.attributes.source.id;
+                }).attributes.attrs[".label"].text;
+
+                if(!res.PreparedLinks.hasOwnProperty(sourceInstanceName)){
+                    res.PreparedLinks[sourceInstanceName] = {};
+                }
+                if(!res.PreparedLinks[sourceInstanceName][cell.attributes.source.port]){
+                    res.PreparedLinks[sourceInstanceName][cell.attributes.source.port] = new Array();
+                }
+                res.PreparedLinks[sourceInstanceName][cell.attributes.source.port].push(cell);
+            }
+        });
+    };
+
+
+    var socketTelemetry;
+    var socketHostsOut;
+    res.Init = function(){
+        // Пока не установдлно соединение веюсокета, кнопки старта и стопа будут красными
+        res.cssClass4ButtonsRunStop('btn btn-danger');
+
+        var host = window.document.location.host.replace(/:.*/, '');
+        if (typeof MozWebSocket != "undefined") {
+            socketTelemetry = new MozWebSocket('ws://' + host + ':7681/xxx', "telemetry-protocol");
+            socketHostsOut = new MozWebSocket('ws://' + host + ':3000');
+        } else {
+            socketTelemetry = new ReconnectingWebSocket('ws://' + host + ':7681/xxx', "telemetry-protocol");
+            socketHostsOut = new ReconnectingWebSocket('ws://' + host + ':3000');
+        }
+        socketTelemetry.binaryType = "arraybuffer";
+
+        try {
+            socketTelemetry.onopen = function() {
+                document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
+                document.getElementById("wsdi_status").textContent = " websocket connection opened ";
+
+                res.cssClass4ButtonsRunStop('btn btn-success');
+
+                Subscribe2Telemetry("subscribe");
+            }
+
+            socketTelemetry.onmessage =function got_packet(msg) {
+                // De serialize it again
+                var obj = BSON.deserialize(new Uint8Array(msg.data));
+//console.log(obj);
+                $.each(obj, function (port, value) {
+                    if(port!="_from" && (obj["_from"] in viewModels.Editor.PreparedLinks) && (port in viewModels.Editor.PreparedLinks[obj["_from"]]))
+                    {
+                        viewModels.Editor.PreparedLinks[obj["_from"]][port].forEach(function(link){
+                            link.label(0, {
+                                position: .5,
+                                attrs: {
+                                    text: {
+                                        text: value.toFixed(2),
+                                        fill: 'white',
+                                        'font-family': 'sans-serif'
+                                    },
+                                    rect: {
+                                        stroke: '#3498DB',
+                                        fill: '#3498DB',
+                                        'stroke-width': 10,
+                                        rx: 3,
+                                        ry: 3
+                                    }
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+
+            socketTelemetry.onclose = function(){
+                document.getElementById("wsdi_status").style.backgroundColor = "#ff4040";
+                document.getElementById("wsdi_status").textContent = " websocket connection CLOSED ";
+
+                res.cssClass4ButtonsRunStop('btn btn-danger');
+            }
+        } catch(exception) {
+            alert('<p>Error' + exception);
+        }
+
+        socketHostsOut.onmessage = function (event) {
+            var resp = JSON.parse(event.data);
+
+            switch (resp.process) {
+                case 'OS':
+                    res.XenoCPU(resp.data.proc + "%");
+                    break;
+
+                default:
+                    switch (resp.type) {
+                        case 'stdout':
+                            var text = String.fromCharCode.apply(String, resp.data).replace(/\n/g, '<br/>');
+
+                            var text = text.replace(/\x1b\[34m/g, '<span style="color: blue">');
+                            var text = text.replace(/\x1b\[31m/g, '<span style="color: red">');
+                            var text = text.replace(/\x1b\[0m/g, '</span>');
+
+                            document.getElementById('host_out').innerHTML =text;
+                            break;
+
+                        case 'status':
+                            res.hostStatus(resp.data);
+                            document.getElementById('host_out').innerHTML = resp.data;
+                            break;
+                    }
+                    break
+            }
+        };
+    }
 
     return res;
 })();
@@ -723,18 +1042,23 @@ viewModels.Editor = (function () {
 $(document).ready(function () {
 
     $.when(
-            $.getJSON("metamodules",
-                function (data) {
-                    viewModels.Editor.LoadMetaModules(data);
-                }),
-
-            $.getJSON("getconfigs",
-                function (data) {
-                    viewModels.Editor.LoadConfigurations(data);
-                })
-        ).then(function (a1, a2) {
+        $.getJSON("metamodules",
+            function (data) {
+                viewModels.Editor.LoadMetaModules(data);
+            }),
+        $.getJSON("getconfigs",
+            function (data) {
+                viewModels.Editor.LoadConfigurations(data);
+            }),
+        $.getJSON("gethoststatus",
+            function (data) {
+                viewModels.Editor.hostStatus(data);
+            })
+    ).then(function (a1, a2) {
             //Request OK
             ko.applyBindings(viewModels.Editor);
+
+            viewModels.Editor.Init();
         }, function (err1, err2) {
             alert("error server request");
         });
@@ -745,6 +1069,5 @@ $(document).ready(function () {
 document.addEventListener("contextmenu", function (e) {
     e.preventDefault();
 }, false);
-
 
 

@@ -11,7 +11,7 @@
                 "ru": "Название девайса",
 		"en": "GPS Serial Device"
             },
-            "type": "string",
+            "type": "const char*",
             "defaultValue": "GPS Serial",
             "validValues" : ["GPS Serial"],
             "unitMeasured": ""
@@ -21,7 +21,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "string",
+            "type": "const char*",
             "defaultValue": "/dev/ttyO2",
             "validValues" : ["/dev/ttyO2","/dev/ttyO4","/dev/ttyO5"],
             "unitMeasured": ""
@@ -31,7 +31,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "string",
+            "type": "const char*",
             "defaultValue": "UART",
             "validValues" : ["UART","RTDM"],
             "unitMeasured": ""
@@ -41,7 +41,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "number",
+            "type": "float",
             "defaultValue": 57600,
             "validValues" : [4800,9600,19200,38400,57600,115200],
             "unitMeasured": "int"
@@ -51,7 +51,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "string",
+            "type": "const char*",
             "defaultValue": "NMEA SiRF",
             "validValues" : ["NMEA","NMEA SiRF","NMEA uBlox","Binary SiRF","Binary uBlox"],
             "unitMeasured": ""
@@ -65,27 +65,27 @@
                 "id": "http://jsonschema.net",
                 "properties": {
                     "latitude": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "longitude": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
                     },
                     "altitude": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
 		    },
                     "time": {
-                        "type": "string",
+                        "type": "const char*",
                         "required": true
 		    },
                     "fix": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
 		    },
                     "satellites": {
-                        "type": "number",
+                        "type": "float",
                         "required": true
 		    }			
                 }

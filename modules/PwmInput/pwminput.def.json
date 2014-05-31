@@ -14,7 +14,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "number",
+            "type": "float",
             "defaultValue": 0,
             "validValues" : [0,1],
             "unitMeasured": ""
@@ -27,7 +27,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "string",
+            "type": "const char*",
             "defaultValue": "/root/PwmIn.bin",
             "unitMeasured": ""
         }
@@ -40,31 +40,31 @@
                 "id": "http://jsonschema.net",
                 "properties":{
                     "pwm0": {
-                        "type":"number",
+                        "type":"float",
                         "required":true
                     },
                     "pwm1": {
-                        "type":"number",
+                        "type":"float",
                         "required":true
                     },
                     "pwm2": {
-                        "type":"number",
+                        "type":"float",
                         "required":true
                     },
                     "pwm3": {
-                        "type":"number",
+                        "type":"float",
                         "required":true
                     },
                     "pwm4": {
-                        "type":"number",
+                        "type":"float",
                         "required":true
                     },
                     "pwm5": {
-                        "type":"number",
+                        "type":"float",
                         "required":true
                     },
                     "pwm6": {
-                        "type":"number",
+                        "type":"float",
                         "required":true
                     }
                 }

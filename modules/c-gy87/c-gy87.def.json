@@ -1,0 +1,78 @@
+{
+    "type": "module_def",
+    "name": "c-gy87",
+    "version": 1,
+    "Task Priority": 80,
+    "Task Period": 1000,
+    "description": {
+        "en": "GY-87 sensors set",
+        "ru": "Набор датчиков на плате GY-87"
+    },
+    "paramsDefinitions": [
+        {
+            "name": "I2C Device",
+            "displayName": {
+                "en": "Bus Name",
+                "ru": "Имя шины"
+            },
+            "description": {
+                "ru": "Путь к файлу i2c устройства"
+            },
+            "type": "string",
+            "defaultValue": "/dev/i2c-1",
+            "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
+            "unitMeasured": ""
+        }
+    ],
+    "outputs": [
+        {
+            "name": "GyroAccelMagTemp",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "accelX": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "accelY": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "accelZ": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "gyroX": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "gyroY": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "gyroZ": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "magX": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "magY": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "magZ": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "temperature": {
+                        "type": "float",
+                        "required": true
+                    }
+                }
+            }
+        }
+    ]
+}

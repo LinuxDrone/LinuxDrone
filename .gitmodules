@@ -1,0 +1,3 @@
+[submodule "libraries/libbson"]
+	path = libraries/libbson
+	url = https://github.com/mongodb/libbson.git

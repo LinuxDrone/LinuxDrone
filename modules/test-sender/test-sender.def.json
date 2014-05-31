@@ -1,0 +1,121 @@
+{
+  "type": "module_def",
+  "name": "test-sender",
+  "version": 2,
+  "Task Priority": 80,
+  "Task Period": 200000,
+  "Transfer task period": 200000,
+  "Notify on change": false,
+  "description": {
+    "en": "en description",
+    "ru": "русское описание"
+  },
+  "paramsDefinitions": [
+    {
+      "name": "I2C Device",
+      "displayName": {
+        "en": "param 1",
+        "ru": "параметр 1"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "string",
+      "defaultValue": "default value",
+      "validValues": [
+        "str1",
+        "str2"
+      ],
+      "unitMeasured": ""
+    },
+    {
+      "name": "Test Number Param",
+      "displayName": {
+        "en": "param 2",
+        "ru": "параметр 2"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "int",
+      "defaultValue": 123,
+      "validValues": [
+        56,
+        123
+      ],
+      "unitMeasured": "Ms"
+    },
+    {
+      "name": "Test Boolean Param",
+      "displayName": {
+        "en": "param 3",
+        "ru": "параметр 3"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "boolean",
+      "defaultValue": false,
+      "unitMeasured": "bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Output1",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "char_out": {
+            "type": "char",
+            "required": true
+          },
+          "short_out": {
+            "type": "short",
+            "required": true
+          },
+          "int_out": {
+            "type": "int",
+            "required": true
+          },
+          "long_out": {
+            "type": "long",
+            "required": true
+          },
+          "long_long_out": {
+            "type": "long long",
+            "required": true
+          },
+          "float_out": {
+            "type": "float",
+            "required": true
+          },
+          "double_out": {
+            "type": "double",
+            "required": true
+          },
+          "string_out": {
+            "type": "const char*",
+            "required": true
+          }
+        }
+      }
+    },
+    {
+      "name": "Output2",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "out3": {
+            "type": "int",
+            "required": true
+          }
+        }
+      }
+    }
+  ]
+}

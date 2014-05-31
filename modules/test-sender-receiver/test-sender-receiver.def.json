@@ -1,0 +1,119 @@
+{
+  "type": "module_def",
+  "name": "test-sender-receiver",
+  "version": 1,
+  "Task Priority": 80,
+  "Task Period": 200000,
+  "Transfer task period": 200000,
+  "Notify on change": false,
+  "description": {
+    "en": "en description",
+    "ru": "русское описание"
+  },
+  "paramsDefinitions": [
+    {
+      "name": "I2C Device",
+      "displayName": {
+        "en": "param 1",
+        "ru": "параметр 1"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "const char*",
+      "defaultValue": "default value",
+      "validValues": [
+        "str1",
+        "str2"
+      ],
+      "unitMeasured": ""
+    },
+    {
+      "name": "Test float Param",
+      "displayName": {
+        "en": "param 2",
+        "ru": "параметр 2"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "float",
+      "defaultValue": 123,
+      "validValues": [
+        56,
+        123
+      ],
+      "unitMeasured": "Ms"
+    },
+    {
+      "name": "Test Boolean Param",
+      "displayName": {
+        "en": "param 3",
+        "ru": "параметр 3"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "bool",
+      "defaultValue": false,
+      "unitMeasured": "bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Output1",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "out1": {
+            "type": "float",
+            "required": true
+          },
+          "out2": {
+            "type": "float",
+            "required": true
+          }
+        }
+      }
+    },
+    {
+      "name": "Output2",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "out3": {
+            "type": "float",
+            "required": true
+          }
+        }
+      }
+    }
+  ],
+  "inputShema": {
+    "type": "object",
+    "id": "http://jsonschema.net",
+    "properties": {
+      "in1": {
+        "type": "float",
+        "required": true,
+        "description": {
+          "en": "input 1",
+          "ru": "Вход 1"
+        }
+      },
+      "in2": {
+        "type": "float",
+        "required": true,
+        "description": {
+          "en": "input 2",
+          "ru": "Вход 2"
+        }
+      }
+    }
+  }
+}

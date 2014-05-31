@@ -31,7 +31,7 @@ set(EXTRA_LIBS
 	rt
 )
 
-add_executable(linuxdrone ${SRC})
-target_link_libraries(linuxdrone ${EXTRA_LIBS})
+#add_executable(linuxdrone ${SRC})
+#target_link_libraries(linuxdrone ${EXTRA_LIBS})
 
-install(TARGETS linuxdrone DESTINATION bin)
+#install(TARGETS linuxdrone DESTINATION bin)

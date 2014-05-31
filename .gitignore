@@ -18,17 +18,27 @@
 /downloads
 /tools
 /build.*
+Debug
+
 
 # Ignore cmake-generated files (should not be in the source tree)
 CMakeFiles/
 CMakeCache.txt
 Makefile
 cmake_install.cmake
+.metadata
 
 # Ignore patch-related files
 *.rej
 *.orig
 *.diff~
+*.user
+*.project
+*.userprefs
+*.exe*
+*.csproj.*
+*.log
 
 # Ignore Idea files
 *.idea
+

@@ -15,6 +15,8 @@
     <script src="javascripts/joint/lib/lodash.js"></script>
     <script src="javascripts/joint/lib/backbone.js"></script>
 
+    <script src="javascripts/ld/admin.js"></script>
+
     <script src="javascripts/joint/src/core.js"></script>
     <script src="javascripts/joint/src/vectorizer.js"></script>
     <script src="javascripts/joint/src/geometry.js"></script>
@@ -30,6 +32,7 @@
     <script src="javascripts/bootstrap/bootstrap.js"></script>
     <script type='text/javascript' src='javascripts/knockout-3.0.0.js'></script>
     <script src="javascripts/knockout-bootstrap.min.js"></script>
+    <script src="javascripts/reconnecting-websocket.js"></script>
 
     <script src="javascripts/joint/plugins/joint.shapes.basic.js"></script>
     <script src="javascripts/joint/plugins/joint.shapes.devs.js"></script>
@@ -37,15 +40,15 @@
 <body class="h100">
 
 <div class="main-region clearfix">
-    <div class="module-panel panel panel-info h100">
+    <div class="module-panel panel panel-info h100" style="margin: 0">
         <div class="panel-heading tools-region">
             <h3 class="panel-title">Modules</h3>
         </div>
         <div class="panel-body">
-            <div data-bind="template: { name: 'listModulesButtonsTemplate', foreach: listModules }"></div>
+            <div style="width: 100%;" data-bind="template: { name: 'listModulesButtonsTemplate', foreach: listModules }"></div>
         </div>
     </div>
-    <div class="board panel panel-primary">
+    <div class="board panel panel-primary" style="margin: 0">
         <div class="panel-heading h10">
             <!--h3 class="panel-title">Schema</h3-->
             <div class="tools-region">
@@ -84,9 +87,10 @@
                         visible: viewModels.Editor.Versions().length > 0">Delete
                     </button>
                     <button type="button" class="btn btn-info" disabled title="Not Implemented">Import</button>
-                    <button type="button" class="btn btn-info" disabled
-                            data-bind="visible: viewModels.Editor.Versions().length > 0">Export
-                    </button>
+                    <button type="button" class="btn btn-info" disabled data-bind="visible: viewModels.Editor.Versions().length > 0">Export</button>
+
+                    <button type="button" data-bind="css: viewModels.Editor.cssClass4ButtonsRunStop(), click: RunConfig, visible: viewModels.Editor.hostStatus()=='stopped'">Run</button>
+                    <button type="button" data-bind="css: viewModels.Editor.cssClass4ButtonsRunStop(), click: StopConfig, visible: viewModels.Editor.hostStatus()=='running'">Stop</button>
                 </form>
 
                 <form data-bind="visible: viewModels.Editor.editSchemaMode()=='sub'" class="form-inline">
@@ -107,7 +111,7 @@
             <div id="paper" class="h100"></div>
         </div>
     </div>
-    <div class="properties-panel panel panel-default">
+    <div class="properties-panel panel panel-default" style="margin: 0">
         <div class="panel-heading  tools-region">
             <h3 class="panel-title" data-bind="text: viewModels.Editor.instnameSelectedModule"></h3>
         </div>
@@ -181,7 +185,7 @@
 
 <script type="text/html" id="listModulesButtonsTemplate">
     <div>
-        <button style="margin: 2px" type="button" class="btn btn-info"
+        <button style="margin: 2px; overflow: hidden; width: 100%; white-space: nowrap; text-overflow: ellipsis; text-align: left" type="button" class="btn btn-info"
                 data-bind="click: AddModule2Paper, text: definition().name + ' (v' + definition().version + ')',
                 tooltip: {html:true, title: GetModuleDescription(), placement: 'right'}"></button>
     </div>
@@ -213,21 +217,45 @@
 <div id="moduleContextMenu" class="dropdown clearfix">
     <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu"
         style="display:block;position:static;margin-bottom:5px;">
-        <li><a tabindex="-1" href="#" data-bind="click: RemoveModule">Delete</a></li>
+        <li><a tabindex="-1" href="javascript:void(0)" data-bind="click: RemoveModule">Delete</a></li>
     </ul>
 </div>
 
 <div id="linkContextMenu" class="dropdown clearfix">
     <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu"
         style="display:block;position:static;margin-bottom:5px;">
-        <li><a tabindex="-1" href="#" data-bind="click: SetLinkAsPipe">Push delivery</a></li>
-        <li><a tabindex="-1" href="#" data-bind="click: SetLinkAsSharedMemory">Pull delivery</a></li>
+        <li><a tabindex="-1" href="javascript:void(0)" data-bind="click: SetLinkAsPipe">Push delivery</a></li>
+        <li><a tabindex="-1" href="javascript:void(0)" data-bind="click: SetLinkAsSharedMemory">Pull delivery</a></li>
     </ul>
 </div>
 
+<script src="javascripts/bson.js"></script>
 <script src="ModulesCommonParams.def.js"></script>
 <script src="javascripts/configurator.js"></script>
-
+<div class="cpu-info content">
+    CPU utilization:<input data-bind="value: viewModels.Editor.XenoCPU"/>
+    <strong>Host process out</strong><br>
+    <div id='host_out'></div>
+</div>
+<div id="js-admin-panel" class="panel panel-default admin-panel">
+    <div class="panel-heading js-admin-toggle link">
+        <div id="wsdi_status" style="text-align: center">Not initialized</div>
+    </div>
+    <div class="panel-body">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#home" data-toggle="tab">Home</a></li>
+            <li><a href="#profile" data-toggle="tab">Profile</a></li>
+            <li><a href="#messages" data-toggle="tab">Messages</a></li>
+            <li><a href="#settings" data-toggle="tab">Settings</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="home">...</div>
+            <div class="tab-pane" id="profile">...</div>
+            <div class="tab-pane" id="messages">...</div>
+            <div class="tab-pane" id="settings">...</div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

@@ -1,0 +1,111 @@
+{
+  "type": "module_def",
+  "name": "c-pru-pwmin",
+  "version": 1,
+  "Task Priority": 80,
+  "Task Period": 20000,
+  "Transfer task period": 200000,
+  "Notify on change": false,
+  "description": {
+    "en": "pru pwm input",
+    "ru": "Модуль чтения pwm сигнала блоком PRU"
+  },
+  "paramsDefinitions": [
+    {
+      "name": "Pru Device",
+      "displayName": {
+        "en": "Pru Device num",
+        "ru": "Номер блока PRU"
+      },
+      "description": {
+        "en": "Pru Device number",
+        "ru": "Номер блока PRU"
+      },
+      "type": "uint",
+      "defaultValue": 1,
+      "validValues" : [0,1],
+      "unitMeasured": ""
+    },
+    {
+      "name": "Pru Binary",
+      "displayName": {
+        "en": "Pru Binary"
+      },
+      "description": {
+        "en": "Path to code PRU",
+        "ru": "Путь к файлу с кодом для модуля PRU"
+      },
+      "type": "const char*",
+      "defaultValue": "/usr/local/linuxdrone/modules/c-pru-pwmin/pru-pwmin.bin",
+      "unitMeasured": ""
+    }
+  ],
+  "outputs": [
+    {
+      "name": "PWM_out",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "ch1": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "output 1",
+              "ru": "Выход 1"
+            }
+          },
+          "ch2": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "output 2",
+              "ru": "Выход 2"
+            }
+          },
+          "ch3": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "output 3",
+              "ru": "Выход 3"
+            }
+          },
+          "ch4": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "output 4",
+              "ru": "Выход 4"
+            }
+          },
+          "ch5": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "output 5",
+              "ru": "Выход 5"
+            }
+          },
+          "ch6": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "output 6",
+              "ru": "Выход 6"
+            }
+          },
+          "ch7": {
+            "type": "float",
+            "required": true,
+            "description": {
+              "en": "output 7",
+              "ru": "Выход 7"
+            }
+          }
+
+        }
+      }
+    }
+  ]
+}

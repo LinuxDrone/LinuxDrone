@@ -1,0 +1,108 @@
+{
+  "type": "module_def",
+  "name": "rx-openlrs",
+  "version": 1,
+  "Task Priority": 80,
+  "Task Period": 200000,
+  "Transfer task period": 200000,
+  "Notify on change": false,
+  "description": {
+    "en": "en description",
+    "ru": "русское описание"
+  },
+  "paramsDefinitions": [
+    {
+      "name": "I2C Device",
+      "displayName": {
+        "en": "param 1",
+        "ru": "параметр 1"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "string",
+      "defaultValue": "default value",
+      "validValues": [
+        "str1",
+        "str2"
+      ],
+      "unitMeasured": ""
+    },
+    {
+      "name": "Test Number Param",
+      "displayName": {
+        "en": "param 2",
+        "ru": "параметр 2"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "int",
+      "defaultValue": 123,
+      "validValues": [
+        56,
+        123
+      ],
+      "unitMeasured": "Ms"
+    },
+    {
+      "name": "Test Boolean Param",
+      "displayName": {
+        "en": "param 3",
+        "ru": "параметр 3"
+      },
+      "description": {
+        "en": "en description",
+        "ru": "русское описание"
+      },
+      "type": "boolean",
+      "defaultValue": false,
+      "unitMeasured": "bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "RC_out",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "ch1": {
+            "type": "short",
+            "required": true
+          },
+          "ch2": {
+            "type": "short",
+            "required": true
+          },
+          "ch3": {
+            "type": "short",
+            "required": true
+          },
+          "ch4": {
+            "type": "short",
+            "required": true
+          },
+          "ch5": {
+            "type": "short",
+            "required": true
+          },
+          "ch6": {
+            "type": "short",
+            "required": true
+          },
+          "ch7": {
+            "type": "short",
+            "required": true
+          },
+          "ch8": {
+            "type": "short",
+            "required": true
+          }
+        }
+      }
+    }
+  ]
+}

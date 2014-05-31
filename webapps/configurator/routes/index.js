@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var spawn = require('child_process').spawn;
 var commonModuleParams = require('../public/ModulesCommonParams.def.js');
 
 /*
@@ -75,6 +76,90 @@ exports.getconfigs = function (db) {
     };
 };
 
+
+var chost=undefined;
+exports.gethoststatus = function (req, res) {
+console.log(chost);
+    var hoststatus;
+    if (chost!=undefined) {
+        hoststatus = 'running';
+    } else {
+        hoststatus = 'stopped';
+    }
+    res.json(hoststatus);
+};
+
+
+exports.runhosts = function (db) {
+    return function (req, res) {
+
+        if(chost!=undefined){
+            return;
+        }
+
+        res.json(req.body);
+
+        chost = spawn('/usr/local/linuxdrone/bin/c-host', [req.body.name, req.body.version]);
+
+        chost.stdout.on('data', function (data) {
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'c-host',
+                    type: 'stdout',
+                    data:data
+                }), function() {  });
+            console.log('stdout: ' + data);
+        });
+
+        chost.stderr.on('data', function (data) {
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+            JSON.stringify({
+                process: 'c-host',
+                type: 'stderr',
+                data:data
+            }), function() { /* ignore errors */ });
+            console.log('stderr: ' + data);
+        });
+
+        chost.on('close', function (code) {
+            chost=undefined;
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'c-host',
+                    type: 'status',
+                    data: 'stopped'
+                }), function() {  });
+            console.log('c-host child process exited with code ' + code);
+        });
+
+        if(chost!=undefined){
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'c-host',
+                    type: 'status',
+                    data: 'running'
+                }), function() {  });
+        }
+    };
+};
+
+exports.stophosts = function (db) {
+    return function (req, res) {
+
+        if(chost==undefined){
+            return;
+        }
+
+        res.json(req.body);
+
+        chost.kill();
+    };
+};
+
 // Конвертирует визуальное представление графа в конфигурацию модулей принятую в linuxdrone
 function ConvertGraph2Configuration(graph, modulesParams, metaModules) {
     var config = {
@@ -94,10 +179,20 @@ function ConvertGraph2Configuration(graph, modulesParams, metaModules) {
 
 function CastValue2Type(value, type) {
     switch (type) {
-        case "number":
+        case "char":
+        case "short":
+        case "int":
+        case "long":
+        case "long long":
+        case "float":
+        case "double":
             value = Number(value);
             break;
-        case "boolean":
+
+        case "const char*":
+            break;
+
+        case "bool":
             if (_.isString(value) && value === "false") {
                 value = false;
             }
@@ -105,13 +200,12 @@ function CastValue2Type(value, type) {
                 value = Boolean(value);
             }
             break;
-        case "string":
-            value = String(value);
-            break;
+
         default:
-            return undefined;
+            console.log("CastValue2Type Unknown type: " + type);
             break;
     }
+
     return value;
 }
 
@@ -186,10 +280,12 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
     if (cell.type == "link") {
         arLinks.links.push({
             "type": cell.mode,
+            "portType": cell.portType, // Тип значения порта
             "outInst": GetInstanceName(graph, cell.source.id),
             "inInst": GetInstanceName(graph, cell.target.id),
             "outPin": cell.source.port,
-            "inPin": cell.target.port
+            "inPin": cell.target.port,
+            "nameOutGroup" : cell.nameOutGroup
         });
     }
 }

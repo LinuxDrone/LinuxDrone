@@ -7,7 +7,7 @@
                 "en": "Task Priority",
                 "ru": "Task Priority"
             },
-            type: "number",
+            type: "char",
             required: true,
             description: {ru: "Приоритет потока (задачи) xenomai"},
             unitMeasured: "%",
@@ -19,21 +19,23 @@
                 "en": "Task Period",
                 "ru": "Task Period"
             },
-            type: "number",
+            type: "long",
             required: true,
             description: {ru: "время между двумя вызовами бизнес функции (микросекунд) 0  - не зависать на очереди в ожидании данных -1 - зависать навечно, до факта появления данных в очереди"},
             unitMeasured: "Ms",
             defaultValue: 20
         },
         {
-            name: "Notify on change",
+            name: "Transfer task period",
             "displayName": {
-                "en": "Notify on change",
-                "ru": "Notify on change"
+                "en": "Transfer task period",
+                "ru": "Transfer task period"
             },
-            type: "boolean",
-            unitMeasured: "",
-            defaultValue: true
+            type: "long",
+            required: true,
+            description: {ru: "время между двумя вызовами бизнес функции (микросекунд) 0  - не зависать на очереди в ожидании данных -1 - зависать навечно, до факта появления данных в очереди"},
+            unitMeasured: "Ms",
+            defaultValue: 20
         }
     ];
 

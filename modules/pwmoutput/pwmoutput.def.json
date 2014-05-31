@@ -14,7 +14,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "number",
+            "type": "float",
             "defaultValue": 1,
             "validValues" : [0,1],
             "unitMeasured": ""
@@ -27,7 +27,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "string",
+            "type": "const char*",
             "defaultValue": "/root/PwmOut.bin",
             "unitMeasured": ""
         }
@@ -37,7 +37,7 @@
         "id": "http://jsonschema.net",
         "properties":{
             "pwm0": {
-                "type":"number",
+                "type":"float",
                 "required":true,
                 "description": {
                     "en": "pwm0 output",
@@ -45,7 +45,7 @@
                 }
             },
             "pwm1": {
-                "type":"number",
+                "type":"float",
                 "required":true,
                 "description": {
                     "en": "pwm1 output",
@@ -53,43 +53,43 @@
                 }
             },
             "pwm2": {
-                "type":"number",
+                "type":"float",
                 "required":true
             },
             "pwm3": {
-                "type":"number",
+                "type":"float",
                 "required":true
             },
             "pwm4": {
-                "type":"number",
+                "type":"float",
                 "required":true
             },
             "pwm5": {
-                "type":"number",
+                "type":"float",
                 "required":true
             },
             "pwm6": {
-                "type":"number",
+                "type":"float",
                 "required":true
             },
             "pwm7": {
-                "type":"number",
+                "type":"float",
                 "required":true
             },
             "pwm8": {
-                "type":"number",
+                "type":"float",
                 "required":true
             },
             "pwm9": {
-                "type":"number",
+                "type":"float",
                 "required":true
             },
             "pwm10": {
-                "type":"number",
+                "type":"float",
                 "required":true
             },
             "pwm11": {
-                "type":"number",
+                "type":"float",
                 "required":true
             }
 	}

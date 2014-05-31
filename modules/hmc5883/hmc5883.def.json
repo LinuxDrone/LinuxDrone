@@ -10,7 +10,7 @@
             "description": {
                 "ru": "Название девайса"
             },
-            "type": "string",
+            "type": "const char*",
             "defaultValue": "/dev/i2c-1",
             "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
             "unitMeasured": ""
@@ -24,15 +24,15 @@
                 "id": "http://jsonschema.net",
                 "properties":{
                     "magX": {
-                        "type":"number",
+                        "type":"float",
                         "required":true
                     },
                     "magY": {
-                        "type":"number",
+                        "type":"float",
                         "required":true
                     },
                     "magZ": {
-                        "type":"number",
+                        "type":"float",
                         "required":true
                     }
                 }
