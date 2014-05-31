@@ -14,6 +14,8 @@
 // Хранилище указателей на загруженные пускачем инстансы модулей
 bson_t instances;
 
+char g_appPath[PATH_MAX];
+
 
 bson_t* get_bson_from_db(const char* configuration_name, const char* configuration_version)
 {
@@ -224,7 +226,7 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, const char* inst
     bson_t * module_instance = NULL;
     const uint8_t *buf = NULL;
     uint32_t buf_len = 0;
-    const char* module_instance_name;
+    const char* module_instance_name = NULL;
 
     // Бежим по списку инстансов в конфигурации
     while(bson_iter_next(&iter_modules))
@@ -287,8 +289,11 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, const char* inst
     }
 
     const char* module_type = bson_iter_utf8(&iter_module_type, NULL);
-    char so_name[64] = "";
-    strcat(so_name, "lib");
+    char so_name[PATH_MAX] = "";
+    strcat(so_name, g_appPath);
+    strcat(so_name, "../modules/");
+    strcat(so_name, module_type);
+    strcat(so_name, "/lib");
     strcat(so_name, module_type);
     strcat(so_name, ".so");
 
@@ -305,7 +310,7 @@ int start_instance(bson_t* bson_configuration, bson_t* modules, const char* inst
 
 
     // Сварганим имя функции и вызовем ее
-    char f_create_name[64] = "";
+    char f_create_name[PATH_MAX] = "";
     strcat(f_create_name, replace(module_type, '-', "_")); // FREE NEED
     strcat(f_create_name, "_create");
     create_f create = dlsym(handle, f_create_name);
@@ -425,6 +430,16 @@ int main(int argc, char *argv[]) {
         printf( "usage: %s configuration_name configuration_version [instance_name ...]\n", argv[0] );
         return -1;
     }
+
+    if (realpath(argv[0], g_appPath) == 0) {
+        fprintf (stderr, "realpath failed: %s\n", strerror (errno));
+        exit(EXIT_FAILURE);
+    }
+    size_t len = strlen(g_appPath);
+    if (len) {
+        g_appPath[len-6] = 0;
+    }
+
 
     const char* configuration_name = argv[1];
     const char* configuration_version = argv[2];
