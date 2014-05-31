@@ -35,4 +35,4 @@ IF(${DO_POST_BUILD})
     )
 ENDIF()
 
-install(TARGETS i2c_client DESTINATION bin)
+install(TARGETS i2c_client DESTINATION lib)

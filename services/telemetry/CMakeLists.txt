@@ -46,4 +46,4 @@ IF(${DO_POST_BUILD})
 ENDIF()
 
 
-install(TARGETS telemetry DESTINATION bin)
+install(TARGETS telemetry DESTINATION services)
