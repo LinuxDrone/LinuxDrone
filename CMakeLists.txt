@@ -184,6 +184,8 @@ add_subdirectory(${MOD_DIR}/c-pru-pwmin)
 #add_subdirectory(${MOD_DIR}/SerialGps)
 add_subdirectory(${MOD_DIR}/c-bmp180)
 
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+
 # Host programms
 add_subdirectory(${HST_DIR}/c-host)
 
@@ -192,5 +194,4 @@ add_subdirectory(${SVC_DIR}/telemetry)
 add_subdirectory(${SVC_DIR}/i2c)
 
 # Main project target
-set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 #add_subdirectory(${TGT_DIR}/beaglebone) 
