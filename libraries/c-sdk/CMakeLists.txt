@@ -10,8 +10,7 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-file(GLOB_RECURSE INC "include/*")
-file(GLOB_RECURSE INC "src/*.h")
+file(GLOB_RECURSE INC "include/*.h")
 file(GLOB_RECURSE SRC "src/*.c")
 
 include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
