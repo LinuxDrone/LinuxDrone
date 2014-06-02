@@ -13,11 +13,19 @@
 #ifndef _C_SDK_VECTOR_4_H_
 #define _C_SDK_VECTOR_4_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct tagVector4 {
     float v[4];
 
 } VECTOR4, *PVECTOR4;
 
 VECTOR4 vector4Make(float x, float y, float z, float w);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _C_SDK_VECTOR_4_H_

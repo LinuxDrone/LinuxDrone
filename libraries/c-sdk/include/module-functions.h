@@ -8,6 +8,10 @@
 #include <native/mutex.h>
 #include <native/cond.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define TASK_MODE  0  /* No flags */
 #define TASK_STKSZ 0  /* Stack size (use default one) */
 
@@ -408,3 +412,7 @@ void print_task_receive_error(int err);
 void print_task_reply_error(int err);
 void print_task_bind_error(int err);
 void print_task_send_error(int err);
+
+#ifdef __cplusplus
+}
+#endif

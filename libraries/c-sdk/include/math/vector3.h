@@ -13,11 +13,19 @@
 #ifndef _C_SDK_VECTOR_3_H_
 #define _C_SDK_VECTOR_3_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct tagVector3 {
     float v[3];
 
 } VECTOR3, *PVECTOR3;
 
 VECTOR3 vector3Make(float x, float y, float z);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _C_SDK_VECTOR_3_H_

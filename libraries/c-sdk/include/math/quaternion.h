@@ -16,6 +16,10 @@
 #include "vector3.h"
 #include "vector4.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct tagQuaternion {
     float q[4];
 } __attribute__((aligned(16)));
@@ -35,5 +39,9 @@ QUATERNION quaternionInvert(QUATERNION quaternion);
 QUATERNION quaternionNormalize(QUATERNION quaternion);
 VECTOR3 quaternionRotateVector3(QUATERNION quaternion, VECTOR3 vector);
 VECTOR4 quaternionRotateVector4(QUATERNION quaternion, VECTOR4 vector);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _C_SDK_QUATERNION_H_
