@@ -183,6 +183,10 @@ function Create_H_file(module) {
 
     r += "#include \"module-functions.h\"\n\n";
 
+    r += "\n#ifdef __cplusplus\n";
+    r += "extern \"C\" {\n"
+    r += "#endif\n\n";
+
     if ('inputShema' in module) {
         r += make_structures(module.inputShema.properties, "input");
     }
@@ -219,6 +223,10 @@ function Create_H_file(module) {
     r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len);\n";
     r += "int " + module_type + "_start();\n";
     r += "void " + module_type + "_delete(module_" + module_type + "_t* module);\n\n";
+
+    r += "\n#ifdef __cplusplus\n";
+    r += "}\n"
+    r += "#endif\n";
 
     return r;
 }
