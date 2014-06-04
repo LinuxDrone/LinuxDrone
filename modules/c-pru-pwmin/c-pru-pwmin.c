@@ -39,7 +39,7 @@ void c_pru_pwmin_run (module_c_pru_pwmin_t *module)
     while(1) {
 
         // Читаем входные данные модуля
-        get_input_data(module);
+        get_input_data(&module->module_info);
 
         // Инициализация модуля PRU
          if (!bPruInit) {

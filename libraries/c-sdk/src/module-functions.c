@@ -982,10 +982,11 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
  * Должна вызываться из бизнес функции модуля. Доставляет данные из входной очереди и из шаред мемори инстансов поставщиков
  * @param p_module
  */
-void get_input_data(void* p_module)
+void get_input_data(module_t *module)
 {
-    module_t* module = p_module;
-
+    if (!module) {
+        return;
+    }
     if(module->input_data==NULL)
     {
         //здесь просто поспать потоку
