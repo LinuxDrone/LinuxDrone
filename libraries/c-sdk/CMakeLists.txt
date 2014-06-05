@@ -10,7 +10,7 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-file(GLOB_RECURSE INC "include/*")
+file(GLOB_RECURSE INC "include/*.h")
 file(GLOB_RECURSE SRC "src/*.c")
 
 include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
@@ -18,6 +18,7 @@ include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
 set(EXTRA_LIBS
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
     ${RFS_DIR}/usr/local/lib/libbson-1.0.so
+    m
 )
 
 add_library(c-sdk ${INC} ${SRC})

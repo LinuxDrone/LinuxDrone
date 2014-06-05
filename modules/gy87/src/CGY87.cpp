@@ -145,7 +145,7 @@ bool CGY87::initMpu()
 			break;
 		}
 	}
-	if (ret == false) {
+	if (!ret) {
 		return false;
 	}
 	CSystem::sleep(10);
@@ -171,7 +171,7 @@ bool CGY87::initMpu()
 void CGY87::configureRanges()
 {
 //	CGY87_SCALE_2000_DEG, CGY87_ACCEL_8G, CGY87_LOWPASS_256_HZ
-    if (setReg(MpuRegs_DlpfCfg, MpuFilter_Lowpass256Hz) != true) {
+    if (!setReg(MpuRegs_DlpfCfg, MpuFilter_Lowpass256Hz)) {
         return;
     }
 
@@ -208,7 +208,7 @@ bool CGY87::getReg(uint8_t reg, uint8_t* data, size_t size /*= 1*/)
 		return false;
 	}
 	len = m_bus.read(data, size);
-	if (int (size) != len) {
+	if (size != len) {
 		return false;
 	}
 	return true;
@@ -255,7 +255,6 @@ void CGY87::moduleTask()
 
 	const char* names[] = {"X", "Y", "Z"};
     char tmp[256];
-
 	for (int i = 0;i<3;i++) {
 		float gyro  = float (gyros[i]) * (1.0f / 16.4f);
 		float accel = float (accels[i]) * (9.81f / 4096.0f);
@@ -272,5 +271,12 @@ void CGY87::moduleTask()
 //    RTIME diff = time - rt_timer_read();
 //    SRTIME el = rt_timer_ticks2ns(diff);
 //    double elapsed = double (abs(el)) / 1000000.0;
+
+//    static double sum = 0.0;
+//    static double count = 0.0;
+//    count += 1.0;
+//    sum += elapsed;
+
+//    Logger() << (sum / count);
 //    Logger() << elapsed;
 }

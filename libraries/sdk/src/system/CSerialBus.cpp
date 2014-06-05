@@ -11,16 +11,15 @@
 //--------------------------------------------------------------------
 
 #include "CSerialBus.h"
-/*
-static CSerialAbstract CSerialBus::*createSerial(CSerialBus::SerialType &type)
+
+CSerial *CSerialBus::createSerial(SerialType type)
 {
-    /*if(type == CSerialBus::SerialType_RT)
-    {
-        return new CSerialRegular;
+    switch (type) {
+        case SerialType_Unknown:
+            return nullptr;
+        case SerialType_RT:
+        case SerialType_UART:
+            return new CSerialUART();
     }
-    else
-    {
-        return new CSerialRegular;
-    //}
+    return nullptr;
 }
-*/

@@ -116,9 +116,14 @@ bool CXenoTask::resume()
 	return true;
 }
 
-void CXenoTask::sleep(int miliseconds)
+void CXenoTask::sleep(int64_t miliseconds, bool microsecs /*= false*/)
 {
-	RTIME delay = miliseconds*rt_timer_ns2ticks(1000000);
+	RTIME delay;
+	if (!microsecs) {
+		delay = (RTIME) (miliseconds*rt_timer_ns2ticks(1000000));
+	} else {
+		delay = (RTIME) (miliseconds*rt_timer_ns2ticks(1000));
+	}
 	rt_task_sleep(delay);
 }
 

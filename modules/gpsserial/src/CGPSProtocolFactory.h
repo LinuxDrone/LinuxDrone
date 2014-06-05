@@ -15,6 +15,7 @@
 #include "text/CString"
 #include "CGPSProtocolNMEASirf.h"
 #include "CGPSProtocolNMEAuBlox.h"
+#include "CGPSProtocolBinSirf.h"
 
 
 class CGPSProtocolFactory
@@ -30,6 +31,10 @@ public:
         else if(protocolType == "NMEA uBlox")
         {
             return new CGPSProtocolNMEAuBlox;
+        }
+        else if(protocolType == "Binary SiRF")
+        {
+            return new CGPSProtocolBinSirf;
         }
     }
 };

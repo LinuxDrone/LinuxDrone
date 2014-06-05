@@ -183,6 +183,10 @@ function Create_H_file(module) {
 
     r += "#include \"module-functions.h\"\n\n";
 
+    r += "\n#ifdef __cplusplus\n";
+    r += "extern \"C\" {\n"
+    r += "#endif\n\n";
+
     if ('inputShema' in module) {
         r += make_structures(module.inputShema.properties, "input");
     }
@@ -199,7 +203,7 @@ function Create_H_file(module) {
     r += "typedef struct {\n";
     r += "\tmodule_t module_info;\n";
     if ('inputShema' in module) {
-        r += "\tinput_t input4modul;\n";
+        r += "\tinput_t input4module;\n";
     }
     if (module.outputs) {
         module.outputs.forEach(function (out) {
@@ -219,6 +223,10 @@ function Create_H_file(module) {
     r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len);\n";
     r += "int " + module_type + "_start();\n";
     r += "void " + module_type + "_delete(module_" + module_type + "_t* module);\n\n";
+
+    r += "\n#ifdef __cplusplus\n";
+    r += "}\n"
+    r += "#endif\n";
 
     return r;
 }
@@ -314,7 +322,7 @@ function Create_C_file(module) {
         for (var key in module.inputShema.properties) {
             r += "    if(!strncmp(name_inpin, \""+key+"\", XNOBJECT_NAME_LEN))\n";
             r += "    {\n";
-            r += "        return (void*)&module->input4modul."+key+" - (void*)&module->input4modul;\n";
+            r += "        return (void*)&module->input4module."+key+" - (void*)&module->input4module;\n";
             r += "    }\n";
         }
         r += "    printf(\"Not found property \\\"%s\\\" among properties in input object\\n\", name_inpin);\n";
@@ -352,8 +360,8 @@ function Create_C_file(module) {
 
     if ('inputShema' in module) {
         r += "    // Input\n";
-        r += "    memset(&module->input4modul, 0, sizeof(input_t));\n";
-        r += "    module->module_info.input_data = &module->input4modul;\n";
+        r += "    memset(&module->input4module, 0, sizeof(input_t));\n";
+        r += "    module->module_info.input_data = &module->input4module;\n";
         r += "    module->module_info.input_bson2obj = (p_bson2obj)&bson2input;\n";
         r += "    module->module_info.get_inmask_by_inputname = (p_get_inputmask_by_inputname)&get_inputmask_by_inputname;\n";
         r += "    module->module_info.get_offset_in_input_by_inpinname = (p_get_offset_in_input_by_inpinname)&get_offset_in_input_by_inpinname;\n";

@@ -4,7 +4,7 @@ void test_sender_run (module_test_sender_t *module)
 {
     int cycle=0;
     while(1) {
-        get_input_data(module);
+        get_input_data(&module->module_info);
 
         // проверим, обновились ли данные
         if(module->module_info.updated_input_properties!=0)

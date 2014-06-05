@@ -106,7 +106,7 @@ public:
     CStringAnsiPrivate& operator=(const CStringAnsiPrivate& other) {
         if (m_data) {
             if (!m_referenceOnly) {
-                free(m_data);
+                my_free(m_data);
                 m_data = 0;
                 m_length = 0;
             }
@@ -216,7 +216,7 @@ public:
 
     void clear() {
         if (m_data && !m_referenceOnly) {
-            free(m_data);
+            my_free(m_data);
         }
         m_data          = nullptr;
         m_length        = 0;

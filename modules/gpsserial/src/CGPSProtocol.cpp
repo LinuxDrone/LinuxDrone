@@ -10,3 +10,8 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 #include "CGPSProtocol.h"
+
+CString CGPSProtocol::getProtocolType()
+{
+	return m_ProtocolType;	
+}
