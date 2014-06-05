@@ -1,0 +1,213 @@
+{
+    "type": "module_def",
+    "name": "c-pid",
+    "version": 1,
+    "Task Priority": 80,
+    "Task Period": 2000,
+    "Transfer task period": 200000,
+    "Notify on change": false,
+    "description": {
+    "en": "PID module 3x",
+    "ru": "PID регулятор 3 канала"
+    },
+    "paramsDefinitions": [
+        {
+            "name": "RollKp",
+            "displayName": {
+                "en": "Roll Kp",
+                "ru": "Roll Kp"
+            },
+            "description": {
+                "ru": "Коэффициент пропорциональности"
+            },
+            "type": "float",
+            "defaultValue": 0.5,
+            "unitMeasured": ""
+        },
+        {
+            "name": "RollKi",
+            "displayName": {
+                "en": "Roll Ki",
+                "ru": "Roll Ki"
+            },
+            "description": {
+                "ru": "Коэффициент интегрирования"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {
+            "name": "RollKd",
+            "displayName": {
+                "en": "Roll Kd",
+                "ru": "Roll Kd"
+            },
+            "description": {
+                "ru": "Кофэффициент дифференцирования"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {
+            "name": "RollLimit",
+            "displayName": {
+                "en": "RollLimit",
+                "ru": "RollLimit"
+            },
+            "description": {
+                "ru": "Ограничение по интегрированию"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {
+            "name": "PitchKp",
+            "displayName": {
+                "en": "Pitch Kp",
+                "ru": "Pitch Kp"
+            },
+            "description": {
+                "ru": "Коэффициент пропорциональности"
+            },
+            "type": "float",
+            "defaultValue": 0.5,
+            "unitMeasured": ""
+        },
+        {
+            "name": "PitchKi",
+            "displayName": {
+                "en": "Pitch Ki",
+                "ru": "Pitch Ki"
+            },
+            "description": {
+                "ru": "Коэффициент интегрирования"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {
+            "name": "PitchKd",
+            "displayName": {
+                "en": "Pitch Kd",
+                "ru": "Pitch Kd"
+            },
+            "description": {
+                "ru": "Кофэффициент дифференцирования"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {
+            "name": "PitchLimit",
+            "displayName": {
+                "en": "PitchLimit",
+                "ru": "PitchLimit"
+            },
+            "description": {
+                "ru": "Ограничение по интегрированию"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {
+            "name": "YawKp",
+            "displayName": {
+                "en": "Yaw Kp",
+                "ru": "Yaw Kp"
+            },
+            "description": {
+                "ru": "Коэффициент пропорциональности"
+            },
+            "type": "float",
+            "defaultValue": 0.5,
+            "unitMeasured": ""
+        },
+        {
+            "name": "YawKi",
+            "displayName": {
+                "en": "Yaw Ki",
+                "ru": "Yaw Ki"
+            },
+            "description": {
+                "ru": "Коэффициент интегрирования"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {
+            "name": "YawKd",
+            "displayName": {
+                "en": "Yaw Kd",
+                "ru": "Yaw Kd"
+            },
+            "description": {
+                "ru": "Кофэффициент дифференцирования"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {
+            "name": "YawLimit",
+            "displayName": {
+                "en": "YawLimit",
+                "ru": "YawLimit"
+            },
+            "description": {
+                "ru": "Ограничение по интегрированию"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        }
+    ],
+    "inputShema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+            "errRoll": {
+                "type": "float",
+                "required": true
+            },
+            "errPitch": {
+                "type": "float",
+                "required": true
+            },
+            "errYaw": {
+                "type": "float",
+                "required": true
+            }
+         }
+    },
+    "outputs": [
+        {
+            "name": "outPID",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "roll": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "pitch": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "yaw": {
+                        "type": "float",
+                        "required": true
+                    }
+                }
+            }
+        }
+    ]
+}
+
