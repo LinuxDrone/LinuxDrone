@@ -268,6 +268,24 @@ function Create_H_file(module) {
     r += "int " + module_type + "_start();\n";
     r += "void " + module_type + "_delete(module_" + module_type + "_t* module);\n\n";
 
+    if ('paramsDefinitions' in module) {
+    r += "/**\n";
+    r += "* @brief \\~russian Заполняет указатель адресом на структуру, содержащую настроечные параметры модуля\n";
+    r += "* @param module\n";
+    r += "* @param params\n";
+    r += "* @return\n";
+    r += "*/\n";
+    r += "int checkout_params_" + module_type + "(module_t* module, void** params);\n\n";
+
+    r += "/**\n";
+    r += "* @brief \\~russian Освобождает мьютекс, удерживаемый на время работы со структурой параметров\n";
+    r += "* @param module\n";
+    r += "* @return\n";
+    r += "*/\n";
+    r += "int checkin_params_" + module_type + "(module_t* module);\n\n";
+    }
+
+
     r += "\n#ifdef __cplusplus\n";
     r += "}\n"
     r += "#endif\n";
@@ -468,6 +486,43 @@ function Create_C_file(module) {
             r += "    return checkin4writer(module, &module->" + outName + ", obj);\n";
             r += "}\n\n";
         });
+    }
+
+    if ('paramsDefinitions' in module) {
+        r += "/**\n";
+        r += "* @brief \\~russian Заполняет указатель адресом на структуру, содержащую настроечные параметры модуля\n";
+        r += "* @param module\n";
+        r += "* @param params\n";
+        r += "* @return\n";
+        r += "*/\n";
+        r += "int checkout_params_" + module_type + "(module_t* module, void** params)\n";
+        r += "{\n";
+        r += "  int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);\n";
+        r += "  if (res != 0)\n";
+        r += "  {\n";
+        r += "      printf(\"error checkout_params_" + module_type + ": rt_mutex_acquire\\n\");\n";
+        r += "      return res;\n";
+        r += "  }\n";
+        r += "  *params = module->params;\n";
+        r += "  return 0;\n";
+        r += "}\n\n";
+
+        r += "/**\n";
+        r += "* @brief \\~russian Освобождает мьютекс, удерживаемый на время работы со структурой параметров\n";
+        r += "* @param module\n";
+        r += "* @return\n";
+        r += "*/\n";
+        r += "int checkin_params_" + module_type + "(module_t* module)\n";
+        r += "{\n";
+        r += "  int res = rt_mutex_release(&module->mutex_obj_exchange);\n";
+        r += "  if (res != 0)\n";
+        r += "  {\n";
+        r += "      printf(\"error checkin_params_" + module_type + ":  rt_mutex_release\\n\");\n";
+        r += "      return res;\n";
+        r += "  }\n";
+        r += "  return 0;\n";
+        r += "}\n";
+
     }
 
     return r;
