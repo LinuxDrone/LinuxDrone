@@ -1734,8 +1734,7 @@ int refresh_input(void* p_module)
 
 
 /**
- * @brief \~russian Заполняет указатель адресом на структуру, содержащую настроечные параметры модуля
- * Описание. Передача параметров в модуль
+ * \~russian Описание. Передача параметров в модуль
  * BSON объект, содержащий параметры, передается передающему потоку модуля посредством rt_task_send
  * В контексте передающего потока, парсится BSON и значения переносятся в структуру параметров.
  * При этом передающий поток, получает ссылку на структуру с параметрами, посредством вызова функции checkout_params
@@ -1747,41 +1746,5 @@ int refresh_input(void* p_module)
  *
  * - структура для хранения параметров
  * - пара функций получения и освобождения ссылки на структуру параметров (ссылка на функции должна быть доступна через струткуру модуля для потоков модуля)
- * - пара функций сериализации и десириализации bson объекта в структуру (ссылка на функции должна быть доступна через струткуру модуля для потоков модуля)
- * @param module
- * @param params
- * @return
+ * - пара функций сериализации и десириализации bson объекта в структуру (ссылка на функции должна быть доступна через структуру модуля для потоков модуля)
  */
-int checkout_params(module_t* module, void** params)
-{
-    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
-    if (res != 0)
-    {
-        printf("error get_module_params: rt_mutex_acquire\n");
-        return res;
-    }
-
-    *params = module->params;
-
-    return 0;
-}
-
-
-
-/**
- * @brief \~russian Освобождает мьютекс, удерживаемый на время работы со структурой параметров
- * @param module
- * @return
- */
-int checkin_params(module_t* module)
-{
-    int res = rt_mutex_release(&module->mutex_obj_exchange);
-    if (res != 0)
-    {
-        printf("error get_module_params:  rt_mutex_release\n");
-        return res;
-    }
-
-    return 0;
-}
-

@@ -111,7 +111,7 @@
         "id": "http://jsonschema.net",
         "properties": {
           "out3": {
-            "type": "int",
+            "type": "bool",
             "required": true
           }
         }

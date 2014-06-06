@@ -37,7 +37,6 @@ function make_params_structure(params_definitions, moduleName) {
     return r;
 }
 
-
 function make_structures(properties, outName) {
     var r = "";
     // формирование перечисления
@@ -79,30 +78,35 @@ function make_Structure2Bson(properties, outName) {
     r += "int " + outName + "2bson(" + outName + "_t* obj, bson_t* bson)\n";
     r += "{\n";
     for (var key in properties) {
+        var propName = key.replace(/\ /g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
             case "int":
             case "long":
-                r += "\tbson_append_int32 (bson, \"" + key + "\", -1, obj->" + key + ");\n";
+                r += "\tbson_append_int32 (bson, \"" + propName + "\", -1, obj->" + propName + ");\n";
                 break;
 
             case "long long":
-                r += "\tbson_append_int64 (bson, \"" + key + "\", -1, obj->" + key + ");\n";
+                r += "\tbson_append_int64 (bson, \"" + propName + "\", -1, obj->" + propName + ");\n";
                 break;
 
             case "float":
             case "double":
-                r += "\tbson_append_double (bson, \"" + key + "\", -1, obj->" + key + ");\n";
+                r += "\tbson_append_double (bson, \"" + propName + "\", -1, obj->" + propName + ");\n";
                 break;
 
             case "const char*":
                 // TODO: Возможна проблема с тем, что строка не копируется
-                r += "\tbson_append_utf8 (bson, \"" + key + "\", -1, obj->" + key + ", -1);\n";
+                r += "\tbson_append_utf8 (bson, \"" + propName + "\", -1, obj->" + propName + ", -1);\n";
+                break;
+
+            case "bool":
+                r += "\tbson_append_bool(bson, \"" + propName + "\", -1, obj->" + propName + ");\n";
                 break;
 
             default:
-                console.log("Unknown type " + properties[key].type + " for port " + key);
+                console.log("Unknown type " + properties[key].type + " for port " + propName);
                 break;
         }
     }
@@ -249,6 +253,12 @@ function Create_H_file(module) {
     if ('inputShema' in module) {
         r += "\tinput_t input4module;\n";
     }
+
+    if ('paramsDefinitions' in module) {
+        r += "\n\t// Настроечные параметры\n";
+        r += "\tparams_" + module_type + "_t params_" + module_type + ";\n";
+    }
+
     if (module.outputs) {
         module.outputs.forEach(function (out) {
             var outName = out.name.replace(/\+/g, "");
@@ -400,9 +410,28 @@ function Create_C_file(module) {
     r += "}\n\n";
 
 
+    // Хитрожопая процедура преобразования массива объектов в объект, где каждый член - объект из массива.
+    // Все танцы для того, чтобы вызвать функции создания функций bson преобразования, без их изменения.
+    // И какой мудак, решил по разному определеять параметры модуля и порты модуля!
+    //var paramsDefinitions = JSON.decode(JSON.encode(module.paramsDefinitions));
+    var params = {};
+    module.paramsDefinitions.forEach(function (param) {
+        params[param.name] = param;
+    });
+
+    r += make_Structure2Bson(params, "params_" + module_type);
+
+
     r += "// Init module.\n";
     r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len)\n";
     r += "{\n";
+
+    if ('paramsDefinitions' in module) {
+        r += "    // Настроечные параметры\n";
+        r += "    module->module_info.params = &module->params_" + module_type + ";\n";
+        r += "    module->module_info.params_bson2obj = (p_bson2obj)&params_" + module_type + "2bson;\n\n";
+    }
+
     if (module.outputs) {
         module.outputs.forEach(function (out) {
             var outName = out.name.replace(/\+/g, "");
