@@ -143,36 +143,41 @@ function make_Bson2Structure(properties, outName, module_type) {
     r += "    {\n";
     r += "        const char* key = bson_iter_key (&iter);\n\n";
     for (var key in properties) {
-        r += "        if(!strncmp(key, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
+        var propName = key.replace(/\ /g, "_");
+        r += "        if(!strncmp(key, \"" + propName + "\", XNOBJECT_NAME_LEN))\n";
         r += "        {\n";
         switch (properties[key].type) {
             case "char":
             case "short":
             case "int":
             case "long":
-                r += "            obj->" + key + " = bson_iter_int32(&iter);\n";
+                r += "            obj->" + propName + " = bson_iter_int32(&iter);\n";
                 break;
 
             case "long long":
-                r += "            obj->" + key + " = bson_iter_int64(&iter);\n";
+                r += "            obj->" + propName + " = bson_iter_int64(&iter);\n";
                 break;
 
             case "float":
             case "double":
-                r += "            obj->" + key + " = bson_iter_double(&iter);\n";
+                r += "            obj->" + propName + " = bson_iter_double(&iter);\n";
                 break;
 
             case "const char*":
                 // TODO: Возможна проблема с тем, что строка не копируется
                 r += "            uint32_t len;\n";
-                r += "            obj->" + key + " = bson_iter_utf8(&iter, &len);\n";
+                r += "            obj->" + propName + " = bson_iter_utf8(&iter, &len);\n";
+                break;
+
+            case "bool":
+                r += "            obj->" + propName + " = bson_iter_bool(&iter);\n";
                 break;
 
             default:
-                console.log("Unknown type " + properties[key].type + " for port " + key);
+                console.log("Unknown type " + properties[key].type + " for port " + propName);
                 break;
         }
-        r += "            module->updated_input_properties |= " + key + ";\n";
+        r += "            module->updated_input_properties |= " + propName + ";\n";
         r += "            continue;\n";
         r += "        }\n";
     }
@@ -190,26 +195,31 @@ function make_Bson2Structure(properties, outName, module_type) {
         r += "{\n";
     }
     for (var key in properties) {
+        var propName = key.replace(/\ /g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
             case "int":
             case "long":
             case "long long":
-                r += "    printf(\"" + key + "=%i\\t\", obj->" + key + ");\n";
+                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
                 break;
 
             case "float":
             case "double":
-                r += "    printf(\"" + key + "=%lf\\t\", obj->" + key + ");\n";
+                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
                 break;
 
             case "const char*":
-                r += "    printf(\"" + key + "=%s\\t\", obj->" + key + ");\n";
+                r += "    printf(\"" + propName + "=%s\\t\", obj->" + propName + ");\n";
+                break;
+
+            case "bool":
+                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
                 break;
 
             default:
-                console.log("Unknown type " + properties[key].type + " for port " + key);
+                console.log("Unknown type " + properties[key].type + " for port " + propName);
                 break;
         }
     }
@@ -419,7 +429,10 @@ function Create_C_file(module) {
         params[param.name] = param;
     });
 
-    r += make_Structure2Bson(params, "params_" + module_type);
+    if ('paramsDefinitions' in module) {
+        r += make_Structure2Bson(params, "params_" + module_type);
+        r += make_Bson2Structure(params, "params_" + module_type);
+    }
 
 
     r += "// Init module.\n";
@@ -429,7 +442,9 @@ function Create_C_file(module) {
     if ('paramsDefinitions' in module) {
         r += "    // Настроечные параметры\n";
         r += "    module->module_info.params = &module->params_" + module_type + ";\n";
-        r += "    module->module_info.params_bson2obj = (p_bson2obj)&params_" + module_type + "2bson;\n\n";
+        r += "    module->module_info.params2bson = (p_obj2bson)&params_" + module_type + "2bson;\n";
+        r += "    module->module_info.bson2params = (p_bson2obj)&bson2params_" + module_type + ";\n";
+        r += "    module->module_info.print_params = (p_print_obj)&print_params_" + module_type + ";\n\n";
     }
 
     if (module.outputs) {
