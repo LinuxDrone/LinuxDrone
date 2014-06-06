@@ -21,7 +21,7 @@
         "en": "Path to i2c device",
         "ru": "Путь к файлу i2c устройства"
       },
-      "type": "string",
+      "type": "const char*",
       "defaultValue": "/dev/i2c-1",
       "validValues": ["/dev/i2c-1","/dev/i2c-2"],
       "unitMeasured": ""

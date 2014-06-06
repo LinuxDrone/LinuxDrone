@@ -48,7 +48,7 @@ void c_pid_run (module_c_pid_t *module)
     settingsLoad(pidParam);
 
     while(1) {
-        get_input_data(module);
+        get_input_data((module_t *)module);
 
         if(rt_timer_read() - last_print_time > print_period)
         {

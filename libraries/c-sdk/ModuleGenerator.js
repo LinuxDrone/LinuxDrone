@@ -1,7 +1,47 @@
-function make_structures(properties, portName) {
+function make_params_structure(params_definitions, moduleName) {
+    moduleName = moduleName.replace(/-/g, "_");
     var r = "";
     // формирование перечисления
-    r += "// Enum and Structure for port " + portName + "\n";
+    r += "// Enum and Structure params for " + moduleName + "\n";
+    r += "typedef enum\n";
+    r += "{\n";
+    var i = 0;
+    params_definitions.forEach(function (param) {
+        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "");
+        if (i != 0) {
+            r += ",\n";
+        }
+        r += "\t" + paramName + " =\t0b";
+        for (var c = 0; c < 32; c++) {
+            if (i == 31 - c) {
+                r += "1";
+            }
+            else {
+                r += "0";
+            }
+        }
+        i++;
+    });
+
+    r += "\n";
+    r += "} fields4params_" + moduleName + "_t;\n\n";
+
+    // формирование структуры выходного объекта
+    r += "typedef struct\n";
+    r += "{\n";
+    params_definitions.forEach(function (param) {
+        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "");
+        r += "\t" + param.type + " " + paramName + ";\n";
+    });
+    r += "} params_" + moduleName + "_t;\n\n";
+    return r;
+}
+
+
+function make_structures(properties, outName) {
+    var r = "";
+    // формирование перечисления
+    r += "// Enum and Structure for port " + outName + "\n";
     r += "typedef enum\n";
     r += "{\n";
     var i = 0;
@@ -21,7 +61,7 @@ function make_structures(properties, portName) {
         i++;
     }
     r += "\n";
-    r += "} fields_" + portName + "_t;\n\n";
+    r += "} fields_" + outName + "_t;\n\n";
 
     // формирование структуры выходного объекта
     r += "typedef struct\n";
@@ -29,14 +69,14 @@ function make_structures(properties, portName) {
     for (var key in properties) {
         r += "\t" + properties[key].type + " " + key + ";\n";
     }
-    r += "} " + portName + "_t;\n\n";
+    r += "} " + outName + "_t;\n\n";
     return r;
 }
 
-function make_Structure2Bson(properties, portName) {
+function make_Structure2Bson(properties, outName) {
     var r = "";
-    r += "// Convert structure " + portName + " to bson\n";
-    r += "int " + portName + "2bson(" + portName + "_t* obj, bson_t* bson)\n";
+    r += "// Convert structure " + outName + " to bson\n";
+    r += "int " + outName + "2bson(" + outName + "_t* obj, bson_t* bson)\n";
     r += "{\n";
     for (var key in properties) {
         switch (properties[key].type) {
@@ -72,27 +112,27 @@ function make_Structure2Bson(properties, portName) {
     return r;
 }
 
-function make_Bson2Structure(properties, portName, module_type) {
+function make_Bson2Structure(properties, outName, module_type) {
     var r = "";
-    r += "// Convert bson to structure " + portName + "\n";
-    r += "int bson2" + portName + "(module_t* module, bson_t* bson)\n";
+    r += "// Convert bson to structure " + outName + "\n";
+    r += "int bson2" + outName + "(module_t* module, bson_t* bson)\n";
     r += "{\n";
     var forInputCorrect = "";
-    if (portName == "input") {
+    if (outName == "input") {
         forInputCorrect = " !module->input_data || ";
     }
     r += "    if(!module || " + forInputCorrect + " !bson)\n";
 
 
     r += "    {\n";
-    r += "        printf(\"Error: func bson2" + portName + ", NULL parameter\\n\");\n";
+    r += "        printf(\"Error: func bson2" + outName + ", NULL parameter\\n\");\n";
     r += "        return -1;\n";
     r += "    }\n\n";
-    r += "    " + portName + "_t* obj = (" + portName + "_t*)module->input_data;\n";
+    r += "    " + outName + "_t* obj = (" + outName + "_t*)module->input_data;\n";
     r += "    bson_iter_t iter;\n";
     r += "    if(!bson_iter_init (&iter, bson))\n";
     r += "    {\n";
-    r += "        printf(\"Error: func bson2" + portName + ", bson_iter_init\\n\");\n";
+    r += "        printf(\"Error: func bson2" + outName + ", bson_iter_init\\n\");\n";
     r += "        return -1;\n";
     r += "    }\n\n";
     r += "    while(bson_iter_next(&iter))\n";
@@ -136,13 +176,13 @@ function make_Bson2Structure(properties, portName, module_type) {
     r += "    return 0;\n";
     r += "}\n\n";
 
-    r += "// Helper function. Print structure " + portName + "\n";
-    if(portName=="input"){
+    r += "// Helper function. Print structure " + outName + "\n";
+    if(outName=="input"){
         r += "void print_" + module_type + "(void* obj1)\n";
         r += "{\n";
-        r += "    " + portName + "_t* obj=obj1;\n";
+        r += "    " + outName + "_t* obj=obj1;\n";
     }else{
-        r += "void print_" + portName + "(" + portName + "_t* obj)\n";
+        r += "void print_" + outName + "(" + outName + "_t* obj)\n";
         r += "{\n";
     }
     for (var key in properties) {
@@ -196,6 +236,10 @@ function Create_H_file(module) {
             var outName = out.name.replace(/\+/g, "");
             r += make_structures(out.Schema.properties, outName);
         });
+    }
+
+    if ('paramsDefinitions' in module) {
+        r += make_params_structure(module.paramsDefinitions, module.name);
     }
 
     // формирование структуры модуля
