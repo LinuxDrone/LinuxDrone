@@ -1,3 +1,5 @@
+var commonModuleParams = require('../../webapps/configurator/public/ModulesCommonParams.def.js');
+
 function make_params_structure(params_definitions, moduleName) {
     moduleName = moduleName.replace(/-/g, "_");
     var r = "";
@@ -84,29 +86,29 @@ function make_Structure2Bson(properties, outName) {
             case "short":
             case "int":
             case "long":
-                r += "\tbson_append_int32 (bson, \"" + propName + "\", -1, obj->" + propName + ");\n";
+                r += "\tbson_append_int32 (bson, \"" + key + "\", -1, obj->" + propName + ");\n";
                 break;
 
             case "long long":
-                r += "\tbson_append_int64 (bson, \"" + propName + "\", -1, obj->" + propName + ");\n";
+                r += "\tbson_append_int64 (bson, \"" + key + "\", -1, obj->" + propName + ");\n";
                 break;
 
             case "float":
             case "double":
-                r += "\tbson_append_double (bson, \"" + propName + "\", -1, obj->" + propName + ");\n";
+                r += "\tbson_append_double (bson, \"" + key + "\", -1, obj->" + propName + ");\n";
                 break;
 
             case "const char*":
                 // TODO: Возможна проблема с тем, что строка не копируется
-                r += "\tbson_append_utf8 (bson, \"" + propName + "\", -1, obj->" + propName + ", -1);\n";
+                r += "\tbson_append_utf8 (bson, \"" + key + "\", -1, obj->" + propName + ", -1);\n";
                 break;
 
             case "bool":
-                r += "\tbson_append_bool(bson, \"" + propName + "\", -1, obj->" + propName + ");\n";
+                r += "\tbson_append_bool(bson, \"" + key + "\", -1, obj->" + propName + ");\n";
                 break;
 
             default:
-                console.log("Unknown type " + properties[key].type + " for port " + propName);
+                console.log("Unknown type " + properties[key].type + " for port " + key);
                 break;
         }
     }
@@ -144,7 +146,7 @@ function make_Bson2Structure(properties, outName, module_type) {
     r += "        const char* key = bson_iter_key (&iter);\n\n";
     for (var key in properties) {
         var propName = key.replace(/\ /g, "_");
-        r += "        if(!strncmp(key, \"" + propName + "\", XNOBJECT_NAME_LEN))\n";
+        r += "        if(!strncmp(key, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
         r += "        {\n";
         switch (properties[key].type) {
             case "char":
@@ -590,6 +592,10 @@ function main() {
 
         var module = JSON.parse(data);
         var module_type = module.name;
+
+        commonModuleParams.commonModuleParamsDefinition.forEach(function (param) {
+            module.paramsDefinitions.push(param);
+        });
 
         var text_H_file = Create_H_file(module);
         //console.log(text_H_file);
