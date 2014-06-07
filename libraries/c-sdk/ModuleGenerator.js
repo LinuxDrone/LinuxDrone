@@ -441,7 +441,7 @@ function Create_C_file(module) {
 
     if ('paramsDefinitions' in module) {
         r += "    // Настроечные параметры\n";
-        r += "    module->module_info.params = &module->params_" + module_type + ";\n";
+        r += "    module->module_info.specific_params = &module->params_" + module_type + ";\n";
         r += "    module->module_info.params2bson = (p_obj2bson)&params_" + module_type + "2bson;\n";
         r += "    module->module_info.bson2params = (p_bson2obj)&bson2params_" + module_type + ";\n";
         r += "    module->module_info.print_params = (p_print_obj)&print_params_" + module_type + ";\n\n";
@@ -547,7 +547,7 @@ function Create_C_file(module) {
         r += "      printf(\"error checkout_params_" + module_type + ": rt_mutex_acquire\\n\");\n";
         r += "      return res;\n";
         r += "  }\n";
-        r += "  *params = module->params;\n";
+        r += "  *params = module->specific_params;\n";
         r += "  return 0;\n";
         r += "}\n\n";
 
