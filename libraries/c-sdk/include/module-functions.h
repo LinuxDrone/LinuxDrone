@@ -7,6 +7,7 @@
 #include <native/event.h>
 #include <native/mutex.h>
 #include <native/cond.h>
+#include "common-params.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -240,16 +241,6 @@ typedef void (t_cycle_function)(void *cookie);
 typedef t_cycle_function* p_cycle_function;
 
 
-// TODO: Структура должна автогенерится из json определения общих для всех модулей параметров
-typedef struct
-{
-    int Task_Priority;
-
-    RTIME Transfer_task_period;
-
-    RTIME Task_Period;
-
-}common_params_t;
 
 
 typedef struct
@@ -345,6 +336,8 @@ typedef struct
      * Первым полем в структуре должно быть поле типа common_params_t
      */
     void* params;
+
+    common_params_t common_params;
 
 
     /**
