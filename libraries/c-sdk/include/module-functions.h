@@ -240,6 +240,18 @@ typedef void (t_cycle_function)(void *cookie);
 typedef t_cycle_function* p_cycle_function;
 
 
+// TODO: Структура должна автогенерится из json определения общих для всех модулей параметров
+typedef struct
+{
+    int Task_Priority;
+
+    RTIME Transfer_task_period;
+
+    RTIME Task_Period;
+
+}common_params_t;
+
+
 typedef struct
 {
     // Массив указателей на структуры содержащие информацию о разделяемой памяти, контролируемой инстансами поставщиками
@@ -273,7 +285,7 @@ typedef struct
 	 * \~russian
 	 */
 	RT_TASK task_main;
-	int task_priority;
+
 
 
 	/**
@@ -281,13 +293,13 @@ typedef struct
 	 * \~russian
 	 */
 	RT_TASK task_transmit;
-	RTIME transmit_task_period;
+
 
 	/**
 	 * \~english input queue
 	 */
 	RT_QUEUE in_queue;
-	RTIME queue_timeout;
+
 
 
     // Массив указателей на структуры содержащие информацию о очередях модулей потребителей
@@ -330,6 +342,7 @@ typedef struct
 
     /**
      * @brief \~russian Указатель на структуру с настроечными параметрами модуля
+     * Первым полем в структуре должно быть поле типа common_params_t
      */
     void* params;
 

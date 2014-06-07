@@ -428,7 +428,9 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         printf("Property \"Task Priority\" not INT32 type");
         return -1;
     }
-    module->task_priority = bson_iter_int32(&iter);
+    common_params_t* common_params = (common_params_t*) module->params;
+
+    common_params->Task_Priority = bson_iter_int32(&iter);
     //fprintf(stdout, "Task Priority=%i\n", module->task_priority);
 
     /**
@@ -442,7 +444,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         printf("Property \"Main task Period\" not INT32 type");
         return -1;
     }
-    module->queue_timeout = rt_timer_ns2ticks(bson_iter_int32(&iter) * 1000);
+    ((common_params_t*)module->params)->Task_Period = rt_timer_ns2ticks(bson_iter_int32(&iter) * 1000);
     //fprintf(stdout, "queue_timeout=%i\n", module->queue_timeout);
 
     /**
@@ -457,7 +459,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         return -1;
     }
     // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна примать на вход наносекунды
-    module->transmit_task_period = rt_timer_ns2ticks(bson_iter_int32(&iter) * 1000);
+    ((common_params_t*)module->params)->Transfer_task_period = rt_timer_ns2ticks(bson_iter_int32(&iter) * 1000);
     //fprintf(stdout, "transmit_task_period=%i\n", module->transmit_task_period);
 
 
@@ -990,7 +992,7 @@ void get_input_data(module_t *module)
     if(module->input_data==NULL)
     {
         //здесь просто поспать потоку
-        rt_task_sleep(module->queue_timeout);
+        rt_task_sleep(((common_params_t*)module->params)->Task_Period);
 
         //printf("Module don't have input\n");
         return;
@@ -1002,7 +1004,7 @@ void get_input_data(module_t *module)
 
     module->updated_input_properties = 0;
 
-    int res_read = rt_queue_read(&module->in_queue, buf, 256, module->queue_timeout);
+    int res_read = rt_queue_read(&module->in_queue, buf, 256, ((common_params_t*)module->params)->Task_Period);
     if (res_read > 0)
     {
         bson_t bson;
@@ -1243,7 +1245,7 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
 
     int i=0;
     out_object_t* out_object = module->out_objects[i];
-    bool time2publish2shmem = (rt_timer_read() - *time_last_publish_shmem) > module->transmit_task_period;
+    bool time2publish2shmem = (rt_timer_read() - *time_last_publish_shmem) > ((common_params_t*)module->params)->Transfer_task_period;
     while(out_object)
     {
         if(!time2publish2shmem && !to_queue)
@@ -1310,7 +1312,7 @@ void task_transmit(void *p_module)
             return;
         }
         // Если нет заполненных объектов, то поспим пока они не появятся
-        res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, module->transmit_task_period);
+        res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, ((common_params_t*)module->params)->Transfer_task_period);
 
 
         int res1 = rt_mutex_release(&module->mutex_obj_exchange);
@@ -1437,7 +1439,7 @@ int create_xenomai_services(module_t* module)
     char name_task_main[XNOBJECT_NAME_LEN] = "";
     strcat(name_task_main, module->instance_name);
     strcat(name_task_main, SUFFIX_TASK);
-    int err = rt_task_create(&module->task_main, name_task_main, TASK_STKSZ, module->task_priority, TASK_MODE);
+    int err = rt_task_create(&module->task_main, name_task_main, TASK_STKSZ, ((common_params_t*)module->params)->Task_Priority, TASK_MODE);
     if (err != 0)
     {
         fprintf(stdout, "Error create work task \"%s\"\n", name_task_main);
