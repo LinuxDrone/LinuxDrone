@@ -57,9 +57,9 @@ bool CModule::init(const mongo::BSONObj& initObject)
 	if (initObject.hasElement("Notify on change")) {
 		m_notifyOnChange = initObject["Notify on change"].Bool();
 	}
-	if(m_period != -1) {
-		m_period = (uint32_t) (m_period * rt_timer_ns2ticks(1000));
-	}
+//	if(m_period != -1) {
+//		m_period = (uint32_t) (m_period * rt_timer_ns2ticks(1000));
+//	}
 	CStringAnsi name;
 	name = m_instance + ".shm";
 	int err = rt_heap_create(&m_outputHeap, name.data(), m_outputHeapSize, H_FIFO | H_MAPPABLE | H_SHARED);
@@ -120,7 +120,6 @@ bool CModule::link(const mongo::BSONObj& link)
 			}
 			m_queueCreated = true;
 		}
-//		CMutexSection locker(&m_mutexLinks);
 		if (m_linksIn.count(moduleName) == 0) {
 			LINK tmp;
 			m_linksIn[moduleName.copy()] = tmp;
@@ -211,24 +210,49 @@ void CModule::stopTask()
 void CModule::mainTask()
 {
 	RTIME startTime = rt_timer_read();
+	double sec = 0.0;
 
+	int val = 0;
 	while (!m_terminate) {
 		if (m_period == -1 && !m_notifyOnChange) {
 			m_task.sleep(10);
 			continue;
 		}
+
 		for (auto it = m_linksIn.begin();it!=m_linksIn.end();it++) {
 			(*it).second.heapSynchronized = false;
 		}
-		RTIME current = rt_timer_read();
 		if (m_period != -1 && m_runnable) {
-			RTIME result = current - startTime;
-			if (result >= m_period) {
-				m_runnable->run();
-				startTime = current;
-			}
+			m_runnable->run();
 		}
 		recvObjects();
+
+		// fps calculator
+//		{
+//			static double numFrames = 0;
+//			static RTIME fpsStartTime = rt_timer_read();
+//			RTIME current = rt_timer_read();
+//			RTIME elapsed = current - fpsStartTime;
+//			fpsStartTime = current;
+//
+//			numFrames += 1;
+//			sec += (double (rt_timer_ticks2ns(elapsed))/1000.0f) / 1000000.0f;
+//			printf("fps = %f\r\n", numFrames/sec);
+//		}
+
+		if (m_period != -1) {
+			RTIME current = rt_timer_read();
+			RTIME elapsed = current - startTime;
+
+			int64_t sleep = m_period - (rt_timer_ticks2ns(elapsed)/1000);
+			if (sleep > 0) {
+				m_task.sleep(sleep, true);
+			}
+			else if (sleep < 0) {
+//				printf("overtime = %d\n", sleep);
+			}
+			startTime = rt_timer_read();
+		}
 	}
 	SAFE_RELEASE(m_runnable);
 }
@@ -513,7 +537,6 @@ void CModule::sendObject(const mongo::BSONObj& object)
             m_tmpObjElements.push_back(elem);
 		}
 	}
-	CMutexSection locker(&m_mutexLinks);
 	for (std::pair<CStringAnsi, LINK>& it_links:m_linksOut) {
 		LINK& link_data = it_links.second;
 		if (link_data.links.size() == 0) {
@@ -533,6 +556,7 @@ void CModule::sendObject(const mongo::BSONObj& object)
 			CStringAnsi name = link_data.inInstance + CStringAnsi("inputQueue", (size_t) -1, true);
 			int err = rt_queue_bind(&link_data.queue, name.data(), TM_NONBLOCK);
 			if (err != 0) {
+				Logger() << name;
 				Logger() << "error binding queue for send data to module. err =" << err;
 				continue;
 			}
@@ -557,27 +581,21 @@ void CModule::sendObject(const mongo::BSONObj& object)
 void CModule::recvObjects()
 {
 	if (!m_queueCreated) {
-		if (m_period == -1) {
-			m_task.sleep(1000);
-		} else {
-			m_task.sleep(1);
-		}
 		return;
 	}
 	void* ptr = 0;
 	unsigned long long timeout = TM_NONBLOCK;
 	if (m_period == -1) {
-		timeout = 1000;
+		timeout = rt_timer_ticks2ns(1000000000);
 	}
 	int read = rt_queue_receive(&m_inputQueue, &ptr, timeout);
 	if (read < 0) {
-		CSystem::sleep(2);
 		return;
 	}
 //	Logger() << "read =" << read;
-	mongo::BSONObj obj = mongo::BSONObj((char*)ptr);
+	mongo::BSONObj obj = mongo::BSONObj((char*)ptr).copy();
 	// it will be removed later
-//	rt_queue_free(&m_inputQueue, ptr);
+	rt_queue_free(&m_inputQueue, ptr);
 
 //	CMutexSection locker(&m_mutexData);
 	// merge new data object with our
@@ -608,7 +626,7 @@ void CModule::recvObjects()
 	m_dataIn = builder.obj();
 
 	// remove memory retrieved from queue
-	rt_queue_free(&m_inputQueue, ptr);
+//	rt_queue_free(&m_inputQueue, ptr);
 
 	{
 		m_elementsIn.clear();

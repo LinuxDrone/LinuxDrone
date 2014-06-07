@@ -1,3 +1,4 @@
+#include <native/timer.h>
 #include "c-gy87.h"
 #include "c-gy87.helper.h"
 #include "../../../services/i2c/client/i2c_client.h"
@@ -192,7 +193,7 @@ void c_gy87_run (module_c_gy87_t *module)
     long print_period = rt_timer_ns2ticks(1000000000);
 
     while(1) {
-        get_input_data(module);
+        get_input_data(&module->module_info);
 
         if(!mpu_initialized)
         {

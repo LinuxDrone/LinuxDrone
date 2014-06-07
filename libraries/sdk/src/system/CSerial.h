@@ -13,6 +13,7 @@
 #pragma once
 
 #include "text/CString"
+#include "core/CByteArray"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -22,21 +23,23 @@ public:
 	CSerial();        
 	~CSerial();
     	
-	virtual int serial_write(CString &ata) = 0;
-	virtual int serial_read(CString &data, size_t size) = 0;
+    virtual int serialWrite(const void* data, size_t size) = 0;
+    virtual int serialWrite(CByteArray const &data) = 0;
+	virtual int serialRead(void *data, size_t size) = 0;
+    virtual size_t bytesToRead() = 0;
         
-        CString getPortName();
-        int getPortSpeed();        
-        CString getPortFile();
+    CString getPortName();
+    int getPortSpeed();        
+    CString getPortFile();
         
-        bool setPortFile(CString portFile);
-        bool setPortSpeed(int portSpeed);
-        bool setPortName(CString portName);
+    bool setPortFile(CString const &portFile);
+    bool setPortSpeed(int portSpeed);
+    bool setPortName(CString const &portName);
         
-        bool isOpened();
+    bool isOpened();
         
-        virtual bool portOpen() = 0;
-        virtual bool portClose() = 0;
+    virtual bool portOpen() = 0;
+    virtual bool portClose() = 0;
 
 protected:
     CString m_portName = "";

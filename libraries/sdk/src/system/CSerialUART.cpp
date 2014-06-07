@@ -10,18 +10,18 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
+#include <assert.h>
 #include "CSerialUART.h"
       
 bool CSerialUART::portOpen()
 {    
     if (isOpened()) 
     {
-    	m_Opened = false;
         return false;
     }
 
     struct termios l_serialconfig; // port configuration - baud rate, parity, etc
-    long l_baudrate; // will receive the baudrate
+    speed_t l_baudrate = 0; // will receive the baudrate
     
     m_fhandler = open((char *)m_portFile.data(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (m_fhandler < 0) 
@@ -56,6 +56,10 @@ bool CSerialUART::portOpen()
         case 115200:
             l_baudrate = B115200;
             break;
+        default:
+            assert(0 == "invalid speed");
+            l_baudrate = 0;
+            break;
     }
     //Logger() << "Setting (" << m_portName << ")";
     cfsetispeed(&l_serialconfig, l_baudrate); //in baudrate
@@ -81,34 +85,73 @@ bool CSerialUART::portClose()
     close(m_fhandler);    
     m_portFile = CString();
     m_portName = CString();
+    return true;
 }
 
-int CSerialUART::serial_write(CString &data)
+
+int CSerialUART::serialWrite(const void *data, size_t size)
 {
-    if (!isOpened()) 
+    if (!isOpened())
     {
         return -1;
     }
-    //Logger() << "Write (" << data << ")";
-    int len = write(m_fhandler, data.data(), data.size()+5);
+    if (!data || !size) {
+        return 0;
+    }
+    int len = write(m_fhandler, data, size);
     return len;
 }
 
-int CSerialUART::serial_read(CString &data, size_t size)
+int CSerialUART::serialWrite(CByteArray const &data)
 {
-	int l_len=0;
-	
-	char buff[150];
-
-    if (!isOpened()) 
-    {
-    	Logger() << "port closed on read operation";
+    if (!isOpened()) {
         return -1;
     }
-    memset(buff,'\0',sizeof(buff));
-    l_len = read(m_fhandler,buff, 1);
+    if (data.isEmpty()) {
+        return 0;
+    }
+    if(data.isString()) {
+        CString msg = data.data();
+        return serialWrite(msg.data(), (size_t) msg.size());
+    }
+    return serialWrite(data.data(), data.size());
+}
 
-   	data = buff;
-    return data.size();
-    
+int CSerialUART::serialRead(void *data, size_t size)
+{
+    if (!isOpened())
+    {
+        Logger() << "port closed on read operation";
+        return -1;
+    }
+    size_t tot_b = bytesToRead();
+    if (!tot_b) {
+        return 0;
+    }
+    if (tot_b > size) {
+        tot_b = size;
+    }
+    int bytesRead = read(m_fhandler,data,tot_b);
+    return bytesRead;
+}
+
+size_t CSerialUART::bytesToRead()
+{
+    if (!isOpened()) {
+        return 0;
+    }
+    int l_cicle = 0;
+    size_t tot_b = 0;
+
+    ioctl(m_fhandler, FIONREAD, &tot_b);
+    while(tot_b == 0)
+    {
+        ioctl(m_fhandler, FIONREAD, &tot_b);
+        l_cicle++;
+        if(l_cicle >= 400)
+        {
+            break;
+        }
+    }
+    return tot_b;
 }

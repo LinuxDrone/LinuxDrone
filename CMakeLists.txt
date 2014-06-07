@@ -76,7 +76,7 @@ ENDIF()
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
 #SET(SSH_PORT_TARGET_SYSTEM 1234)
 
-SET(URL_TARGET_SYSTEM root@192.168.1.43)
+SET(URL_TARGET_SYSTEM root@192.168.3.5)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
 # MongoDB
@@ -172,8 +172,9 @@ add_subdirectory(${MOD_DIR}/c-gy87)
 add_subdirectory(${MOD_DIR}/test-sender)
 add_subdirectory(${MOD_DIR}/test-receiver)
 add_subdirectory(${MOD_DIR}/test-sender-receiver)
-add_subdirectory(${MOD_DIR}/c-pru-pwmout)
-add_subdirectory(${MOD_DIR}/c-pru-pwmin)
+#add_subdirectory(${MOD_DIR}/c-pru-pwmout)
+#add_subdirectory(${MOD_DIR}/c-pru-pwmin)
+add_subdirectory(${MOD_DIR}/c-pid)
 #add_subdirectory(${MOD_DIR}/MyModule)
 #add_subdirectory(${MOD_DIR}/bmp180)
 #add_subdirectory(${MOD_DIR}/ms5611)
@@ -184,6 +185,8 @@ add_subdirectory(${MOD_DIR}/c-pru-pwmin)
 #add_subdirectory(${MOD_DIR}/SerialGps)
 add_subdirectory(${MOD_DIR}/c-bmp180)
 
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+
 # Host programms
 add_subdirectory(${HST_DIR}/c-host)
 
@@ -192,5 +195,4 @@ add_subdirectory(${SVC_DIR}/telemetry)
 add_subdirectory(${SVC_DIR}/i2c)
 
 # Main project target
-set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 #add_subdirectory(${TGT_DIR}/beaglebone) 

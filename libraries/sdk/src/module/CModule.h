@@ -112,9 +112,8 @@ protected:
 	std::vector<std::pair<CStringAnsi, LINK>> m_linksOut;
 	std::map<CStringAnsi, CStringAnsi> m_sharedLinks;
 	std::map<CStringAnsi, CStringAnsi> m_sharedPinMaping;
-	CMutex                  m_mutexLinks;
 
-	mongo::BSONObj m_dataIn;
+    mongo::BSONObj m_dataIn;
 	std::map<CStringAnsi, mongo::BSONElement> m_elementsIn;
 	CMutex         m_mutexData;
 

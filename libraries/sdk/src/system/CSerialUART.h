@@ -23,17 +23,20 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
+#include "core/CByteArray"
 
 class CSerialUART : public CSerial
 {
 public:
 
-    int serial_write(CString &data) override;
-    int serial_read(CString &data, size_t size) override;
-        
+    virtual int serialWrite(const void* data, size_t size) override;
+    virtual int serialWrite(CByteArray const &data) override;
+    virtual int serialRead(void *data, size_t size) override;
+    virtual size_t bytesToRead() override;
+
     bool portOpen() override;
     bool portClose() override;        
     
-    private:
-        int m_fhandler;
+private:
+    int m_fhandler;
 };

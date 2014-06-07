@@ -21,7 +21,7 @@
         "en": "en description",
         "ru": "русское описание"
       },
-      "type": "string",
+      "type": "const char*",
       "defaultValue": "default value",
       "validValues": [
         "str1",
@@ -57,7 +57,7 @@
         "en": "en description",
         "ru": "русское описание"
       },
-      "type": "boolean",
+      "type": "bool",
       "defaultValue": false,
       "unitMeasured": "bool"
     }
@@ -111,7 +111,7 @@
         "id": "http://jsonschema.net",
         "properties": {
           "out3": {
-            "type": "int",
+            "type": "bool",
             "required": true
           }
         }

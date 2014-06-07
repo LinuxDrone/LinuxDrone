@@ -16,7 +16,7 @@ void rx_openlrs_run (module_rx_openlrs_t *module)
     uint16_t* ch_data;
 
     while(1) {
-        get_input_data(module);
+        get_input_data((module_t*)module);
 
         // Открываем сессию с i2c шиной
         if(i2c_session<1)

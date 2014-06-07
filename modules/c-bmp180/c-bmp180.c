@@ -145,7 +145,7 @@ void c_bmp180_run (module_c_bmp180_t *module)
     uint16_t Temperature;
 
     while(1) {
-        get_input_data(module);
+        get_input_data(&module->module_info);
 
         count_reads++;
         if(rt_timer_read() - last_print_time > print_period)

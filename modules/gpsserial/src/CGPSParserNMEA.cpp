@@ -21,7 +21,9 @@ CGPSParserNMEA::CGPSParserNMEA()
 	m_numberofSatellities = CString();
 	m_gpsFix = CString();
 	m_Time = CString();	
-	m_Sentence = CString();
+	m_Sentence = CByteArray();
+	l_sentence = CString();
+	m_validChecksum = false;
 }
 	
 CGPSParserNMEA::~CGPSParserNMEA()
@@ -36,6 +38,7 @@ bool CGPSParserNMEA::parseSentence()
 	char l_chksum;
 	int l_idxNextString = 0;
 	int l_sentenceSize = 0;
+	l_sentence = CString(m_Sentence.data());
 
 	m_Longitude = CString();
 	m_Latitude = CString();
@@ -45,14 +48,14 @@ bool CGPSParserNMEA::parseSentence()
 	m_gpsFix = CString();
 	m_Time = CString();	
 	
-	l_idxNextString = m_Sentence.find(",",0);	
-	CString	l_seqID = m_Sentence.left(l_idxNextString);
+	l_idxNextString = l_sentence.find(",",0);	
+	CString	l_seqID = l_sentence.left(l_idxNextString);
 	m_validChecksum = false;
 
 	int l_commas =0;
-	for(int i=0;i< m_Sentence.size();i++)
+	for(int i=0;i< l_sentence.size();i++)
 	{
-		if(m_Sentence[i] == ',') 
+		if(l_sentence[i] == ',') 
 		{
 			l_commas++;
 		}
@@ -63,116 +66,116 @@ bool CGPSParserNMEA::parseSentence()
 		//$GPGGA,223715.506,,,,,0,00,,,M,0.0,M,,0000*55
 		//Getting time
 		l_tmpposicion = l_idxNextString+1;
-		l_idxNextString = m_Sentence.find(",",l_tmpposicion);
-		m_Time = m_Sentence.substr(l_tmpposicion,l_idxNextString);
+		l_idxNextString = l_sentence.find(",",l_tmpposicion);
+		m_Time = l_sentence.substr(l_tmpposicion,l_idxNextString);
 		l_sentenceSize++;
 		l_tmpposicion = l_idxNextString+1;
-		if(m_Sentence[l_tmpposicion] == ',')
+		if(l_sentence[l_tmpposicion] == ',')
 		{
 			l_idxNextString++;
 			m_Latitude="0";
 		}
 		else
 		{
-			l_idxNextString = m_Sentence.find(",",l_tmpposicion);
-			m_Latitude = m_Sentence.substr(l_tmpposicion,l_idxNextString);			
+			l_idxNextString = l_sentence.find(",",l_tmpposicion);
+			m_Latitude = l_sentence.substr(l_tmpposicion,l_idxNextString);			
 		}
 
 		l_sentenceSize++;
 		l_tmpposicion = l_idxNextString+1;
-		if(m_Sentence[l_tmpposicion] == ',')
+		if(l_sentence[l_tmpposicion] == ',')
 		{
 			l_idxNextString++;
 			m_LatitudeDir=" ";
 		}
 		else
 		{
-			l_idxNextString = m_Sentence.find(",",l_tmpposicion);
-			m_LatitudeDir = m_Sentence.substr(l_tmpposicion,l_idxNextString);			
+			l_idxNextString = l_sentence.find(",",l_tmpposicion);
+			m_LatitudeDir = l_sentence.substr(l_tmpposicion,l_idxNextString);			
 		}
 
 		l_sentenceSize++;
 		l_tmpposicion = l_idxNextString+1;
-		if(m_Sentence[l_tmpposicion] == ',')
+		if(l_sentence[l_tmpposicion] == ',')
 		{
 			l_idxNextString++;
 			m_Longitude="0";
 		}
 		else
 		{
-			l_idxNextString = m_Sentence.find(",",l_tmpposicion);
-			m_Longitude = m_Sentence.substr(l_tmpposicion,l_idxNextString);			
+			l_idxNextString = l_sentence.find(",",l_tmpposicion);
+			m_Longitude = l_sentence.substr(l_tmpposicion,l_idxNextString);			
 		}
 		l_sentenceSize++;
 		l_tmpposicion = l_idxNextString+1;
-		if(m_Sentence[l_tmpposicion] == ',')
+		if(l_sentence[l_tmpposicion] == ',')
 		{
 			l_idxNextString++;
 			m_LongitudeDir=" ";
 		}
 		else
 		{
-			l_idxNextString = m_Sentence.find(",",l_tmpposicion);
-			m_LongitudeDir = m_Sentence.substr(l_tmpposicion,l_idxNextString);			
+			l_idxNextString = l_sentence.find(",",l_tmpposicion);
+			m_LongitudeDir = l_sentence.substr(l_tmpposicion,l_idxNextString);			
 		}
 
 		//Getting GPS Fix
 		l_sentenceSize++;
 		l_tmpposicion = l_idxNextString+1;
-		if(m_Sentence[l_tmpposicion] == ',')
+		if(l_sentence[l_tmpposicion] == ',')
 		{
 			l_idxNextString++;
 			m_gpsFix="0";
 		}
 		else
 		{
-			l_idxNextString = m_Sentence.find(",",l_tmpposicion);
-			m_gpsFix = m_Sentence.substr(l_tmpposicion,l_idxNextString);			
+			l_idxNextString = l_sentence.find(",",l_tmpposicion);
+			m_gpsFix = l_sentence.substr(l_tmpposicion,l_idxNextString);			
 		}
 		//Getting Number of statellites
 		l_sentenceSize++;
 		l_tmpposicion = l_idxNextString+1;
-		if(m_Sentence[l_tmpposicion] == ',')
+		if(l_sentence[l_tmpposicion] == ',')
 		{
 			l_idxNextString++;
 			m_numberofSatellities="0";
 		}
 		else
 		{
-			l_idxNextString = m_Sentence.find(",",l_tmpposicion);
-			m_numberofSatellities = m_Sentence.substr(l_tmpposicion,l_idxNextString);			
+			l_idxNextString = l_sentence.find(",",l_tmpposicion);
+			m_numberofSatellities = l_sentence.substr(l_tmpposicion,l_idxNextString);			
 		}
 		//Getting HDOP - ignored field
 		l_sentenceSize++;
 		l_tmpposicion = l_idxNextString+1;
-		if(m_Sentence[l_tmpposicion] == ',')
+		if(l_sentence[l_tmpposicion] == ',')
 		{
 			l_idxNextString++;
 		}
 		else
 		{
-			l_idxNextString = m_Sentence.find(",",l_tmpposicion);
+			l_idxNextString = l_sentence.find(",",l_tmpposicion);
 		}
 
 		//Getting Altitude
 		l_sentenceSize++;
 		l_tmpposicion = l_idxNextString+1;
-		if(m_Sentence[l_tmpposicion] == ',')
+		if(l_sentence[l_tmpposicion] == ',')
 		{
 			l_idxNextString++;
 			m_Altitude="0";
 		}
 		else
 		{
-			l_idxNextString = m_Sentence.find(",",l_tmpposicion);
-			m_Altitude = m_Sentence.substr(l_tmpposicion,l_idxNextString);			
+			l_idxNextString = l_sentence.find(",",l_tmpposicion);
+			m_Altitude = l_sentence.substr(l_tmpposicion,l_idxNextString);			
 		}
 		//Checksum
-		l_idxNextString = m_Sentence.find("*",l_tmpposicion);
+		l_idxNextString = l_sentence.find("*",l_tmpposicion);
 		if(l_idxNextString != 0)
 		{
-			l_tmp = m_Sentence.substr(l_idxNextString+1);
-			if(validade_checksum(m_Sentence))
+			l_tmp = l_sentence.substr(l_idxNextString+1);
+			if(validade_checksum(l_sentence))
 			{
 				m_validChecksum = true;
 				//Logger() << "=========================================> Checksum valido <================================================";
@@ -243,26 +246,4 @@ int CGPSParserNMEA::hex2dec(char hexdigit)
 	{
 		return int(hexdigit) - 48;
 	}
-}
-
-CString CGPSParserNMEA::getFullSentence(const CString newsentence)
-{
-	int l_checksum=0;
-	char *l_tmpfinalsentence = (char *)newsentence.data();
-	char l_charref;
-
-	CString l_finalsentence;
-	
-	for (int i = 0; i < newsentence.length(); i++) 
-	{		
-		l_charref= l_tmpfinalsentence[i];
-		Logger() << "CHAR : " << l_charref;  			
-		Logger() << "CHKREF : " << l_checksum;  			
-    	l_checksum ^= l_charref;
-  	}	 
-	Logger() << "CHECKSUM : " << l_checksum;  	
-	
-  	l_finalsentence = "$" + newsentence + "*" + l_checksum;
-
-  	return l_finalsentence;
 }

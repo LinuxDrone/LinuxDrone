@@ -13,7 +13,6 @@
 #include "CGPSSerial.h"
 #include "my_memory"
 
-
 extern "C" 
 {
     CModule* moduleCreator()
@@ -30,7 +29,8 @@ extern "C"
 CGpsSerial::CGpsSerial() :
 	CModule(1024)
 {
-
+    m_serialType  = CSerialBus::SerialType_Unknown;
+    m_serialSpeed = 0;
 }
 
 CGpsSerial::~CGpsSerial()
@@ -90,9 +90,11 @@ bool CGpsSerial::init(const mongo::BSONObj& initObject)
             this->m_portName = objParam["Port Name"].String().c_str();
         }        
     }
+    
     m_serialbus = CSerialBus::createSerial(m_serialType);
     gpsProtocol = CGPSProtocolFactory::createGPSProtocol(m_gpsProtocol);
     gpsProtocolParser = CGPSParserFactory::createGPSParser(m_gpsProtocol);
+    Logger() << "Protocol:" << m_gpsProtocol;
     m_serialbus->setPortFile(m_serialPort);
     m_serialbus->setPortSpeed(m_serialSpeed);
     m_serialbus->setPortName(m_portName);
@@ -114,56 +116,40 @@ bool CGpsSerial::start()
 
 bool CGpsSerial::initGpsSerial()
 {
-    std::vector<CString> l_gpsInitCommands;
+    std::vector<CByteArray> l_gpsInitCommands;
     int l_retgps=0;
     int l_return;
-    //Logger() << "Init";
     l_gpsInitCommands = gpsProtocol->getInitCommands();	
     l_return =m_serialbus->portOpen();
     CSystem::sleep(10);
     for(int i=0;i<l_gpsInitCommands.size();i++)
     {
-        CString elemento = l_gpsInitCommands[i];
-        l_retgps = m_serialbus->serial_write(elemento);
+        CByteArray elemento = l_gpsInitCommands[i];
+        l_retgps = m_serialbus->serialWrite(elemento);
         CSystem::sleep(100);
+        char str_retorno[1024];        
+        int size = m_serialbus->serialRead(&str_retorno, 1024);
     }
-    return l_return;
+    return (bool) l_return;
 }
 
 uint32_t CGpsSerial::readSentence()
 {
     int l_sentencesize=0;
-    bool l_endsentence = false;
-    
-    CString l_queryCommand = gpsProtocol->getQueryCommand();
+        
+    CByteArray l_queryCommand = gpsProtocol->getQueryCommand();
     CString l_tmpbuf;
     int l_retgps;
 
-    //Logger() << "Read Sentence";
-
-    m_sentence = CString();
-
-    l_retgps = m_serialbus->serial_write(l_queryCommand);
-//    Logger() << l_queryCommand;
- //   Logger() << "query " << l_queryCommand.mid(1,l_queryCommand.find("*",0)-1);
-  //  Logger() << "CHECKSUM:" << l_cnma.getFullSentence(l_queryCommand.mid(1,l_queryCommand.find("*",0) -1));
-    int l_charendsequence = gpsProtocol->getEndSentence();
-    while(!l_endsentence)
-    {
-        l_sentencesize = m_serialbus->serial_read(l_tmpbuf,512);
-        //if((l_tmpbuf == '\n') || (l_tmpbuf == '\r'))
-        //Logger() << "Char: " << l_tmpbuf;
-        if(l_tmpbuf ==(char )l_charendsequence)
-        {
-            l_endsentence = true;       
-            break;
-        }
-        m_sentence+=l_tmpbuf;
-    }
-
-    if(m_sentence.size() > 0)
-    {
-        gpsProtocolParser->setSentence(m_sentence);
+    l_retgps = m_serialbus->serialWrite(l_queryCommand);
+   
+    CSystem::sleep(100);
+    char str_retorno[512];    
+    int size = m_serialbus->serialRead(&str_retorno, 512);
+    CByteArray ba_return = CByteArray(str_retorno,size,false);
+    if(ba_return.size() > 0)
+    {    
+        gpsProtocolParser->setSentence(ba_return);     
         bool l_retparser = gpsProtocolParser->parseSentence();
         if(l_retparser)
         {
@@ -208,24 +194,8 @@ void CGpsSerial::moduleTask()
 {
     RTIME time = rt_timer_read();
 
-    //Logger() << "moduleTask method";
-    //Logger() << "before readSentence";
     int l_sensize = readSentence();
-    //Logger() << "after readSentence -> " << l_sensize;
-
-    //Logger() << "JSON Builder";
-/*    mongo::BSONObjBuilder builder;
-    builder.append("name", "SerialGps");
-    //Logger() << "After Builder";
-    sendObject(builder.obj());
-*/
     RTIME diff = time - rt_timer_read();
     SRTIME el = rt_timer_ticks2ns(diff);
     uint64_t elapsed = abs(el) / 1000;
-
-    //Logger() << "moduleTask";
-
-    //printf("%5d\r",m_pwm[0]);
-    //Logger() << "SerialGPS Task " << elapsed;
-    //CSystem::sleep(10);
 }

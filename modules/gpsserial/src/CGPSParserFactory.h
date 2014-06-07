@@ -15,6 +15,7 @@
 
 #include "CGPSParser.h"
 #include "CGPSParserNMEA.h"
+#include "CGPSParserSiRFBin.h"
 
 class CGPSParserFactory
 {
@@ -29,6 +30,10 @@ public:
         else if(parserType == "NMEA uBlox")
         {
             return new CGPSParserNMEA;
+        }
+        else if(parserType == "Binary SiRF")
+        {
+            return new CGPSParserSiRFBin;
         }
     }
 };

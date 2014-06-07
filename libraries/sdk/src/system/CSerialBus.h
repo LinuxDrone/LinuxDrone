@@ -23,16 +23,6 @@ public:
         SerialType_RT,
         SerialType_Unknown,
     };
-    
-    static CSerial* createSerial(SerialType type)
-    {
-        if(type == SerialType_RT)
-        {
-            return new CSerialUART;
-        }
-        else
-        {
-            return new CSerialUART;
-        }
-    }
+
+    static CSerial * createSerial(SerialType type);
 };

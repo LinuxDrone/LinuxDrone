@@ -12,6 +12,7 @@
 
 file(GLOB_RECURSE INC "include/*")
 file(GLOB_RECURSE SRC "src/*.cpp")
+file(GLOB_RECURSE INC "src/*.h")
 
 include_directories(${LIB_DIR}/core/include)
 

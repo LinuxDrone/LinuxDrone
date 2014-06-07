@@ -14,6 +14,10 @@
 
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
   Структура данных, содержащая информацию о текущем режиме работы блоков PRU
   Адресов доступа к блокам через расшаренную память.
@@ -73,3 +77,6 @@ bool WriteUInt32(pru_info_t *pru_info, unsigned long addr, unsigned long data);
 // read a unsigned long from memory
 bool ReadUInt32(pru_info_t *pru_info, unsigned long addr, unsigned long *data);
 
+#ifdef __cplusplus
+}
+#endif
