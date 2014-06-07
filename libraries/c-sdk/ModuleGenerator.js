@@ -116,7 +116,14 @@ function make_Structure2Bson(properties, outName) {
     return r;
 }
 
-function make_Bson2Structure(properties, outName, module_type) {
+/**
+ * param set_update_fact Отражать факт обновления свойства или нет.
+ * Для данных обмена между модулями установка данного факта имеет смысл.
+ * Для обновления параметра - пока не понятно зачем.
+ * Так как данная функция используется для генерации функций как для преобразования параметров, так и для данных обмена
+ * то при помощи данного параметра будем указывать, когда необходимо отражать факт изменения.
+ */
+function make_Bson2Structure(properties, outName, module_type, set_update_fact) {
     var r = "";
     r += "// Convert bson to structure " + outName + "\n";
     r += "int bson2" + outName + "(module_t* module, bson_t* bson)\n";
@@ -177,7 +184,9 @@ function make_Bson2Structure(properties, outName, module_type) {
                 console.log("Unknown type " + properties[key].type + " for port " + propName);
                 break;
         }
-        r += "            module->updated_input_properties |= " + propName + ";\n";
+        if(set_update_fact){
+            r += "            module->updated_input_properties |= " + propName + ";\n";
+        }
         r += "            continue;\n";
         r += "        }\n";
     }
@@ -340,15 +349,14 @@ function Create_C_file(module) {
         }
         r += "\n    return 0;\n";
         r += "}\n\n";
-        r += make_Bson2Structure(module.inputShema.properties,  "input", module_type);
+        r += make_Bson2Structure(module.inputShema.properties,  "input", module_type, true);
     }
 
     if (module.outputs) {
         module.outputs.forEach(function (out) {
             var outName = out.name.replace(/\+/g, "");
-
             r += make_Structure2Bson(out.Schema.properties, outName);
-            r += make_Bson2Structure(out.Schema.properties, outName);
+            r += make_Bson2Structure(out.Schema.properties, outName, "", true);
         });
     }
 
@@ -431,7 +439,7 @@ function Create_C_file(module) {
 
     if ('paramsDefinitions' in module) {
         r += make_Structure2Bson(params, "params_" + module_type);
-        r += make_Bson2Structure(params, "params_" + module_type);
+        r += make_Bson2Structure(params, "params_" + module_type, "", false);
     }
 
 
