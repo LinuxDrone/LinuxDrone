@@ -333,7 +333,6 @@ typedef struct
 
     /**
      * @brief \~russian Указатель на структуру с настроечными параметрами модуля
-     * Первым полем в структуре должно быть поле типа common_params_t
      */
     void* specific_params;
 

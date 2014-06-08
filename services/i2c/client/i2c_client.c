@@ -50,9 +50,9 @@ void disconnect_i2c_service(i2c_service_t* service)
  *          ==0 - Недоступен сервис i2c. Следует пытаться снова открыть сессию
  *          < 0 - Ошибка. Распечатать ошибку можно при помощи функции print_task_send_error
  */
-int open_i2c(i2c_service_t* service, char* bus_name)
+int open_i2c(i2c_service_t* service, const char* bus_name)
 {
-    service->request_open_block.data = bus_name;
+    service->request_open_block.data = (caddr_t)bus_name;
     service->request_open_block.size = strlen(bus_name);
     service->request_open_block.opcode = op_open_i2c;
     service->response_data_block.size = MAX_TRANSFER_BLOCK;

@@ -391,7 +391,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     bson_t bson;
     bson_init_static(&bson, data, length);
 
-    //debug_print_bson("Function \"init\" module-functions.c", &bson);
+//debug_print_bson("Function \"init\" module-functions.c", &bson);
 
     // Вытаскиваем из конфигурации значения обязательных настроечных параметров
     /**
@@ -417,14 +417,35 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     }
     //fprintf(stdout, "instance name=%s\n\n", module->instance_name);
 
-    bson2common_params(module, &bson);
 
+    // Чтение в структуру общих параметров модуля
+    bson2common_params(module, &bson);
     // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна примать на вход наносекунды
     module->common_params.Transfer_task_period = rt_timer_ns2ticks(module->common_params.Transfer_task_period * 1000);
     module->common_params.Task_Period = rt_timer_ns2ticks(module->common_params.Task_Period * 1000);
-
     //print_common_params(&module->common_params);
 
+
+
+    // Поиск узла специфичных параметров модуля
+    if (!bson_iter_init_find(&iter, &bson, "params")) {
+        printf("Not found property \"params\"");
+        return -1;
+    }
+    if (!BSON_ITER_HOLDS_DOCUMENT(&iter)) {
+        printf("Property \"params\" not Document type");
+        return -1;
+    }
+    bson_t bson_params;
+    const uint8_t *link_buf = NULL;
+    uint32_t link_buf_len = 0;
+    bson_iter_document(&iter, &link_buf_len, &link_buf);
+    bson_init_static(&bson_params, link_buf, link_buf_len);
+    //debug_print_bson("Function \"init\" module-functions.c", &bson_params);
+
+    // Чтение в структуру специфичных параметров модуля
+    (*module->bson2params)(module, &bson_params);
+    //(*module->print_params)(module->specific_params);
 
 
 
@@ -455,8 +476,6 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             return -1;
         }
 
-        const uint8_t *link_buf = NULL;
-        uint32_t link_buf_len = 0;
         bson_t bson_out_link;
         while(bson_iter_next(&iter_links))
         {
@@ -577,8 +596,6 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             return -1;
         }
 
-        const uint8_t *link_buf = NULL;
-        uint32_t link_buf_len = 0;
         bson_t bson_in_link;
         while(bson_iter_next(&iter_links))
         {

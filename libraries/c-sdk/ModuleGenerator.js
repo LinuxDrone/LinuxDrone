@@ -139,7 +139,11 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
     r += "        printf(\"Error: func bson2" + outName + ", NULL parameter\\n\");\n";
     r += "        return -1;\n";
     r += "    }\n\n";
-    r += "    " + outName + "_t* obj = (" + outName + "_t*)module->input_data;\n";
+    if(set_update_fact){
+        r += "    " + outName + "_t* obj = (" + outName + "_t*)module->input_data;\n";
+    }else{
+        r += "    " + outName + "_t* obj = (" + outName + "_t*)module->specific_params;\n";
+    }
     r += "    bson_iter_t iter;\n";
     r += "    if(!bson_iter_init (&iter, bson))\n";
     r += "    {\n";

@@ -2,6 +2,9 @@
 
 void test_sender_run (module_test_sender_t *module)
 {
+    printf("params for test_sender\n");
+    print_params_test_sender(&module->params_test_sender);
+
     int cycle=0;
     while(1) {
         get_input_data(&module->module_info);

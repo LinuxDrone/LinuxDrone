@@ -4,11 +4,6 @@
 #include "../../../services/i2c/client/i2c_client.h"
 
 
-#define I2CBusName "/dev/i2c-1"
-
-
-
-
 /**
  * @brief get_mpu6050_id Проверяет, что на шине действительно чмп mpu6050
  * Считывает число из регистра 0x75 идентифицирцющее чип mpu6050
@@ -93,7 +88,7 @@ bool configureRanges(i2c_service_t* i2c_service, int i2c_session)
 }
 
 
-bool initMpu(i2c_service_t* i2c_service, int i2c_session)
+bool initMpu(i2c_service_t* i2c_service, int i2c_session, const char* I2CBusName)
 {
     if(!check_mpu6050_id(i2c_service, i2c_session))
     {
@@ -207,14 +202,14 @@ void c_gy87_run (module_c_gy87_t *module)
                     continue;
                 }
 
-                i2c_session = open_i2c(&i2c_service, I2CBusName);
+                i2c_session = open_i2c(&i2c_service, module->params_c_gy87.I2C_Device);
                 continue;
             }
 
 
-            if(!initMpu(&i2c_service, i2c_session))
+            if(!initMpu(&i2c_service, i2c_session, module->params_c_gy87.I2C_Device))
             {
-                printf("Error init MPU6050 on bus %s\n", I2CBusName);
+                printf("Error init MPU6050 on bus %s\n", module->params_c_gy87.I2C_Device);
                 rt_task_sleep(rt_timer_ns2ticks(200000000));
                 continue;
             }
