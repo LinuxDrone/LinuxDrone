@@ -16,7 +16,7 @@
 #include "math.h"
 
 // Загрузка параметров для PID регуляторов из базы.
-void settingsLoad(pidParams_t *pidParam);
+void settingsLoad(pidParams_t *pidParam, params_c_pid_t *param);
 
 /**
  * @brief c_pid_run Функция рабочего потока модуля
@@ -45,7 +45,7 @@ void c_pid_run (module_c_pid_t *module)
 
     SRTIME  timeTick, timeTickold;
 
-    settingsLoad(pidParam);
+    settingsLoad(pidParam, &module->params_c_pid);
 
     while(1) {
         get_input_data((module_t *)module);
@@ -94,7 +94,8 @@ void c_pid_run (module_c_pid_t *module)
         //module->module_info.refresh_input_mask = errRoll | errPitch | errYaw;
 
 
-        //if(printEnable) printf("pidParam[Yaw].Kp = %f\n",pidParam[Yaw].Kp);
+        //if(printEnable) printf("module->params_c_pid.PitchKp = %f\n",module->params_c_pid.RollKp);//pidParam[Roll].Kp);
+        //if(printEnable) print_params_c_pid(&module->params_c_pid);
         printEnable = false;
     }
 }
@@ -106,10 +107,10 @@ void c_pid_run (module_c_pid_t *module)
  * @brief Читает данные из базы MongoDB
  * И сохраняет в структуре attitude_data_t
  */
-void settingsLoad(pidParams_t *pidParam)
+void settingsLoad(pidParams_t *pidParam, params_c_pid_t *param)
 {
-  setPID(&pidParam[Roll],  ROLL_KP, ROLL_KI,ROLL_KD,  ROLL_ILIMIT);
-  setPID(&pidParam[Pitch], ROLL_KP, ROLL_KI,ROLL_KD,  ROLL_ILIMIT);
-  setPID(&pidParam[Yaw],   ROLL_KP, ROLL_KI,ROLL_KD,  ROLL_ILIMIT);
+  setPID(&pidParam[Roll],   param->RollKp, param->RollKi,param->RollKd,  param->RollLimit);
+  setPID(&pidParam[Pitch],  param->PitchKp, param->PitchKi,param->PitchKd,  param->PitchLimit);
+  setPID(&pidParam[Yaw],    param->YawKp, param->YawKi,param->YawKd,  param->YawLimit);
 }
 
