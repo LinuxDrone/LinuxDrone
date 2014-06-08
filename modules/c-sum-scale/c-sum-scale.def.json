@@ -111,7 +111,7 @@
             "defaultValue": 90,
             "unitMeasured": ""
         },
-        {   "name": "in1_RollInvert",
+        {   "name": "in1_InvertRoll",
             "displayName": {
                 "en": "Enable invert input signal in1 Roll"
             },
@@ -161,7 +161,7 @@
             "defaultValue": 2000,
             "unitMeasured": ""
         },
-        {   "name": "deg_PitchEn",
+        {   "name": "deg_EnPitch",
             "displayName": {
                 "en": "Enable Output signal to range -180...+180 degree"
             },
@@ -311,7 +311,7 @@
             "defaultValue": 2000.0,
             "unitMeasured": ""
         },
-        {   "name": "deg_YawEn",
+        {   "name": "deg_EnYaw",
             "displayName": {
                 "en": "Enable Output signal to range -180...+180 degree"
             },

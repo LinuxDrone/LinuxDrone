@@ -15,7 +15,7 @@
 #include "math.h"
 
 // Загрузка параметров из базы.
-void settingsLoad(sumScaleChParams_t *cfg);
+void settingsLoad(sumScaleChParams_t *cfg, params_c_sum_scale_t *params);
 // Обработка данных
 bool calcSumScale(sumScaleChParams_t *cfg_ch, struct in_data *in_err, float *out);
 
@@ -43,7 +43,7 @@ void c_sum_scale_run (module_c_sum_scale_t *module)
     // Выходные данные модуля
     float out[3];
 
-    settingsLoad(sumScaleParams);
+    settingsLoad(sumScaleParams, &module->params_c_sum_scale);
 
     while(1) {
         get_input_data(&module->module_info);
@@ -106,46 +106,46 @@ void c_sum_scale_run (module_c_sum_scale_t *module)
  * @brief Читает данные из базы MongoDB
  * И сохраняет в структуре sumScaleParams_t
  */
-void settingsLoad(sumScaleChParams_t *cfg)
+void settingsLoad(sumScaleChParams_t *cfg, params_c_sum_scale_t *params)
 {
-     cfg[Roll].degEn            = DEG_ROLL_EN;
-     cfg[Roll].out_RangeLow     = OUT_RANGE_LOW_ROLL;
-     cfg[Roll].out_RangeCenter  = OUT_RANGE_CENTER_ROLL;
-     cfg[Roll].out_RangeHigh    = OUT_RANGE_HIGH_ROLL;
-     cfg[Roll].in0_Invert       = IN0_ROLL_INVERT;
-     cfg[Roll].in0_RangeLow     = IN0_RANGE_LOW_ROLL;
-     cfg[Roll].in0_RangeCenter  = IN0_RANGE_CENTER_ROLL;
-     cfg[Roll].in0_RangeHigh    = IN0_RANGE_HIGH_ROLL;
-     cfg[Roll].in1_Invert       = IN1_ROLL_INVERT;
-     cfg[Roll].in1_RangeLow     = IN1_RANGE_LOW_ROLL;
-     cfg[Roll].in1_RangeCenter  = IN1_RANGE_CENTER_ROLL;
-     cfg[Roll].in1_RangeHigh    = IN1_RANGE_HIGH_ROLL;
+     cfg[Roll].degEn            = params->deg_EnRoll;
+     cfg[Roll].out_RangeLow     = params->out_RangeLowRoll;
+     cfg[Roll].out_RangeCenter  = params->out_RangeCenterRoll;
+     cfg[Roll].out_RangeHigh    = params->out_RangeHighRoll;
+     cfg[Roll].in0_Invert       = params->in0_InvertRoll;
+     cfg[Roll].in0_RangeLow     = params->in0_RangeLowRoll;
+     cfg[Roll].in0_RangeCenter  = params->in0_RangeCenterRoll;
+     cfg[Roll].in0_RangeHigh    = params->in0_RangeHighRoll;
+     cfg[Roll].in1_Invert       = params->in1_InvertRoll;
+     cfg[Roll].in1_RangeLow     = params->in1_RangeLowRoll;
+     cfg[Roll].in1_RangeCenter  = params->in1_RangeCenterRoll;
+     cfg[Roll].in1_RangeHigh    = params->in1_RangeHighRoll;
 
-     cfg[Pitch].degEn           = DEG_PITCH_EN;
-     cfg[Pitch].out_RangeLow    = OUT_RANGE_LOW_PITCH;
-     cfg[Pitch].out_RangeCenter = OUT_RANGE_CENTER_PITCH;
-     cfg[Pitch].out_RangeHigh   = OUT_RANGE_HIGH_PITCH;
-     cfg[Pitch].in0_Invert      = IN0_PITCH_INVERT;
-     cfg[Pitch].in0_RangeLow    = IN0_RANGE_LOW_PITCH;
-     cfg[Pitch].in0_RangeCenter = IN0_RANGE_CENTER_PITCH;
-     cfg[Pitch].in0_RangeHigh   = IN0_RANGE_HIGH_PITCH;
-     cfg[Pitch].in1_Invert      = IN1_PITCH_INVERT;
-     cfg[Pitch].in1_RangeLow    = IN1_RANGE_LOW_PITCH;
-     cfg[Pitch].in1_RangeCenter = IN1_RANGE_CENTER_PITCH;
-     cfg[Pitch].in1_RangeHigh   = IN1_RANGE_HIGH_PITCH;
+     cfg[Pitch].degEn            = params->deg_EnPitch;
+     cfg[Pitch].out_RangeLow     = params->out_RangeLowPitch;
+     cfg[Pitch].out_RangeCenter  = params->out_RangeCenterPitch;
+     cfg[Pitch].out_RangeHigh    = params->out_RangeHighPitch;
+     cfg[Pitch].in0_Invert       = params->in0_InvertPitch;
+     cfg[Pitch].in0_RangeLow     = params->in0_RangeLowPitch;
+     cfg[Pitch].in0_RangeCenter  = params->in0_RangeCenterPitch;
+     cfg[Pitch].in0_RangeHigh    = params->in0_RangeHighPitch;
+     cfg[Pitch].in1_Invert       = params->in1_InvertPitch;
+     cfg[Pitch].in1_RangeLow     = params->in1_RangeLowPitch;
+     cfg[Pitch].in1_RangeCenter  = params->in1_RangeCenterPitch;
+     cfg[Pitch].in1_RangeHigh    = params->in1_RangeHighPitch;
 
-     cfg[Yaw].degEn             = DEG_YAW_EN;
-     cfg[Yaw].out_RangeLow      = OUT_RANGE_LOW_YAW;
-     cfg[Yaw].out_RangeCenter   = OUT_RANGE_CENTER_YAW;
-     cfg[Yaw].out_RangeHigh     = OUT_RANGE_HIGH_YAW;
-     cfg[Yaw].in0_Invert        = IN0_YAW_INVERT;
-     cfg[Yaw].in0_RangeLow      = IN0_RANGE_LOW_YAW;
-     cfg[Yaw].in0_RangeCenter   = IN0_RANGE_CENTER_YAW;
-     cfg[Yaw].in0_RangeHigh     = IN0_RANGE_HIGH_YAW;
-     cfg[Yaw].in1_Invert        = IN1_YAW_INVERT;
-     cfg[Yaw].in1_RangeLow      = IN1_RANGE_LOW_YAW;
-     cfg[Yaw].in1_RangeCenter   = IN1_RANGE_CENTER_YAW;
-     cfg[Yaw].in1_RangeHigh     = IN1_RANGE_HIGH_YAW;
+     cfg[Yaw].degEn            = params->deg_EnYaw;
+     cfg[Yaw].out_RangeLow     = params->out_RangeLowYaw;
+     cfg[Yaw].out_RangeCenter  = params->out_RangeCenterYaw;
+     cfg[Yaw].out_RangeHigh    = params->out_RangeHighYaw;
+     cfg[Yaw].in0_Invert       = params->in0_InvertYaw;
+     cfg[Yaw].in0_RangeLow     = params->in0_RangeLowYaw;
+     cfg[Yaw].in0_RangeCenter  = params->in0_RangeCenterYaw;
+     cfg[Yaw].in0_RangeHigh    = params->in0_RangeHighYaw;
+     cfg[Yaw].in1_Invert       = params->in1_InvertYaw;
+     cfg[Yaw].in1_RangeLow     = params->in1_RangeLowYaw;
+     cfg[Yaw].in1_RangeCenter  = params->in1_RangeCenterYaw;
+     cfg[Yaw].in1_RangeHigh    = params->in1_RangeHighYaw;
 
      // Вычисление масштабных кофэффициентов
      uint8_t ch;

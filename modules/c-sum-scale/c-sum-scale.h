@@ -47,46 +47,4 @@ struct in_data
     float in1;
 };
 
-// Пока все параметры задавать через дефайны.
-#define DEG_ROLL_EN             true
-#define OUT_RANGE_LOW_ROLL      -90.0f
-#define OUT_RANGE_CENTER_ROLL   0.0f
-#define OUT_RANGE_HIGH_ROLL     90.0f
-#define IN0_ROLL_INVERT         true
-#define IN0_RANGE_LOW_ROLL     -90.0f
-#define IN0_RANGE_CENTER_ROLL   0.0f
-#define IN0_RANGE_HIGH_ROLL     90.0f
-#define IN1_ROLL_INVERT         false
-#define IN1_RANGE_LOW_ROLL      -90.0f
-#define IN1_RANGE_CENTER_ROLL   0.0f
-#define IN1_RANGE_HIGH_ROLL     90.0f
-
-
-#define DEG_PITCH_EN             true
-#define OUT_RANGE_LOW_PITCH      -90.0f
-#define OUT_RANGE_CENTER_PITCH   0.0f
-#define OUT_RANGE_HIGH_PITCH     90.0f
-#define IN0_PITCH_INVERT         true
-#define IN0_RANGE_LOW_PITCH     -90.0f
-#define IN0_RANGE_CENTER_PITCH   0.0f
-#define IN0_RANGE_HIGH_PITCH     90.0f
-#define IN1_PITCH_INVERT         false
-#define IN1_RANGE_LOW_PITCH      1000.0f
-#define IN1_RANGE_CENTER_PITCH   1500.0f
-#define IN1_RANGE_HIGH_PITCH     2000.0f
-
-
-#define DEG_YAW_EN             true
-#define OUT_RANGE_LOW_YAW      -90.0f
-#define OUT_RANGE_CENTER_YAW   0.0f
-#define OUT_RANGE_HIGH_YAW     90.0f
-#define IN0_YAW_INVERT         true
-#define IN0_RANGE_LOW_YAW     -90.0f
-#define IN0_RANGE_CENTER_YAW   0.0f
-#define IN0_RANGE_HIGH_YAW     90.0f
-#define IN1_YAW_INVERT         false
-#define IN1_RANGE_LOW_YAW      1000.0f
-#define IN1_RANGE_CENTER_YAW   1500.0f
-#define IN1_RANGE_HIGH_YAW     2000.0f
-
 enum channel {Roll, Pitch, Yaw};
