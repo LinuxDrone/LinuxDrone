@@ -28,12 +28,15 @@ void test_sender_run (module_test_sender_t *module)
         char buffer_string_out [32];
         snprintf(buffer_string_out, 32, "data: %d", cycle);
         objOutput1->string_out = buffer_string_out;
+//print_Output1(objOutput1);
         checkin_Output1(module, &objOutput1);
 
         Output2_t* objOutput2;
         checkout_Output2(module, &objOutput2);
         objOutput2->out3 = cycle;
         checkin_Output2(module, &objOutput2);
+
+
 
         cycle++;
     }

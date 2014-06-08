@@ -58,7 +58,7 @@ int bson2common_params(void* in_module, bson_t* bson)
 void print_common_params(common_params_t* common_params)
 {
     printf("Task_Priority=%i\t", common_params->Task_Priority);
-    printf("Task_Period=%i\t", common_params->Task_Period);
-    printf("Transfer_task_period=%i\t", common_params->Transfer_task_period);
+    printf("Task_Period=%llu\t", common_params->Task_Period);
+    printf("Transfer_task_period=%llu\t", common_params->Transfer_task_period);
     printf("\n");
 }
