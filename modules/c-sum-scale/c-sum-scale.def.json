@@ -1,0 +1,518 @@
+{
+    "type": "module_def",
+    "name": "c-sum-scale",
+    "version": 1,
+    "Task Priority": 80,
+    "Task Period": 2000,
+    "Transfer task period": 200000,
+    "Notify on change": false,
+    "description": {
+        "en": "Scale signal range module 3x",
+        "ru": "Трехканальный масштабирующий сумматор"
+    },
+    "paramsDefinitions": [
+        {   "name": "deg_EnRoll",
+            "displayName": {
+                "en": "Enable Output signal to range -180...+180 degree"
+            },
+            "description": {
+                "en": "Enable Output signal to range -180...+180 degree",
+                "ru": "Включить выход сумматора в режим суммирования углов"
+            },
+            "type": "bool",
+            "defaultValue": true,
+            "unitMeasured": ""
+        },
+        {   "name": "out_RangeLowRoll",
+            "displayName": {
+                "en": "input range Roll Low "
+            },
+            "description": {
+                "en": "Roll Low input range in0",
+                "ru": "Roll нижняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": -90.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_RangeCenterRoll",
+            "displayName": {
+                "en": "Roll Center input range in0",
+                "ru": "Roll середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Roll Center input range in0",
+                "ru": "Roll середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {    "name": "out_RangeHighRoll",
+            "displayName": {
+                "en": "Roll High input range in0",
+                "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Roll High input range in0",
+                "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 90.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_InvertRoll",
+            "displayName": {
+                "en": "Enable invert input signal in0 Roll"
+            },
+            "description": {
+                "en": "Enable invert input signal in0 Roll",
+                "ru": "Инвертирование входного сигнала in0 Roll"
+            },
+            "type": "bool",
+            "defaultValue": true,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_RangeLowRoll",
+            "displayName": {
+                "en": "input range Roll Low "
+            },
+            "description": {
+                "en": "Roll Low input range in0",
+                "ru": "Roll нижняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": -90,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_RangeCenterRoll",
+            "displayName": {
+                "en": "Roll Center input range in0",
+                "ru": "Roll середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Roll Center input range in0",
+                "ru": "Roll середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 0,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_RangeHighRoll",
+            "displayName": {
+                "en": "Roll High input range in0",
+                "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Roll High input range in0",
+                "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 90,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_RollInvert",
+            "displayName": {
+                "en": "Enable invert input signal in1 Roll"
+            },
+            "description": {
+                "en": "Enable invert input signal in1 Roll",
+                "ru": "Инвертирование входного сигнала in1 Roll"
+            },
+            "type": "bool",
+            "defaultValue": false,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_RangeLowRoll",
+            "displayName": {
+                "en": "input range Roll Low "
+            },
+            "description": {
+                "en": "Roll Low input range in1",
+                "ru": "Roll нижняя граница диапазона входного сигнала, вход сумматора 1"
+            },
+            "type": "float",
+            "defaultValue": 1000,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_RangeCenterRoll",
+            "displayName": {
+                "en": "Roll Center input range in1",
+                "ru": "Roll середина диапазона входного сигнала, вход сумматора 1"
+            },
+            "description": {
+                "en": "Roll Center input range in1",
+                "ru": "Roll середина диапазона входного сигнала, вход сумматора 1"
+            },
+            "type": "float",
+            "defaultValue": 1500,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_RangeHighRoll",
+            "displayName": {
+                "en": "Roll High input range in1",
+                "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 1"
+            },
+            "description": {
+                "en": "Roll High input range in1",
+                "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 1"
+            },
+            "type": "float",
+            "defaultValue": 2000,
+            "unitMeasured": ""
+        },
+        {   "name": "deg_PitchEn",
+            "displayName": {
+                "en": "Enable Output signal to range -180...+180 degree"
+            },
+            "description": {
+                "en": "Enable Output signal to range -180...+180 degree",
+                "ru": "Включить выход сумматора в режим суммирования углов"
+            },
+            "type": "bool",
+            "defaultValue": true,
+            "unitMeasured": ""
+        },
+        {   "name": "out_RangeLowPitch",
+            "displayName": {
+                "en": "input range Pitch Low "
+            },
+            "description": {
+                "en": "Pitch Low input range in0",
+                "ru": "Pitch нижняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": -90.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_RangeCenterPitch",
+            "displayName": {
+                "en": "Pitch Center input range in0",
+                "ru": "Pitch середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Pitch Center input range in0",
+                "ru": "Pitch середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_RangeHighPitch",
+            "displayName": {
+                "en": "Pitch High input range in0",
+                "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Pitch High input range in0",
+                "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 90.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_InvertPitch",
+            "displayName": {
+                "en": "Enable invert input signal in0 Pitch"
+            },
+            "description": {
+                "en": "Enable invert input signal in0 Pitch",
+                "ru": "Инвертирование входного сигнала in0 Pitch"
+            },
+            "type": "bool",
+            "defaultValue": true,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_RangeLowPitch",
+            "displayName": {
+                "en": "input range Pitch Low "
+            },
+            "description": {
+                "en": "Pitch Low input range in0",
+                "ru": "Pitch нижняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": -90.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_RangeCenterPitch",
+            "displayName": {
+                "en": "Pitch Center input range in0",
+                "ru": "Pitch середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Pitch Center input range in0",
+                "ru": "Pitch середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_RangeHighPitch",
+            "displayName": {
+                "en": "Pitch High input range in0",
+                "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Pitch High input range in0",
+                "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 90.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_InvertPitch",
+            "displayName": {
+                "en": "Enable invert input signal in1 Pitch"
+            },
+            "description": {
+                "en": "Enable invert input signal in1 Pitch",
+                "ru": "Инвертирование входного сигнала in1 Pitch"
+            },
+            "type": "bool",
+            "defaultValue": false,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_RangeLowPitch",
+            "displayName": {
+                "en": "input range Pitch Low "
+            },
+            "description": {
+                "en": "Pitch Low input range in1",
+                "ru": "Pitch нижняя граница диапазона входного сигнала, вход сумматора 1"
+            },
+            "type": "float",
+            "defaultValue": 1000.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_RangeCenterPitch",
+            "displayName": {
+                "en": "Pitch Center input range in1",
+                "ru": "Pitch середина диапазона входного сигнала, вход сумматора 1"
+            },
+            "description": {
+                "en": "Pitch Center input range in1",
+                "ru": "Pitch середина диапазона входного сигнала, вход сумматора 1"
+            },
+            "type": "float",
+            "defaultValue": 1500.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_RangeHighPitch",
+            "displayName": {
+                "en": "Pitch High input range in1",
+                "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 1"
+            },
+            "description": {
+                "en": "Pitch High input range in0",
+                "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 1"
+            },
+            "type": "float",
+            "defaultValue": 2000.0,
+            "unitMeasured": ""
+        },
+        {   "name": "deg_YawEn",
+            "displayName": {
+                "en": "Enable Output signal to range -180...+180 degree"
+            },
+            "description": {
+                "en": "Enable Output signal to range -180...+180 degree",
+                "ru": "Включить выход сумматора в режим суммирования углов"
+            },
+            "type": "bool",
+            "defaultValue": true,
+            "unitMeasured": ""
+        },
+        {   "name": "out_RangeLowYaw",
+            "displayName": {
+                "en": "input range Yaw Low "
+            },
+            "description": {
+                "en": "Yaw Low input range in0",
+                "ru": "Yaw нижняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": -90.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_RangeCenterYaw",
+            "displayName": {
+                "en": "Yaw Center input range in0",
+                "ru": "Yaw середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Yaw Center input range in0",
+                "ru": "Yaw середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_RangeHighYaw",
+            "displayName": {
+                "en": "Yaw High input range in0",
+                "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Yaw High input range in0",
+                "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 90.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_InvertYaw",
+            "displayName": {
+                "en": "Enable invert input signal in0 Yaw"
+            },
+            "description": {
+                "en": "Enable invert input signal in0 Yaw",
+                "ru": "Инвертирование входного сигнала in0 Yaw"
+            },
+            "type": "bool",
+            "defaultValue": false,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_RangeLowYaw",
+            "displayName": {
+                "en": "input range Yaw Low "
+            },
+            "description": {
+                "en": "Yaw Low input range in0",
+                "ru": "Yaw нижняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": -90.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_RangeCenterYaw",
+            "displayName": {
+                "en": "Yaw Center input range in0",
+                "ru": "Yaw середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Yaw Center input range in0",
+                "ru": "Yaw середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in0_RangeHighYaw",
+            "displayName": {
+                "en": "Yaw High input range in0",
+                "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Yaw High input range in0",
+                "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 90.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_InvertYaw",
+            "displayName": {
+                "en": "Enable invert input signal in1 Yaw"
+            },
+            "description": {
+                "en": "Enable invert input signal in1 Yaw",
+                "ru": "Инвертирование входного сигнала in1 Yaw"
+            },
+            "type": "bool",
+            "defaultValue": true,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_RangeLowYaw",
+            "displayName": {
+                "en": "input range Yaw Low "
+            },
+            "description": {
+                "en": "Yaw Low input range in1",
+                "ru": "Yaw нижняя граница диапазона входного сигнала, вход сумматора 1"
+            },
+            "type": "float",
+            "defaultValue": 1000.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_RangeCenterYaw",
+            "displayName": {
+                "en": "Yaw Center input range in1",
+                "ru": "Yaw середина диапазона входного сигнала, вход сумматора 1"
+            },
+            "description": {
+                "en": "Yaw Center input range in1",
+                "ru": "Yaw середина диапазона входного сигнала, вход сумматора 1"
+            },
+            "type": "float",
+            "defaultValue": 1500.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in1_RangeHighYaw",
+            "displayName": {
+                "en": "Yaw High input range in1",
+                "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 1"
+            },
+            "description": {
+                "en": "Yaw High input range in1",
+                "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 1"
+            },
+            "type": "float",
+            "defaultValue": 2000.0,
+            "unitMeasured": ""
+        }
+    ],
+    "inputShema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+            "in0_Roll": {
+                "type": "float",
+                "required": true
+            },
+            "in0_Pitch": {
+                "type": "float",
+                "required": true
+            },
+            "in0_Yaw": {
+                "type": "float",
+                "required": true
+            },
+            "in1_Roll": {
+                "type": "float",
+                "required": true
+            },
+            "in1_Pitch": {
+                "type": "float",
+                "required": true
+            },
+            "in1_Yaw": {
+                "type": "float",
+                "required": true
+            }
+        }
+    },
+    "outputs": [
+        {
+            "name": "outSumScale",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "roll": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "pitch": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "yaw": {
+                        "type": "float",
+                        "required": true
+                    }
+                }
+            }
+        }
+    ]
+}
