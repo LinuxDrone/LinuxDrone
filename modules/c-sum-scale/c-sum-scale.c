@@ -108,44 +108,44 @@ void c_sum_scale_run (module_c_sum_scale_t *module)
  */
 void settingsLoad(sumScaleChParams_t *cfg, params_c_sum_scale_t *params)
 {
-     cfg[Roll].degEn            = params->deg_EnRoll;
-     cfg[Roll].out_RangeLow     = params->out_RangeLowRoll;
-     cfg[Roll].out_RangeCenter  = params->out_RangeCenterRoll;
-     cfg[Roll].out_RangeHigh    = params->out_RangeHighRoll;
-     cfg[Roll].in0_Invert       = params->in0_InvertRoll;
-     cfg[Roll].in0_RangeLow     = params->in0_RangeLowRoll;
-     cfg[Roll].in0_RangeCenter  = params->in0_RangeCenterRoll;
-     cfg[Roll].in0_RangeHigh    = params->in0_RangeHighRoll;
-     cfg[Roll].in1_Invert       = params->in1_InvertRoll;
-     cfg[Roll].in1_RangeLow     = params->in1_RangeLowRoll;
-     cfg[Roll].in1_RangeCenter  = params->in1_RangeCenterRoll;
-     cfg[Roll].in1_RangeHigh    = params->in1_RangeHighRoll;
+     cfg[Roll].degEn            = params->deg_RollEn;
+     cfg[Roll].out_RangeLow     = params->out_RollRangeLow;
+     cfg[Roll].out_RangeCenter  = params->out_RollRangeCenter;
+     cfg[Roll].out_RangeHigh    = params->out_RollRangeHigh;
+     cfg[Roll].in0_Invert       = params->in0_RollInvert;
+     cfg[Roll].in0_RangeLow     = params->in0_RollRangeLow;
+     cfg[Roll].in0_RangeCenter  = params->in0_RollRangeCenter;
+     cfg[Roll].in0_RangeHigh    = params->in0_RollRangeHigh;
+     cfg[Roll].in1_Invert       = params->in1_RollInvert;
+     cfg[Roll].in1_RangeLow     = params->in1_RollRangeLow;
+     cfg[Roll].in1_RangeCenter  = params->in1_RollRangeCenter;
+     cfg[Roll].in1_RangeHigh    = params->in1_RollRangeHigh;
 
-     cfg[Pitch].degEn            = params->deg_EnPitch;
-     cfg[Pitch].out_RangeLow     = params->out_RangeLowPitch;
-     cfg[Pitch].out_RangeCenter  = params->out_RangeCenterPitch;
-     cfg[Pitch].out_RangeHigh    = params->out_RangeHighPitch;
-     cfg[Pitch].in0_Invert       = params->in0_InvertPitch;
-     cfg[Pitch].in0_RangeLow     = params->in0_RangeLowPitch;
-     cfg[Pitch].in0_RangeCenter  = params->in0_RangeCenterPitch;
-     cfg[Pitch].in0_RangeHigh    = params->in0_RangeHighPitch;
-     cfg[Pitch].in1_Invert       = params->in1_InvertPitch;
-     cfg[Pitch].in1_RangeLow     = params->in1_RangeLowPitch;
-     cfg[Pitch].in1_RangeCenter  = params->in1_RangeCenterPitch;
-     cfg[Pitch].in1_RangeHigh    = params->in1_RangeHighPitch;
+     cfg[Pitch].degEn            = params->deg_PitchEn;
+     cfg[Pitch].out_RangeLow     = params->out_PitchRangeLow;
+     cfg[Pitch].out_RangeCenter  = params->out_PitchRangeCenter;
+     cfg[Pitch].out_RangeHigh    = params->out_PitchRangeHigh;
+     cfg[Pitch].in0_Invert       = params->in0_PitchInvert;
+     cfg[Pitch].in0_RangeLow     = params->in0_PitchRangeLow;
+     cfg[Pitch].in0_RangeCenter  = params->in0_PitchRangeCenter;
+     cfg[Pitch].in0_RangeHigh    = params->in0_PitchRangeHigh;
+     cfg[Pitch].in1_Invert       = params->in1_PitchInvert;
+     cfg[Pitch].in1_RangeLow     = params->in1_PitchRangeLow;
+     cfg[Pitch].in1_RangeCenter  = params->in1_PitchRangeCenter;
+     cfg[Pitch].in1_RangeHigh    = params->in1_PitchRangeHigh;
 
-     cfg[Yaw].degEn            = params->deg_EnYaw;
-     cfg[Yaw].out_RangeLow     = params->out_RangeLowYaw;
-     cfg[Yaw].out_RangeCenter  = params->out_RangeCenterYaw;
-     cfg[Yaw].out_RangeHigh    = params->out_RangeHighYaw;
-     cfg[Yaw].in0_Invert       = params->in0_InvertYaw;
-     cfg[Yaw].in0_RangeLow     = params->in0_RangeLowYaw;
-     cfg[Yaw].in0_RangeCenter  = params->in0_RangeCenterYaw;
-     cfg[Yaw].in0_RangeHigh    = params->in0_RangeHighYaw;
-     cfg[Yaw].in1_Invert       = params->in1_InvertYaw;
-     cfg[Yaw].in1_RangeLow     = params->in1_RangeLowYaw;
-     cfg[Yaw].in1_RangeCenter  = params->in1_RangeCenterYaw;
-     cfg[Yaw].in1_RangeHigh    = params->in1_RangeHighYaw;
+     cfg[Yaw].degEn            = params->deg_YawEn;
+     cfg[Yaw].out_RangeLow     = params->out_YawRangeLow;
+     cfg[Yaw].out_RangeCenter  = params->out_YawRangeCenter;
+     cfg[Yaw].out_RangeHigh    = params->out_YawRangeHigh;
+     cfg[Yaw].in0_Invert       = params->in0_YawInvert;
+     cfg[Yaw].in0_RangeLow     = params->in0_YawRangeLow;
+     cfg[Yaw].in0_RangeCenter  = params->in0_YawRangeCenter;
+     cfg[Yaw].in0_RangeHigh    = params->in0_YawRangeHigh;
+     cfg[Yaw].in1_Invert       = params->in1_YawInvert;
+     cfg[Yaw].in1_RangeLow     = params->in1_YawRangeLow;
+     cfg[Yaw].in1_RangeCenter  = params->in1_YawRangeCenter;
+     cfg[Yaw].in1_RangeHigh    = params->in1_YawRangeHigh;
 
      // Вычисление масштабных кофэффициентов
      uint8_t ch;

@@ -11,7 +11,7 @@
         "ru": "Трехканальный масштабирующий сумматор"
     },
     "paramsDefinitions": [
-        {   "name": "deg_EnRoll",
+        {   "name": "deg_RollEn",
             "displayName": {
                 "en": "Enable Output signal to range -180...+180 degree"
             },
@@ -23,7 +23,7 @@
             "defaultValue": true,
             "unitMeasured": ""
         },
-        {   "name": "out_RangeLowRoll",
+        {   "name": "out_RollRangeLow",
             "displayName": {
                 "en": "input range Roll Low "
             },
@@ -35,7 +35,7 @@
             "defaultValue": -90.0,
             "unitMeasured": ""
         },
-        {   "name": "out_RangeCenterRoll",
+        {   "name": "out_RollRangeCenter",
             "displayName": {
                 "en": "Roll Center input range in0",
                 "ru": "Roll середина диапазона входного сигнала, вход сумматора 0"
@@ -48,7 +48,7 @@
             "defaultValue": 0.0,
             "unitMeasured": ""
         },
-        {    "name": "out_RangeHighRoll",
+        {   "name": "out_RollRangeHigh",
             "displayName": {
                 "en": "Roll High input range in0",
                 "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 0"
@@ -61,19 +61,19 @@
             "defaultValue": 90.0,
             "unitMeasured": ""
         },
-        {   "name": "in0_InvertRoll",
+        {   "name": "in0_RollInvert",
             "displayName": {
-                "en": "Enable invert input signal in0 Roll"
+                "en": "Enable invert input signal in0 "
             },
             "description": {
-                "en": "Enable invert input signal in0 Roll",
-                "ru": "Инвертирование входного сигнала in0 Roll"
+                "en": "Enable invert input signal in0 ",
+                "ru": "Инвертирование входного сигнала in0 "
             },
             "type": "bool",
             "defaultValue": true,
             "unitMeasured": ""
         },
-        {   "name": "in0_RangeLowRoll",
+        {   "name": "in0_RollRangeLow",
             "displayName": {
                 "en": "input range Roll Low "
             },
@@ -85,7 +85,7 @@
             "defaultValue": -90,
             "unitMeasured": ""
         },
-        {   "name": "in0_RangeCenterRoll",
+        {   "name": "in0_RollRangeCenter",
             "displayName": {
                 "en": "Roll Center input range in0",
                 "ru": "Roll середина диапазона входного сигнала, вход сумматора 0"
@@ -98,7 +98,7 @@
             "defaultValue": 0,
             "unitMeasured": ""
         },
-        {   "name": "in0_RangeHighRoll",
+        {   "name": "in0_RollRangeHigh",
             "displayName": {
                 "en": "Roll High input range in0",
                 "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 0"
@@ -111,19 +111,19 @@
             "defaultValue": 90,
             "unitMeasured": ""
         },
-        {   "name": "in1_InvertRoll",
+        {   "name": "in1_RollInvert",
             "displayName": {
-                "en": "Enable invert input signal in1 Roll"
+                "en": "Enable invert input signal in1 "
             },
             "description": {
-                "en": "Enable invert input signal in1 Roll",
-                "ru": "Инвертирование входного сигнала in1 Roll"
+                "en": "Enable invert input signal in1 ",
+                "ru": "Инвертирование входного сигнала in1 "
             },
             "type": "bool",
             "defaultValue": false,
             "unitMeasured": ""
         },
-        {   "name": "in1_RangeLowRoll",
+        {   "name": "in1_RollRangeLow",
             "displayName": {
                 "en": "input range Roll Low "
             },
@@ -135,7 +135,7 @@
             "defaultValue": 1000,
             "unitMeasured": ""
         },
-        {   "name": "in1_RangeCenterRoll",
+        {   "name": "in1_RollRangeCenter",
             "displayName": {
                 "en": "Roll Center input range in1",
                 "ru": "Roll середина диапазона входного сигнала, вход сумматора 1"
@@ -148,7 +148,7 @@
             "defaultValue": 1500,
             "unitMeasured": ""
         },
-        {   "name": "in1_RangeHighRoll",
+        {   "name": "in1_RollRangeHigh",
             "displayName": {
                 "en": "Roll High input range in1",
                 "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 1"
@@ -161,7 +161,7 @@
             "defaultValue": 2000,
             "unitMeasured": ""
         },
-        {   "name": "deg_EnPitch",
+        {   "name": "deg_PitchEn",
             "displayName": {
                 "en": "Enable Output signal to range -180...+180 degree"
             },
@@ -173,7 +173,7 @@
             "defaultValue": true,
             "unitMeasured": ""
         },
-        {   "name": "out_RangeLowPitch",
+        {   "name": "out_PitchRangeLow",
             "displayName": {
                 "en": "input range Pitch Low "
             },
@@ -185,7 +185,7 @@
             "defaultValue": -90.0,
             "unitMeasured": ""
         },
-        {   "name": "out_RangeCenterPitch",
+        {   "name": "out_PitchRangeCenter",
             "displayName": {
                 "en": "Pitch Center input range in0",
                 "ru": "Pitch середина диапазона входного сигнала, вход сумматора 0"
@@ -198,7 +198,7 @@
             "defaultValue": 0.0,
             "unitMeasured": ""
         },
-        {   "name": "out_RangeHighPitch",
+        {   "name": "out_PitchRangeHigh",
             "displayName": {
                 "en": "Pitch High input range in0",
                 "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 0"
@@ -211,19 +211,19 @@
             "defaultValue": 90.0,
             "unitMeasured": ""
         },
-        {   "name": "in0_InvertPitch",
+        {   "name": "in0_PitchInvert",
             "displayName": {
-                "en": "Enable invert input signal in0 Pitch"
+                "en": "Enable invert input signal in0 "
             },
             "description": {
-                "en": "Enable invert input signal in0 Pitch",
-                "ru": "Инвертирование входного сигнала in0 Pitch"
+                "en": "Enable invert input signal in0 ",
+                "ru": "Инвертирование входного сигнала in0 "
             },
             "type": "bool",
             "defaultValue": true,
             "unitMeasured": ""
         },
-        {   "name": "in0_RangeLowPitch",
+        {   "name": "in0_PitchRangeLow",
             "displayName": {
                 "en": "input range Pitch Low "
             },
@@ -235,7 +235,7 @@
             "defaultValue": -90.0,
             "unitMeasured": ""
         },
-        {   "name": "in0_RangeCenterPitch",
+        {   "name": "in0_PitchRangeCenter",
             "displayName": {
                 "en": "Pitch Center input range in0",
                 "ru": "Pitch середина диапазона входного сигнала, вход сумматора 0"
@@ -248,7 +248,7 @@
             "defaultValue": 0.0,
             "unitMeasured": ""
         },
-        {   "name": "in0_RangeHighPitch",
+        {   "name": "in0_PitchRangeHigh",
             "displayName": {
                 "en": "Pitch High input range in0",
                 "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 0"
@@ -261,19 +261,19 @@
             "defaultValue": 90.0,
             "unitMeasured": ""
         },
-        {   "name": "in1_InvertPitch",
+        {   "name": "in1_PitchInvert",
             "displayName": {
-                "en": "Enable invert input signal in1 Pitch"
+                "en": "Enable invert input signal in1 "
             },
             "description": {
-                "en": "Enable invert input signal in1 Pitch",
-                "ru": "Инвертирование входного сигнала in1 Pitch"
+                "en": "Enable invert input signal in1 ",
+                "ru": "Инвертирование входного сигнала in1 "
             },
             "type": "bool",
             "defaultValue": false,
             "unitMeasured": ""
         },
-        {   "name": "in1_RangeLowPitch",
+        {   "name": "in1_PitchRangeLow",
             "displayName": {
                 "en": "input range Pitch Low "
             },
@@ -285,7 +285,7 @@
             "defaultValue": 1000.0,
             "unitMeasured": ""
         },
-        {   "name": "in1_RangeCenterPitch",
+        {   "name": "in1_PitchRangeCenter",
             "displayName": {
                 "en": "Pitch Center input range in1",
                 "ru": "Pitch середина диапазона входного сигнала, вход сумматора 1"
@@ -298,7 +298,7 @@
             "defaultValue": 1500.0,
             "unitMeasured": ""
         },
-        {   "name": "in1_RangeHighPitch",
+        {   "name": "in1_PitchRangeHigh",
             "displayName": {
                 "en": "Pitch High input range in1",
                 "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 1"
@@ -311,7 +311,7 @@
             "defaultValue": 2000.0,
             "unitMeasured": ""
         },
-        {   "name": "deg_EnYaw",
+        {   "name": "deg_YawEn",
             "displayName": {
                 "en": "Enable Output signal to range -180...+180 degree"
             },
@@ -323,7 +323,7 @@
             "defaultValue": true,
             "unitMeasured": ""
         },
-        {   "name": "out_RangeLowYaw",
+        {   "name": "out_YawRangeLow",
             "displayName": {
                 "en": "input range Yaw Low "
             },
@@ -335,7 +335,7 @@
             "defaultValue": -90.0,
             "unitMeasured": ""
         },
-        {   "name": "out_RangeCenterYaw",
+        {   "name": "out_YawRangeCenter",
             "displayName": {
                 "en": "Yaw Center input range in0",
                 "ru": "Yaw середина диапазона входного сигнала, вход сумматора 0"
@@ -348,7 +348,7 @@
             "defaultValue": 0.0,
             "unitMeasured": ""
         },
-        {   "name": "out_RangeHighYaw",
+        {   "name": "out_YawRangeHigh",
             "displayName": {
                 "en": "Yaw High input range in0",
                 "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 0"
@@ -361,19 +361,19 @@
             "defaultValue": 90.0,
             "unitMeasured": ""
         },
-        {   "name": "in0_InvertYaw",
+        {   "name": "in0_YawInvert",
             "displayName": {
-                "en": "Enable invert input signal in0 Yaw"
+                "en": "Enable invert input signal in0 "
             },
             "description": {
-                "en": "Enable invert input signal in0 Yaw",
-                "ru": "Инвертирование входного сигнала in0 Yaw"
+                "en": "Enable invert input signal in0 ",
+                "ru": "Инвертирование входного сигнала in0 "
             },
             "type": "bool",
             "defaultValue": false,
             "unitMeasured": ""
         },
-        {   "name": "in0_RangeLowYaw",
+        {   "name": "in0_YawRangeLow",
             "displayName": {
                 "en": "input range Yaw Low "
             },
@@ -385,7 +385,7 @@
             "defaultValue": -90.0,
             "unitMeasured": ""
         },
-        {   "name": "in0_RangeCenterYaw",
+        {   "name": "in0_YawRangeCenter",
             "displayName": {
                 "en": "Yaw Center input range in0",
                 "ru": "Yaw середина диапазона входного сигнала, вход сумматора 0"
@@ -398,7 +398,7 @@
             "defaultValue": 0.0,
             "unitMeasured": ""
         },
-        {   "name": "in0_RangeHighYaw",
+        {   "name": "in0_YawRangeHigh",
             "displayName": {
                 "en": "Yaw High input range in0",
                 "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 0"
@@ -411,19 +411,19 @@
             "defaultValue": 90.0,
             "unitMeasured": ""
         },
-        {   "name": "in1_InvertYaw",
+        {   "name": "in1_YawInvert",
             "displayName": {
-                "en": "Enable invert input signal in1 Yaw"
+                "en": "Enable invert input signal in1 "
             },
             "description": {
-                "en": "Enable invert input signal in1 Yaw",
-                "ru": "Инвертирование входного сигнала in1 Yaw"
+                "en": "Enable invert input signal in1 ",
+                "ru": "Инвертирование входного сигнала in1 "
             },
             "type": "bool",
             "defaultValue": true,
             "unitMeasured": ""
         },
-        {   "name": "in1_RangeLowYaw",
+        {   "name": "in1_YawRangeLow",
             "displayName": {
                 "en": "input range Yaw Low "
             },
@@ -435,7 +435,7 @@
             "defaultValue": 1000.0,
             "unitMeasured": ""
         },
-        {   "name": "in1_RangeCenterYaw",
+        {   "name": "in1_YawRangeCenter",
             "displayName": {
                 "en": "Yaw Center input range in1",
                 "ru": "Yaw середина диапазона входного сигнала, вход сумматора 1"
@@ -448,7 +448,7 @@
             "defaultValue": 1500.0,
             "unitMeasured": ""
         },
-        {   "name": "in1_RangeHighYaw",
+        {   "name": "in1_YawRangeHigh",
             "displayName": {
                 "en": "Yaw High input range in1",
                 "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 1"
