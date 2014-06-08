@@ -69,6 +69,21 @@ void c_pid_run (module_c_pid_t *module)
             in_err[Roll]  = (double)input->errRoll;
             in_err[Pitch] = (double)input->errPitch;
             in_err[Yaw]   = (double)input->errYaw;
+
+            // Запускаем расчет PID для каждого канала.
+            uint8_t ch;
+            for (ch = 0; ch < 3; ch++) {
+                out[ch]= calcPID(pidParam, in_err[ch], dT);
+            }
+
+
+            outPID_t* outpid;
+            checkout_outPID(module, &outpid);
+            outpid->roll  = (float)out[Roll];
+            outpid->pitch = (float)out[Pitch];
+            outpid->yaw   = (float)out[Yaw];
+            checkin_outPID(module, &outpid);
+
         }
         else
         {
@@ -78,21 +93,8 @@ void c_pid_run (module_c_pid_t *module)
         // Эти данные следует добыть из разделяемой памяти, если они не придут через трубу
         //module->module_info.refresh_input_mask = errRoll | errPitch | errYaw;
 
-        // Запускаем расчет PID для каждого канала.
-        uint8_t ch;
-        for (ch = 0; ch < 3; ch++) {
-            out[ch]= calcPID(pidParam, in_err[ch], dT);
-        }
 
         //if(printEnable) printf("pidParam[Yaw].Kp = %f\n",pidParam[Yaw].Kp);
-
-        outPID_t* outpid;
-        checkout_outPID(module, &outpid);
-        outpid->roll  = (float)out[Roll];
-        outpid->pitch = (float)out[Pitch];
-        outpid->yaw   = (float)out[Yaw];
-        checkin_outPID(module, &outpid);
-
         printEnable = false;
     }
 }
