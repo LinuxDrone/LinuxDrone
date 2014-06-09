@@ -92,11 +92,20 @@ function make_Bson2Structure(properties) {
             case "short":
             case "int":
             case "long":
-                r += "            module->common_params." + propName + " = bson_iter_int32(&iter);\n";
-                break;
-
             case "long long":
-                r += "            module->common_params." + propName + " = bson_iter_int64(&iter);\n";
+
+                r += "            if(BSON_ITER_HOLDS_INT32(&iter))\n";
+                r += "            {\n";
+                r += "                module->common_params." + propName + " = bson_iter_int32(&iter);\n";
+                r += "            }\n";
+                r += "            else if(BSON_ITER_HOLDS_INT64(&iter))\n";
+                r += "            {\n";
+                r += "                module->common_params." + propName + " = bson_iter_int64(&iter);\n";
+                r += "            }\n";
+                r += "            else\n";
+                r += "            {\n";
+                r += "                printf(\"Unknown type for Number parameter " + propName + "\t\");\n";
+                r += "            }\n";
                 break;
 
             case "float":
@@ -140,11 +149,11 @@ function make_Bson2Structure(properties) {
                 break;
 
             case "long":
-                r += "    printf(\"" + propName + "=%l\\t\", obj->" + propName + ");\n";
+                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
                 break;
 
             case "long long":
-                r += "    printf(\"" + propName + "=%ll\\t\", obj->" + propName + ");\n";
+                r += "    printf(\"" + propName + "=%llu\\t\", obj->" + propName + ");\n";
                 break;
 
             case "float":
@@ -157,7 +166,7 @@ function make_Bson2Structure(properties) {
                 break;
 
             case "bool":
-                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
+                r += "    printf(\"" + propName + "=%s\\t\", obj->" + propName + ");\n";
                 break;
 
             default:
