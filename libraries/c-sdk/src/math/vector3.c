@@ -11,8 +11,19 @@
 //--------------------------------------------------------------------
 
 #include "../../include/math/vector3.h"
+#include <math.h>
 
 VECTOR3 vector3Make(float x, float y, float z) {
     VECTOR3 result = {x, y, z};
     return result;
+}
+
+float vector3Length(VECTOR3 vector) {
+    return (float) sqrt(vector.v[0] * vector.v[0] + vector.v[1] * vector.v[1] + vector.v[2] * vector.v[2]);
+}
+
+VECTOR3 vector3Normalize(VECTOR3 vector) {
+    float scale = 1.0f / vector3Length(vector);
+    VECTOR3 v = { vector.v[0] * scale, vector.v[1] * scale, vector.v[2] * scale };
+    return v;
 }

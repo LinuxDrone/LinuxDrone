@@ -23,6 +23,8 @@ typedef struct tagVector3 {
 } VECTOR3, *PVECTOR3;
 
 VECTOR3 vector3Make(float x, float y, float z);
+float vector3Length(VECTOR3 vector);
+VECTOR3 vector3Normalize(VECTOR3 v);
 
 #ifdef __cplusplus
 }
