@@ -76,7 +76,7 @@ SET(DO_POST_BUILD YES)
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
 #SET(SSH_PORT_TARGET_SYSTEM 1234)
 
-SET(URL_TARGET_SYSTEM root@192.168.1.4)
+SET(URL_TARGET_SYSTEM root@192.168.1.43)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
 # MongoDB
@@ -184,6 +184,7 @@ add_subdirectory(${MOD_DIR}/c-pid)
 #add_subdirectory(${MOD_DIR}/SimpleTransform)
 #add_subdirectory(${MOD_DIR}/SerialGps)
 add_subdirectory(${MOD_DIR}/c-bmp180)
+add_subdirectory(${MOD_DIR}/c-generator)
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
