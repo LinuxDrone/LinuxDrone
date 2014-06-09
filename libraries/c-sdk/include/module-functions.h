@@ -7,6 +7,7 @@
 #include <native/event.h>
 #include <native/mutex.h>
 #include <native/cond.h>
+#include "common-params.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -240,6 +241,8 @@ typedef void (t_cycle_function)(void *cookie);
 typedef t_cycle_function* p_cycle_function;
 
 
+
+
 typedef struct
 {
     // Массив указателей на структуры содержащие информацию о разделяемой памяти, контролируемой инстансами поставщиками
@@ -273,7 +276,7 @@ typedef struct
 	 * \~russian
 	 */
 	RT_TASK task_main;
-	int task_priority;
+
 
 
 	/**
@@ -281,13 +284,13 @@ typedef struct
 	 * \~russian
 	 */
 	RT_TASK task_transmit;
-	RTIME transmit_task_period;
+
 
 	/**
 	 * \~english input queue
 	 */
 	RT_QUEUE in_queue;
-	RTIME queue_timeout;
+
 
 
     // Массив указателей на структуры содержащие информацию о очередях модулей потребителей
@@ -327,6 +330,41 @@ typedef struct
 
     // Указатель на структуру (входные данные модуля)
     void* input_data;
+
+    /**
+     * @brief \~russian Указатель на структуру с настроечными параметрами модуля
+     */
+    void* specific_params;
+
+    /**
+     * @brief \~russian Набор параметров одинаковый для всех модулей
+     * (по типу параметров, не по значению. У каждого инстанса свой набор значений)
+     */
+    common_params_t common_params;
+
+
+    /**
+     * @brief \~russian
+     * Функция переноса данных из структуру конфигурационных параметров в bson объект
+     * Указатель на функцию должен подставляться пользовательским (автогенеренным) кодом
+     */
+    p_obj2bson params2bson;
+
+
+    /**
+     * @brief \~russian
+     * Функция переноса данных из bson объекта с конфигурационными параметрами модуля
+     * в структуру конфигурационных параметров
+     * Указатель на функцию должен подставляться пользовательским (автогенеренным) кодом
+     */
+    p_bson2obj bson2params;
+
+
+    /**
+     * @brief \~russian Печать настроечных параметров модуля в консоль
+     */
+    p_print_input print_params;
+
 
     // Функция печати в консоль входного объекта
     p_print_input print_input;

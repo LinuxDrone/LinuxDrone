@@ -3,7 +3,8 @@
     "name": "c-gy87",
     "version": 1,
     "Task Priority": 80,
-    "Task Period": 1000,
+    "Task Period": 200,
+    "Transfer task period": 200000,
     "description": {
         "en": "GY-87 sensors set",
         "ru": "Набор датчиков на плате GY-87"
@@ -18,7 +19,7 @@
             "description": {
                 "ru": "Путь к файлу i2c устройства"
             },
-            "type": "string",
+            "type": "const char*",
             "defaultValue": "/dev/i2c-1",
             "validValues" : ["/dev/i2c-1","/dev/i2c-2"],
             "unitMeasured": ""

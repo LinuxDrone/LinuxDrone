@@ -70,6 +70,7 @@ bson_t* get_bson_from_db(const char* configuration_name, const char* configurati
     return result;
 }
 
+
 /**
  * @brief add_links2instance
  * extract info about links from configuration and add them to instance bson

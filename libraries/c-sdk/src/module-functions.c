@@ -391,7 +391,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     bson_t bson;
     bson_init_static(&bson, data, length);
 
-    //debug_print_bson("Function \"init\" module-functions.c", &bson);
+//debug_print_bson("Function \"init\" module-functions.c", &bson);
 
     // Вытаскиваем из конфигурации значения обязательных настроечных параметров
     /**
@@ -417,48 +417,36 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     }
     //fprintf(stdout, "instance name=%s\n\n", module->instance_name);
 
-    /**
-     * Task Priority
-     */
-    if (!bson_iter_init_find(&iter, &bson, "Task Priority")) {
-        printf("Not found property \"Task Priority\"");
-        return -1;
-    }
-    if (!BSON_ITER_HOLDS_INT32(&iter)) {
-        printf("Property \"Task Priority\" not INT32 type");
-        return -1;
-    }
-    module->task_priority = bson_iter_int32(&iter);
-    //fprintf(stdout, "Task Priority=%i\n", module->task_priority);
 
-    /**
-     * Main task Period
-     */
-    if (!bson_iter_init_find(&iter, &bson, "Task Period")) {
-        printf("Not found property \"Task Period\"");
-        return -1;
-    }
-    if (!BSON_ITER_HOLDS_INT32(&iter)) {
-        printf("Property \"Main task Period\" not INT32 type");
-        return -1;
-    }
-    module->queue_timeout = rt_timer_ns2ticks(bson_iter_int32(&iter) * 1000);
-    //fprintf(stdout, "queue_timeout=%i\n", module->queue_timeout);
-
-    /**
-     * Transfer task Period
-     */
-    if (!bson_iter_init_find(&iter, &bson, "Transfer task period")) {
-        printf("Not found property \"Transfer task period\"");
-        return -1;
-    }
-    if (!BSON_ITER_HOLDS_INT32(&iter)) {
-        printf("Property \"Main task Period\" not INT32 type");
-        return -1;
-    }
+    // Чтение в структуру общих параметров модуля
+    bson2common_params(module, &bson);
     // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна примать на вход наносекунды
-    module->transmit_task_period = rt_timer_ns2ticks(bson_iter_int32(&iter) * 1000);
-    //fprintf(stdout, "transmit_task_period=%i\n", module->transmit_task_period);
+    module->common_params.Transfer_task_period = rt_timer_ns2ticks(module->common_params.Transfer_task_period * 1000);
+    module->common_params.Task_Period = rt_timer_ns2ticks(module->common_params.Task_Period * 1000);
+    //print_common_params(&module->common_params);
+
+
+
+    // Поиск узла специфичных параметров модуля
+    if (!bson_iter_init_find(&iter, &bson, "params")) {
+        printf("Not found property \"params\"");
+        return -1;
+    }
+    if (!BSON_ITER_HOLDS_DOCUMENT(&iter)) {
+        printf("Property \"params\" not Document type");
+        return -1;
+    }
+    bson_t bson_params;
+    const uint8_t *link_buf = NULL;
+    uint32_t link_buf_len = 0;
+    bson_iter_document(&iter, &link_buf_len, &link_buf);
+    bson_init_static(&bson_params, link_buf, link_buf_len);
+    //debug_print_bson("Function \"init\" module-functions.c", &bson_params);
+
+    // Чтение в структуру специфичных параметров модуля
+    (*module->bson2params)(module, &bson_params);
+    //(*module->print_params)(module->specific_params);
+
 
 
     // Выделяем память под структуры, представляющие связи с модулями подписчиками
@@ -488,8 +476,6 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             return -1;
         }
 
-        const uint8_t *link_buf = NULL;
-        uint32_t link_buf_len = 0;
         bson_t bson_out_link;
         while(bson_iter_next(&iter_links))
         {
@@ -610,8 +596,6 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             return -1;
         }
 
-        const uint8_t *link_buf = NULL;
-        uint32_t link_buf_len = 0;
         bson_t bson_in_link;
         while(bson_iter_next(&iter_links))
         {
@@ -990,7 +974,7 @@ void get_input_data(module_t *module)
     if(module->input_data==NULL)
     {
         //здесь просто поспать потоку
-        rt_task_sleep(module->queue_timeout);
+        rt_task_sleep(module->common_params.Task_Period);
 
         //printf("Module don't have input\n");
         return;
@@ -1002,7 +986,7 @@ void get_input_data(module_t *module)
 
     module->updated_input_properties = 0;
 
-    int res_read = rt_queue_read(&module->in_queue, buf, 256, module->queue_timeout);
+    int res_read = rt_queue_read(&module->in_queue, buf, 256, module->common_params.Task_Period);
     if (res_read > 0)
     {
         bson_t bson;
@@ -1243,7 +1227,7 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
 
     int i=0;
     out_object_t* out_object = module->out_objects[i];
-    bool time2publish2shmem = (rt_timer_read() - *time_last_publish_shmem) > module->transmit_task_period;
+    bool time2publish2shmem = (rt_timer_read() - *time_last_publish_shmem) > module->common_params.Transfer_task_period;
     while(out_object)
     {
         if(!time2publish2shmem && !to_queue)
@@ -1310,7 +1294,7 @@ void task_transmit(void *p_module)
             return;
         }
         // Если нет заполненных объектов, то поспим пока они не появятся
-        res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, module->transmit_task_period);
+        res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, module->common_params.Transfer_task_period);
 
 
         int res1 = rt_mutex_release(&module->mutex_obj_exchange);
@@ -1437,7 +1421,7 @@ int create_xenomai_services(module_t* module)
     char name_task_main[XNOBJECT_NAME_LEN] = "";
     strcat(name_task_main, module->instance_name);
     strcat(name_task_main, SUFFIX_TASK);
-    int err = rt_task_create(&module->task_main, name_task_main, TASK_STKSZ, module->task_priority, TASK_MODE);
+    int err = rt_task_create(&module->task_main, name_task_main, TASK_STKSZ, module->common_params.Task_Priority, TASK_MODE);
     if (err != 0)
     {
         fprintf(stdout, "Error create work task \"%s\"\n", name_task_main);
@@ -1733,4 +1717,18 @@ int refresh_input(void* p_module)
 
 
 
-
+/**
+ * \~russian Описание. Передача параметров в модуль
+ * BSON объект, содержащий параметры, передается передающему потоку модуля посредством rt_task_send
+ * В контексте передающего потока, парсится BSON и значения переносятся в структуру параметров.
+ * При этом передающий поток, получает ссылку на структуру с параметрами, посредством вызова функции checkout_params
+ * получать ссылку посредлством вызова функции, а не прямого доступа через module_t необходимо потому, что в функции лочится мьютекс,
+ * не позволяющий (во время парсинга bson объекта заполнения структуры с параметрами) основному потоку модуля получить доступ к структуре.
+ * Аналогично и основной поток модуля, когда ему нужно прочитать настроечные параметры, пользуется парой функций checkout_params и checkin_params
+ *
+ * В автосгенеренных хелпер файлах модуля, для поддержания данного функционала создаются
+ *
+ * - структура для хранения параметров
+ * - пара функций получения и освобождения ссылки на структуру параметров (ссылка на функции должна быть доступна через струткуру модуля для потоков модуля)
+ * - пара функций сериализации и десириализации bson объекта в структуру (ссылка на функции должна быть доступна через структуру модуля для потоков модуля)
+ */

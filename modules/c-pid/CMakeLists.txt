@@ -19,28 +19,27 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/c-sdk)
 
 set(EXTRA_LIBS
     c-sdk
-    i2c_client
     m
 )
 
 ADD_CUSTOM_COMMAND(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/c-bmp180.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-bmp180.def.json ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-bmp180.def.json
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/c-pid.helper.c
+    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-pid.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-pid.def.json
 )
 
-add_library(c-bmp180 MODULE ${INC} ${SRC} c-bmp180.helper.c)
+add_library(c-pid MODULE ${INC} ${SRC} c-pid.helper.c)
 
-target_link_libraries(c-bmp180 ${EXTRA_LIBS})
+target_link_libraries(c-pid ${EXTRA_LIBS})
 
 IF(${DO_POST_BUILD})
     add_custom_command(
-        TARGET c-bmp180
+        TARGET c-pid
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-bmp180.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-bmp180/libc-bmp180.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-bmp180/c-bmp180.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-bmp180/c-bmp180.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-pid.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pid/libc-pid.so
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-pid/c-pid.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pid/c-pid.def.json
     )
 ENDIF()
 
-install(TARGETS c-bmp180 DESTINATION modules/c-bmp180)
-install(FILES c-bmp180.def.json DESTINATION modules/c-bmp180)
+install(TARGETS c-pid DESTINATION modules/c-pid)
+install(FILES c-pid.def.json DESTINATION modules/c-pid)
