@@ -158,20 +158,30 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
         r += "        if(!strncmp(key, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
         r += "        {\n";
         switch (properties[key].type) {
+            case "float":
+            case "double":
+                r += "            if(BSON_ITER_HOLDS_DOUBLE(&iter))\n";
+                r += "            {\n";
+                r += "                obj->" + propName + " = bson_iter_double(&iter);\n";
+                r += "            }\nelse ";
+
             case "char":
             case "short":
             case "int":
             case "long":
-                r += "            obj->" + propName + " = bson_iter_int32(&iter);\n";
-                break;
-
             case "long long":
-                r += "            obj->" + propName + " = bson_iter_int64(&iter);\n";
-                break;
-
-            case "float":
-            case "double":
-                r += "            obj->" + propName + " = bson_iter_double(&iter);\n";
+                r += "            if(BSON_ITER_HOLDS_INT32(&iter))\n";
+                r += "            {\n";
+                r += "                obj->" + propName + " = bson_iter_int32(&iter);\n";
+                r += "            }\n";
+                r += "            else if(BSON_ITER_HOLDS_INT64(&iter))\n";
+                r += "            {\n";
+                r += "                obj->" + propName + " = bson_iter_int64(&iter);\n";
+                r += "            }\n";
+                r += "            else\n";
+                r += "            {\n";
+                r += "                printf(\"Unknown type for Number parameter " + propName + "\t\");\n";
+                r += "            }\n";
                 break;
 
             case "const char*":

@@ -88,12 +88,18 @@ function make_Bson2Structure(properties) {
         r += "        if(!strncmp(key, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
         r += "        {\n";
         switch (properties[key].type) {
+            case "float":
+            case "double":
+                r += "            if(BSON_ITER_HOLDS_DOUBLE(&iter))\n";
+                r += "            {\n";
+                r += "                module->common_params." + propName + " = bson_iter_double(&iter);\n";
+                r += "            }\nelse ";
+
             case "char":
             case "short":
             case "int":
             case "long":
             case "long long":
-
                 r += "            if(BSON_ITER_HOLDS_INT32(&iter))\n";
                 r += "            {\n";
                 r += "                module->common_params." + propName + " = bson_iter_int32(&iter);\n";
@@ -106,11 +112,6 @@ function make_Bson2Structure(properties) {
                 r += "            {\n";
                 r += "                printf(\"Unknown type for Number parameter " + propName + "\t\");\n";
                 r += "            }\n";
-                break;
-
-            case "float":
-            case "double":
-                r += "            module->common_params." + propName + " = bson_iter_double(&iter);\n";
                 break;
 
             case "const char*":
