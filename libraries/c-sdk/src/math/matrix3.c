@@ -10,7 +10,7 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
-#include "matrix3.h"
+#include "../../include/math/matrix3.h"
 #include <math.h>
 
 #if defined(__ARM_NEON__)
