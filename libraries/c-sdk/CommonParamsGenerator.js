@@ -1,5 +1,3 @@
-var commonModuleParams = require('../../webapps/configurator/public/ModulesCommonParams.def.js');
-
 function make_params_structure(params_definitions) {
     var r = "";
 
@@ -188,8 +186,8 @@ function Create_H_file(paramsDefinitions) {
 function Create_C_file(paramsDefinitions) {
     var r = "";
 
-    r += "#include \"../include/common-params.h\"\n";
-    r += "#include \"../include/module-functions.h\"\n\n";
+    r += "#include \"common-params.h\"\n";
+    r += "#include \"module-functions.h\"\n\n";
 
     // Хитрожопая процедура преобразования массива объектов в объект, где каждый член - объект из массива.
     // Все танцы для того, чтобы вызвать функции создания функций bson преобразования, без их изменения.
@@ -207,6 +205,16 @@ function Create_C_file(paramsDefinitions) {
 }
 
 function main() {
+    if (process.argv.length < 4) {
+        console.log("Use " + process.argv[0] + " " + process.argv[1] + " path_to/ModulesCommonParams.def.js OUT_DIR");
+        return -1;
+    }
+
+    var file_module_definition = process.argv[2];
+    var out_dir = process.argv[3];
+
+    var commonModuleParams = require(file_module_definition);
+
     var fs = require('fs');
 
     var paramsDefinitions = [];
@@ -215,11 +223,11 @@ function main() {
         paramsDefinitions.push(param);
     });
 
-    fs.writeFile("include/common-params.h", Create_H_file(paramsDefinitions), function (err) {
+    fs.writeFile(out_dir + "/common-params.h", Create_H_file(paramsDefinitions), function (err) {
         if (err) return console.log(err);
     });
 
-    fs.writeFile("src/common-params.c", Create_C_file(paramsDefinitions), function (err) {
+    fs.writeFile(out_dir + "/common-params.c", Create_C_file(paramsDefinitions), function (err) {
         if (err) return console.log(err);
     });
 }

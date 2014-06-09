@@ -13,7 +13,7 @@
 file(GLOB_RECURSE INC "include/*.h")
 file(GLOB_RECURSE SRC "src/*.c")
 
-include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
+include_directories(${RFS_DIR}/usr/local/include/libbson-1.0 ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(EXTRA_LIBS
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
@@ -21,7 +21,13 @@ set(EXTRA_LIBS
     m
 )
 
-add_library(c-sdk ${INC} ${SRC})
+ADD_CUSTOM_COMMAND(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/common-params.c
+    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/CommonParamsGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/../../webapps/configurator/public/ModulesCommonParams.def.js ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../webapps/configurator/public/ModulesCommonParams.def.js
+)
+
+add_library(c-sdk ${INC} ${SRC} common-params.c)
 
 target_link_libraries(c-sdk ${EXTRA_LIBS})
 
