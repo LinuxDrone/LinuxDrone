@@ -19,7 +19,7 @@
                 "en": "Task Period",
                 "ru": "Task Period"
             },
-            type: "long",
+            type: "long long",
             required: true,
             description: {ru: "время между двумя вызовами бизнес функции (микросекунд) 0  - не зависать на очереди в ожидании данных -1 - зависать навечно, до факта появления данных в очереди"},
             unitMeasured: "Ms",
@@ -31,7 +31,7 @@
                 "en": "Transfer task period",
                 "ru": "Transfer task period"
             },
-            type: "long",
+            type: "long long",
             required: true,
             description: {ru: "время между двумя вызовами бизнес функции (микросекунд) 0  - не зависать на очереди в ожидании данных -1 - зависать навечно, до факта появления данных в очереди"},
             unitMeasured: "Ms",
