@@ -91,7 +91,7 @@ void c_attitude_run (module_c_attitude_t *module)
 
             //if(el < 0.0018f) printf("\nDT_time      = %f\n", el);
 
-            if (p_ad->timeElapsed < TIMESTART) {
+            if (p_ad->timeElapsed < TIMESTART && p_ad->timeElapsed > 1.0f) {
                 // Use accels to initialise attitude and calculate gyro bias
                 p_ad->accelKp     = 1.0f;
                 p_ad->accelKi     = 0.0f;
@@ -125,6 +125,18 @@ void c_attitude_run (module_c_attitude_t *module)
             rotateBoard(p_ad);
             correctBias(p_ad);
             calcAttitude(p_ad);
+
+            // Во время калибровки обнулять выходы
+            if(p_ad->initSeting==0)
+            {
+                p_ad->rpy[0]= 0.0f;
+                p_ad->rpy[1]= 0.0f;
+                p_ad->rpy[2]= 0.0f;
+                p_ad->q[0]  = 1.0f;
+                p_ad->q[1]  = 0.0f;
+                p_ad->q[2]  = 0.0f;
+                p_ad->q[3]  = 0.0f;
+            }
 
             // Вывод данных из модуля
             qrpy_out_t* qrpy_out;
