@@ -1,9 +1,9 @@
 {
     "type": "module_def",
     "name": "c-sum-scale",
-    "version": 1,
+    "version": 2,
     "Task Priority": 80,
-    "Task Period": 2000,
+    "Task Period": 20000,
     "Transfer task period": 200000,
     "Notify on change": false,
     "description": {
