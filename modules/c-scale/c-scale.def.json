@@ -1,9 +1,9 @@
 {
     "type": "module_def",
     "name": "c-scale",
-    "version": 1,
+    "version": 2,
     "Task Priority": 80,
-    "Task Period": 2000,
+    "Task Period": 20000,
     "Transfer task period": 200000,
     "Notify on change": false,
     "description": {
@@ -56,7 +56,7 @@
                 "ru": "Roll нижняя граница диапазона входного сигнала, вход сумматора 0"
             },
             "type": "float",
-            "defaultValue": -90,
+            "defaultValue": -45,
             "unitMeasured": ""
         },
         {   "name": "in_RollRangeCenter",
@@ -82,7 +82,7 @@
                 "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 0"
             },
             "type": "float",
-            "defaultValue": 90,
+            "defaultValue": 45,
             "unitMeasured": ""
         },
         {   "name": "out_RollRangeLow",
@@ -94,7 +94,7 @@
                 "ru": "Roll нижняя граница диапазона выходного сигнала"
             },
             "type": "float",
-            "defaultValue": -90.0,
+            "defaultValue": 1000.0,
             "unitMeasured": ""
         },
         {   "name": "out_RollRangeCenter",
@@ -107,7 +107,7 @@
                 "ru": "Roll середина диапазона выходного сигнала"
             },
             "type": "float",
-            "defaultValue": 0.0,
+            "defaultValue": 1500.0,
             "unitMeasured": ""
         },
         {   "name": "out_RollRangeHigh",
@@ -120,7 +120,7 @@
                 "ru": "Roll верхняя граница диапазона выходного сигнала"
             },
             "type": "float",
-            "defaultValue": 90.0,
+            "defaultValue": 2000.0,
             "unitMeasured": ""
         },
         {   "name": "in_PitchRangeLow",
@@ -132,7 +132,7 @@
                 "ru": "Pitch нижняя граница диапазона входного сигнала, вход сумматора 0"
             },
             "type": "float",
-            "defaultValue": -90.0,
+            "defaultValue": -45.0,
             "unitMeasured": ""
         },
         {   "name": "in_PitchRangeCenter",
@@ -158,20 +158,7 @@
                 "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 0"
             },
             "type": "float",
-            "defaultValue": 90.0,
-            "unitMeasured": ""
-        },
-
-        {   "name": "out_YawRangeLow",
-            "displayName": {
-                "en": "output range Yaw Low "
-            },
-            "description": {
-                "en": "Yaw Low output range",
-                "ru": "Yaw нижняя граница диапазона выходного сигнала"
-            },
-            "type": "float",
-            "defaultValue": -90.0,
+            "defaultValue": 45.0,
             "unitMeasured": ""
         },
         {   "name": "out_PitchRangeLow",
@@ -183,7 +170,7 @@
                 "ru": "Pitch нижняя граница диапазона выходного сигнала"
             },
             "type": "float",
-            "defaultValue": -90.0,
+            "defaultValue": 1000.0,
             "unitMeasured": ""
         },
         {   "name": "out_PitchRangeCenter",
@@ -196,7 +183,7 @@
                 "ru": "Pitch середина диапазона выходного сигнала"
             },
             "type": "float",
-            "defaultValue": 0.0,
+            "defaultValue": 1500.0,
             "unitMeasured": ""
         },
         {   "name": "out_PitchRangeHigh",
@@ -209,7 +196,7 @@
                 "ru": "Pitch верхняя граница диапазона выходного сигнала"
             },
             "type": "float",
-            "defaultValue": 90.0,
+            "defaultValue": 2000.0,
             "unitMeasured": ""
         },
         {   "name": "in_YawRangeLow",
@@ -221,7 +208,7 @@
                 "ru": "Yaw нижняя граница диапазона входного сигнала, вход сумматора 0"
             },
             "type": "float",
-            "defaultValue": -90.0,
+            "defaultValue": -45.0,
             "unitMeasured": ""
         },
         {   "name": "in_YawRangeCenter",
@@ -247,7 +234,19 @@
                 "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 0"
             },
             "type": "float",
-            "defaultValue": 90.0,
+            "defaultValue": 45.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_YawRangeLow",
+            "displayName": {
+                "en": "output range Yaw Low "
+            },
+            "description": {
+                "en": "Yaw Low output range",
+                "ru": "Yaw нижняя граница диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 1000.0,
             "unitMeasured": ""
         },
         {   "name": "out_YawRangeCenter",
@@ -260,7 +259,7 @@
                 "ru": "Yaw середина диапазона выходного сигнала"
             },
             "type": "float",
-            "defaultValue": 0.0,
+            "defaultValue": 1500.0,
             "unitMeasured": ""
         },
         {   "name": "out_YawRangeHigh",
@@ -273,7 +272,7 @@
                 "ru": "Yaw верхняя граница диапазона выходного сигнала"
             },
             "type": "float",
-            "defaultValue": 90.0,
+            "defaultValue": 2000.0,
             "unitMeasured": ""
         }
 
