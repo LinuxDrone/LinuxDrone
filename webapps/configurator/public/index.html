@@ -87,7 +87,9 @@
                         visible: viewModels.Editor.Versions().length > 0">Delete
                     </button>
                     <button type="button" class="btn btn-info" disabled title="Not Implemented">Import</button>
-                    <button type="button" class="btn btn-info" disabled data-bind="visible: viewModels.Editor.Versions().length > 0">Export</button>
+                    <button type="button" class="btn btn-info" data-bind="visible: viewModels.Editor.Versions().length > 0, click: ExportConfig">Export</button>
+                    <a href = "#" id = "save" download="data.json">Save Canvas 1</a>
+                    Load Canvas<input type="file" id="load" />
 
                     <button type="button" data-bind="css: viewModels.Editor.cssClass4ButtonsRunStop(), click: RunConfig, visible: viewModels.Editor.hostStatus()=='stopped'">Run</button>
                     <button type="button" data-bind="css: viewModels.Editor.cssClass4ButtonsRunStop(), click: StopConfig, visible: viewModels.Editor.hostStatus()=='running'">Stop</button>

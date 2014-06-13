@@ -306,6 +306,40 @@ viewModels.Editor = (function () {
             });
     }
 
+
+    $( "#save" ).click(function( event ) {
+        var data4save = {
+            "name": res.configNameSelected(),
+            "version": res.versionSelected(),
+            "jsonGraph": JSON.stringify(graph.toJSON()),
+            "modulesParams": res.currentConfig().modulesParams
+        };
+        this.href = 'data:plain/text,' + JSON.stringify(data4save)
+    });
+    
+    $( "#load" ).change(function( event ) {
+        var fr = new FileReader();
+        fr.onload = function(){
+            res.currentConfig(JSON.parse(this.result));
+            graph.fromJSON(JSON.parse(res.currentConfig().jsonGraph));
+        }
+        fr.readAsText(this.files[0]);
+    });
+
+    res.ExportConfig = function() {
+        var data4save = {
+            "name": res.configNameSelected(),
+            "version": res.versionSelected(),
+            "jsonGraph": JSON.stringify(graph.toJSON()),
+            "modulesParams": res.currentConfig().modulesParams
+        };
+
+        var url = 'data:application/octet-stream;charset=utf8,' + encodeURIComponent(JSON.stringify(data4save));
+        window.open(url, '_blank');
+        window.focus();
+    }
+
+
     // Приватная. Подписаться, отписаться на телеметрию всех инстансов
     var Subscribe2Telemetry = function(cmd){
         if(socketTelemetry.readyState==1) {
