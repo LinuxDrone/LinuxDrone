@@ -274,5 +274,5 @@ function Starti2cService() {
 };
 
 
-StartTelemetryService();
-Starti2cService();
+//StartTelemetryService();
+//Starti2cService();
