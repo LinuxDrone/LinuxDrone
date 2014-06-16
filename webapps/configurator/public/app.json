@@ -110,7 +110,7 @@
         {
             "path": "app.js",
             "bundle": true
-        },{
+        }/*,{
             "path": "javascripts/joint/lib/jquery.js"
         }
         ,{
@@ -129,7 +129,7 @@
             "path": "javascripts/joint/src/geometry.js"
         },{
             "path": "javascripts/joint/src/joint.dia.paper.js"
-        }
+        }*/
     ],
 
     /**
