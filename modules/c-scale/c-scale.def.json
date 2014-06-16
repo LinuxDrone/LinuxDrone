@@ -1,0 +1,333 @@
+{
+    "type": "module_def",
+    "name": "c-scale",
+    "version": 2,
+    "Task Priority": 80,
+    "Task Period": 20000,
+    "Transfer task period": 200000,
+    "Notify on change": false,
+    "description": {
+        "en": "Scale signal range module 3x",
+        "ru": "Трехканальный сумматор"
+    },
+    "paramsDefinitions": [
+        {   "name": "in_RollInvert",
+            "displayName": {
+                "en": "Enable invert input signal"
+            },
+            "description": {
+                "en": "Enable invert input signal",
+                "ru": "Инвертирование входного сигнала"
+            },
+            "type": "bool",
+            "defaultValue": false,
+            "unitMeasured": ""
+        },
+        {   "name": "in_PitchInvert",
+            "displayName": {
+                "en": "Enable invert input signal"
+            },
+            "description": {
+                "en": "Enable invert input signal",
+                "ru": "Инвертирование входного сигнала"
+            },
+            "type": "bool",
+            "defaultValue": false,
+            "unitMeasured": ""
+        },
+        {   "name": "in_YawInvert",
+            "displayName": {
+                "en": "Enable invert input signal"
+            },
+            "description": {
+                "en": "Enable invert input signal",
+                "ru": "Инвертирование входного сигнала"
+            },
+            "type": "bool",
+            "defaultValue": false,
+            "unitMeasured": ""
+        },
+        {   "name": "in_RollRangeLow",
+            "displayName": {
+                "en": "input range Roll Low "
+            },
+            "description": {
+                "en": "Roll Low input range",
+                "ru": "Roll нижняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": -45,
+            "unitMeasured": ""
+        },
+        {   "name": "in_RollRangeCenter",
+            "displayName": {
+                "en": "Roll Center input range",
+                "ru": "Roll середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Roll Center input range",
+                "ru": "Roll середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 0,
+            "unitMeasured": ""
+        },
+        {   "name": "in_RollRangeHigh",
+            "displayName": {
+                "en": "Roll High input range",
+                "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Roll High input range",
+                "ru": "Roll верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 45,
+            "unitMeasured": ""
+        },
+        {   "name": "out_RollRangeLow",
+            "displayName": {
+                "en": "output range Roll Low "
+            },
+            "description": {
+                "en": "Roll Low output range",
+                "ru": "Roll нижняя граница диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 1000.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_RollRangeCenter",
+            "displayName": {
+                "en": "Roll Center output rang",
+                "ru": "Roll середина диапазона выходного сигнала"
+            },
+            "description": {
+                "en": "Roll Center output range",
+                "ru": "Roll середина диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 1500.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_RollRangeHigh",
+            "displayName": {
+                "en": "Roll High output range",
+                "ru": "Roll верхняя граница диапазона выходного сигнала"
+            },
+            "description": {
+                "en": "Roll High output range",
+                "ru": "Roll верхняя граница диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 2000.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in_PitchRangeLow",
+            "displayName": {
+                "en": "input range Pitch Low "
+            },
+            "description": {
+                "en": "Pitch Low input range",
+                "ru": "Pitch нижняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": -45.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in_PitchRangeCenter",
+            "displayName": {
+                "en": "Pitch Center input range",
+                "ru": "Pitch середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Pitch Center input range",
+                "ru": "Pitch середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in_PitchRangeHigh",
+            "displayName": {
+                "en": "Pitch High input range",
+                "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Pitch High input range",
+                "ru": "Pitch верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 45.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_PitchRangeLow",
+            "displayName": {
+                "en": "output range Pitch Low "
+            },
+            "description": {
+                "en": "Pitch Low output range",
+                "ru": "Pitch нижняя граница диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 1000.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_PitchRangeCenter",
+            "displayName": {
+                "en": "Pitch Center output range",
+                "ru": "Pitch середина диапазона выходного сигнала"
+            },
+            "description": {
+                "en": "Pitch Center output range",
+                "ru": "Pitch середина диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 1500.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_PitchRangeHigh",
+            "displayName": {
+                "en": "Pitch High output range",
+                "ru": "Pitch верхняя граница диапазона выходного сигнала"
+            },
+            "description": {
+                "en": "Pitch High output range",
+                "ru": "Pitch верхняя граница диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 2000.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in_YawRangeLow",
+            "displayName": {
+                "en": "input range Yaw Low "
+            },
+            "description": {
+                "en": "Yaw Low input range",
+                "ru": "Yaw нижняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": -45.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in_YawRangeCenter",
+            "displayName": {
+                "en": "Yaw Center input range",
+                "ru": "Yaw середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Yaw Center input range",
+                "ru": "Yaw середина диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {   "name": "in_YawRangeHigh",
+            "displayName": {
+                "en": "Yaw High input range",
+                "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "description": {
+                "en": "Yaw High input range",
+                "ru": "Yaw верхняя граница диапазона входного сигнала, вход сумматора 0"
+            },
+            "type": "float",
+            "defaultValue": 45.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_YawRangeLow",
+            "displayName": {
+                "en": "output range Yaw Low "
+            },
+            "description": {
+                "en": "Yaw Low output range",
+                "ru": "Yaw нижняя граница диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 1000.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_YawRangeCenter",
+            "displayName": {
+                "en": "Yaw Center output range",
+                "ru": "Yaw середина диапазона выходного сигнала"
+            },
+            "description": {
+                "en": "Yaw Center output range",
+                "ru": "Yaw середина диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 1500.0,
+            "unitMeasured": ""
+        },
+        {   "name": "out_YawRangeHigh",
+            "displayName": {
+                "en": "Yaw High output range",
+                "ru": "Yaw верхняя граница диапазона выходного сигнала"
+            },
+            "description": {
+                "en": "Yaw High output range",
+                "ru": "Yaw верхняя граница диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 2000.0,
+            "unitMeasured": ""
+        }
+
+    ],
+    "inputShema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+            "in_Roll": {
+                "type": "float",
+                "required": true
+            },
+            "in_Pitch": {
+                "type": "float",
+                "required": true
+            },
+            "in_Yaw": {
+                "type": "float",
+                "required": true
+            },
+            "in_Roll": {
+                "type": "float",
+                "required": true
+            },
+            "in_Pitch": {
+                "type": "float",
+                "required": true
+            },
+            "in_Yaw": {
+                "type": "float",
+                "required": true
+            }
+        }
+    },
+    "outputs": [
+        {
+            "name": "outScale",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "roll": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "pitch": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "yaw": {
+                        "type": "float",
+                        "required": true
+                    }
+                }
+            }
+        }
+    ]
+}
