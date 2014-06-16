@@ -15,11 +15,11 @@ file(GLOB_RECURSE SRC "*.c")
 
 include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
 include_directories(${RFS_DIR}/usr/local/include/libmongoc-1.0)
-include_directories(${LIB_DIR}/c-sdk/include)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../../libraries/c-sdk)
+include_directories(${LIB_DIR}/sdk/include)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../../libraries/sdk)
 
 set(EXTRA_LIBS
-    c-sdk
+    sdk
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
     rt
     pthread

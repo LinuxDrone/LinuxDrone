@@ -120,7 +120,7 @@ IF(BUILD_DOCUMENTATION)
         OUTPUT ${doxy_ru_index}
         COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile.ru
         MAIN_DEPENDENCY ${doxyfile_ru} ${doxyfile_in}
-        DEPENDS c-sdk ${doxy_extra_files}
+        DEPENDS sdk ${doxy_extra_files}
         COMMENT "Generating RU HTML documentation"
     )
 
@@ -134,7 +134,7 @@ IF(BUILD_DOCUMENTATION)
         OUTPUT ${doxy_en_index}
         COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile.en
         MAIN_DEPENDENCY ${doxyfile_en} ${doxyfile_in}
-        DEPENDS c-sdk ${doxy_extra_files}
+        DEPENDS sdk ${doxy_extra_files}
         COMMENT "Generating EN HTML documentation"
     )
 
@@ -160,7 +160,7 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 #add_subdirectory(${LIB_DIR}/core)
 #add_subdirectory(${LIB_DIR}/sdk)
 #add_subdirectory(${LIB_DIR}/dotnet-sdk)
-add_subdirectory(${LIB_DIR}/c-sdk)
+add_subdirectory(${LIB_DIR}/sdk)
 
 # Loadable modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
