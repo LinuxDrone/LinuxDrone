@@ -1,9 +1,9 @@
 {
     "type": "module_def",
     "name": "c-pid",
-    "version": 1,
+    "version": 2,
     "Task Priority": 80,
-    "Task Period": 2000,
+    "Task Period": 20000,
     "Transfer task period": 200000,
     "Notify on change": false,
     "description": {
@@ -11,8 +11,19 @@
     "ru": "PID регулятор 3 канала"
     },
     "paramsDefinitions": [
-        {
-            "name": "RollKp",
+        {   "name": "RollDeadband",
+            "displayName": {
+                "en": "Roll deadband",
+                "ru": "Roll зона нечувствительности"
+            },
+            "description": {
+                "ru": "Roll зона нечувствительности"
+            },
+            "type": "float",
+            "defaultValue": 0.5,
+            "unitMeasured": ""
+        },
+        {   "name": "RollKp",
             "displayName": {
                 "en": "Roll Kp",
                 "ru": "Roll Kp"
@@ -21,11 +32,10 @@
                 "ru": "Коэффициент пропорциональности"
             },
             "type": "float",
-            "defaultValue": 0.5,
+            "defaultValue": 8.0,
             "unitMeasured": ""
         },
-        {
-            "name": "RollKi",
+        {   "name": "RollKi",
             "displayName": {
                 "en": "Roll Ki",
                 "ru": "Roll Ki"
@@ -34,11 +44,10 @@
                 "ru": "Коэффициент интегрирования"
             },
             "type": "float",
-            "defaultValue": 0.0,
+            "defaultValue": 8.0,
             "unitMeasured": ""
         },
-        {
-            "name": "RollKd",
+        {   "name": "RollKd",
             "displayName": {
                 "en": "Roll Kd",
                 "ru": "Roll Kd"
@@ -50,8 +59,7 @@
             "defaultValue": 0.0,
             "unitMeasured": ""
         },
-        {
-            "name": "RollLimit",
+        {   "name": "RollLimit",
             "displayName": {
                 "en": "RollLimit",
                 "ru": "RollLimit"
@@ -60,11 +68,46 @@
                 "ru": "Ограничение по интегрированию"
             },
             "type": "float",
+            "defaultValue": 30.0,
+            "unitMeasured": ""
+        },
+        {   "name": "RollLimitAccum",
+            "displayName": {
+                "en": "Roll, limit for accumulator type output",
+                "ru": "Roll, ограничение по выходу для режима с накоплением "
+            },
+            "description": {
+                "ru": "Roll, ограничение по выходу для режима с накоплением "
+            },
+            "type": "float",
             "defaultValue": 0.0,
             "unitMeasured": ""
         },
-        {
-            "name": "PitchKp",
+        {   "name": "RollFilteredAlfa",
+            "displayName": {
+                "en": "Roll Filtered Alfa",
+                "ru": "Roll Filtered Alfa"
+            },
+            "description": {
+                "ru": "Alfa коэффициент фильтации по входу"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {   "name": "PitchDeadband",
+            "displayName": {
+                "en": "Pitch deadband",
+                "ru": "Pitch зона нечувствительности"
+            },
+            "description": {
+                "ru": "Pitch зона нечувствительности"
+            },
+            "type": "float",
+            "defaultValue": 0.5,
+            "unitMeasured": ""
+        },
+        {   "name": "PitchKp",
             "displayName": {
                 "en": "Pitch Kp",
                 "ru": "Pitch Kp"
@@ -73,11 +116,10 @@
                 "ru": "Коэффициент пропорциональности"
             },
             "type": "float",
-            "defaultValue": 0.5,
+            "defaultValue": 8.0,
             "unitMeasured": ""
         },
-        {
-            "name": "PitchKi",
+        {   "name": "PitchKi",
             "displayName": {
                 "en": "Pitch Ki",
                 "ru": "Pitch Ki"
@@ -86,11 +128,10 @@
                 "ru": "Коэффициент интегрирования"
             },
             "type": "float",
-            "defaultValue": 0.0,
+            "defaultValue": 8.0,
             "unitMeasured": ""
         },
-        {
-            "name": "PitchKd",
+        {   "name": "PitchKd",
             "displayName": {
                 "en": "Pitch Kd",
                 "ru": "Pitch Kd"
@@ -102,8 +143,7 @@
             "defaultValue": 0.0,
             "unitMeasured": ""
         },
-        {
-            "name": "PitchLimit",
+        {   "name": "PitchLimit",
             "displayName": {
                 "en": "PitchLimit",
                 "ru": "PitchLimit"
@@ -112,11 +152,46 @@
                 "ru": "Ограничение по интегрированию"
             },
             "type": "float",
+            "defaultValue": 30.0,
+            "unitMeasured": ""
+        },
+        {   "name": "PitchLimitAccum",
+            "displayName": {
+                "en": "Pitch, limit for accumulator type output",
+                "ru": "Pitch, ограничение по выходу для режима с накоплением "
+            },
+            "description": {
+                "ru": "Pitch, ограничение по выходу для режима с накоплением "
+            },
+            "type": "float",
             "defaultValue": 0.0,
             "unitMeasured": ""
         },
-        {
-            "name": "YawKp",
+        {   "name": "PitchFilteredAlfa",
+            "displayName": {
+                "en": "Pitch Filtered Alfa",
+                "ru": "Pitch Filtered Alfa"
+            },
+            "description": {
+                "ru": "Alfa коэффициент фильтации по входу"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {   "name": "YawDeadband",
+            "displayName": {
+                "en": "Yaw deadband",
+                "ru": "Yaw зона нечувствительности"
+            },
+            "description": {
+                "ru": "Yaw зона нечувствительности"
+            },
+            "type": "float",
+            "defaultValue": 0.5,
+            "unitMeasured": ""
+        },
+        {   "name": "YawKp",
             "displayName": {
                 "en": "Yaw Kp",
                 "ru": "Yaw Kp"
@@ -125,11 +200,10 @@
                 "ru": "Коэффициент пропорциональности"
             },
             "type": "float",
-            "defaultValue": 0.5,
+            "defaultValue": 8.0,
             "unitMeasured": ""
         },
-        {
-            "name": "YawKi",
+        {   "name": "YawKi",
             "displayName": {
                 "en": "Yaw Ki",
                 "ru": "Yaw Ki"
@@ -138,11 +212,10 @@
                 "ru": "Коэффициент интегрирования"
             },
             "type": "float",
-            "defaultValue": 0.0,
+            "defaultValue": 8.0,
             "unitMeasured": ""
         },
-        {
-            "name": "YawKd",
+        {   "name": "YawKd",
             "displayName": {
                 "en": "Yaw Kd",
                 "ru": "Yaw Kd"
@@ -154,14 +227,37 @@
             "defaultValue": 0.0,
             "unitMeasured": ""
         },
-        {
-            "name": "YawLimit",
+        {   "name": "YawLimit",
             "displayName": {
                 "en": "YawLimit",
                 "ru": "YawLimit"
             },
             "description": {
                 "ru": "Ограничение по интегрированию"
+            },
+            "type": "float",
+            "defaultValue": 30.0,
+            "unitMeasured": ""
+        },
+        {   "name": "YawLimitAccum",
+            "displayName": {
+                "en": "Yaw, limit for accumulator type output",
+                "ru": "Yaw, ограничение по выходу для режима с накоплением "
+            },
+            "description": {
+                "ru": "Yaw, ограничение по выходу для режима с накоплением "
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {   "name": "YawFilteredAlfa",
+            "displayName": {
+                "en": "Yaw Filtered Alfa",
+                "ru": "Yaw Filtered Alfa"
+            },
+            "description": {
+                "ru": "Alfa коэффициент фильтации по входу"
             },
             "type": "float",
             "defaultValue": 0.0,

@@ -40,6 +40,12 @@ void zeroPID(pidParams_t *p)
     p->lastError    = 0.0f;
 }
 
+double filtered(pidParams_t *p, double ferr, double err)
+{
+    // Фильтрация данных
+    return ferr * p->filteredAlfa + err * (1.0d - p->filteredAlfa);
+}
+
 /*
 void setKp(double Kp)
 {
