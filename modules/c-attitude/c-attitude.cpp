@@ -35,8 +35,8 @@ void CAttitude::run(module_c_attitude_t *module)
     // Указатель на структуру с входными данными модуля.
     input_t* input;
 
-    long last_print_time = (long)rt_timer_read();
-    long print_period = rt_timer_ns2ticks(1000000000);
+    SRTIME last_print_time = (SRTIME)rt_timer_read();
+    SRTIME print_period = rt_timer_ns2ticks(1000000000);
 
     static SRTIME  timeTick, timeTickold;
     timeTickold = timeTick = (SRTIME)rt_timer_read();
