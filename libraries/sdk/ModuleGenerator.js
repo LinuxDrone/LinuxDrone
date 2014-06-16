@@ -306,9 +306,9 @@ function Create_H_file(module) {
 
     // Формирование объявлений функций
     r += "\n// Helper functions\n";
-    r += "module_" + module_type + "_t* " + module_type + "_create();\n";
+    r += "module_" + module_type + "_t* " + module_type + "_create(void *handle);\n";
     r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len);\n";
-    r += "int " + module_type + "_start();\n";
+    r += "int " + module_type + "_start(module_" + module_type + "_t* module);\n";
     r += "void " + module_type + "_delete(module_" + module_type + "_t* module);\n\n";
 
     if ('paramsDefinitions' in module) {
@@ -326,6 +326,13 @@ function Create_H_file(module) {
     r += "* @return\n";
     r += "*/\n";
     r += "int checkin_params_" + module_type + "(module_t* module);\n\n";
+        if (module.outputs) {
+            module.outputs.forEach(function (out) {
+                var outName = out.name.replace(/\+/g, "");
+                r += "int checkout_" + outName + "(module_" + module_type + "_t* module, " + outName + "_t** obj);\n";
+                r += "int checkin_" + outName + "(module_" + module_type + "_t* module, " + outName + "_t** obj);\n\n";
+            });
+        }
     }
 
 
@@ -344,6 +351,8 @@ function Create_C_file(module) {
 
     module_type = module_type.replace(/-/g, "_");
 
+    r += "int checkout4writer(module_t* module, out_object_t* set, void** obj);\n";
+    r += "int checkin4writer(module_t* module, out_object_t* set, void** obj);\n\n";
     r += "// количество типов выходных объектов\n";
     if (module.outputs) {
         r += "#define count_outs " + module.outputs.length + "\n\n";
@@ -537,7 +546,7 @@ function Create_C_file(module) {
             r += "*/\n";
             r += "int checkout_" + outName + "(module_" + module_type + "_t* module, " + outName + "_t** obj)\n";
             r += "{\n";
-            r += "    return checkout4writer(module, &module->" + outName + ", obj);\n";
+            r += "\treturn checkout4writer(&module->module_info, &module->" + outName + ", (void**)obj);\n";
             r += "}\n\n";
 
 
@@ -549,7 +558,7 @@ function Create_C_file(module) {
             r += "*/\n";
             r += "int checkin_" + outName + "(module_" + module_type + "_t* module, " + outName + "_t** obj)\n";
             r += "{\n";
-            r += "    return checkin4writer(module, &module->" + outName + ", obj);\n";
+            r += "\treturn checkin4writer(&module->module_info, &module->" + outName + ", (void**)obj);\n";
             r += "}\n\n";
         });
     }

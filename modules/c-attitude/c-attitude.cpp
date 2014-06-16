@@ -13,6 +13,7 @@
 // license: http://creativecommons.org/licenses/by-sa/4.0/
 //--------------------------------------------------------------------
 
+#include <native/timer.h>
 #include "c-attitude.h"
 #include "c-attitude.helper.h"
 #include "quaternion-functions.h"
