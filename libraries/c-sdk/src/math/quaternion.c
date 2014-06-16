@@ -12,6 +12,7 @@
 
 #include <math.h>
 #include "../../include/math/quaternion.h"
+
 #ifdef __ARM_NEON__
 #include <arm_neon.h>
 #endif // __ARM_NEON__

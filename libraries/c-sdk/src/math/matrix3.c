@@ -18,26 +18,24 @@
 #endif
 
 const MATRIX3 matrix3Identity = {1.0f, 0.0f, 0.0f,
-                                 0.0f, 1.0f, 0.0f,
-                                 0.0f, 0.0f, 1.0f};
+        0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 1.0f};
 
 MATRIX3 matrix3Make(float m00, float m01, float m02,
-                    float m10, float m11, float m12,
-                    float m20, float m21, float m22)
-{
+        float m10, float m11, float m12,
+        float m20, float m21, float m22) {
     MATRIX3 m = {m00, m01, m02,
-                m10, m11, m12,
-                m20, m21, m22};
+            m10, m11, m12,
+            m20, m21, m22};
     return m;
 }
 
 MATRIX3 matrix3MakeAndTranspose(float m00, float m01, float m02,
-                                float m10, float m11, float m12,
-                                float m20, float m21, float m22)
-{
+        float m10, float m11, float m12,
+        float m20, float m21, float m22) {
     MATRIX3 m = {m00, m10, m20,
-                m01, m11, m21,
-                m02, m12, m22};
+            m01, m11, m21,
+            m02, m12, m22};
     return m;
 }
 
@@ -50,27 +48,26 @@ MATRIX3 matrix3MakeWithArray(float values[9]) {
 
 MATRIX3 matrix3MakeWithArrayAndTranspose(float values[9]) {
     MATRIX3 result = {values[0], values[3], values[6],
-                    values[1], values[4], values[7],
-                    values[2], values[5], values[8]};
+            values[1], values[4], values[7],
+            values[2], values[5], values[8]};
     return result;
 }
 
 MATRIX3 matrix3MakeWihColumns(VECTOR3 column0, VECTOR3 column1, VECTOR3 column2) {
     MATRIX3 result = {column0.v[0], column0.v[1], column0.v[2],
-                      column1.v[0], column1.v[1], column1.v[2],
-                      column2.v[0], column2.v[1], column2.v[2],};
+            column1.v[0], column1.v[1], column1.v[2],
+            column2.v[0], column2.v[1], column2.v[2],};
     return result;
 }
 
 MATRIX3 matrix3MakeWihRows(VECTOR3 row0, VECTOR3 row1, VECTOR3 row2) {
     MATRIX3 result = {row0.v[0], row1.v[0], row2.v[0],
-                      row0.v[1], row1.v[1], row2.v[1],
-                      row0.v[2], row1.v[2], row2.v[2]};
+            row0.v[1], row1.v[1], row2.v[1],
+            row0.v[2], row1.v[2], row2.v[2]};
     return result;
 }
 
-MATRIX3 matrix3MakeWithQuaternion(QUATERNION q)
-{
+MATRIX3 matrix3MakeWithQuaternion(QUATERNION q) {
     q = quaternionNormalize(q);
 
     float x = q.q[0];
@@ -83,7 +80,7 @@ MATRIX3 matrix3MakeWithQuaternion(QUATERNION q)
     float _2z = z + z;
     float _2w = w + w;
 
-    MATRIX3 m = { 1.0f - _2y * y - _2z * z,
+    MATRIX3 m = {1.0f - _2y * y - _2z * z,
             _2x * y + _2w * z,
             _2x * z - _2w * y,
 
@@ -93,13 +90,12 @@ MATRIX3 matrix3MakeWithQuaternion(QUATERNION q)
 
             _2x * z + _2w * y,
             _2y * z - _2w * x,
-            1.0f - _2x * x - _2y * y };
+            1.0f - _2x * x - _2y * y};
 
     return m;
 }
 
-MATRIX3 matrix3MakeScale(float sx, float sy, float sz)
-{
+MATRIX3 matrix3MakeScale(float sx, float sy, float sz) {
     MATRIX3 m = matrix3Identity;
     m.m[0] = sx;
     m.m[4] = sy;
@@ -113,7 +109,7 @@ MATRIX3 matrix3MakeRotation(float radians, float x, float y, float z) {
     float cosp = 1.0f - cos;
     float sin = sinf(radians);
 
-    MATRIX3 m = { cos + cosp * v.v[0] * v.v[0],
+    MATRIX3 m = {cos + cosp * v.v[0] * v.v[0],
             cosp * v.v[0] * v.v[1] + v.v[2] * sin,
             cosp * v.v[0] * v.v[2] - v.v[1] * sin,
 
@@ -123,7 +119,7 @@ MATRIX3 matrix3MakeRotation(float radians, float x, float y, float z) {
 
             cosp * v.v[0] * v.v[2] + v.v[1] * sin,
             cosp * v.v[1] * v.v[2] - v.v[0] * sin,
-            cos + cosp * v.v[2] * v.v[2] };
+            cos + cosp * v.v[2] * v.v[2]};
 
     return m;
 }
@@ -132,9 +128,9 @@ MATRIX3 matrix3MakeXRotation(float radians) {
     float cos = cosf(radians);
     float sin = sinf(radians);
 
-    MATRIX3 m = { 1.0f, 0.0f, 0.0f,
+    MATRIX3 m = {1.0f, 0.0f, 0.0f,
             0.0f, cos, sin,
-            0.0f, -sin, cos };
+            0.0f, -sin, cos};
 
     return m;
 }
@@ -143,9 +139,9 @@ MATRIX3 matrix3MakeYRotation(float radians) {
     float cos = cosf(radians);
     float sin = sinf(radians);
 
-    MATRIX3 m = { cos, 0.0f, -sin,
+    MATRIX3 m = {cos, 0.0f, -sin,
             0.0f, 1.0f, 0.0f,
-            sin, 0.0f, cos };
+            sin, 0.0f, cos};
 
     return m;
 }
@@ -154,9 +150,9 @@ MATRIX3 matrix3MakeZRotation(float radians) {
     float cos = cosf(radians);
     float sin = sinf(radians);
 
-    MATRIX3 m = { cos, sin, 0.0f,
+    MATRIX3 m = {cos, sin, 0.0f,
             -sin, cos, 0.0f,
-            0.0f, 0.0f, 1.0f };
+            0.0f, 0.0f, 1.0f};
 
     return m;
 }
@@ -169,7 +165,7 @@ MATRIX3 matrix3SetColumn(MATRIX3 matrix, int column, VECTOR3 vector) {
 }
 
 VECTOR3 matrix3GetColumn(MATRIX3 matrix, int column) {
-    VECTOR3 result = { matrix.m[column * 3 + 0], matrix.m[column * 3 + 1], matrix.m[column * 3 + 2] };
+    VECTOR3 result = {matrix.m[column * 3 + 0], matrix.m[column * 3 + 1], matrix.m[column * 3 + 2]};
     return result;
 }
 
@@ -182,19 +178,18 @@ MATRIX3 matrix3SetRow(MATRIX3 matrix, int row, VECTOR3 vector) {
 }
 
 VECTOR3 matrix3GetRow(MATRIX3 matrix, int row) {
-    VECTOR3 result = { matrix.m[row], matrix.m[3 + row], matrix.m[6 + row] };
+    VECTOR3 result = {matrix.m[row], matrix.m[3 + row], matrix.m[6 + row]};
     return result;
 }
 
 MATRIX3 matrix3Transpose(MATRIX3 matrix) {
-    MATRIX3 m = { matrix.m[0], matrix.m[3], matrix.m[6],
+    MATRIX3 m = {matrix.m[0], matrix.m[3], matrix.m[6],
             matrix.m[1], matrix.m[4], matrix.m[7],
-            matrix.m[2], matrix.m[5], matrix.m[8] };
+            matrix.m[2], matrix.m[5], matrix.m[8]};
     return m;
 }
 
-MATRIX3 matrix3Multiply(MATRIX3 matrixLeft, MATRIX3 matrixRight)
-{
+MATRIX3 matrix3Multiply(MATRIX3 matrixLeft, MATRIX3 matrixRight) {
 #if defined(__ARM_NEON__)
     MATRIX3 m;
     float32x4x3_t iMatrixLeft;
@@ -338,23 +333,23 @@ MATRIX3 matrix3Subtract(MATRIX3 matrixLeft, MATRIX3 matrixRight) {
 }
 
 MATRIX3 matrix3Scale(MATRIX3 matrix, float sx, float sy, float sz) {
-    MATRIX3 m = { matrix.m[0] * sx, matrix.m[1] * sx, matrix.m[2] * sx,
+    MATRIX3 m = {matrix.m[0] * sx, matrix.m[1] * sx, matrix.m[2] * sx,
             matrix.m[3] * sy, matrix.m[4] * sy, matrix.m[5] * sy,
-            matrix.m[6] * sz, matrix.m[7] * sz, matrix.m[8] * sz };
+            matrix.m[6] * sz, matrix.m[7] * sz, matrix.m[8] * sz};
     return m;
 }
 
 MATRIX3 matrix3ScaleWithVector3(MATRIX3 matrix, VECTOR3 scaleVector) {
-    MATRIX3 m = { matrix.m[0] * scaleVector.v[0], matrix.m[1] * scaleVector.v[0], matrix.m[2] * scaleVector.v[0],
+    MATRIX3 m = {matrix.m[0] * scaleVector.v[0], matrix.m[1] * scaleVector.v[0], matrix.m[2] * scaleVector.v[0],
             matrix.m[3] * scaleVector.v[1], matrix.m[4] * scaleVector.v[1], matrix.m[5] * scaleVector.v[1],
-            matrix.m[6] * scaleVector.v[2], matrix.m[7] * scaleVector.v[2], matrix.m[8] * scaleVector.v[2] };
+            matrix.m[6] * scaleVector.v[2], matrix.m[7] * scaleVector.v[2], matrix.m[8] * scaleVector.v[2]};
     return m;
 }
 
 MATRIX3 matrix3ScaleWithVector4(MATRIX3 matrix, VECTOR4 scaleVector) {
-    MATRIX3 m = { matrix.m[0] * scaleVector.v[0], matrix.m[1] * scaleVector.v[0], matrix.m[2] * scaleVector.v[0],
+    MATRIX3 m = {matrix.m[0] * scaleVector.v[0], matrix.m[1] * scaleVector.v[0], matrix.m[2] * scaleVector.v[0],
             matrix.m[3] * scaleVector.v[1], matrix.m[4] * scaleVector.v[1], matrix.m[5] * scaleVector.v[1],
-            matrix.m[6] * scaleVector.v[2], matrix.m[7] * scaleVector.v[2], matrix.m[8] * scaleVector.v[2] };
+            matrix.m[6] * scaleVector.v[2], matrix.m[7] * scaleVector.v[2], matrix.m[8] * scaleVector.v[2]};
     return m;
 }
 
@@ -389,8 +384,8 @@ MATRIX3 matrix3RotateZ(MATRIX3 matrix, float radians) {
 }
 
 VECTOR3 matrix3MultiplyVector3(MATRIX3 matrixLeft, VECTOR3 vectorRight) {
-    VECTOR3 v = { matrixLeft.m[0] * vectorRight.v[0] + matrixLeft.m[3] * vectorRight.v[1] + matrixLeft.m[6] * vectorRight.v[2],
+    VECTOR3 v = {matrixLeft.m[0] * vectorRight.v[0] + matrixLeft.m[3] * vectorRight.v[1] + matrixLeft.m[6] * vectorRight.v[2],
             matrixLeft.m[1] * vectorRight.v[0] + matrixLeft.m[4] * vectorRight.v[1] + matrixLeft.m[7] * vectorRight.v[2],
-            matrixLeft.m[2] * vectorRight.v[0] + matrixLeft.m[5] * vectorRight.v[1] + matrixLeft.m[8] * vectorRight.v[2] };
+            matrixLeft.m[2] * vectorRight.v[0] + matrixLeft.m[5] * vectorRight.v[1] + matrixLeft.m[8] * vectorRight.v[2]};
     return v;
 }

@@ -26,6 +26,18 @@ VECTOR3 vector3Make(float x, float y, float z);
 float vector3Length(VECTOR3 vector);
 VECTOR3 vector3Normalize(VECTOR3 v);
 
+VECTOR3 vector3Add(VECTOR3 vectorLeft, VECTOR3 vectorRight);
+VECTOR3 vector3Subtract(VECTOR3 vectorLeft, VECTOR3 vectorRight);
+VECTOR3 vector3Multiply(VECTOR3 vectorLeft, VECTOR3 vectorRight);
+VECTOR3 vector3Divide(VECTOR3 vectorLeft, VECTOR3 vectorRight);
+
+VECTOR3 vector3AddScalar(VECTOR3 vector, float value);
+VECTOR3 vector3SubtractScalar(VECTOR3 vector, float value);
+VECTOR3 vector3MultiplyScalar(VECTOR3 vector, float value);
+VECTOR3 vector3DivideScalar(VECTOR3 vector, float value);
+
+VECTOR3 vector3CrossProduct(VECTOR3 vectorLeft, VECTOR3 vectorRight);
+
 #ifdef __cplusplus
 }
 #endif
