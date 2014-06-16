@@ -28,21 +28,19 @@
 #define RAD2DEG_D(rad)          ((rad) * (180.0d / M_PI_D))
 #define DEG2RAD_D(deg)          ((deg) * (M_PI_D / 180.0d))
 
-
 // ****** find roll, pitch, yaw from quaternion ********
-void Quaternion2RPY(const float q[4], float rpy[3])
-{
+void Quaternion2RPY(const float q[4], float rpy[3]) {
     float R13, R11, R12, R23, R33;
     float q0s = q[0] * q[0];
     float q1s = q[1] * q[1];
     float q2s = q[2] * q[2];
     float q3s = q[3] * q[3];
 
-    R13    = 2.0f * (q[1] * q[3] - q[0] * q[2]);
-    R11    = q0s + q1s - q2s - q3s;
-    R12    = 2.0f * (q[1] * q[2] + q[0] * q[3]);
-    R23    = 2.0f * (q[2] * q[3] + q[0] * q[1]);
-    R33    = q0s - q1s - q2s + q3s;
+    R13 = 2.0f * (q[1] * q[3] - q[0] * q[2]);
+    R11 = q0s + q1s - q2s - q3s;
+    R12 = 2.0f * (q[1] * q[2] + q[0] * q[3]);
+    R23 = 2.0f * (q[2] * q[3] + q[0] * q[1]);
+    R33 = q0s - q1s - q2s + q3s;
 
     rpy[1] = RAD2DEG(asinf(-R13)); // pitch always between -pi/2 to pi/2
     rpy[2] = RAD2DEG(atan2f(R12, R11));
@@ -52,25 +50,24 @@ void Quaternion2RPY(const float q[4], float rpy[3])
 }
 
 // ****** find quaternion from roll, pitch, yaw ********
-void RPY2Quaternion(const float rpy[3], float q[4])
-{
+void RPY2Quaternion(const float rpy[3], float q[4]) {
     float phi, theta, psi;
     float cphi, sphi, ctheta, stheta, cpsi, spsi;
 
-    phi    = DEG2RAD(rpy[0] / 2);
-    theta  = DEG2RAD(rpy[1] / 2);
-    psi    = DEG2RAD(rpy[2] / 2);
-    cphi   = cosf(phi);
-    sphi   = sinf(phi);
+    phi = DEG2RAD(rpy[0] / 2);
+    theta = DEG2RAD(rpy[1] / 2);
+    psi = DEG2RAD(rpy[2] / 2);
+    cphi = cosf(phi);
+    sphi = sinf(phi);
     ctheta = cosf(theta);
     stheta = sinf(theta);
-    cpsi   = cosf(psi);
-    spsi   = sinf(psi);
+    cpsi = cosf(psi);
+    spsi = sinf(psi);
 
-    q[0]   = cphi * ctheta * cpsi + sphi * stheta * spsi;
-    q[1]   = sphi * ctheta * cpsi - cphi * stheta * spsi;
-    q[2]   = cphi * stheta * cpsi + sphi * ctheta * spsi;
-    q[3]   = cphi * ctheta * spsi - sphi * stheta * cpsi;
+    q[0] = cphi * ctheta * cpsi + sphi * stheta * spsi;
+    q[1] = sphi * ctheta * cpsi - cphi * stheta * spsi;
+    q[2] = cphi * stheta * cpsi + sphi * ctheta * spsi;
+    q[3] = cphi * ctheta * spsi - sphi * stheta * cpsi;
 
     if (q[0] < 0) { // q0 always positive for uniqueness
         q[0] = -q[0];
@@ -81,8 +78,7 @@ void RPY2Quaternion(const float rpy[3], float q[4])
 }
 
 // ** Find Rbe, that rotates a vector from earth fixed to body frame, from quaternion **
-void Quaternion2R(float q[4], float Rbe[3][3])
-{
+void Quaternion2R(float q[4], float Rbe[3][3]) {
     float q0s = q[0] * q[0], q1s = q[1] * q[1], q2s = q[2] * q[2], q3s = q[3] * q[3];
 
     Rbe[0][0] = q0s + q1s - q2s - q3s;
@@ -98,22 +94,21 @@ void Quaternion2R(float q[4], float Rbe[3][3])
 
 // ****** convert Rotation Matrix to Quaternion ********
 // ****** if R converts from e to b, q is rotation from e to b ****
-void R2Quaternion(float R[3][3], float q[4])
-{
+void R2Quaternion(float R[3][3], float q[4]) {
     float m[4], mag;
     uint8_t index, i;
 
-    m[0]  = 1 + R[0][0] + R[1][1] + R[2][2];
-    m[1]  = 1 + R[0][0] - R[1][1] - R[2][2];
-    m[2]  = 1 - R[0][0] + R[1][1] - R[2][2];
-    m[3]  = 1 - R[0][0] - R[1][1] + R[2][2];
+    m[0] = 1 + R[0][0] + R[1][1] + R[2][2];
+    m[1] = 1 + R[0][0] - R[1][1] - R[2][2];
+    m[2] = 1 - R[0][0] + R[1][1] - R[2][2];
+    m[3] = 1 - R[0][0] - R[1][1] + R[2][2];
 
     // find maximum divisor
     index = 0;
-    mag   = m[0];
+    mag = m[0];
     for (i = 1; i < 4; i++) {
         if (m[i] > mag) {
-            mag   = m[i];
+            mag = m[i];
             index = i;
         }
     }
@@ -153,8 +148,7 @@ void R2Quaternion(float R[3][3], float q[4])
 // ****** Rotation Matrix from Two Vector Directions ********
 // ****** given two vector directions (v1 and v2) known in two frames (b and e) find Rbe ***
 // ****** solution is approximate if can't be exact ***
-uint8_t RotFrom2Vectors(const float v1b[3], const float v1e[3], const float v2b[3], const float v2e[3], float Rbe[3][3])
-{
+uint8_t RotFrom2Vectors(const float v1b[3], const float v1e[3], const float v2b[3], const float v2e[3], float Rbe[3][3]) {
     float Rib[3][3], Rie[3][3];
     float mag;
     uint8_t i, j, k;
@@ -220,8 +214,7 @@ uint8_t RotFrom2Vectors(const float v1b[3], const float v1e[3], const float v2b[
     return 1;
 }
 
-void Rv2Rot(float Rv[3], float R[3][3])
-{
+void Rv2Rot(float Rv[3], float R[3][3]) {
     // Compute rotation matrix from a rotation vector
     // To save .text space, uses Quaternion2R()
     float q[4];
@@ -249,19 +242,16 @@ void Rv2Rot(float Rv[3], float R[3][3])
 }
 
 // ****** Vector Cross Product ********
-void CrossProduct(const float v1[3], const float v2[3], float result[3])
-{
+void CrossProduct(const float v1[3], const float v2[3], float result[3]) {
     result[0] = v1[1] * v2[2] - v2[1] * v1[2];
     result[1] = v2[0] * v1[2] - v1[0] * v2[2];
     result[2] = v1[0] * v2[1] - v2[0] * v1[1];
 }
 
 // ****** Vector Magnitude ********
-float VectorMagnitude(const float v[3])
-{
+float VectorMagnitude(const float v[3]) {
     return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
-
 /**
  * @brief Compute the inverse of a quaternion
  * @param [in][out] q The matrix to invert
@@ -272,7 +262,6 @@ void quat_inverse(float q[4])
     q[2] = -q[2];
     q[3] = -q[3];
 }
-
 /**
  * @brief Duplicate a quaternion
  * @param[in] q quaternion in
@@ -285,7 +274,6 @@ void quat_copy(const float q[4], float qnew[4])
     qnew[2] = q[2];
     qnew[3] = q[3];
 }
-
 /**
  * @brief Multiply two quaternions into a third
  * @param[in] q1 First quaternion
@@ -299,7 +287,6 @@ void quat_mult(const float q1[4], const float q2[4], float qout[4])
     qout[2] = q1[0] * q2[2] - q1[1] * q2[3] + q1[2] * q2[0] + q1[3] * q2[1];
     qout[3] = q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0];
 }
-
 /**
  * @brief Rotate a vector by a rotation matrix
  * @param[in] R a three by three rotation matrix (first index is row)

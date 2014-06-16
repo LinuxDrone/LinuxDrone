@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "c-attitude.helper.h"
 
 enum TrimFlight {TRIMFLIGHT_START,TRIMFLIGHT_LOAD,TRIMFLIGHT_NORMAL};
 
@@ -12,12 +13,15 @@ enum TrimFlight {TRIMFLIGHT_START,TRIMFLIGHT_LOAD,TRIMFLIGHT_NORMAL};
 // Время на калибровку гироскопов после запуска, в секундах
 #define TIMESTART       7.0f
 
-/**
- * @brief Структура данных с параметрами модуля
- */
-
-typedef struct attitude_data
+class CAttitude
 {
+public:
+    CAttitude();
+    ~CAttitude();
+
+    void run(module_c_attitude_t *module);
+
+private:
     float rpy[3];
     float accels[3], gyros[3];
 
@@ -53,4 +57,12 @@ typedef struct attitude_data
     volatile int32_t trim_accels[3];
     volatile int32_t trim_samples;
 
-} attitude_data_t;
+    bool printEnable;
+
+    void init();
+    void settingsLoad(params_c_attitude_t *params);
+    void rotateBoard();
+    void correctBias();
+    void accelFilter(const float *raw, float *filtered);
+    void calcAttitude();
+};
