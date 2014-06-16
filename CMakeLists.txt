@@ -185,6 +185,7 @@ add_subdirectory(${MOD_DIR}/c-pid)
 #add_subdirectory(${MOD_DIR}/SerialGps)
 add_subdirectory(${MOD_DIR}/c-bmp180)
 add_subdirectory(${MOD_DIR}/c-attitude)
+add_subdirectory(${MOD_DIR}/c-generator)
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 

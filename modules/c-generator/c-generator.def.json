@@ -1,0 +1,144 @@
+{
+    "type": "module_def",
+    "name": "c-generator",
+    "version": 1,
+    "Task Priority": 80,
+    "Task Period": 100,
+    "Transfer task period": 200000,
+    "Notify on change": false,
+    "description": {
+        "en": "One signal generator",
+        "ru": "Одноканальный генератор сигнала"
+    },
+    "paramsDefinitions": [
+        {   "name": "enState",
+            "displayName": {
+                "en": "Enable state signal generator"
+            },
+            "description": {
+                "en": "Enable state signal generator",
+                "ru": "Включение генерации меандра"
+            },
+            "type": "bool",
+            "defaultValue": true,
+            "unitMeasured": "true, false"
+        },
+        {   "name": "enMeander",
+            "displayName": {
+                "en": "Enable meander signal generator"
+            },
+            "description": {
+                "en": "Enable meander signal generator",
+                "ru": "Включение генерации меандра"
+            },
+            "type": "bool",
+            "defaultValue": false,
+            "unitMeasured": "true, false"
+        },
+        {   "name": "enSine",
+            "displayName": {
+                "en": "Enable sine signal generator"
+            },
+            "description": {
+                "en": "Enable sine signal generator",
+                "ru": "Включение генерации синусоидального сигнала"
+            },
+            "type": "bool",
+            "defaultValue": false,
+            "unitMeasured": "true, false"
+        },
+        {   "name": "period",
+            "displayName": {
+                "en": "Period signal generator"
+            },
+            "description": {
+                "en": "Period  signal generator",
+                "ru": "Период генерируемого сигнала"
+            },
+            "type": "float",
+            "defaultValue": 1000000,
+            "unitMeasured": "us"
+        },
+        {   "name": "dutyCycle",
+            "displayName": {
+                "en": "Duty cycle  signal generator"
+            },
+            "description": {
+                "en": "Duty cycle  signal generator",
+                "ru": "Скважность генерируемого сигнала"
+            },
+            "type": "float",
+            "defaultValue": 50.0,
+            "unitMeasured": "%"
+        },
+        {   "name": "stateData",
+            "displayName": {
+                "en": "Data static signal generator"
+            },
+            "description": {
+                "en": "Data  static signal generator",
+                "ru": "Значение статически генерируемого сигнала"
+            },
+            "type": "float",
+            "defaultValue": 1.0,
+            "unitMeasured": ""
+        },
+        {   "name": "RangeLow",
+            "displayName": {
+                "en": "Output range Low "
+            },
+            "description": {
+                "en": "Output range Low",
+                "ru": "нижняя граница диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": -90.0,
+            "unitMeasured": ""
+        },
+        {   "name": "RangeCenter",
+            "displayName": {
+                "en": "Output range сenter",
+                "ru": "Середина диапазона выходного сигнала"
+            },
+            "description": {
+                "en": "Output range сenter",
+                "ru": "Середина диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 0,
+            "unitMeasured": ""
+        },
+        {   "name": "RangeHigh",
+            "displayName": {
+                "en": "Output range high",
+                "ru": "Верхняя граница диапазона выходного сигнала"
+            },
+            "description": {
+                "en": "Output range high",
+                "ru": "Верхняя граница диапазона выходного сигнала"
+            },
+            "type": "float",
+            "defaultValue": 90,
+            "unitMeasured": ""
+        }
+    ],
+    "outputs": [
+        {
+            "name": "outGen",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "pos": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "inv": {
+                        "type": "float",
+                        "required": true
+                    }
+                }
+            }
+        }
+    ]
+}
