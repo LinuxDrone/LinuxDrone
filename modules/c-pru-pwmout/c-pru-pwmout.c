@@ -20,7 +20,6 @@ void setChannelPulseWidth(uint8_t *m_sharedMem, int channel, uint32_t pw);
 
 void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
 {
-    int cycle=0;
     // Указатель на структуру с входными данными модуля.
     input_t* input;
     // Указатель на обслуживающую структуру блока PRU
@@ -29,11 +28,16 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
 
     uint32_t m_pwm[12];
     uint32_t m_period[12];
+
     uint8_t *m_sharedMem;
     char *pathBin = "/usr/local/linuxdrone/modules/c-pru-pwmout/pru-pwmout.bin";
+
     // true если инициализация модуля прошла успешно
     bool     bPruInit = false;
     int i;
+
+    memset(m_period, 0, sizeof(uint32_t)*12);
+    memset(m_pwm, 0, sizeof(uint32_t)*12);
 
     long last_print_time = rt_timer_read();
     long print_period = rt_timer_ns2ticks(1000000000);
@@ -76,36 +80,26 @@ void c_pru_pwmout_run (module_c_pru_pwmout_t *module)
             m_pwm[10] = (uint32_t)input->ch11;
             m_pwm[11] = (uint32_t)input->ch12;
 
+
+            for(i=0;i<12;i++) {
+                // Проверка входных данных на диапазон
+                if(m_pwm[i]<1000) m_pwm[i] = 1000;
+                if(m_pwm[i]>2000) m_pwm[i] = 2000;
+
+                // Обновление данных периода шим в блоке PRU
+                setChannelPulseWidth(m_sharedMem,i,m_pwm[i]);
+            }
         }
         else
         {
             // вышел таймаут
         }
 
-        for(i=0;i<12;i++) {
-            // Проверка входных данных на диапазон
-            if(m_pwm[i]<1000) m_pwm[i] = 1000;
-            if(m_pwm[i]>2000) m_pwm[i] = 2000;
-            // Обновление данных периода шим в блоке PRU
-            setChannelPulseWidth(m_sharedMem,i,m_pwm[i]);
-        }
 
         // Эти данные следует добыть из разделяемой памяти, если они не придут через трубу
-        module->module_info.refresh_input_mask =
-                ch1  |
-                ch2  |
-                ch3  |
-                ch4  |
-                ch5  |
-                ch6  |
-                ch7  |
-                ch8  |
-                ch9  |
-                ch10 |
-                ch11 |
-                ch12;
+        //module->module_info.refresh_input_mask =
+                //ch1  |  ch2  | ch3  | ch4  | ch5  | ch6  | ch7  | ch8  | ch9  | ch10 | ch11 | ch12;
 
-        cycle++;
     }
 }
 
