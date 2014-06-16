@@ -35,7 +35,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET sdk
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-sdk.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/lib/libc-sdk.so
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libsdk.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/lib/libsdk.so
     )
 ENDIF()
 
