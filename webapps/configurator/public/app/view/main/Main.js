@@ -24,19 +24,21 @@ Ext.define('RtConfigurator.view.main.Main', {
     },
 
     items: [{
-        xtype: 'panel',
+        xtype: 'grid',
         bind: {
             title: '{name}'
         },
+        store: 'StoreMetaModules',
+        columns: [
+            { text: 'Module',  dataIndex: 'name' }
+        ],
         region: 'west',
-        html: '<ul><li>This area is commonly used for navigation, for example, using a "tree" component.</li></ul>',
         width: 250,
         split: true,
         tbar: [{
             text: 'Button',
             handler: 'onClickButton'
         }]
-
     },{
         region: 'center',
         xtype: 'tabpanel',
