@@ -44,6 +44,14 @@ Ext.define('RtConfigurator.view.main.Main', {
             title: 'Tab 1',
             html: '<h2>Content appropriate for the current navigation.</h2>'
         },{
+            title: 'List',
+            xtype: 'multiselect',
+            fieldLabel: 'Choose State',
+            store: 'StoreMetaModules',
+            //queryMode: 'local',
+            displayField: 'name'//,
+            //valueField: 'abbr',
+        },{
             xtype: 'svgpanel',
             title: 'SVG'
         }]

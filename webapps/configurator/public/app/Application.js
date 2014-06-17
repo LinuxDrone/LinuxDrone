@@ -18,10 +18,11 @@ Ext.define('RtConfigurator.Application', {
     ],
 
     stores: [
-        // TODO: add stores here
+        'StoreMetaModules'
     ],
     
     launch: function () {
         // TODO - Launch the application
+        //var store = Ext.data.StoreManager.lookup('StoreMetaModules');
     }
 });
