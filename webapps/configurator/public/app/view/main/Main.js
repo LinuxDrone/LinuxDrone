@@ -30,7 +30,32 @@ Ext.define('RtConfigurator.view.main.Main', {
         },
         store: 'StoreMetaModules',
         columns: [
-            { text: 'Module',  dataIndex: 'name' }
+            { text: 'Module',  dataIndex: 'name' },
+            {
+                xtype:'actioncolumn',
+                align:'right',
+
+                items: [{
+                    icon: 'images/information.png',
+                    tooltip: 'About module',
+                    handler: function(grid, rowIndex, colIndex) {
+                        var rec = grid.getStore().getAt(rowIndex);
+                        Ext.Msg.alert('Module description', rec.get('description').en);
+                    },
+                    getClass: function(v, metadata, r, rowIndex, colIndex, store) {
+                        if(r.data.description == undefined) {
+                            return " x-hidden";
+                        }
+                    }
+                },{
+                    icon: 'images/add.png',
+                    tooltip: 'Add to scheme',
+                    handler: function(grid, rowIndex, colIndex) {
+                        var rec = grid.getStore().getAt(rowIndex);
+                        alert("Soon");
+                    }
+                }]
+            }
         ],
         region: 'west',
         width: 250,
