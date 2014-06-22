@@ -30,10 +30,11 @@ Ext.define('RtConfigurator.view.main.Main', {
         },
         store: 'StoreMetaModules',
         columns: [
-            { text: 'Module',  dataIndex: 'name' },
+            { text: 'Module',  dataIndex: 'name', padding:5, width:'80%'},
             {
                 xtype:'actioncolumn',
                 align:'right',
+                width:40,
 
                 items: [{
                     icon: 'images/information.png',
@@ -52,7 +53,7 @@ Ext.define('RtConfigurator.view.main.Main', {
                     tooltip: 'Add to scheme',
                     handler: function(grid, rowIndex, colIndex) {
                         var rec = grid.getStore().getAt(rowIndex);
-                        alert("Soon");
+                        grid.ownerCt.ownerCt.controller.onAddModule2Scheme(rec.data);
                     }
                 }]
             }
@@ -71,16 +72,9 @@ Ext.define('RtConfigurator.view.main.Main', {
             title: 'Tab 1',
             html: '<h2>Content appropriate for the current navigation.</h2>'
         },{
-            title: 'List',
-            xtype: 'multiselect',
-            fieldLabel: 'Choose State',
-            store: 'StoreMetaModules',
-            //queryMode: 'local',
-            displayField: 'name'//,
-            //valueField: 'abbr',
-        },{
             xtype: 'svgpanel',
-            title: 'SVG'
+            title: 'Configuration',
+            reference: 'svgCanvas'
         }]
     }]
 });
