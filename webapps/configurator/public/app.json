@@ -110,26 +110,7 @@
         {
             "path": "app.js",
             "bundle": true
-        }/*,{
-            "path": "javascripts/joint/lib/jquery.js"
         }
-        ,{
-           "path": "javascripts/joint/lib/jquery.sortElements.js"
-        },{
-           "path": "javascripts/joint/lib/lodash.js"
-        },{
-            "path": "javascripts/joint/lib/backbone.js"
-        },{
-            "path": "javascripts/ld/admin.js"
-        },{
-            "path": "javascripts/joint/src/core.js"
-        },{
-            "path": "javascripts/joint/src/vectorizer.js"
-        },{
-            "path": "javascripts/joint/src/geometry.js"
-        },{
-            "path": "javascripts/joint/src/joint.dia.paper.js"
-        }*/
     ],
 
     /**

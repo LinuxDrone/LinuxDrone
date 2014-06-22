@@ -25,9 +25,11 @@ Ext.define('RtConfigurator.view.main.Main', {
 
     items: [{
         xtype: 'grid',
-        bind: {
+        /*bind: {
             title: '{name}'
-        },
+        },*/
+        title: 'Modules',
+        hideHeaders :true,
         store: 'StoreMetaModules',
         columns: [
             { text: 'Module',  dataIndex: 'name', padding:5, width:'80%'},
@@ -59,22 +61,37 @@ Ext.define('RtConfigurator.view.main.Main', {
             }
         ],
         region: 'west',
+        collapsible: true,
         width: 250,
-        split: true,
+        split: true/*,
         tbar: [{
             text: 'Button',
             handler: 'onClickButton'
-        }]
+        }]*/
     },{
         region: 'center',
         xtype: 'tabpanel',
         items:[{
             title: 'Tab 1',
             html: '<h2>Content appropriate for the current navigation.</h2>'
-        },{
-            xtype: 'svgpanel',
-            title: 'Configuration',
-            reference: 'svgCanvas'
-        }]
+        },
+            {
+                layout: 'border',
+                xtype: 'panel',
+                title: 'Configuration',
+                items:[{
+                    region: 'east',
+                    title: 'Properties',
+                    collapsible: true,
+                    width: 250,
+                    split: true,
+                    html: '<h2>properties will be here</h2>'
+                },{
+                    region: 'center',
+                    xtype: 'svgpanel',
+                    reference: 'svgCanvas'
+                }]
+            }
+        ]
     }]
 });

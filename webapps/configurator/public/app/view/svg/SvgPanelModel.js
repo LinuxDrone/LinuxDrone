@@ -8,7 +8,10 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
 
     graph: undefined,
 
-    paper: undefined
+    paper: undefined,
 
-    //store: 'MetamodulesStore'
+    store: 'schemasStore',
+
+    paperScaleX: 1,
+    paperScaleY: 1
 });

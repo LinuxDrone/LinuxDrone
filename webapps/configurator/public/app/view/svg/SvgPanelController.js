@@ -168,5 +168,19 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
             }
         }
         return moduleParams;
+    },
+
+    onClickZoomOut: function (b, e, eOpts ){
+        var model = this.view.getViewModel();
+        model.paperScaleX -= 0.1;
+        model.paperScaleY -= 0.1;
+        model.paper.scale(model.paperScaleX, model.paperScaleY);
+    },
+
+    onClickZoomIn: function (b, e, eOpts ){
+        var model = this.view.getViewModel();
+        model.paperScaleX += 0.1;
+        model.paperScaleY += 0.1;
+        model.paper.scale(model.paperScaleX, model.paperScaleY);
     }
 });
