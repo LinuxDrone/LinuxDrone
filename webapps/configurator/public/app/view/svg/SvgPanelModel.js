@@ -1,10 +1,14 @@
 /**
  * Created by vrubel on 22.06.14.
  */
-Ext.define('RtConfigurator.view.main.SvgPanelModel', {
+Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
     extend: 'Ext.app.ViewModel',
 
-    alias: 'viewmodel.svg'//,
+    alias: 'viewmodel.svg',
+
+    graph: undefined,
+
+    paper: undefined
 
     //store: 'MetamodulesStore'
 });

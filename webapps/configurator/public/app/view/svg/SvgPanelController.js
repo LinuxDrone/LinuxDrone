@@ -12,7 +12,8 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
 
 
     AddModule2Scheme: function(metaOfModule){
-        this.view.graph.addCell(this.MakeVisualModule(metaOfModule, this.view.graph));
+        var model = this.view.getViewModel();
+        model.graph.addCell(this.MakeVisualModule(metaOfModule, model.graph));
     },
 
     svgColors:{

@@ -13,7 +13,8 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
     alias: 'widget.svgpanel',
 
     requires: [
-        'RtConfigurator.view.svg.SvgPanelController'
+        'RtConfigurator.view.svg.SvgPanelController',
+        'RtConfigurator.view.svg.SvgPanelModel'
     ],
 
     viewModel: {
@@ -21,21 +22,19 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
     },
     controller: 'svg',
 
-    graph: undefined,
-
-    paper: undefined,
 
     afterRender: function() {
 
-        if(this.graph != undefined){
+        var model = this.getViewModel();
+        if(!model.graph){
             return;
         }
 
-        this.graph = new joint.dia.Graph;
+        model.graph = new joint.dia.Graph;
 
-        this.paper = new joint.dia.Paper({
+        model.paper = new joint.dia.Paper({
             el: this.el.dom,
-            model: this.graph,
+            model: model.graph,
             gridSize: 1,
             width: "100%",
             height: "99%"
@@ -55,7 +54,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
             target: { id: rect2.id }
         });
 
-        this.graph.addCells([rect, rect2, link]);
+        model.graph.addCells([rect, rect2, link]);
     }
 
 });
