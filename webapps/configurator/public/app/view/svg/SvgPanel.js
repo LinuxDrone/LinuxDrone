@@ -12,6 +12,15 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
     extend: 'Ext.Component',
     alias: 'widget.svgpanel',
 
+    requires: [
+        'RtConfigurator.view.svg.SvgPanelController'
+    ],
+
+    viewModel: {
+        type: 'svg'
+    },
+    controller: 'svg',
+
     graph: undefined,
 
     paper: undefined,

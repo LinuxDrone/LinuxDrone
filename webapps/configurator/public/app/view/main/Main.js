@@ -9,7 +9,7 @@ Ext.define('RtConfigurator.view.main.Main', {
     extend: 'Ext.container.Container',
 
     requires: [
-        'RtConfigurator.view.svg.SvgPanel',
+        'RtConfigurator.view.svg.SvgPanel'
     ],
 
     xtype: 'app-main',

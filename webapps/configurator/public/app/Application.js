@@ -14,7 +14,6 @@ Ext.define('RtConfigurator.Application', {
 
     controllers: [
         'Root'
-        // TODO: add controllers here
     ],
 
     stores: [

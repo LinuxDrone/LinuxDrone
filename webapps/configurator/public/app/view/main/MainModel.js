@@ -7,10 +7,4 @@ Ext.define('RtConfigurator.view.main.MainModel', {
     alias: 'viewmodel.main',
 
     store: 'MetamodulesStore'
-
-    //data: {
-      //  name: 'RtConfigurator'
-    //}
-
-    //TODO - add data, formulas and/or methods to support your view
 });
