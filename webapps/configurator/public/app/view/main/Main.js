@@ -78,6 +78,7 @@ Ext.define('RtConfigurator.view.main.Main', {
             {
                 layout: 'border',
                 xtype: 'panel',
+                reference: 'svgTab',
                 title: 'Configuration',
                 items:[{
                     region: 'east',
@@ -89,7 +90,7 @@ Ext.define('RtConfigurator.view.main.Main', {
                 },{
                     region: 'center',
                     xtype: 'svgpanel',
-                    reference: 'svgCanvas'
+                    reference: 'svgPanel'
                 }]
             }
         ]

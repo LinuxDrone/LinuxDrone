@@ -19,9 +19,8 @@ Ext.define('RtConfigurator.view.main.MainController', {
     },
 
     onAddModule2Scheme: function(metaOfModule){
-        var svgCanvas = this.lookupReference('svgCanvas');
-        this.view.layout.centerRegion.setActiveTab(svgCanvas);
-
-        svgCanvas.controller.AddModule2Scheme(metaOfModule);
+        var svgTab = this.lookupReference('svgTab');
+        this.view.layout.centerRegion.setActiveTab(svgTab);
+        this.lookupReference('svgPanel').controller.AddModule2Scheme(metaOfModule);
     }
 });
