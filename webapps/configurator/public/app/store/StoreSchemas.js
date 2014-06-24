@@ -8,6 +8,7 @@ Ext.define('RtConfigurator.store.StoreSchemas', {
 
     model: 'RtConfigurator.model.Schema',
 
+    groupField: 'name',
     proxy: {
         type: 'rest',
         url: '/getconfigs'

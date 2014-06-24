@@ -16,6 +16,10 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
     },
     controller: 'svg',
 
+    bind: {
+        title: 'Hello {firstName}'
+    },
+
     layout:'fit',
     items:[
         {xtype:'svg'}
@@ -29,9 +33,16 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
             displayField: 'name',
             valueField: '_id'
         },
-        {
+        /*{
             xtype:'combo',
             fieldLabel: 'Version'
+        },*/
+        {
+            xtype:'combo',
+            bind:{
+                store: '{listSchemas}'
+            },
+            displayField: 'name'
         }
     ],
     bbar: [
