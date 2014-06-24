@@ -20,6 +20,20 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
     items:[
         {xtype:'svg'}
     ],
+    tbar: [
+        {
+            xtype:'combo',
+            store:'StoreSchemas',
+            fieldLabel: 'Schema',
+            //queryMode: 'local',
+            displayField: 'name',
+            valueField: '_id'
+        },
+        {
+            xtype:'combo',
+            fieldLabel: 'Version'
+        }
+    ],
     bbar: [
         { text: '-', handler: 'onClickZoomOut'},
         { text: '+', handler: 'onClickZoomIn' }
