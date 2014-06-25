@@ -16,28 +16,34 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
     paperScaleY: 1,
 
     data: {
-        firstName: 'John',
-        lastName: 'Doe'
+        listSchemasNames : new Ext.data.ArrayStore({
+            autoLoad: true,
+            model: 'RtConfigurator.model.Schema',
+            listeners: {
+                load: function( th, records, successful, eOpts ) {
+                    var store = Ext.data.StoreManager.lookup('StoreSchemas');
+                    store.collect('name').forEach(function(entry) {
+                        th.add({name: entry});
+                    });
+                }
+            }
+        })
     },
 
     formulas: {
-        listSchemas : function(get){
-            var store = Ext.data.StoreManager.lookup('StoreSchemas');
+        selectedSchemaName: {
+            get: function (get) {
+                var col = get('listSchemasNames');
+                if(col.count()==0){
+                    col.load();
+                }
+                return col.first().data.name;
+            },
 
-            var res = new Array();
-            store.collect('name').forEach(function(entry) {
-                var rec = new Array();
-                rec.push(entry);
-                res.push(rec);
-            });
-
-            return new Ext.data.ArrayStore({
-                fields: ['name'],
-                data : res
-                //data : [['Alabama'],['Alaska'],['Arizona']]
-                //data : ['Alabama','Alaska','Arizona']
-            });
-
+            set: function (value) {
+                //var col = this.data.listSchemasNames;
+                //col.add({name: 'dddddd'});
+            }
         }
     }
 

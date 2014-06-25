@@ -183,4 +183,5 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         model.paperScaleY += 0.1;
         model.paper.scale(model.paperScaleX, model.paperScaleY);
     }
+
 });

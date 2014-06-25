@@ -16,15 +16,20 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
     },
     controller: 'svg',
 
-    bind: {
-        title: 'Hello {firstName}'
-    },
-
     layout:'fit',
     items:[
         {xtype:'svg'}
     ],
     tbar: [
+        {
+            xtype:'combo',
+            fieldLabel: 'Schema',
+            bind:{
+                store: '{listSchemasNames}',
+                value: '{selectedSchemaName}'
+            },
+            displayField: 'name'
+        },
         {
             xtype:'combo',
             store:'StoreSchemas',
@@ -33,10 +38,6 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
             displayField: 'name',
             valueField: '_id'
         },
-        /*{
-            xtype:'combo',
-            fieldLabel: 'Version'
-        },*/
         {
             xtype:'combo',
             bind:{
@@ -49,4 +50,5 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
         { text: '-', handler: 'onClickZoomOut'},
         { text: '+', handler: 'onClickZoomIn' }
     ]
+
 });
