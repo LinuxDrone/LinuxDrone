@@ -182,6 +182,10 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         model.paperScaleX += 0.1;
         model.paperScaleY += 0.1;
         model.paper.scale(model.paperScaleX, model.paperScaleY);
+
+        var store = Ext.data.StoreManager.lookup('StoreSchemas');
+        var m_curSchema=store.findRecord('name', true);
+        alert(m_curSchema);
     }
 
 });

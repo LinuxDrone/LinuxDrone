@@ -25,7 +25,7 @@ Ext.define('RtConfigurator.view.svg.SvgControl', {
             width: "100%",
             height: "99%"
         });
-
+/*
         var rect = new joint.shapes.basic.Rect({
             position: { x: 100, y: 30 },
             size: { width: 100, height: 30 },
@@ -41,5 +41,6 @@ Ext.define('RtConfigurator.view.svg.SvgControl', {
         });
 
         model.graph.addCells([rect, rect2, link]);
+        */
     }
 });
