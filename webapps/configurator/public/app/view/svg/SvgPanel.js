@@ -23,6 +23,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
     tbar: [
         {
             xtype:'combo',
+            editable: false,
             fieldLabel: 'Schema',
             bind:{
                 store: '{listSchemasNames}',
@@ -32,13 +33,14 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
         },
         {
             xtype:'combo',
+            editable: false,
             fieldLabel: 'Version',
             bind:{
                 store: '{listSchemasVersions}',
                 value: '{currentVersion}'
             },
             displayField: 'version',
-            valueField: '_id'
+            valueField: 'version'
         }
     ],
     bbar: [

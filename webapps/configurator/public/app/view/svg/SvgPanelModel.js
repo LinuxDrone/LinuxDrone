@@ -31,20 +31,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
             }
         }),
         listSchemasVersions : new Ext.data.ArrayStore({
-            //autoLoad: true,
-            fields:['_id','version']
-            /* ,
-            listeners: {
-                load: function(th) {
-                    var store = Ext.data.StoreManager.lookup('StoreSchemas');
-                    if(store){
-                        store.collect('name').forEach(function(entry) {
-                            th.add({version: '0'});
-                        });
-                    }
-                }
-            }
-            */
+            fields:['_id','version','id']
         }),
         m_currentSchema:false
     },
@@ -70,24 +57,20 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
                     listVersions.add(e.data);
                 });
 
-
-                //this.set({
-                  //  listSchemasVersions: group
-                //});
+                this.set({
+                    currentVersion: listVersions.first().data.version
+                });
             }
         },
         currentVersion:{
             get: function (get) {
-                return '1';
+                var m_curSchema = get('currentSchema');
+//alert(m_curSchema.data._id);
+                return m_curSchema.data.version;
             },
             set: function (value) {
-/*
-                this.set({
-                    firstName: value.substring(0, split),
-                    lastName: value.substring(split + 1)
-                });
-*/
-                alert(value);
+
+//alert(value);
             }
         }
     }
