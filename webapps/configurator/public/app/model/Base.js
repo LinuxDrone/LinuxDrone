@@ -2,6 +2,9 @@ Ext.define('RtConfigurator.model.Base', {
     extend: 'Ext.data.Model',
 
     fields: [{
+        name: '_id',
+        type: 'string'
+    },{
         name: 'name',
         type: 'string'
     }],

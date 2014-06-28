@@ -182,10 +182,33 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         model.paperScaleX += 0.1;
         model.paperScaleY += 0.1;
         model.paper.scale(model.paperScaleX, model.paperScaleY);
+    },
+
+    onSelectSchema: function(combo, records, eOpts){
+        var model = this.view.getViewModel();
+        var store = Ext.data.StoreManager.lookup('StoreSchemas');
+        var group = store.getGroups().getByKey(records[0].get('name'));
+
+        var listVersions = model.get('listSchemasVersions');
+        listVersions.removeAll();
+
+        $.each(group.items, function (i, e) {
+            listVersions.add(e.data);
+        });
+
+        model.set('m_currentSchema', listVersions.first());
+    },
+
+    onSelectVersion: function(combo, records, eOpts){
+        var model = this.view.getViewModel();
 
         var store = Ext.data.StoreManager.lookup('StoreSchemas');
-        var m_curSchema=store.findRecord('name', true);
-        alert(m_curSchema);
+
+        var ind = store.findBy(function(record, id){
+            return record.get('version') == records[0].get('version') && record.get('name') == model.get('currentSchema') .get('name');
+        });
+
+        model.set('m_currentSchema', store.getAt(ind));
     }
 
 });

@@ -31,7 +31,8 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
             }
         }),
         listSchemasVersions : new Ext.data.ArrayStore({
-            fields:['_id','version','id']
+            autoLoad: true,
+            model: 'RtConfigurator.model.Schema'
         }),
         m_currentSchema:false
     },
@@ -43,34 +44,11 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
                 if(!m_curSchema){
                     var store = Ext.data.StoreManager.lookup('StoreSchemas');
                     m_curSchema=store.findRecord('current', true);
+                    this.set({
+                       m_currentSchema: m_curSchema
+                    });
                 }
                 return m_curSchema;
-            },
-            set: function (value) {
-                var store = Ext.data.StoreManager.lookup('StoreSchemas');
-                var group = store.getGroups().getByKey(value);
-
-                var listVersions = this.data.listSchemasVersions;
-                listVersions.removeAll();
-
-                $.each(group.items, function (i, e) {
-                    listVersions.add(e.data);
-                });
-
-                this.set({
-                    currentVersion: listVersions.first().data.version
-                });
-            }
-        },
-        currentVersion:{
-            get: function (get) {
-                var m_curSchema = get('currentSchema');
-//alert(m_curSchema.data._id);
-                return m_curSchema.data.version;
-            },
-            set: function (value) {
-
-//alert(value);
             }
         }
     }
