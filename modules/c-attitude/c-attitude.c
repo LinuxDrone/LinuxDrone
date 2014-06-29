@@ -29,7 +29,7 @@ void init_attitude(attitude_data_t *p_ad);
 void accelFilter(const float *raw, float *filtered, attitude_data_t *p_ad);
 static inline void apply_accel_filter(const float *raw, float *filtered);
 
-static bool printEnable = false;
+bool printEnable = false;
 
 /**
  * @brief c_attitude_run Функция рабочего потока модуля
@@ -46,7 +46,7 @@ void c_attitude_run (module_c_attitude_t *module)
     static SRTIME  timeTick, timeTickold;
     timeTickold = timeTick = (SRTIME)rt_timer_read();
 
-    static attitude_data_t *p_ad, attitude_data;
+    attitude_data_t *p_ad, attitude_data;
     p_ad = &attitude_data;
 
     p_ad->attitude_initialized = false;
