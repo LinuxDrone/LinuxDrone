@@ -17,8 +17,7 @@ Ext.define('RtConfigurator.Application', {
     ],
 
     stores: [
-        'StoreMetaModules',
-        'StoreSchemas'
+        'StoreMetaModules'
     ],
     
     launch: function () {

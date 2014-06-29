@@ -10,9 +10,27 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
 
     alias: 'controller.svg',
 
+    init: function() {
+        var model = this.getView().getViewModel();
+
+        // Подписываемся на факт изменения текущей схемы
+        var binding = model.bind('{currentSchema}', function(x) {
+            console.log(x);
+        });
+
+        // После загрузки списка всех схем, проинициализируем список имен схем
+        model.get('listSchemas').addListener('load', function(storeListSchemas) {
+            var namesStore = model.get('listSchemasNames');
+            storeListSchemas.collect('name').forEach(function(entry) {
+                namesStore.add({name: entry});
+            });
+            // Найдем и установим текущую схему
+            model.set('currentSchema', storeListSchemas.findRecord('current', true));
+        });
+    },
 
     AddModule2Scheme: function(metaOfModule){
-        var model = this.view.getViewModel();
+        var model = this.getView().getViewModel();
         model.graph.addCell(this.MakeVisualModule(metaOfModule, model.graph));
     },
 
@@ -171,44 +189,46 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
     },
 
     onClickZoomOut: function (b, e, eOpts ){
-        var model = this.view.getViewModel();
+        var model = this.getView().getViewModel();
         model.paperScaleX -= 0.1;
         model.paperScaleY -= 0.1;
         model.paper.scale(model.paperScaleX, model.paperScaleY);
     },
 
     onClickZoomIn: function (b, e, eOpts ){
-        var model = this.view.getViewModel();
+        var model = this.getView().getViewModel();
         model.paperScaleX += 0.1;
         model.paperScaleY += 0.1;
         model.paper.scale(model.paperScaleX, model.paperScaleY);
     },
 
     onSelectSchema: function(combo, records, eOpts){
-        var model = this.view.getViewModel();
-        var store = Ext.data.StoreManager.lookup('StoreSchemas');
-        var group = store.getGroups().getByKey(records[0].get('name'));
+        var model=this.getView().getViewModel();
+        var versionsStore = model.get('listSchemasVersions');
 
-        var listVersions = model.get('listSchemasVersions');
-        listVersions.removeAll();
+        // Отфильтруем список версий в соответствии с выбранным именем схемы
+        versionsStore.removeFilter('name');
+        versionsStore.addFilter([{
+            property: 'name',
+            value: records[0].get('name'),
+            operator: '='
+        }]);
 
-        $.each(group.items, function (i, e) {
-            listVersions.add(e.data);
-        });
-
-        model.set('m_currentSchema', listVersions.first());
+        // Установим в качестве текщуй схемы, первую попавшуюся версию схемы с выбранным в данный момент именем
+        model.set('currentSchema', versionsStore.first());
     },
 
     onSelectVersion: function(combo, records, eOpts){
-        var model = this.view.getViewModel();
+        var model = this.getView().getViewModel();
+        var storeListSchemas = model.get('listSchemas');
 
-        var store = Ext.data.StoreManager.lookup('StoreSchemas');
-
-        var ind = store.findBy(function(record, id){
-            return record.get('version') == records[0].get('version') && record.get('name') == model.get('currentSchema') .get('name');
+        // Найдем в хранилище схему с указанными именем и версией
+        var ind = storeListSchemas.findBy(function(record, id){
+            return record.get('version') == records[0].get('version') && record.get('name') == model.get('currentSchema').get('name');
         });
 
-        model.set('m_currentSchema', store.getAt(ind));
+        // Установим в качестве текущей схемы, схемц с выбранной версией
+        model.set('currentSchema', storeListSchemas.getAt(ind));
     }
 
 });
