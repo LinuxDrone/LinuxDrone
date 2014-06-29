@@ -16,15 +16,15 @@ Ext.define('RtConfigurator.view.svg.SvgControl', {
             return;
         }
 
-        model.graph = new joint.dia.Graph;
+        model.set('graph', new joint.dia.Graph);
 
-        model.paper = new joint.dia.Paper({
+        model.set('paper', new joint.dia.Paper({
             el: this.el.dom,
-            model: model.graph,
+            model: model.get('graph'),
             gridSize: 1,
             width: "100%",
             height: "99%"
-        });
+        }));
 /*
         var rect = new joint.shapes.basic.Rect({
             position: { x: 100, y: 30 },

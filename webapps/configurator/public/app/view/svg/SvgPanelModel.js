@@ -6,11 +6,6 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
 
     alias: 'viewmodel.svg',
 
-    graph: undefined,
-
-    paper: undefined,
-
-
     paperScaleX: 1,
     paperScaleY: 1,
 
@@ -37,6 +32,10 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
     },
 
     data: {
+        graph: undefined,
+
+        paper: undefined,
+
         // Текущая выбранная схема
         currentSchema:undefined
     },

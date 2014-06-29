@@ -14,9 +14,13 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         var model = this.getView().getViewModel();
 
         // Подписываемся на факт изменения текущей схемы
-        var binding = model.bind('{currentSchema}', function(x) {
-            console.log(x);
+        model.bind('{currentSchema}', this.onChangeCurrentSchema);
+
+        // После создания папера, отрисуем на нем текущую схему
+        model.bind('{paper}', function(paper){
+            this.getView().controller.onChangeCurrentSchema(model.get('currentSchema'));
         });
+
 
         // После загрузки списка всех схем, проинициализируем список имен схем
         model.get('listSchemas').addListener('load', function(storeListSchemas) {
@@ -31,7 +35,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
 
     AddModule2Scheme: function(metaOfModule){
         var model = this.getView().getViewModel();
-        model.graph.addCell(this.MakeVisualModule(metaOfModule, model.graph));
+        model.get('graph').addCell(this.MakeVisualModule(metaOfModule, model.get('graph')));
     },
 
     svgColors:{
@@ -192,14 +196,14 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         var model = this.getView().getViewModel();
         model.paperScaleX -= 0.1;
         model.paperScaleY -= 0.1;
-        model.paper.scale(model.paperScaleX, model.paperScaleY);
+        model.get('paper').scale(model.paperScaleX, model.paperScaleY);
     },
 
     onClickZoomIn: function (b, e, eOpts ){
         var model = this.getView().getViewModel();
         model.paperScaleX += 0.1;
         model.paperScaleY += 0.1;
-        model.paper.scale(model.paperScaleX, model.paperScaleY);
+        model.get('paper').scale(model.paperScaleX, model.paperScaleY);
     },
 
     onSelectSchema: function(combo, records, eOpts){
@@ -229,6 +233,79 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
 
         // Установим в качестве текущей схемы, схемц с выбранной версией
         model.set('currentSchema', storeListSchemas.getAt(ind));
+    },
+
+    onChangeCurrentSchema: function(curSchema){
+        console.log(this.getView().getViewModel());
+
+        var graph = this.getView().getViewModel().get('graph');
+
+        if(!graph){
+            return;
+        }
+
+
+        var jsonGraph = curSchema.get('jsonGraph');
+        if (jsonGraph) {
+            graph.fromJSON(JSON.parse(jsonGraph));
+
+            /*
+            // Инициализация портов на модулях, с целью показа их описания в тултипе
+            var elements = graph.getElements();
+            $.each(elements, function (i, element) {
+                var view = paper.findViewByModel(element);
+
+                $.each([2, 3], function (i, s) {
+                    $.each(view.el.childNodes[0].childNodes[s].childNodes, function (k, port) {
+                        port.childNodes[0].onmouseenter = function (e) {
+                            $("#portTooltip").css({
+                                display: "block",
+                                left: e.x,
+                                top: e.y
+                            });
+                            var groupsPorts = new Array();
+                            var moduleType = element.attributes.moduleType;
+                            var portName = port.textContent;
+
+                            var meta = GetModuleMeta(moduleType);
+                            if (s == 2) {
+                                groupsPorts.push(meta.definition().inputShema.properties);
+                            }
+                            else {
+                                $.each(meta.definition().outputs, function (i, m) {
+                                    groupsPorts.push(m.Schema.properties);
+                                });
+                            }
+
+                            $.each(groupsPorts, function (i, gp) {
+                                var propsObj = gp;
+                                if (propsObj.hasOwnProperty(portName)) {
+                                    var portMeta = propsObj[portName];
+
+                                    var text = portMeta.type;
+
+                                    text += "<br>" + Geti18nProperty(portMeta, "description");
+
+                                    var options = {placement: "left", html: true, title: text};
+                                    $("#portTooltip").tooltip('destroy');
+                                    $("#portTooltip").tooltip(options);
+                                    $("#portTooltip").tooltip('show');
+                                }
+                            });
+                        };
+
+                        port.childNodes[0].onmouseleave = function (e) {
+                            $("#portTooltip").tooltip('hide');
+                        }
+                    });
+                });
+            });
+            */
+        }
+        //res.graphChanged(false);
+        //res.instnameSelectedModule("Properties");
+
+        //PrepareListLinks();
     }
 
 });
