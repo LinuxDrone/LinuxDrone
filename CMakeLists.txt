@@ -186,6 +186,7 @@ add_subdirectory(${MOD_DIR}/c-scale)
 #add_subdirectory(${MOD_DIR}/SimpleTransform)
 #add_subdirectory(${MOD_DIR}/SerialGps)
 add_subdirectory(${MOD_DIR}/c-bmp180)
+add_subdirectory(${MOD_DIR}/c-generator)
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
