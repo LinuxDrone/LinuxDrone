@@ -16,11 +16,5 @@ Ext.define('RtConfigurator.view.main.MainController', {
 
     onClickButton: function () {
         Ext.Msg.confirm('Confirm', 'Are you sure?', 'onConfirm', this);
-    },
-
-    onAddModule2Scheme: function(metaOfModule){
-        var svgTab = this.lookupReference('svgTab');
-        this.view.layout.centerRegion.setActiveTab(svgTab);
-        this.lookupReference('svgPanel').controller.AddModule2Scheme(metaOfModule);
     }
 });

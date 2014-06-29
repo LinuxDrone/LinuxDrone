@@ -236,7 +236,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
     },
 
     onChangeCurrentSchema: function(curSchema){
-        console.log(this.getView().getViewModel());
+        //console.log(this.getView().getViewModel());
 
         var graph = this.getView().getViewModel().get('graph');
 
