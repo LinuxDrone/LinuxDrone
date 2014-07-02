@@ -49,6 +49,12 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
                 select: 'onSelectVersion'
             },
             queryMode: 'local'
+        },
+        {
+            xtype: 'button',
+            text: 'Save',
+            handler: 'onClickSaveSchema',
+            tooltip: 'Save current configuration'
         }
     ],
     bbar: [

@@ -29,7 +29,11 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
                 namesStore.add({name: entry});
             });
             // Найдем и установим текущую схему
-            model.set('currentSchema', storeListSchemas.findRecord('current', true));
+            var curSchema = storeListSchemas.findRecord('current', true)
+            if(!curSchema){
+                curSchema = storeListSchemas.first();
+            }
+            model.set('currentSchema', curSchema);
         });
     },
 
@@ -235,77 +239,97 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         model.set('currentSchema', storeListSchemas.getAt(ind));
     },
 
-    onChangeCurrentSchema: function(curSchema){
-        //console.log(this.getView().getViewModel());
+    GetLocale: function () {
+        var l_lang;
+        if (navigator.userLanguage) // Explorer
+            l_lang = navigator.userLanguage;
+        else if (navigator.language) // FF
+            l_lang = navigator.language;
+        else
+            l_lang = "en";
+        return l_lang;
+    },
 
+
+// Пытается вернуть текстовое свойство объекта в локали браузера
+    Geti18nProperty: function (obj, propName) {
+        if (obj.hasOwnProperty(propName)) {
+            if (obj[propName].hasOwnProperty(this.getView().getController().GetLocale())) {
+                return obj[propName][this.getView().getController().GetLocale()];
+            }
+            else {
+                if (obj[propName].hasOwnProperty("en")) {
+                    return obj.description.en;
+                }
+            }
+        }
+        return "";
+    },
+
+    onChangeCurrentSchema: function(curSchema){
         var graph = this.getView().getViewModel().get('graph');
 
         if(!graph){
             return;
         }
 
-
         var jsonGraph = curSchema.get('jsonGraph');
         if (jsonGraph) {
             graph.fromJSON(JSON.parse(jsonGraph));
 
-            /*
+
+            var paper = this.getView().getViewModel().get('paper');
+            var controller = this.getView().getController();
             // Инициализация портов на модулях, с целью показа их описания в тултипе
             var elements = graph.getElements();
             $.each(elements, function (i, element) {
                 var view = paper.findViewByModel(element);
-
                 $.each([2, 3], function (i, s) {
                     $.each(view.el.childNodes[0].childNodes[s].childNodes, function (k, port) {
                         port.childNodes[0].onmouseenter = function (e) {
-                            $("#portTooltip").css({
-                                display: "block",
-                                left: e.x,
-                                top: e.y
-                            });
                             var groupsPorts = new Array();
                             var moduleType = element.attributes.moduleType;
                             var portName = port.textContent;
 
-                            var meta = GetModuleMeta(moduleType);
+                            var storeMetamodules = Ext.data.StoreManager.lookup('StoreMetaModules');
+                            var meta = storeMetamodules.findRecord('name', moduleType);
                             if (s == 2) {
-                                groupsPorts.push(meta.definition().inputShema.properties);
+                                groupsPorts.push(meta.get('inputShema').properties);
                             }
                             else {
-                                $.each(meta.definition().outputs, function (i, m) {
+                                $.each(meta.get('outputs'), function (i, m) {
                                     groupsPorts.push(m.Schema.properties);
                                 });
                             }
 
+                            var toolTipText = '';
                             $.each(groupsPorts, function (i, gp) {
                                 var propsObj = gp;
                                 if (propsObj.hasOwnProperty(portName)) {
                                     var portMeta = propsObj[portName];
-
-                                    var text = portMeta.type;
-
-                                    text += "<br>" + Geti18nProperty(portMeta, "description");
-
-                                    var options = {placement: "left", html: true, title: text};
-                                    $("#portTooltip").tooltip('destroy');
-                                    $("#portTooltip").tooltip(options);
-                                    $("#portTooltip").tooltip('show');
+                                    toolTipText = portMeta.type;
+                                    toolTipText += "<br>" + controller.Geti18nProperty(portMeta, "description");
                                 }
                             });
-                        };
 
-                        port.childNodes[0].onmouseleave = function (e) {
-                            $("#portTooltip").tooltip('hide');
-                        }
+                            var tip = Ext.create('Ext.tip.ToolTip', {
+                                target: e.currentTarget,
+                                html: toolTipText
+                            });
+                        };
                     });
                 });
             });
-            */
         }
         //res.graphChanged(false);
         //res.instnameSelectedModule("Properties");
 
         //PrepareListLinks();
+    },
+
+    onClickSaveSchema: function(){
+        alert('save');
     }
+
 
 });
