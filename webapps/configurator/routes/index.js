@@ -36,6 +36,12 @@ exports.saveconfig = function (db) {
         });
 
         db.get('modules_defs').find({}, {}, function (e, metaModules) {
+            if(!req.body.modulesParams){
+                var logMsg = 'In request, not found required property "modulesParams"';
+                console.log(logMsg);
+                res.send(logMsg);
+                return;
+            }
             var configuration = ConvertGraph2Configuration(JSON.parse(req.body.jsonGraph), req.body.modulesParams, metaModules);
             configuration.version = req.body.version;
             configuration.name = req.body.name;
@@ -224,7 +230,7 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
         });
 
         // Перенос общих (определенных для всех типов модулей) параметров
-        if (modulesParams[module.instance].common) { //modulesParams[module.instance] &&
+        if (modulesParams && modulesParams[module.instance].common) { //modulesParams[module.instance] &&
             var commonParams = modulesParams[module.instance].common;
             Object.keys(commonParams).forEach(function (paramName) {
                 var metaParam = _.find(commonModuleParams.commonModuleParamsDefinition, function (meta) {

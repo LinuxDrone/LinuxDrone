@@ -125,7 +125,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         module.size.height = maxPins * 30;
 
         // Этот вывзов обеспечит установку значений по умолчанию для свойств
-        //this.GetInstanceParams(name4NewInstance, moduleInfo);
+        this.GetInstanceParams(name4NewInstance, moduleInfo);
 
         // Добавление параметров, со значениями по умолчанию
         return new joint.shapes.devs.Model(module);
@@ -135,29 +135,36 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
     // Приватная функция
     // Возвращает объект - значения конфигурационных параметров инстанса модуля
     GetInstanceParams: function GetInstanceParams(instanceName, moduleMeta) {
+        var model = this.getView().getViewModel();
+        var modulesParams = model.get('currentSchema').get('modulesParams');
+        if(!modulesParams){
+            alert('Wrong schema. Not found required property "modulesParams"');
+            return;
+        }
+
         var moduleParams;
         var requireMakeDefaults = false;
         switch (moduleMeta.type) {
             case "module_def":
-                if (!res.currentConfig().modulesParams[instanceName]) {
+                if (!modulesParams[instanceName]) {
                     requireMakeDefaults = true;
-                    res.currentConfig().modulesParams[instanceName] = {common: {}, specific: {}};
+                    modulesParams[instanceName] = {common: {}, specific: {}};
                 }
-                moduleParams = res.currentConfig().modulesParams[instanceName];
+                moduleParams = modulesParams[instanceName];
                 break;
 
             case "block_def":
                 // Если это не модуль а блок, поместим его параметры в иерархию соответсвующего родительского инстанса модуля
                 var parentSuperModuleName = res.selectedSuperModule().attributes.attrs[".label"].text;
-                if (!res.currentConfig().modulesParams[parentSuperModuleName].blocksConfig) {
-                    res.currentConfig().modulesParams[parentSuperModuleName].blocksConfig = {};
+                if (!modulesParams[parentSuperModuleName].blocksConfig) {
+                    modulesParams[parentSuperModuleName].blocksConfig = {};
                 }
 
-                if (!res.currentConfig().modulesParams[parentSuperModuleName].blocksConfig[instanceName]) {
+                if (!modulesParams[parentSuperModuleName].blocksConfig[instanceName]) {
                     requireMakeDefaults = true;
-                    res.currentConfig().modulesParams[parentSuperModuleName].blocksConfig[instanceName] = {specific: {}};
+                    modulesParams[parentSuperModuleName].blocksConfig[instanceName] = {specific: {}};
                 }
-                moduleParams = res.currentConfig().modulesParams[parentSuperModuleName].blocksConfig[instanceName];
+                moduleParams = modulesParams[parentSuperModuleName].blocksConfig[instanceName];
                 break;
 
             default:
@@ -235,7 +242,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
             return record.get('version') == records[0].get('version') && record.get('name') == model.get('currentSchema').get('name');
         });
 
-        // Установим в качестве текущей схемы, схемц с выбранной версией
+        // Установим в качестве текущей схемы, схемы с выбранной версией
         model.set('currentSchema', storeListSchemas.getAt(ind));
     },
 
@@ -328,8 +335,62 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
     },
 
     onClickSaveSchema: function(){
-        alert('save');
-    }
+        var currentSchema = this.getView().getViewModel().get('currentSchema');
+        this.SaveCurrentConfig(currentSchema.get('name'), currentSchema.get('version'), false);
+    },
 
+    // Приватная функция сохранения конфигурации (текущего графа) с именем и версией
+    SaveCurrentConfig: function (name, version, isNew) {
+        var model = this.getView().getViewModel();
+        var graph = model.get('graph');
+        var data4save = {
+            "name": name,
+            "version": version,
+            "jsonGraph": JSON.stringify(graph.toJSON()),
+            "modulesParams": this.getView().getViewModel().get('currentSchema').get('modulesParams')
+        };
+        $.post("saveconfig", data4save,
+            function (data) {
+                if (data != "OK") {
+                    alert(data);
+                }
+                else {
+                    if (isNew) {
+                        allConfigs.push(data4save);
+                        // Если была записана новая конфигурация, добавим ее в комбобоксы
+                        // Если была записана новая версия, а имя конфигурации не изменилось, то добавим новую строку только
+                        // в комбобокс версий.
+                        // Иначе добавим новые строки в оба комбобокса. И установим как выбранные значения в комбобоксах,
+                        // соответсвующие имени и версии новой конфигурации
+                        if (_.contains(res.ConfigNames(), name)) {
+                            if (res.configNameSelected() == name) {
+                                // Добавим контент конфигурации к списку версий выбранной конфигурации
+                                res.Versions.push(version);
+                            }
+                            else {
+                                res.configNameSelected(name);
+                            }
+                            res.versionSelected(version);
+                        }
+                        else {
+                            res.ConfigNames.push(name);
+                            res.configNameSelected(name);
+                        }
+                    }
+                    else {
+                        var storeListSchemas = model.get('listSchemas');
+                        // Найдем в хранилище схему с указанными именем и версией
+                        var ind = storeListSchemas.findBy(function(record, id){
+                            return record.get('version') == data4save.version && record.get('name') == data4save.name;
+                        });
+                        var rec = storeListSchemas.getAt(ind);
+
+                        rec.set('jsonGraph', data4save.jsonGraph);
+                    }
+                    res.graphChanged(false);
+                }
+            }
+        );
+    }
 
 });
