@@ -7,5 +7,8 @@ Ext.define('RtConfigurator.model.Schema', {
     fields: [{
         name: 'version',
         type: 'string'
+    },{
+        name: 'jsonGraph',
+        type: 'string'
     }]
 });

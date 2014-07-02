@@ -349,6 +349,18 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
             "jsonGraph": JSON.stringify(graph.toJSON()),
             "modulesParams": this.getView().getViewModel().get('currentSchema').get('modulesParams')
         };
+
+
+        var storeListSchemas = model.get('listSchemas');
+        // Найдем в хранилище схему с указанными именем и версией
+        var ind = storeListSchemas.findBy(function(record, id){
+            return record.get('version') == data4save.version && record.get('name') == data4save.name;
+        });
+        var rec = storeListSchemas.getAt(ind);
+        rec.set('jsonGraph', data4save.jsonGraph);
+        storeListSchemas.sync();
+
+        /*
         $.post("saveconfig", data4save,
             function (data) {
                 if (data != "OK") {
@@ -386,11 +398,16 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
                         var rec = storeListSchemas.getAt(ind);
 
                         rec.set('jsonGraph', data4save.jsonGraph);
+
+                        //rec.save();
+
+                        storeListSchemas.sync();
                     }
                     res.graphChanged(false);
                 }
             }
         );
+        */
     }
 
 });

@@ -27,7 +27,7 @@ exports.saveconfig = function (db) {
         //console.log(req.body);
         var collection = db.get('visual_configuration');
 
-        collection.update({"name": req.body.name, "version": req.body.version}, req.body, {"upsert": true }, function (err, count) {
+        collection.update({"_id": req.body._id}, req.body, {"upsert": true }, function (err, count) {
             if (err) {
                 res.send("There was a problem adding the information to the database.");
                 return console.log(err);

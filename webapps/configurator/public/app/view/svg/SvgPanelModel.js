@@ -16,7 +16,11 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
             model: 'RtConfigurator.model.Schema',
             proxy: {
                 type: 'rest',
-                url: '/getconfigs'
+                //url: '/getconfigs',
+                api: {
+                    read: 'getconfigs',
+                    update: '/saveconfig'
+                }
             }
         },
 

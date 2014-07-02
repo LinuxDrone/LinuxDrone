@@ -9,10 +9,11 @@ Ext.define('RtConfigurator.model.Base', {
         type: 'string'
     }],
 
+    idProperty: '_id',
+
     schema: {
         namespace: 'RtConfigurator.model',  // generate auto entityName
-
-        proxy: {     // Ext.util.ObjectTemplate
+        proxy: {
             type: 'rest',
             url: '{entityName}',
             reader: {
