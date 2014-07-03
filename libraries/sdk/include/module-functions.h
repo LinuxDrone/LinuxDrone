@@ -411,7 +411,7 @@ typedef module_t* (*create_f)(void *);
 typedef int (*init_f)(module_t*, const uint8_t*, uint32_t);
 
 // Тип функции старта модуля
-typedef int (*start_f)();
+typedef int (*start_f)(module_t*);
 
 // Тип функции удаления модуля
 typedef void (*delete_f)(module_t*);
@@ -450,6 +450,9 @@ void print_task_receive_error(int err);
 void print_task_reply_error(int err);
 void print_task_bind_error(int err);
 void print_task_send_error(int err);
+
+
+void debug_print_bson(char* where, bson_t* bson);
 
 #ifdef __cplusplus
 }
