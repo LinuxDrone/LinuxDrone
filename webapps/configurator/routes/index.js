@@ -23,38 +23,42 @@ exports.metamodules = function (db) {
 
 exports.saveconfig = function (db) {
     return function (req, res) {
-        //req.body.version = parseInt(req.body.version);
-        //console.log(req.body);
         var collection = db.get('visual_configuration');
 
-        collection.update({"_id": req.body._id}, req.body, {"upsert": true }, function (err, count) {
+        var id = req.body._id;
+        delete req.body._id;
+
+        collection.update({"_id": id}, { $set: req.body }, {"upsert": true }, function (err, count) {
             if (err) {
                 res.send("There was a problem adding the information to the database.");
                 return console.log(err);
             }
-            console.log("Save configuration " + req.body.name + " v." + req.body.version + " - OK.");
+            console.log("Save visual configuration for " + id + " - OK.");
         });
 
-        db.get('modules_defs').find({}, {}, function (e, metaModules) {
-            if(!req.body.modulesParams){
+        collection.findOne({_id:id}, {}, function(o, schema){
+            db.get('modules_defs').find({}, {}, function (e, metaModules) {
+            if(!schema.modulesParams){
                 var logMsg = 'In request, not found required property "modulesParams"';
                 console.log(logMsg);
                 res.send(logMsg);
                 return;
             }
-            var configuration = ConvertGraph2Configuration(JSON.parse(req.body.jsonGraph), req.body.modulesParams, metaModules);
-            configuration.version = req.body.version;
-            configuration.name = req.body.name;
+            var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
+            configuration.version = schema.version;
+            configuration.name = schema.name;
 
             var configurations = db.get('configuration');
-            configurations.update({"name": req.body.name, "version": req.body.version}, configuration, {"upsert": true }, function (err, count) {
+            configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
                 if (err) {
                     res.send("There was a problem adding the information to the database.");
                     return console.log(err);
                 }
-                console.log("Save LinuxDrone configuration " + req.body.name + " v." + req.body.version + " - OK.");
+                console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
             });
             res.send("OK");
+        });
+
         });
     };
 };
