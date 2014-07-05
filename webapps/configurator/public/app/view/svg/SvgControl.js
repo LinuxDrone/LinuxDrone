@@ -16,15 +16,22 @@ Ext.define('RtConfigurator.view.svg.SvgControl', {
             return;
         }
 
-        model.set('graph', new joint.dia.Graph);
+        var graph = new joint.dia.Graph;
+
+        model.set('graph', graph);
 
         model.set('paper', new joint.dia.Paper({
             el: this.el.dom,
-            model: model.get('graph'),
+            model: graph,
             gridSize: 1,
             width: "100%",
             height: "99%"
         }));
+
+        // Подпишемся на изменения графа
+        graph.on('change', function () {
+            model.set('schemaChanged', true);
+        });
 
     }
 });

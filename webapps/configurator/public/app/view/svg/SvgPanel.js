@@ -54,7 +54,10 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
             xtype: 'button',
             text: 'Save',
             handler: 'onClickSaveSchema',
-            tooltip: 'Save current configuration'
+            tooltip: 'Save current configuration',
+            bind:{
+                disabled: '{!schemaChanged}'
+            }
         }
     ],
     bbar: [

@@ -30,7 +30,7 @@ exports.saveconfig = function (db) {
 
         collection.update({"_id": id}, { $set: req.body }, {"upsert": true }, function (err, count) {
             if (err) {
-                res.send("There was a problem adding the information to the database.");
+                res.send({"success": false, "message":"There was a problem adding the information to the database."});
                 return console.log(err);
             }
             console.log("Save visual configuration for " + id + " - OK.");
@@ -38,27 +38,26 @@ exports.saveconfig = function (db) {
 
         collection.findOne({_id:id}, {}, function(o, schema){
             db.get('modules_defs').find({}, {}, function (e, metaModules) {
-            if(!schema.modulesParams){
-                var logMsg = 'In request, not found required property "modulesParams"';
-                console.log(logMsg);
-                res.send(logMsg);
-                return;
-            }
-            var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
-            configuration.version = schema.version;
-            configuration.name = schema.name;
-
-            var configurations = db.get('configuration');
-            configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
-                if (err) {
-                    res.send("There was a problem adding the information to the database.");
-                    return console.log(err);
+                if(!schema.modulesParams){
+                    var logMsg = 'In request, not found required property "modulesParams"';
+                    console.log(logMsg);
+                    res.send({"success": false, "message":logMsg});
+                    return;
                 }
-                console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
-            });
-            res.send("OK");
-        });
+                var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
+                configuration.version = schema.version;
+                configuration.name = schema.name;
 
+                var configurations = db.get('configuration');
+                configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
+                    if (err) {
+                        res.send({"success": false, "message":"There was a problem adding the information to the database."});
+                        return console.log(err);
+                    }
+                    console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
+                });
+                res.send({"success": true});
+            });
         });
     };
 };

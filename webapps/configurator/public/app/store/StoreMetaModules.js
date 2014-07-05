@@ -7,7 +7,12 @@ Ext.define('RtConfigurator.store.StoreMetaModules', {
 
     proxy: {
         type: 'rest',
-        url: '/metamodules'
+        url: '/metamodules',
+        listeners : {
+            exception : function(proxy, response, operation) {
+                alert('Got Exception....');
+            }
+        }
     }
 });
 

@@ -14,11 +14,11 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         var model = this.getView().getViewModel();
 
         // Подписываемся на факт изменения текущей схемы
-        model.bind('{currentSchema}', this.onChangeCurrentSchema);
+        model.bind('{currentSchema}', this.onSwitchCurrentSchema);
 
         // После создания папера, отрисуем на нем текущую схему
         model.bind('{paper}', function(paper){
-            this.getView().controller.onChangeCurrentSchema(model.get('currentSchema'));
+            this.getView().controller.onSwitchCurrentSchema(model.get('currentSchema'));
         });
 
 
@@ -217,6 +217,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         model.get('paper').scale(model.paperScaleX, model.paperScaleY);
     },
 
+    // обработчик выбора имени схемы в комбобоксе
     onSelectSchema: function(combo, records, eOpts){
         var model=this.getView().getViewModel();
         var versionsStore = model.get('listSchemasVersions');
@@ -233,6 +234,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         model.set('currentSchema', versionsStore.first());
     },
 
+    // обработчик выбора версии схемы в комбобоксе
     onSelectVersion: function(combo, records, eOpts){
         var model = this.getView().getViewModel();
         var storeListSchemas = model.get('listSchemas');
@@ -258,7 +260,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
     },
 
 
-// Пытается вернуть текстовое свойство объекта в локали браузера
+    // Пытается вернуть текстовое свойство объекта в локали браузера
     Geti18nProperty: function (obj, propName) {
         if (obj.hasOwnProperty(propName)) {
             if (obj[propName].hasOwnProperty(this.getView().getController().GetLocale())) {
@@ -273,8 +275,11 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         return "";
     },
 
-    onChangeCurrentSchema: function(curSchema){
-        var graph = this.getView().getViewModel().get('graph');
+    // Обработчик смены текущей схемы на другую
+    onSwitchCurrentSchema: function(curSchema){
+        var model = this.getView().getViewModel();
+
+        var graph = model.get('graph');
 
         if(!graph){
             return;
@@ -328,12 +333,15 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
                 });
             });
         }
-        //res.graphChanged(false);
+
+        model.set('schemaChanged', false);
+
         //res.instnameSelectedModule("Properties");
 
         //PrepareListLinks();
     },
 
+    // Обработчик кнопки сохранения схемы
     onClickSaveSchema: function(){
         var currentSchema = this.getView().getViewModel().get('currentSchema');
         this.SaveCurrentConfig(currentSchema.get('name'), currentSchema.get('version'), false);
@@ -343,21 +351,16 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
     SaveCurrentConfig: function (name, version, isNew) {
         var model = this.getView().getViewModel();
         var graph = model.get('graph');
-        var data4save = {
-            "name": name,
-            "version": version,
-            "jsonGraph": JSON.stringify(graph.toJSON()),
-            "modulesParams": this.getView().getViewModel().get('currentSchema').get('modulesParams')
-        };
 
+        //"modulesParams": this.getView().getViewModel().get('currentSchema').get('modulesParams')
 
         var storeListSchemas = model.get('listSchemas');
         // Найдем в хранилище схему с указанными именем и версией
         var ind = storeListSchemas.findBy(function(record, id){
-            return record.get('version') == data4save.version && record.get('name') == data4save.name;
+            return record.get('version') == version && record.get('name') == name;
         });
         var rec = storeListSchemas.getAt(ind);
-        rec.set('jsonGraph', data4save.jsonGraph);
+        rec.set('jsonGraph', JSON.stringify(graph.toJSON()));
         storeListSchemas.sync();
 
         /*

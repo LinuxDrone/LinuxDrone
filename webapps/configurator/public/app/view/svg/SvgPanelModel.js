@@ -16,10 +16,28 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
             model: 'RtConfigurator.model.Schema',
             proxy: {
                 type: 'rest',
-                //url: '/getconfigs',
+                reader : {
+                    root:'data',
+                    messageProperty : 'message'
+                },
                 api: {
                     read: 'getconfigs',
                     update: '/saveconfig'
+                },
+                listeners : {
+                    exception : function(proxy, response, operation) {
+                        if(operation){
+                            alert(operation.getError());
+                        }else{
+                            alert("Got Exception");
+                        }
+                    }
+                }
+            },
+            listeners:{
+                write: function( store, operation, eOpts ){
+                    // TODO: Здесь найти модель и установить schemaChanged в false
+                    //alert("okkk");
                 }
             }
         },
@@ -41,7 +59,10 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
         paper: undefined,
 
         // Текущая выбранная схема
-        currentSchema:undefined
+        currentSchema:undefined,
+
+        // Сигнализирует о том, что схема изменилась (изменился graph - визуальное представление)
+        schemaChanged: false
     },
 
     formulas:{
