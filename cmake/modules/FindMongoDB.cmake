@@ -19,6 +19,7 @@ else(MongoDB_INCLUDE_DIR AND MongoDB_LIBRARIES)
       /usr/local/include/
       /usr/include/mongo/
       /usr/local/include/mongo/
+      /usr/local/mongo/include/
 	  /opt/mongo/include/
       $ENV{ProgramFiles}/Mongo/*/include
       $ENV{SystemDrive}/Mongo/*/include
