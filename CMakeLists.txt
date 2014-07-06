@@ -47,7 +47,8 @@ set(SYS_DIR ${PROJECT_SOURCE_DIR}/system)
 set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
 set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
 set(WEB_DIR ${PROJECT_SOURCE_DIR}/webapps)
-set(RFS_DIR ${TLS_DIR}/rootfs/beaglebone)
+#set(RFS_DIR ${TLS_DIR}/rootfs/beaglebone)
+set(RFS_DIR ${TLS_DIR}/rootfs/rpi)
 
 
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
