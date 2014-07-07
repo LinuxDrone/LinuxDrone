@@ -58,6 +58,15 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
             bind:{
                 disabled: '{!schemaChanged}'
             }
+        },
+        {
+            xtype: 'button',
+            text: 'Delete',
+            handler: 'onClickDeleteSchema',
+            tooltip: 'Delete current configuration',
+            bind:{
+                //disabled: '{!schemaChanged}'
+            }
         }
     ],
     bbar: [

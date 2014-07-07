@@ -22,7 +22,9 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
                 },
                 api: {
                     read: 'getconfigs',
-                    update: '/saveconfig'
+                    update: 'saveconfig',
+                    create: 'newconfig',
+                    destroy: 'delconfig'
                 },
                 listeners : {
                     exception : function(proxy, response, operation) {

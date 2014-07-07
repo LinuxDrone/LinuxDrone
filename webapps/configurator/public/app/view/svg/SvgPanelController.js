@@ -347,6 +347,15 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         this.SaveCurrentConfig(currentSchema.get('name'), currentSchema.get('version'), false);
     },
 
+    onClickDeleteSchema: function(){
+        var listSchemas = this.getView().getViewModel().get('listSchemas');
+        var currentSchema = this.getView().getViewModel().get('currentSchema');
+        listSchemas.remove(currentSchema);
+        listSchemas.sync();
+
+        //alert("del");
+    },
+
     // Приватная функция сохранения конфигурации (текущего графа) с именем и версией
     SaveCurrentConfig: function (name, version, isNew) {
         var model = this.getView().getViewModel();

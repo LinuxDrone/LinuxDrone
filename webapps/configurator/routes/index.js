@@ -64,15 +64,15 @@ exports.saveconfig = function (db) {
 
 exports.delconfig = function (db) {
     return function (req, res) {
-        //req.body.version = parseInt(req.body.version);
-
         var collection = db.get('visual_configuration');
-        collection.remove({"name": req.body.name, "version": req.body.version});
+        collection.findOne({_id:req.body._id}, {}, function(o, schema){
+            var configurations = db.get('configuration');
+            configurations.remove({"name": req.body.name, "version": req.body.version});
+        });
 
-        var configurations = db.get('configuration');
-        configurations.remove({"name": req.body.name, "version": req.body.version});
+        collection.remove({"_id": req.body._id});
 
-        res.send("OK");
+        res.send({"success": true});
     };
 };
 
@@ -233,7 +233,7 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
         });
 
         // Перенос общих (определенных для всех типов модулей) параметров
-        if (modulesParams && modulesParams[module.instance].common) { //modulesParams[module.instance] &&
+        if (modulesParams && modulesParams[module.instance].common) { //&& modulesParams[module.instance]
             var commonParams = modulesParams[module.instance].common;
             Object.keys(commonParams).forEach(function (paramName) {
                 var metaParam = _.find(commonModuleParams.commonModuleParamsDefinition, function (meta) {
