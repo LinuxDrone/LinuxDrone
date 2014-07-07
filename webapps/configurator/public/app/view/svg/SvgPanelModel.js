@@ -18,6 +18,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
                 type: 'rest',
                 reader : {
                     root:'data',
+                    successProperty: 'success',
                     messageProperty : 'message'
                 },
                 api: {
@@ -28,11 +29,12 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
                 },
                 listeners : {
                     exception : function(proxy, response, operation) {
-                        if(operation){
-                            alert(operation.getError());
-                        }else{
-                            alert("Got Exception");
-                        }
+                            Ext.MessageBox.show({
+                                title: 'REMOTE EXCEPTION',
+                                msg: operation.getError(),
+                                icon: Ext.MessageBox.ERROR,
+                                buttons: Ext.Msg.OK
+                            });
                     }
                 }
             },
