@@ -21,6 +21,56 @@ exports.metamodules = function (db) {
     };
 };
 
+
+exports.newconfig = function (db) {
+    return function (req, res) {
+
+        var collection = db.get('visual_configuration');
+
+        delete req.body._id;
+
+        var wr = collection.insert(req.body, function(err,docs) {
+                if (err) {
+                    res.send(400, err);
+                }
+                else {
+                    res.send(201, docs);
+                }
+            });
+
+
+return ;
+        /*
+        collection.findOne({_id:id}, {}, function(o, schema){
+            db.get('modules_defs').find({}, {}, function (e, metaModules) {
+                if(!schema.modulesParams){
+                    var logMsg = 'In request, not found required property "modulesParams"';
+                    console.log(logMsg);
+                    res.send({"success": false, "message":logMsg});
+                    return;
+                }
+                var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
+                configuration.version = schema.version;
+                configuration.name = schema.name;
+
+                var configurations = db.get('configuration');
+                configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
+                    if (err) {
+                        res.send({"success": false, "message":"There was a problem adding the information to the database."});
+                        return console.log(err);
+                    }
+                    console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
+                });
+                res.send({"success": true});
+            });
+        });
+        */
+
+
+    };
+};
+
+
 exports.saveconfig = function (db) {
     return function (req, res) {
         var collection = db.get('visual_configuration');

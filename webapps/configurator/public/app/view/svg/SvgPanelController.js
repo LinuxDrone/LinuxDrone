@@ -24,10 +24,26 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
 
         // После загрузки списка всех схем, проинициализируем список имен схем
         model.get('listSchemas').addListener('load', function(storeListSchemas) {
+            if(storeListSchemas.count()==0){
+                // Если база конфигураций пуста
+                var BSON = bson().BSON;
+
+                console.log(BSON);
+
+                var newSchema = Ext.create('RtConfigurator.model.Schema', {
+                    _id : new ObjectID(),
+                    name : 'New',
+                    version : 1,
+                    current: true
+                });
+                storeListSchemas.add(newSchema);
+            }
+
             var namesStore = model.get('listSchemasNames');
             storeListSchemas.collect('name').forEach(function(entry) {
                 namesStore.add({name: entry});
             });
+
             // Найдем и установим текущую схему
             var curSchema = storeListSchemas.findRecord('current', true)
             if(!curSchema){

@@ -31,7 +31,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanelModel', {
                     exception : function(proxy, response, operation) {
                             Ext.MessageBox.show({
                                 title: 'REMOTE EXCEPTION',
-                                msg: operation.getError(),
+                                msg: operation.getError().statusText,
                                 icon: Ext.MessageBox.ERROR,
                                 buttons: Ext.Msg.OK
                             });
