@@ -4,7 +4,6 @@
     "version": 4,
     "Task Priority": 80,
     "Task Period": 200,
-    "Notify on change": false,
     "inputShema": {
         "type": "object",
         "id": "http://jsonschema.net",

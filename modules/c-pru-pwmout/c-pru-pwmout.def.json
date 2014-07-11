@@ -5,7 +5,6 @@
   "Task Priority": 80,
   "Task Period": 20000,
   "Transfer task period": 200000,
-  "Notify on change": false,
   "description": {
     "en": "pru pwm output",
     "ru": "Модуль формирования pwm сигнала блоком PRU"

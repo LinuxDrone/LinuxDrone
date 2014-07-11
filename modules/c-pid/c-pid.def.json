@@ -5,7 +5,6 @@
     "Task Priority": 80,
     "Task Period": 2000,
     "Transfer task period": 200000,
-    "Notify on change": false,
     "description": {
     "en": "PID module 3x",
     "ru": "PID регулятор 3 канала"

@@ -290,7 +290,7 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
                     return meta.name == paramName;
                 });
                 if (!metaParam) {
-                    console.log("Not found metadata for parameter '" + paramName + "'  in common definition for modules ");
+                    console.log("In instance " + module.instance + ". Not found metadata for parameter '" + paramName + "'  in common definition for modules ");
                 }
                 var typedValue = CastValue2Type(commonParams[paramName], metaParam.type);
                 if (typedValue === undefined) {
