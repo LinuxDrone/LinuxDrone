@@ -5,7 +5,8 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
     extend: 'Ext.app.ViewController',
 
     requires: [
-        'Ext.MessageBox'
+        'Ext.MessageBox',
+        'RtConfigurator.view.svg.SaveAsSchemaDialog'
     ],
 
     alias: 'controller.svg',
@@ -219,10 +220,6 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         model.paperScaleX -= 0.1;
         model.paperScaleY -= 0.1;
         model.get('paper').scale(model.paperScaleX, model.paperScaleY);
-
-        var BSON = bson().BSON;
-
-        console.log(BSON);
     },
 
     onClickZoomIn: function (b, e, eOpts ){
@@ -362,13 +359,33 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         this.SaveCurrentConfig(currentSchema.get('name'), currentSchema.get('version'), false);
     },
 
+    // Обработчик кнопки сохраненить схему как
+    onClickOpenSaveAsSchemaDialog: function(){
+        var newSaveAsDialog = Ext.create('RtConfigurator.view.svg.SaveAsSchemaDialog',{
+            //viewModel: this.getView().getViewModel(),
+            ownerCt: this.getView().ownerCt
+        });
+
+        //newSaveAsDialog.setViewModel(this.getView().getViewModel());
+
+        newSaveAsDialog.show();
+
+        //newSaveAsDialog.setViewModel(this.getView().getViewModel());
+    },
+
+    onClickSaveAsSchema: function(){
+        var currentSchema = this.getView().getViewModel().get('currentSchema');
+
+alert('sss');
+
+        //this.SaveCurrentConfig(currentSchema.get('name'), currentSchema.get('version'), false);
+    },
+
     onClickDeleteSchema: function(){
         var listSchemas = this.getView().getViewModel().get('listSchemas');
         var currentSchema = this.getView().getViewModel().get('currentSchema');
         listSchemas.remove(currentSchema);
         listSchemas.sync();
-
-        //alert("del");
     },
 
     // Приватная функция сохранения конфигурации (текущего графа) с именем и версией
