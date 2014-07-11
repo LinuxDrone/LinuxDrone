@@ -26,12 +26,7 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         model.get('listSchemas').addListener('load', function(storeListSchemas) {
             if(storeListSchemas.count()==0){
                 // Если база конфигураций пуста
-                var BSON = bson().BSON;
-
-                console.log(BSON);
-
                 var newSchema = Ext.create('RtConfigurator.model.Schema', {
-                    _id : new ObjectID(),
                     name : 'New',
                     version : 1,
                     current: true
@@ -224,6 +219,10 @@ Ext.define('RtConfigurator.view.svg.SvgPanelController', {
         model.paperScaleX -= 0.1;
         model.paperScaleY -= 0.1;
         model.get('paper').scale(model.paperScaleX, model.paperScaleY);
+
+        var BSON = bson().BSON;
+
+        console.log(BSON);
     },
 
     onClickZoomIn: function (b, e, eOpts ){

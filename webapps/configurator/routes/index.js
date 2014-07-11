@@ -27,7 +27,7 @@ exports.newconfig = function (db) {
 
         var collection = db.get('visual_configuration');
 
-        delete req.body._id;
+        //delete req.body._id;
 
         var wr = collection.insert(req.body, function(err,docs) {
                 if (err) {

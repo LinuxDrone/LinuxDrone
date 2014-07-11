@@ -1,6 +1,8 @@
 Ext.define('RtConfigurator.model.Base', {
     extend: 'Ext.data.Model',
 
+    identifier: 'mongoidgenerator',
+
     fields: [{
         name: '_id',
         defaultValue: null
