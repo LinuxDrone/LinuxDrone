@@ -197,6 +197,7 @@ add_subdirectory(${HST_DIR}/c-host)
 # Services
 add_subdirectory(${SVC_DIR}/telemetry)
 add_subdirectory(${SVC_DIR}/i2c)
+add_subdirectory(${SVC_DIR}/test)
 
 # Main project target
 #add_subdirectory(${TGT_DIR}/beaglebone) 
