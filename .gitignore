@@ -41,4 +41,3 @@ cmake_install.cmake
 
 # Ignore Idea files
 *.idea
-
