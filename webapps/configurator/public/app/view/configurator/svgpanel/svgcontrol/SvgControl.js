@@ -5,7 +5,7 @@
  *
  * TODO - Replace this content of this view to suite the needs of your application.
  */
-Ext.define('RtConfigurator.view.svg.SvgControl', {
+Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
     extend: 'Ext.Component',
     alias: 'widget.svg',
 

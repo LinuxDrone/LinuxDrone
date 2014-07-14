@@ -6,9 +6,9 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
     alias: 'widget.svgpanel',
 
     requires: [
-        'RtConfigurator.view.svg.SvgPanelController',
-        'RtConfigurator.view.svg.SvgPanelModel',
-        'RtConfigurator.view.svg.SvgControl'
+        'RtConfigurator.view.configurator.svgpanel.SvgPanelController',
+        'RtConfigurator.view.configurator.svgpanel.SvgPanelModel',
+        'RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl'
     ],
 
     viewModel: {
