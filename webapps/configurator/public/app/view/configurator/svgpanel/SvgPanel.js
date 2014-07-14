@@ -1,7 +1,7 @@
 /**
  * Created by vrubel on 22.06.14.
  */
-Ext.define('RtConfigurator.view.svg.SvgPanel', {
+Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
     extend: 'Ext.Panel',
     alias: 'widget.svgpanel',
 
@@ -12,9 +12,9 @@ Ext.define('RtConfigurator.view.svg.SvgPanel', {
     ],
 
     viewModel: {
-        type: 'svg'
+        type: 'svgpanel'
     },
-    controller: 'svg',
+    controller: 'svgpanel',
 
     layout:'fit',
     items:[

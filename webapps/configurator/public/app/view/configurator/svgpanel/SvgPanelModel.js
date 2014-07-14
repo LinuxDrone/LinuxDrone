@@ -4,7 +4,7 @@
 Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
     extend: 'Ext.app.ViewModel',
 
-    alias: 'viewmodel.svg',
+    alias: 'viewmodel.svgpanel',
 
     paperScaleX: 1,
     paperScaleY: 1,

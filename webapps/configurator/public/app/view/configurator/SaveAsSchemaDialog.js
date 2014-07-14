@@ -1,5 +1,5 @@
 
-Ext.define('RtConfigurator.view.svg.SaveAsSchemaDialog', {
+Ext.define('RtConfigurator.view.configurator.SaveAsSchemaDialog', {
     extend: 'Ext.form.Panel',
     floating: true,
     modal : true,
@@ -25,7 +25,10 @@ Ext.define('RtConfigurator.view.svg.SaveAsSchemaDialog', {
     },{
         fieldLabel: 'Version',
         name: 'last',
-        allowBlank: false
+        allowBlank: false,
+        bind:{
+            value: '{newSchemaVersion}'
+        }
     }],
 
     // Reset and Submit buttons

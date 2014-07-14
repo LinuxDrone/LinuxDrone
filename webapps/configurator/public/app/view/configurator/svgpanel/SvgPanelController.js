@@ -6,10 +6,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     requires: [
         'Ext.MessageBox',
-        'RtConfigurator.view.svg.SaveAsSchemaDialog'
+//        'RtConfigurator.view.svg.SaveAsSchemaDialog'
     ],
 
-    alias: 'controller.svg',
+    alias: 'controller.svgpanel',
 
     init: function() {
         var model = this.getView().getViewModel();
@@ -361,7 +361,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     // Обработчик кнопки сохраненить схему как
     onClickOpenSaveAsSchemaDialog: function(){
-        var newSaveAsDialog = Ext.create('RtConfigurator.view.svg.SaveAsSchemaDialog',{
+        var newSaveAsDialog = Ext.create('RtConfigurator.view.configurator.SaveAsSchemaDialog',{
             //viewModel: this.getView().getViewModel(),
             ownerCt: this.getView().ownerCt
         });
