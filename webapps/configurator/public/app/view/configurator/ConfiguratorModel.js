@@ -7,8 +7,8 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorModel', {
     alias: 'viewmodel.configurator',
 
     data: {
-        newSchemaName: 'jjjjjjj',
-        newSchemaVersion: '1'
+        newSchemaName: '',
+        newSchemaVersion: ''
     }
 
 });

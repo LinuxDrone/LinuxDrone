@@ -5,8 +5,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     extend: 'Ext.app.ViewController',
 
     requires: [
-        'Ext.MessageBox',
-//        'RtConfigurator.view.svg.SaveAsSchemaDialog'
+        'Ext.MessageBox'
     ],
 
     alias: 'controller.svgpanel',
@@ -361,19 +360,23 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         this.SaveCurrentConfig(currentSchema.get('name'), currentSchema.get('version'), false);
     },
 
+
     // Обработчик кнопки сохраненить схему как
     onClickOpenSaveAsSchemaDialog: function () {
+        var model = this.getView().getViewModel();
+        var configuratorModel = this.getView().ownerCt.getViewModel();
+        configuratorModel.set('newSchemaName', model.get('currentSchemaName'));
+
         var newSaveAsDialog = Ext.create('RtConfigurator.view.configurator.SaveAsSchemaDialog', {
             ownerCt: this.getView().ownerCt
         });
         newSaveAsDialog.show();
     },
 
+
     SaveAsSchema: function (newSchemaName, newSchemaVersion) {
         var model = this.getView().getViewModel();
-
         var storeListSchemas = model.get('listSchemas');
-
 
         var newSchema = Ext.create('RtConfigurator.model.Schema', {
             name: newSchemaName,
@@ -382,12 +385,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         });
         storeListSchemas.add(newSchema);
 
-
         var graph = model.get('graph');
         //"modulesParams": this.getView().getViewModel().get('currentSchema').get('modulesParams')
         newSchema.set('jsonGraph', JSON.stringify(graph.toJSON()));
         storeListSchemas.sync();
-
 
         //this.SaveCurrentConfig(currentSchema.get('name'), currentSchema.get('version'), false);
     },
