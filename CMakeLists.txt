@@ -98,6 +98,10 @@ include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
 # Threads
 find_package(Threads)
 
+# BSON
+# Libraries: ${BSON_LIBRARIES}
+find_package(BSON REQUIRED)
+include_directories(${INCLUDE_DIRECTORIES} ${BSON_INCLUDE_DIR})
 
 #option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
 IF(BUILD_DOCUMENTATION)
