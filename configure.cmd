@@ -7,11 +7,16 @@ for %%F in (.) do set ROOT_DIR=%%~fF
 set CMAKE="%ROOT_DIR%/tools/cmake-2.8.12.2-win32-x86/bin/cmake"
 rem set CMAKE="cmake"
 
+# Use cross compiler for build
+set CROSS_COMPILED_USE=YES
+# Compile code for board
+set BOARD_TYPE=rpi
+
 rem Remove cmake cache if found in the source directory
 %CMAKE% -E remove "%ROOT_DIR%/CMakeCache.txt"
 %CMAKE% -E remove_directory "%ROOT_DIR%/CMakeFiles/"
 
-set TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/beaglebone.cmake
+set TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/%BOARD_TYPE%.cmake
 set BUILD_TYPE=Debug
 rem set BUILD_TYPE=Release
 
@@ -32,7 +37,7 @@ if "%INCLUDE%" == "" set INCLUDE=*
 if "%LIB%"     == "" set LIB=*
 if "%LIBPATH%" == "" set LIBPATH=*
 
-%CMAKE% %GENERATOR% %TOOLCHAIN% -DCMAKE_BUILD_TYPE=%BUILD_TYPE% "%ROOT_DIR%" %*
+%CMAKE% %GENERATOR% %TOOLCHAIN% -DCMAKE_BUILD_TYPE=%BUILD_TYPE% "%ROOT_DIR%" %* -DCMAKE_BOARD_TYPE=%BOARD_TYPE%
 if not errorlevel 1 goto Done
 echo *** CMAKE ERROR ***
 
