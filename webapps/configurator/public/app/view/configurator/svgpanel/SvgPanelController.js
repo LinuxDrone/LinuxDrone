@@ -21,31 +21,54 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             this.getView().controller.onSwitchCurrentSchema(model.get('currentSchema'));
         });
 
+        var refreshSchemaComboLists = this.RefreshSchemaComboLists;
 
         // После загрузки списка всех схем, проинициализируем список имен схем
         model.get('listSchemas').addListener('load', function (storeListSchemas) {
-            if (storeListSchemas.count() == 0) {
-                // Если база конфигураций пуста
-                var newSchema = Ext.create('RtConfigurator.model.Schema', {
-                    name: 'New',
-                    version: 1,
-                    current: true
-                });
-                storeListSchemas.add(newSchema);
-            }
-
-            var namesStore = model.get('listSchemasNames');
-            storeListSchemas.collect('name').forEach(function (entry) {
-                namesStore.add({name: entry});
-            });
-
-            // Найдем и установим текущую схему
-            var curSchema = storeListSchemas.findRecord('current', true)
-            if (!curSchema) {
-                curSchema = storeListSchemas.first();
-            }
-            model.set('currentSchema', curSchema);
+            refreshSchemaComboLists(model);
         });
+    },
+
+
+    // Реврешит содержимое списков комбобоксов выбора схемы
+    RefreshSchemaComboLists: function(svgPanelModel){
+        var storeListSchemas = svgPanelModel.get('listSchemas');
+
+        if (storeListSchemas.count() == 0) {
+            // Если база конфигураций пуста
+            var newSchema = Ext.create('RtConfigurator.model.Schema', {
+                name: 'New',
+                version: 1,
+                current: true
+            });
+            storeListSchemas.add(newSchema);
+        }
+
+        var namesStore = svgPanelModel.get('listSchemasNames');
+        namesStore.removeAll();
+        storeListSchemas.collect('name').forEach(function (entry) {
+            namesStore.add({name: entry});
+        });
+
+
+        // Найдем и установим текущую схему
+        var curSchema = storeListSchemas.findRecord('current', true)
+        if (!curSchema) {
+            curSchema = storeListSchemas.first();
+        }
+
+        var versionsStore = svgPanelModel.get('listSchemasVersions');
+        // Отфильтруем список версий в соответствии с выбранным именем схемы
+        versionsStore.removeFilter('name');
+        versionsStore.addFilter([
+            {
+                property: 'name',
+                value: curSchema.get('name'),
+                operator: '='
+            }
+        ]);
+
+        svgPanelModel.set('currentSchema', curSchema);
     },
 
     AddModule2Scheme: function (metaOfModule) {
@@ -244,7 +267,13 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         ]);
 
         // Установим в качестве текщуй схемы, первую попавшуюся версию схемы с выбранным в данный момент именем
-        model.set('currentSchema', versionsStore.first());
+        // Но перед эти пометим текущую схему как не активную
+        model.get('currentSchema').set('current', false);
+        var newCurrent = versionsStore.first();
+        newCurrent.set('current', true);
+        model.set('currentSchema', newCurrent);
+
+        model.get('listSchemas').sync();
     },
 
     // обработчик выбора версии схемы в комбобоксе
@@ -257,8 +286,16 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             return record.get('version') == records[0].get('version') && record.get('name') == model.get('currentSchema').get('name');
         });
 
+        // Но перед эти пометим текущую схему как не активную
+        model.get('currentSchema').set('current', false);
+
         // Установим в качестве текущей схемы, схемы с выбранной версией
-        model.set('currentSchema', storeListSchemas.getAt(ind));
+        var newCurrent = storeListSchemas.getAt(ind);
+        newCurrent.set('current', true);
+
+        model.set('currentSchema', newCurrent);
+
+        storeListSchemas.sync();
     },
 
     GetLocale: function () {
@@ -388,9 +425,14 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var graph = model.get('graph');
         //"modulesParams": this.getView().getViewModel().get('currentSchema').get('modulesParams')
         newSchema.set('jsonGraph', JSON.stringify(graph.toJSON()));
+
+        // Текущая схема перестает быть таковой
+        var currentSchema = model.get('currentSchema');
+        currentSchema.set('current', false);
+
         storeListSchemas.sync();
 
-        //this.SaveCurrentConfig(currentSchema.get('name'), currentSchema.get('version'), false);
+        this.RefreshSchemaComboLists(model);
     },
 
     onClickDeleteSchema: function () {

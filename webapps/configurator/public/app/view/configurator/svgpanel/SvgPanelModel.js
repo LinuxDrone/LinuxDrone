@@ -11,15 +11,15 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
 
     stores: {
         // Список всех схем
-        listSchemas : {
+        listSchemas: {
             autoLoad: true,
             model: 'RtConfigurator.model.Schema',
             proxy: {
                 type: 'rest',
-                reader : {
-                    root:'data',
+                reader: {
+                    root: 'data',
                     successProperty: 'success',
-                    messageProperty : 'message'
+                    messageProperty: 'message'
                 },
                 api: {
                     read: 'getconfigs',
@@ -27,19 +27,23 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
                     create: 'newconfig',
                     destroy: 'delconfig'
                 },
-                listeners : {
-                    exception : function(proxy, response, operation) {
-                            Ext.MessageBox.show({
-                                title: 'REMOTE EXCEPTION',
-                                msg: operation.getError().statusText,
-                                icon: Ext.MessageBox.ERROR,
-                                buttons: Ext.Msg.OK
-                            });
+                listeners: {
+                    exception: function (proxy, response, operation) {
+                        var errMsg = operation.getError();
+                        if (operation.getError().statusText) {
+                            errMsg = operation.getError().statusText;
+                        }
+                        Ext.MessageBox.show({
+                            title: 'REMOTE EXCEPTION',
+                            msg: errMsg,
+                            icon: Ext.MessageBox.ERROR,
+                            buttons: Ext.Msg.OK
+                        });
                     }
                 }
             },
-            listeners:{
-                write: function( store, operation, eOpts ){
+            listeners: {
+                write: function (store, operation, eOpts) {
                     // TODO: Здесь найти модель и установить schemaChanged в false
                     //alert("okkk");
                 }
@@ -47,12 +51,12 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
         },
 
         // Список имен схем
-        listSchemasNames : new Ext.data.ArrayStore({
-            fields:['name']
+        listSchemasNames: new Ext.data.ArrayStore({
+            fields: ['name']
         }),
 
         // Список версий для выбранного имени схемы
-        listSchemasVersions : {
+        listSchemasVersions: {
             source: '{listSchemas}'
         }
     },
@@ -63,25 +67,25 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
         paper: undefined,
 
         // Текущая выбранная схема
-        currentSchema:undefined,
+        currentSchema: undefined,
 
         // Сигнализирует о том, что схема изменилась (изменился graph - визуальное представление)
         schemaChanged: false
     },
 
-    formulas:{
+    formulas: {
         // Имя текущей схемы
-        currentSchemaName:function(get){
+        currentSchemaName: function (get) {
             var curSchema = get('currentSchema');
-            if(curSchema){
+            if (curSchema) {
                 return curSchema.get('name');
             }
         },
 
         // Версия текущей схемы
-        currentSchemaVersion:function(get){
+        currentSchemaVersion: function (get) {
             var curSchema = get('currentSchema');
-            if(curSchema){
+            if (curSchema) {
                 return curSchema.get('version');
             }
         }
