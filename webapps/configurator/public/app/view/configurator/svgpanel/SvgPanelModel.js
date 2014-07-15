@@ -66,9 +66,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
         currentSchema:undefined,
 
         // Сигнализирует о том, что схема изменилась (изменился graph - визуальное представление)
-        schemaChanged: false,
-
-        newSchemaName: 'jjjjjjj'
+        schemaChanged: false
     },
 
     formulas:{

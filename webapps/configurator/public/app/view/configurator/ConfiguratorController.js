@@ -14,13 +14,13 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
     },
 
 
+    // Вызывается при нажатии кнопки Save в диалоге SaveAs (SaveAsSchemaDialog)
     onClickSaveAsSchema: function(){
-        var currentSchema = this.getView().getViewModel().get('currentSchema');
-
-        alert('sss');
-
-        //this.SaveCurrentConfig(currentSchema.get('name'), currentSchema.get('version'), false);
-    },
+        var model = this.getView().getViewModel();
+        var svgpanelmodel = model.children["rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1"];
+        var svgpanelcontroller = svgpanelmodel.getView().controller;
+        svgpanelcontroller.SaveAsSchema(model.get('newSchemaName'), model.get('newSchemaVersion'));
+    }
 
 
 });

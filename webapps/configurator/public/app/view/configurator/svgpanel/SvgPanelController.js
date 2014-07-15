@@ -11,50 +11,50 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     alias: 'controller.svgpanel',
 
-    init: function() {
+    init: function () {
         var model = this.getView().getViewModel();
 
         // Подписываемся на факт изменения текущей схемы
         model.bind('{currentSchema}', this.onSwitchCurrentSchema);
 
         // После создания папера, отрисуем на нем текущую схему
-        model.bind('{paper}', function(paper){
+        model.bind('{paper}', function (paper) {
             this.getView().controller.onSwitchCurrentSchema(model.get('currentSchema'));
         });
 
 
         // После загрузки списка всех схем, проинициализируем список имен схем
-        model.get('listSchemas').addListener('load', function(storeListSchemas) {
-            if(storeListSchemas.count()==0){
+        model.get('listSchemas').addListener('load', function (storeListSchemas) {
+            if (storeListSchemas.count() == 0) {
                 // Если база конфигураций пуста
                 var newSchema = Ext.create('RtConfigurator.model.Schema', {
-                    name : 'New',
-                    version : 1,
+                    name: 'New',
+                    version: 1,
                     current: true
                 });
                 storeListSchemas.add(newSchema);
             }
 
             var namesStore = model.get('listSchemasNames');
-            storeListSchemas.collect('name').forEach(function(entry) {
+            storeListSchemas.collect('name').forEach(function (entry) {
                 namesStore.add({name: entry});
             });
 
             // Найдем и установим текущую схему
             var curSchema = storeListSchemas.findRecord('current', true)
-            if(!curSchema){
+            if (!curSchema) {
                 curSchema = storeListSchemas.first();
             }
             model.set('currentSchema', curSchema);
         });
     },
 
-    AddModule2Scheme: function(metaOfModule){
+    AddModule2Scheme: function (metaOfModule) {
         var model = this.getView().getViewModel();
         model.get('graph').addCell(this.MakeVisualModule(metaOfModule, model.get('graph')));
     },
 
-    svgColors:{
+    svgColors: {
         outPortsFillColor: '#E74C3C',
         normalModuleColor: '#2ECC71',
         smartModuleColor: '#CCCC71',
@@ -149,7 +149,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     GetInstanceParams: function GetInstanceParams(instanceName, moduleMeta) {
         var model = this.getView().getViewModel();
         var modulesParams = model.get('currentSchema').get('modulesParams');
-        if(!modulesParams){
+        if (!modulesParams) {
             alert('Wrong schema. Not found required property "modulesParams"');
             return;
         }
@@ -215,14 +215,14 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         return moduleParams;
     },
 
-    onClickZoomOut: function (b, e, eOpts ){
+    onClickZoomOut: function (b, e, eOpts) {
         var model = this.getView().getViewModel();
         model.paperScaleX -= 0.1;
         model.paperScaleY -= 0.1;
         model.get('paper').scale(model.paperScaleX, model.paperScaleY);
     },
 
-    onClickZoomIn: function (b, e, eOpts ){
+    onClickZoomIn: function (b, e, eOpts) {
         var model = this.getView().getViewModel();
         model.paperScaleX += 0.1;
         model.paperScaleY += 0.1;
@@ -230,29 +230,31 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     },
 
     // обработчик выбора имени схемы в комбобоксе
-    onSelectSchema: function(combo, records, eOpts){
-        var model=this.getView().getViewModel();
+    onSelectSchema: function (combo, records, eOpts) {
+        var model = this.getView().getViewModel();
         var versionsStore = model.get('listSchemasVersions');
 
         // Отфильтруем список версий в соответствии с выбранным именем схемы
         versionsStore.removeFilter('name');
-        versionsStore.addFilter([{
-            property: 'name',
-            value: records[0].get('name'),
-            operator: '='
-        }]);
+        versionsStore.addFilter([
+            {
+                property: 'name',
+                value: records[0].get('name'),
+                operator: '='
+            }
+        ]);
 
         // Установим в качестве текщуй схемы, первую попавшуюся версию схемы с выбранным в данный момент именем
         model.set('currentSchema', versionsStore.first());
     },
 
     // обработчик выбора версии схемы в комбобоксе
-    onSelectVersion: function(combo, records, eOpts){
+    onSelectVersion: function (combo, records, eOpts) {
         var model = this.getView().getViewModel();
         var storeListSchemas = model.get('listSchemas');
 
         // Найдем в хранилище схему с указанными именем и версией
-        var ind = storeListSchemas.findBy(function(record, id){
+        var ind = storeListSchemas.findBy(function (record, id) {
             return record.get('version') == records[0].get('version') && record.get('name') == model.get('currentSchema').get('name');
         });
 
@@ -288,12 +290,12 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     },
 
     // Обработчик смены текущей схемы на другую
-    onSwitchCurrentSchema: function(curSchema){
+    onSwitchCurrentSchema: function (curSchema) {
         var model = this.getView().getViewModel();
 
         var graph = model.get('graph');
 
-        if(!graph){
+        if (!graph) {
             return;
         }
 
@@ -354,34 +356,43 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     },
 
     // Обработчик кнопки сохранения схемы
-    onClickSaveSchema: function(){
+    onClickSaveSchema: function () {
         var currentSchema = this.getView().getViewModel().get('currentSchema');
         this.SaveCurrentConfig(currentSchema.get('name'), currentSchema.get('version'), false);
     },
 
     // Обработчик кнопки сохраненить схему как
-    onClickOpenSaveAsSchemaDialog: function(){
-        var newSaveAsDialog = Ext.create('RtConfigurator.view.configurator.SaveAsSchemaDialog',{
-            //viewModel: this.getView().getViewModel(),
+    onClickOpenSaveAsSchemaDialog: function () {
+        var newSaveAsDialog = Ext.create('RtConfigurator.view.configurator.SaveAsSchemaDialog', {
             ownerCt: this.getView().ownerCt
         });
-
-        //newSaveAsDialog.setViewModel(this.getView().getViewModel());
-
         newSaveAsDialog.show();
-
-        //newSaveAsDialog.setViewModel(this.getView().getViewModel());
     },
 
-    onClickSaveAsSchema: function(){
-        var currentSchema = this.getView().getViewModel().get('currentSchema');
+    SaveAsSchema: function (newSchemaName, newSchemaVersion) {
+        var model = this.getView().getViewModel();
 
-alert('sss');
+        var storeListSchemas = model.get('listSchemas');
+
+
+        var newSchema = Ext.create('RtConfigurator.model.Schema', {
+            name: newSchemaName,
+            version: newSchemaVersion,
+            current: true
+        });
+        storeListSchemas.add(newSchema);
+
+
+        var graph = model.get('graph');
+        //"modulesParams": this.getView().getViewModel().get('currentSchema').get('modulesParams')
+        newSchema.set('jsonGraph', JSON.stringify(graph.toJSON()));
+        storeListSchemas.sync();
+
 
         //this.SaveCurrentConfig(currentSchema.get('name'), currentSchema.get('version'), false);
     },
 
-    onClickDeleteSchema: function(){
+    onClickDeleteSchema: function () {
         var listSchemas = this.getView().getViewModel().get('listSchemas');
         var currentSchema = this.getView().getViewModel().get('currentSchema');
         listSchemas.remove(currentSchema);
@@ -397,7 +408,7 @@ alert('sss');
 
         var storeListSchemas = model.get('listSchemas');
         // Найдем в хранилище схему с указанными именем и версией
-        var ind = storeListSchemas.findBy(function(record, id){
+        var ind = storeListSchemas.findBy(function (record, id) {
             return record.get('version') == version && record.get('name') == name;
         });
         var rec = storeListSchemas.getAt(ind);
@@ -405,53 +416,53 @@ alert('sss');
         storeListSchemas.sync();
 
         /*
-        $.post("saveconfig", data4save,
-            function (data) {
-                if (data != "OK") {
-                    alert(data);
-                }
-                else {
-                    if (isNew) {
-                        allConfigs.push(data4save);
-                        // Если была записана новая конфигурация, добавим ее в комбобоксы
-                        // Если была записана новая версия, а имя конфигурации не изменилось, то добавим новую строку только
-                        // в комбобокс версий.
-                        // Иначе добавим новые строки в оба комбобокса. И установим как выбранные значения в комбобоксах,
-                        // соответсвующие имени и версии новой конфигурации
-                        if (_.contains(res.ConfigNames(), name)) {
-                            if (res.configNameSelected() == name) {
-                                // Добавим контент конфигурации к списку версий выбранной конфигурации
-                                res.Versions.push(version);
-                            }
-                            else {
-                                res.configNameSelected(name);
-                            }
-                            res.versionSelected(version);
-                        }
-                        else {
-                            res.ConfigNames.push(name);
-                            res.configNameSelected(name);
-                        }
-                    }
-                    else {
-                        var storeListSchemas = model.get('listSchemas');
-                        // Найдем в хранилище схему с указанными именем и версией
-                        var ind = storeListSchemas.findBy(function(record, id){
-                            return record.get('version') == data4save.version && record.get('name') == data4save.name;
-                        });
-                        var rec = storeListSchemas.getAt(ind);
+         $.post("saveconfig", data4save,
+         function (data) {
+         if (data != "OK") {
+         alert(data);
+         }
+         else {
+         if (isNew) {
+         allConfigs.push(data4save);
+         // Если была записана новая конфигурация, добавим ее в комбобоксы
+         // Если была записана новая версия, а имя конфигурации не изменилось, то добавим новую строку только
+         // в комбобокс версий.
+         // Иначе добавим новые строки в оба комбобокса. И установим как выбранные значения в комбобоксах,
+         // соответсвующие имени и версии новой конфигурации
+         if (_.contains(res.ConfigNames(), name)) {
+         if (res.configNameSelected() == name) {
+         // Добавим контент конфигурации к списку версий выбранной конфигурации
+         res.Versions.push(version);
+         }
+         else {
+         res.configNameSelected(name);
+         }
+         res.versionSelected(version);
+         }
+         else {
+         res.ConfigNames.push(name);
+         res.configNameSelected(name);
+         }
+         }
+         else {
+         var storeListSchemas = model.get('listSchemas');
+         // Найдем в хранилище схему с указанными именем и версией
+         var ind = storeListSchemas.findBy(function(record, id){
+         return record.get('version') == data4save.version && record.get('name') == data4save.name;
+         });
+         var rec = storeListSchemas.getAt(ind);
 
-                        rec.set('jsonGraph', data4save.jsonGraph);
+         rec.set('jsonGraph', data4save.jsonGraph);
 
-                        //rec.save();
+         //rec.save();
 
-                        storeListSchemas.sync();
-                    }
-                    res.graphChanged(false);
-                }
-            }
-        );
-        */
+         storeListSchemas.sync();
+         }
+         res.graphChanged(false);
+         }
+         }
+         );
+         */
     }
 
 });
