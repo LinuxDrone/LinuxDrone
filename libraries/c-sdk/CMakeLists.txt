@@ -13,11 +13,12 @@
 file(GLOB_RECURSE INC "include/*.h")
 file(GLOB_RECURSE SRC "src/*.c")
 
-include_directories(${RFS_DIR}/usr/local/include/libbson-1.0 ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${BSON_INCLUDE_DIR})
+include_directories( ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(EXTRA_LIBS
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
-    ${RFS_DIR}/usr/local/lib/libbson-1.0.so
+    ${BSON_LIBRARIES}
     m
 )
 
