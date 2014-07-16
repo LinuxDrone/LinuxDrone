@@ -83,6 +83,11 @@ SET(SSH_PORT_TARGET_SYSTEM 22)
 find_package(MongoDB REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 
+# MongoC
+# Libraries: ${MongoC_LIBRARIES}
+find_package(MongoC REQUIRED)
+include_directories(${INCLUDE_DIRECTORIES} ${MongoC_INCLUDE_DIR})
+
 # Boost
 # Libraries: ${Boost_LIBRARIES}
 set(Boost_USE_STATIC_LIBS OFF) 
