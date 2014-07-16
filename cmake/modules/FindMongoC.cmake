@@ -29,6 +29,8 @@ else(MongoC_INCLUDE_DIR AND MongoC_LIBRARIES)
       /usr/local/include/
       )
 
+  set(MongoC_INCLUDE_DIR "${MongoC_INCLUDE_DIR}/libmongoc-1.0")
+
   find_library(
       MongoC_LIBRARIES
       NAMES mongoc-1.0
