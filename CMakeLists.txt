@@ -108,6 +108,11 @@ find_package(Threads)
 find_package(BSON REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${BSON_INCLUDE_DIR})
 
+# WebSockets
+# Libraries: ${WebSockets_LIBRARIES}
+find_package(WebSockets REQUIRED)
+include_directories(${INCLUDE_DIRECTORIES} ${WebSockets_INCLUDE_DIR})
+
 #option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
 IF(BUILD_DOCUMENTATION)
 
