@@ -33,7 +33,11 @@ project(linuxdrone)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME})
 
 # Compiler options
-add_definitions(-mfpu=neon ${XENOMAI_DEFINITIONS}) #-std=c++11
+IF(${BOARD_TYPE} STREQUAL "beaglebone")
+    add_definitions(-mfpu=neon ${XENOMAI_DEFINITIONS}) #-std=c++11
+ELSEIF(${BOARD_TYPE} STREQUAL "rpi")
+    add_definitions(${XENOMAI_DEFINITIONS})
+ENDIF()
 
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
