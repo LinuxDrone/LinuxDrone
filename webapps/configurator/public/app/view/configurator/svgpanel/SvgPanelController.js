@@ -436,10 +436,13 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     },
 
     onClickDeleteSchema: function () {
-        var listSchemas = this.getView().getViewModel().get('listSchemas');
-        var currentSchema = this.getView().getViewModel().get('currentSchema');
+        var model = this.getView().getViewModel();
+        var listSchemas = model.get('listSchemas');
+        var currentSchema = model.get('currentSchema');
         listSchemas.remove(currentSchema);
         listSchemas.sync();
+
+        this.RefreshSchemaComboLists(model);
     },
 
     // Приватная функция сохранения конфигурации (текущего графа) с именем и версией
