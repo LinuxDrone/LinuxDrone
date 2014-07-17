@@ -172,8 +172,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var model = this.getView().getViewModel();
         var modulesParams = model.get('currentSchema').get('modulesParams');
         if (!modulesParams) {
-            alert('Wrong schema. Not found required property "modulesParams"');
-            return;
+            modulesParams = {};
+            model.get('currentSchema').set('modulesParams', modulesParams);
         }
 
         var moduleParams;
@@ -182,7 +182,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             case "module_def":
                 if (!modulesParams[instanceName]) {
                     requireMakeDefaults = true;
-                    modulesParams[instanceName] = {common: {}, specific: {}};
+                    modulesParams[instanceName]= {common: {}, specific: {}};
                 }
                 moduleParams = modulesParams[instanceName];
                 break;
@@ -430,6 +430,11 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var currentSchema = model.get('currentSchema');
         currentSchema.set('current', false);
 
+        var origModulesParams = currentSchema.get('modulesParams');
+
+        // Копируем modulesParams из текущей схемы в новую
+        newSchema.set('modulesParams', Ext.JSON.decode((Ext.JSON.encode(origModulesParams))));
+
         storeListSchemas.sync();
 
         this.RefreshSchemaComboLists(model);
@@ -449,9 +454,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     SaveCurrentConfig: function (name, version, isNew) {
         var model = this.getView().getViewModel();
         var graph = model.get('graph');
-
-        //"modulesParams": this.getView().getViewModel().get('currentSchema').get('modulesParams')
-
         var storeListSchemas = model.get('listSchemas');
         // Найдем в хранилище схему с указанными именем и версией
         var ind = storeListSchemas.findBy(function (record, id) {
@@ -459,56 +461,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         });
         var rec = storeListSchemas.getAt(ind);
         rec.set('jsonGraph', JSON.stringify(graph.toJSON()));
+        rec.modified['modulesParams']=rec.get('modulesParams');
         storeListSchemas.sync();
-
-        /*
-         $.post("saveconfig", data4save,
-         function (data) {
-         if (data != "OK") {
-         alert(data);
-         }
-         else {
-         if (isNew) {
-         allConfigs.push(data4save);
-         // Если была записана новая конфигурация, добавим ее в комбобоксы
-         // Если была записана новая версия, а имя конфигурации не изменилось, то добавим новую строку только
-         // в комбобокс версий.
-         // Иначе добавим новые строки в оба комбобокса. И установим как выбранные значения в комбобоксах,
-         // соответсвующие имени и версии новой конфигурации
-         if (_.contains(res.ConfigNames(), name)) {
-         if (res.configNameSelected() == name) {
-         // Добавим контент конфигурации к списку версий выбранной конфигурации
-         res.Versions.push(version);
-         }
-         else {
-         res.configNameSelected(name);
-         }
-         res.versionSelected(version);
-         }
-         else {
-         res.ConfigNames.push(name);
-         res.configNameSelected(name);
-         }
-         }
-         else {
-         var storeListSchemas = model.get('listSchemas');
-         // Найдем в хранилище схему с указанными именем и версией
-         var ind = storeListSchemas.findBy(function(record, id){
-         return record.get('version') == data4save.version && record.get('name') == data4save.name;
-         });
-         var rec = storeListSchemas.getAt(ind);
-
-         rec.set('jsonGraph', data4save.jsonGraph);
-
-         //rec.save();
-
-         storeListSchemas.sync();
-         }
-         res.graphChanged(false);
-         }
-         }
-         );
-         */
     }
 
 });

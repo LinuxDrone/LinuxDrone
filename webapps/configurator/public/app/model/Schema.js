@@ -4,11 +4,9 @@
 Ext.define('RtConfigurator.model.Schema', {
     extend: 'RtConfigurator.model.Base',
 
-    fields: [{
-        name: 'version',
-        type: 'string'
-    },{
-        name: 'jsonGraph',
-        type: 'string'
-    }]
+    fields: [
+        {name: 'version', type: 'string'},
+        {name: 'jsonGraph', type: 'string'},
+        {name: 'modulesParams', type: 'auto' }
+    ]
 });
