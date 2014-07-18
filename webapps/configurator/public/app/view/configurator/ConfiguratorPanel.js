@@ -6,7 +6,8 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorPanel', {
     alias: 'widget.configurator',
 
     requires: [
-        'RtConfigurator.view.configurator.svgpanel.SvgPanel'
+        'RtConfigurator.view.configurator.svgpanel.SvgPanel',
+        'RtConfigurator.view.configurator.propertiespanel.PropertiesPanel'
     ],
 
     viewModel: {
@@ -61,11 +62,7 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorPanel', {
         },
         {
             region: 'east',
-            title: 'Properties',
-            collapsible: true,
-            width: 250,
-            split: true,
-            html: '<h2>properties will be here</h2>'
+            xtype: 'propertiespanel'
         },
         {
             region: 'center',
