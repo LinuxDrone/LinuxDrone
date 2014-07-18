@@ -8,7 +8,9 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorModel', {
 
     data: {
         newSchemaName: '',
-        newSchemaVersion: ''
+        newSchemaVersion: '',
+
+        currentModuleProps: {}
     }
 
 });

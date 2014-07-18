@@ -21,11 +21,7 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
             items: [
                 {
                     xtype: 'propertygrid',
-                    source: {
-                        "Task Priority": 66,
-                        "Task Period": 150,
-                        "Transfer task period": 20
-                    }
+                    reference: 'commonProperties'
                 }
             ]
         },
@@ -34,10 +30,7 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
             items: [
                 {
                     xtype: 'propertygrid',
-                    source: {
-                        "Pru Device" : 1,
-                        "Pru Binary" : "/root/PwmOut.bin"
-                    }
+                    reference: 'specificProperties'
                 }
             ]
         }

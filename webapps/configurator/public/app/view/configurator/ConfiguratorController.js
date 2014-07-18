@@ -10,9 +10,17 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
 
     alias: 'controller.configurator',
 
-    init: function() {
+    init: function () {
+        var model = this.getView().getViewModel();
+
+        // Подписываемся на факт изменения текущей схемы
+        model.bind('{currentModuleProps}', this.onChangeCurrentModuleProps);
     },
 
+    onChangeCurrentModuleProps: function(currentModuleProps){
+        this.getView().lookupReference('commonProperties').setSource(currentModuleProps.common);
+        this.getView().lookupReference('specificProperties').setSource(currentModuleProps.specific);
+    },
 
     // Вызывается при нажатии кнопки Save в диалоге SaveAs (SaveAsSchemaDialog)
     onClickSaveAsSchema: function(){

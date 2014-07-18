@@ -31,7 +31,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
 
     // Реврешит содержимое списков комбобоксов выбора схемы
-    RefreshSchemaComboLists: function(svgPanelModel){
+    RefreshSchemaComboLists: function (svgPanelModel) {
         var storeListSchemas = svgPanelModel.get('listSchemas');
 
         if (storeListSchemas.count() == 0) {
@@ -182,7 +182,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             case "module_def":
                 if (!modulesParams[instanceName]) {
                     requireMakeDefaults = true;
-                    modulesParams[instanceName]= {common: {}, specific: {}};
+                    modulesParams[instanceName] = {common: {}, specific: {}};
                 }
                 moduleParams = modulesParams[instanceName];
                 break;
@@ -239,6 +239,21 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     onClickZoomOut: function (b, e, eOpts) {
         var model = this.getView().getViewModel();
+
+
+        var model2 = this.getView().ownerCt.getViewModel();
+        model2.set('currentModuleProps', {
+            "common" : {
+                "Task Priority" : 80,
+                "Task Period" : 20000,
+                "Transfer task period" : 20
+            },
+            "specific" : {
+                "Pru Device" : 1,
+                "Pru Binary" : "/root/PwmOut.bin"
+            }
+        });
+
         model.paperScaleX -= 0.1;
         model.paperScaleY -= 0.1;
         model.get('paper').scale(model.paperScaleX, model.paperScaleY);
@@ -461,7 +476,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         });
         var rec = storeListSchemas.getAt(ind);
         rec.set('jsonGraph', JSON.stringify(graph.toJSON()));
-        rec.modified['modulesParams']=rec.get('modulesParams');
+        rec.modified['modulesParams'] = rec.get('modulesParams');
         storeListSchemas.sync();
     }
 
