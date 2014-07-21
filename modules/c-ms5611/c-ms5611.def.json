@@ -1,0 +1,57 @@
+{
+  "type": "module_def",
+  "name": "c-ms5611",
+  "version": 1,
+  "Task Priority": 80,
+  "Task Period": 2000,
+  "Transfer task period": 200000,
+  "Notify on change": false,
+  "description": {
+    "en": "Pressure sensor",
+    "ru": "Датчик абсолютного давления"
+  },
+  "paramsDefinitions": [
+    {
+      "name": "I2C Device",
+      "displayName": {
+        "en": "Bus Name",
+        "ru": "Имя шины"
+      },
+      "description": {
+        "en": "Path to i2c device",
+        "ru": "Путь к файлу i2c устройства"
+      },
+      "type": "const char*",
+      "defaultValue": "/dev/i2c-1",
+      "validValues": ["/dev/i2c-1","/dev/i2c-2"],
+      "unitMeasured": ""
+    }
+  ],
+  "outputs": [
+    {
+      "name": "BaroTemp",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+          "Pressure": {
+            "type": "float",
+            "required": true
+          },
+          "PressureHg": {
+            "type": "float",
+            "required": true
+          },
+          "Altitude": {
+            "type": "float",
+            "required": true
+          },
+          "Temperature": {
+            "type": "float",
+            "required": true
+          }
+        }
+      }
+    }
+  ]
+}

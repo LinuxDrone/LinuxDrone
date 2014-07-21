@@ -1,0 +1,22 @@
+#pragma once
+
+
+
+enum oversampling {
+	MS5611_OSR_256  = 0,
+	MS5611_OSR_512  = 2,
+	MS5611_OSR_1024 = 4,
+	MS5611_OSR_2048 = 6,
+	MS5611_OSR_4096 = 8,
+};
+
+/* MS5611 Addresses */
+#define MS5611_I2C_ADDR   0x77
+#define MS5611_RESET      0x1E
+#define MS5611_CALIB_ADDR 0xA2
+#define MS5611_CALIB_LEN     6
+#define MS5611_ADC_READ   0x00
+#define MS5611_PRES_ADDR  0x40
+#define MS5611_TEMP_ADDR  0x50
+
+#define MS5611_OVERSAMPLING MS5611_OSR_4096
