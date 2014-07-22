@@ -5,8 +5,11 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
     extend: 'Ext.Panel',
     alias: 'widget.propertiespanel',
 
-    title: 'Properties',
-    header: false,
+    bind:{
+        title: '{nameOfSelectedInstance}'
+    },
+    //title: 'Properties',
+    //header: false,
     collapsible: true,
     split: true,
     width: 300,

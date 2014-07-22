@@ -16,6 +16,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         // Подписываемся на факт изменения текущей схемы
         model.bind('{currentSchema}', this.onSwitchCurrentSchema);
 
+        // Подписываемся на факт выбора модуля
+        model.bind('{selectedCell}', this.onSwitchCurrentCell);
+
         // После создания папера, отрисуем на нем текущую схему
         model.bind('{paper}', function (paper) {
             this.getView().controller.onSwitchCurrentSchema(model.get('currentSchema'));
@@ -239,21 +242,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     onClickZoomOut: function (b, e, eOpts) {
         var model = this.getView().getViewModel();
-
-
-        var model2 = this.getView().ownerCt.getViewModel();
-        model2.set('currentModuleProps', {
-            "common" : {
-                "Task Priority" : 80,
-                "Task Period" : 20000,
-                "Transfer task period" : 20
-            },
-            "specific" : {
-                "Pru Device" : 1,
-                "Pru Binary" : "/root/PwmOut.bin"
-            }
-        });
-
         model.paperScaleX -= 0.1;
         model.paperScaleY -= 0.1;
         model.get('paper').scale(model.paperScaleX, model.paperScaleY);
@@ -338,6 +326,35 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             }
         }
         return "";
+    },
+
+    // Приватная
+    // Возвращает имя типа модуля по идентификатору модуля в графической схеме
+    GetModuleTypeByGraphId: function(IdModelInGraph)
+    {
+        var model = this.getView().getViewModel();
+        var graph = model.get('graph');
+
+        return _.find(graph.attributes.cells.models, function (model) {
+            return model.id == IdModelInGraph;
+        }).attributes.moduleType;
+    },
+
+
+    // Обработчик выбора модуля на схеме
+    onSwitchCurrentCell: function(cell){
+        if (cell) {
+            var model2 = this.getView().ownerCt.getViewModel();
+            var model = this.getView().getViewModel();
+
+            var currentSchema = model.get('currentSchema');
+
+            var instanceName = cell.attributes.attrs[".label"].text;
+            var moduleParams = currentSchema.get('modulesParams')[instanceName];
+
+            model2.set('currentModuleProps', moduleParams);
+            model2.set('nameOfSelectedInstance', instanceName);
+        }
     },
 
     // Обработчик смены текущей схемы на другую
