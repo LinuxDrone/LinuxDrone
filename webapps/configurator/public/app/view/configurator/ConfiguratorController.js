@@ -17,22 +17,23 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
         model.bind('{currentModuleProps}', this.onChangeCurrentModuleProps);
 
         // При обновлении параметров модуля, пометить схему как измененную.
-        this.getView().lookupReference('commonProperties').getStore().on('update', function(store, record, operation, modifiedFieldNames, eOpts ){
-            if(operation=='edit'){
-                model.children['rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1'].set('schemaChanged', true);
-            }
-        });
-        this.getView().lookupReference('specificProperties').getStore().on('update', function(store, record, operation, modifiedFieldNames, eOpts ){
-            if(operation=='edit'){
-                model.children['rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1'].set('schemaChanged', true);
-            }
-        });
+        this.getView().lookupReference('commonProperties').getStore().on('update', this.markSchemaAsChanged, this);
+        this.getView().lookupReference('specificProperties').getStore().on('update', this.markSchemaAsChanged, this);
+        this.getView().lookupReference('telemetrySelect').getStore().on('update', this.markSchemaAsChanged, this);
 
+    },
+
+    markSchemaAsChanged: function(store, record, operation, modifiedFieldNames, eOpts){
+        if(operation=='edit'){
+            var model = this.getView().getViewModel();
+            model.children['rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1'].set('schemaChanged', true);
+        }
     },
 
     onChangeCurrentModuleProps: function(currentModuleProps){
         this.getView().lookupReference('commonProperties').setSource(currentModuleProps.common);
         this.getView().lookupReference('specificProperties').setSource(currentModuleProps.specific);
+        this.getView().lookupReference('telemetrySelect').setSource(currentModuleProps.telemetrySubscriptions);
     },
 
     // Вызывается при нажатии кнопки Save в диалоге SaveAs (SaveAsSchemaDialog)

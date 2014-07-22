@@ -18,7 +18,7 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
     },
     items: [
         {
-            title: 'common',
+            title: 'Common Properties',
             items: [
                 {
                     xtype: 'propertygrid',
@@ -27,11 +27,20 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
             ]
         },
         {
-            title: 'specific',
+            title: 'Specific Properties',
             items: [
                 {
                     xtype: 'propertygrid',
                     reference: 'specificProperties'
+                }
+            ]
+        },
+        {
+            title: 'Telemetry',
+            items: [
+                {
+                    xtype: 'propertygrid',
+                    reference: 'telemetrySelect'
                 }
             ]
         }

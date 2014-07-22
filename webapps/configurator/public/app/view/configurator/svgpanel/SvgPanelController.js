@@ -185,7 +185,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             case "module_def":
                 if (!modulesParams[instanceName]) {
                     requireMakeDefaults = true;
-                    modulesParams[instanceName] = {common: {}, specific: {}};
+                    modulesParams[instanceName] = {common: {}, specific: {}, telemetrySubscriptions: {}};
                 }
                 moduleParams = modulesParams[instanceName];
                 break;
@@ -234,6 +234,13 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             if (moduleMeta.paramsDefinitions) {
                 $.each(moduleMeta.paramsDefinitions, function (i, paramDefinition) {
                     moduleParams.specific[paramDefinition.name] = paramDefinition.defaultValue;
+                });
+            }
+
+            // Теперь заполним подписки на телеметрию (по умолчанию - false)
+            if (moduleMeta.outputs) {
+                $.each(moduleMeta.outputs, function (i, out) {
+                    moduleParams.telemetrySubscriptions[out.name] = false;
                 });
             }
         }
