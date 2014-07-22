@@ -122,6 +122,48 @@ int read_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_regis
     return service->response_data_block.opcode;
 }
 
+/**
+ * @brief read_raw_i2c Считывает блок данных с указанного устройства i2c, запрашиваемой длины,
+ * без указания внутреннего порта устройства.
+ * @param service Указатель на структуру сервиса
+ * @param session_id Идентификатор шины (сессии)
+ * @param dev_id Адрес девайса на шине i2c
+ * @param len_requested_data Запрашиваемая длина считываемых данных (необходимо считать)
+ * @param ret_data Блок считанных данных
+ * @param ret_len Длина считанных данных (фактически считано)
+ * @return < 0 - Ошибка. Распечатать ошибку можно при помощи функции print_task_send_error
+ */
+int read_raw_i2c(i2c_service_t* service, int session_id, char dev_id, int len_requested_data, char** ret_data, int* ret_len)
+{
+    data_request_i2c_t request;
+    request.addr_and_dev_register.dev_id = dev_id;
+    request.len_requested_data = len_requested_data;
+    request.addr_and_dev_register.session_id = session_id;
+
+    service->request_data_block.data = (caddr_t)&request;
+    service->request_data_block.size = sizeof(data_request_i2c_t);
+    service->response_data_block.size = MAX_TRANSFER_BLOCK;
+    service->request_data_block.opcode = op_raw_read_i2c;
+
+    ssize_t received = rt_task_send(&service->task_i2c_service, &service->request_data_block, &service->response_data_block, TM_INFINITE);
+    if(received<0)
+    {
+        if(received==-ESRCH)
+        {
+            service->connected=false;
+            return 0;
+        }
+        else
+        {
+            return received;
+        }
+    }
+
+    *ret_data = service->response_data_block.data;
+    *ret_len = service->response_data_block.size;
+
+    return service->response_data_block.opcode;
+}
 
 
 /**
@@ -172,6 +214,50 @@ int write_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_regi
 }
 
 
+/**
+ * @brief write_raw_i2c Записывает блок данных в указанное устройство i2с, без указания порта
+ * @param service Указатель на структуру сервиса
+ * @param session_id Идентификатор сессии
+ * @param dev_id Адрес девайса на шине i2c
+ * @param len_data Длина блока записываемых данных
+ * @param data Указатель на блок записываемых данных
+ * @return < 0 - Ошибка.
+ */
+int write_raw_i2c(i2c_service_t* service, int session_id, char dev_id, int len_data, char* data)
+{
+    if(len_data>MAX_TRANSFER_BLOCK-sizeof(address_i2c_t))
+    {
+        printf("Length of transfered data > MAX_TRANSFER_BLOCK-sizeof(address_i2c_t)\n");
+        return -1;
+    }
+
+    address_i2c_t* address_i2c = (address_i2c_t*)service->data_buf;
+    address_i2c->session_id=session_id;
+    address_i2c->dev_id = dev_id;
+
+    memcpy(&address_i2c->dev_register, data, len_data);
+
+    service->request_data_block.data = service->data_buf;
+    service->request_data_block.size = sizeof(address_i2c_t)+len_data;
+    service->response_data_block.size = MAX_TRANSFER_BLOCK;
+    service->request_data_block.opcode = op_raw_write_i2c;
+
+    ssize_t received = rt_task_send(&service->task_i2c_service, &service->request_data_block, &service->response_data_block, TM_INFINITE);
+    if(received<0)
+    {
+        if(received==-ESRCH)
+        {
+            service->connected=false;
+            return 0;
+        }
+        else
+        {
+            return received;
+        }
+    }
+
+    return service->response_data_block.opcode;
+}
 
 /**
  * @brief close_i2c Закрывает сессию взаимодействия с шиной i2c
@@ -212,7 +298,7 @@ void print_i2c_error(int err)
     switch (err)
     {
     case res_error_write_to_i2c:
-        printf("Error wtite to i2c device\n");
+        printf("Error write to i2c device\n");
         break;
 
     case res_error_ioctl:
