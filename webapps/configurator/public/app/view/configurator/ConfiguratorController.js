@@ -15,6 +15,19 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
 
         // Подписываемся на факт изменения текущей схемы
         model.bind('{currentModuleProps}', this.onChangeCurrentModuleProps);
+
+        // При обновлении параметров модуля, пометить схему как измененную.
+        this.getView().lookupReference('commonProperties').getStore().on('update', function(store, record, operation, modifiedFieldNames, eOpts ){
+            if(operation=='edit'){
+                model.children['rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1'].set('schemaChanged', true);
+            }
+        });
+        this.getView().lookupReference('specificProperties').getStore().on('update', function(store, record, operation, modifiedFieldNames, eOpts ){
+            if(operation=='edit'){
+                model.children['rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1'].set('schemaChanged', true);
+            }
+        });
+
     },
 
     onChangeCurrentModuleProps: function(currentModuleProps){

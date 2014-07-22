@@ -492,9 +492,16 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             return record.get('version') == version && record.get('name') == name;
         });
         var rec = storeListSchemas.getAt(ind);
-        rec.set('jsonGraph', JSON.stringify(graph.toJSON()));
+        rec.set('jsonGraph', JSON.stringify(graph.toJSON()) + ' ');
+        rec.set('date', new Date());
         rec.modified['modulesParams'] = rec.get('modulesParams');
-        storeListSchemas.sync();
+
+        storeListSchemas.sync(
+            {
+                callback :function(batch , options ){
+                    model.set('schemaChanged', false);
+                }
+            });
     }
 
 });
