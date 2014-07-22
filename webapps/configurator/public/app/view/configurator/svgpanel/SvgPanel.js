@@ -79,8 +79,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
         }
     ],
     bbar: [
-        { text: '-', handler: 'onClickZoomOut'},
-        { text: '+', handler: 'onClickZoomIn' }
+        { text: '-', handler: 'onClickZoomOut', tooltip: 'Zoom Out'},
+        { text: '+', handler: 'onClickZoomIn', tooltip: 'Zoom In' }
     ]
 
 });

@@ -41,6 +41,29 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
         var svgpanelmodel = model.children["rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1"];
         var svgpanelcontroller = svgpanelmodel.getView().controller;
         svgpanelcontroller.SaveAsSchema(model.get('newSchemaName'), model.get('newSchemaVersion'));
+    },
+
+    // Вызывается при нажатии кнопки Save в диалоге SaveAs (SaveAsSchemaDialog)
+    onClickDeleteModule: function(){
+        var model = this.getView().getViewModel();
+        var svgpanelmodel = model.children["rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1"];
+
+        // Очисти окно свойств инстанса
+        this.getView().lookupReference('commonProperties').setSource(null);
+        this.getView().lookupReference('specificProperties').setSource(null);
+
+        // Удалим инстанс со схемы
+        svgpanelmodel.get('selectedCell').remove();
+        svgpanelmodel.set('selectedCell', null);
+
+        // Удалим параметры инстанса из схемы
+        delete svgpanelmodel.get('currentSchema').get('modulesParams')[model.get('nameOfSelectedInstance')];
+
+        // Установим заголовок в коне свйоств, это заблокирует кнопку удаления
+        model.set('nameOfSelectedInstance', 'Properties');
+
+        // Пометим схему как измененную
+        svgpanelmodel.set('schemaChanged', true);
     }
 
 

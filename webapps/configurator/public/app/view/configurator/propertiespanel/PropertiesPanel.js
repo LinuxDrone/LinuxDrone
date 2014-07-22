@@ -8,8 +8,6 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
     bind:{
         title: '{nameOfSelectedInstance}'
     },
-    //title: 'Properties',
-    //header: false,
     collapsible: true,
     split: true,
     width: 300,
@@ -36,6 +34,16 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
                     reference: 'specificProperties'
                 }
             ]
+        }
+    ],
+    bbar: [
+        {
+            text: 'Delete',
+            handler: 'onClickDeleteModule',
+            tooltip: 'Delete module instance from schema',
+            bind:{
+                disabled: '{disableDeleteModule}'
+            }
         }
     ]
 });

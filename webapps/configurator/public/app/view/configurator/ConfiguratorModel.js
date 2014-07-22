@@ -12,6 +12,12 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorModel', {
         nameOfSelectedInstance: 'Properties',
 
         currentModuleProps: {}
+    },
+
+    formulas: {
+        disableDeleteModule: function (get) {
+            return get('nameOfSelectedInstance') == 'Properties';
+        }
     }
 
 });
