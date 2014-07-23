@@ -11,7 +11,15 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorModel', {
         newSchemaVersion: '',
         nameOfSelectedInstance: 'Properties',
 
-        currentModuleProps: {}
+        currentModuleProps: {},
+
+        // Тип выбранного на схеме линка
+        typeSelectedLink:'',
+
+        // Скрывать панель свойств связи
+        hideLinkProperties:true,
+        // Скрывать панели свойств выбранного инстанса
+        hideInstanceProperties:true
     },
 
     formulas: {

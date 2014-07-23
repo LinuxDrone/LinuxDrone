@@ -73,7 +73,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
         schemaChanged: false,
 
         // Модуль выбранный на схеме
-        selectedCell: undefined
+        selectedCell: undefined,
+
+        // Связь выбранная на схеме
+        selectedLink: undefined
     },
 
     formulas: {

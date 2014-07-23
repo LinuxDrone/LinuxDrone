@@ -19,6 +19,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         // Подписываемся на факт выбора модуля
         model.bind('{selectedCell}', this.onSwitchCurrentCell);
 
+        model.bind('{selectedLink}', this.onSelectLink);
+
+
         // После создания папера, отрисуем на нем текущую схему
         model.bind('{paper}', function (paper) {
             this.getView().controller.onSwitchCurrentSchema(model.get('currentSchema'));
@@ -30,6 +33,20 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         model.get('listSchemas').addListener('load', function (storeListSchemas) {
             refreshSchemaComboLists(model);
         });
+    },
+
+    onSelectLink: function(link){
+        var configuratorModel = this.getView().ownerCt.getViewModel();
+
+        // Значение в комбобоксе выбора типа связи в панели свойств связи
+        configuratorModel.set('typeSelectedLink',link.attributes.mode);
+
+        // Заголовок панели свойств
+        configuratorModel.set('nameOfSelectedInstance', link.attributes.source.port + '->' + link.attributes.target.port);
+
+        // Показать панель свойств связи
+        configuratorModel.set('hideInstanceProperties', true);
+        configuratorModel.set('hideLinkProperties', false);
     },
 
 
@@ -337,8 +354,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     // Приватная
     // Возвращает имя типа модуля по идентификатору модуля в графической схеме
-    GetModuleTypeByGraphId: function(IdModelInGraph)
-    {
+    GetModuleTypeByGraphId: function(IdModelInGraph){
         var model = this.getView().getViewModel();
         var graph = model.get('graph');
 
@@ -351,7 +367,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     // Обработчик выбора модуля на схеме
     onSwitchCurrentCell: function(cell){
         if (cell) {
-            var model2 = this.getView().ownerCt.getViewModel();
+            var configuratorModel = this.getView().ownerCt.getViewModel();
             var model = this.getView().getViewModel();
 
             var currentSchema = model.get('currentSchema');
@@ -359,8 +375,12 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             var instanceName = cell.attributes.attrs[".label"].text;
             var moduleParams = currentSchema.get('modulesParams')[instanceName];
 
-            model2.set('currentModuleProps', moduleParams);
-            model2.set('nameOfSelectedInstance', instanceName);
+            configuratorModel.set('currentModuleProps', moduleParams);
+            configuratorModel.set('nameOfSelectedInstance', instanceName);
+
+            // Показать панель свойств связи
+            configuratorModel.set('hideLinkProperties', true);
+            configuratorModel.set('hideInstanceProperties', false);
         }
     },
 

@@ -16,68 +16,76 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
     },
     controller: 'svgpanel',
 
-    layout:'fit',
-    items:[
-        {xtype:'svg'}
+    layout: 'fit',
+    items: [
+        {xtype: 'svg'}
     ],
-    tbar: [
-        {
-            xtype:'combo',
-            editable: false,
-            fieldLabel: 'Schema',
-            bind:{
-                store: '{listSchemasNames}',
-                value: '{currentSchemaName}'
-            },
-            displayField: 'name',
-            listeners: {
-                select: 'onSelectSchema'
-            },
-            queryMode: 'local'
+    tbar: {
+        xtype: 'toolbar',
+        border: 5,
+        style: {
+            borderColor: 'red',
+            borderStyle: 'solid'
         },
-        {
-            xtype:'combo',
-            editable: false,
-            fieldLabel: 'Version',
-            bind:{
-                store: '{listSchemasVersions}',
-                value: '{currentSchemaVersion}'
+        items: [
+            {
+                xtype: 'combo',
+                editable: false,
+                fieldLabel: 'Schema',
+                bind: {
+                    store: '{listSchemasNames}',
+                    value: '{currentSchemaName}'
+                },
+                displayField: 'name',
+                listeners: {
+                    select: 'onSelectSchema'
+                },
+                queryMode: 'local'
             },
-            displayField: 'version',
-            valueField: 'version',
-            listeners: {
-                select: 'onSelectVersion'
+            {
+                xtype: 'combo',
+                editable: false,
+                fieldLabel: 'Version',
+                bind: {
+                    store: '{listSchemasVersions}',
+                    value: '{currentSchemaVersion}'
+                },
+                displayField: 'version',
+                valueField: 'version',
+                listeners: {
+                    select: 'onSelectVersion'
+                },
+                queryMode: 'local'
             },
-            queryMode: 'local'
-        },
-        {
-            xtype: 'button',
-            text: 'Save',
-            handler: 'onClickSaveSchema',
-            tooltip: 'Save current configuration',
-            bind:{
-                disabled: '{!schemaChanged}'
+            {
+                xtype: 'button',
+                text: 'Save',
+                handler: 'onClickSaveSchema',
+                tooltip: 'Save current configuration',
+                bind: {
+                    disabled: '{!schemaChanged}'
+                }
+            },
+            {
+                xtype: 'button',
+                text: 'Save As',
+                handler: 'onClickOpenSaveAsSchemaDialog',
+                tooltip: 'Save as current configuration..',
+                bind: {
+                    //disabled: '{!schemaChanged}'
+                }
+            },
+            {
+                xtype: 'button',
+                text: 'Delete',
+                handler: 'onClickDeleteSchema',
+                tooltip: 'Delete current configuration',
+                bind: {
+                    //disabled: '{!schemaChanged}'
+                }
             }
-        },
-        {
-            xtype: 'button',
-            text: 'Save As',
-            handler: 'onClickOpenSaveAsSchemaDialog',
-            tooltip: 'Save as current configuration..',
-            bind:{
-                //disabled: '{!schemaChanged}'
-            }
-        },
-        {
-            xtype: 'button',
-            text: 'Delete',
-            handler: 'onClickDeleteSchema',
-            tooltip: 'Delete current configuration',
-            bind:{
-                //disabled: '{!schemaChanged}'
-            }
-        }
-    ],
+        ]
+    },
     bbar: [
         { text: '-', handler: 'onClickZoomOut', tooltip: 'Zoom Out'},
         { text: '+', handler: 'onClickZoomIn', tooltip: 'Zoom In' }

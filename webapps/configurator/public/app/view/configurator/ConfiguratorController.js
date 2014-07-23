@@ -20,7 +20,6 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
         this.getView().lookupReference('commonProperties').getStore().on('update', this.markSchemaAsChanged, this);
         this.getView().lookupReference('specificProperties').getStore().on('update', this.markSchemaAsChanged, this);
         this.getView().lookupReference('telemetrySelect').getStore().on('update', this.markSchemaAsChanged, this);
-
     },
 
     markSchemaAsChanged: function(store, record, operation, modifiedFieldNames, eOpts){

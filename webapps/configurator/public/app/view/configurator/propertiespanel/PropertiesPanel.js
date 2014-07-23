@@ -5,7 +5,7 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
     extend: 'Ext.Panel',
     alias: 'widget.propertiespanel',
 
-    bind:{
+    bind: {
         title: '{nameOfSelectedInstance}'
     },
     collapsible: true,
@@ -19,6 +19,9 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
     items: [
         {
             title: 'Common Properties',
+            bind: {
+                //hidden: '{hideInstanceProperties}'
+            },
             items: [
                 {
                     xtype: 'propertygrid',
@@ -28,6 +31,9 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
         },
         {
             title: 'Specific Properties',
+            bind: {
+                //hidden: '{hideInstanceProperties}'
+            },
             items: [
                 {
                     xtype: 'propertygrid',
@@ -37,10 +43,43 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
         },
         {
             title: 'Telemetry',
+            bind: {
+                //hidden: '{hideInstanceProperties}'
+            },
             items: [
                 {
                     xtype: 'propertygrid',
                     reference: 'telemetrySelect'
+                }
+            ]
+        },
+        {
+            title: 'Link Properties',
+            reference: 'panelLinkProperties',
+            bind: {
+                //hidden: '{hideLinkProperties}'
+            },
+            items: [
+                {
+                    xtype: 'combo',
+                    fieldLabel: 'Link Type',
+                    store: {
+                        fields: ['abbr', 'name'],
+                        data: [
+                            {"abbr": "queue", "name": "queue"},
+                            {"abbr": "memory", "name": "memory"}
+                        ]
+                    },
+                    queryMode: 'local',
+                    displayField: 'name',
+                    valueField: 'abbr',
+                    editable: false,
+                    bind: {
+                        value: '{typeSelectedLink}'
+                    },
+                    listeners: {
+                        //select: 'onSelectSchema'
+                    }
                 }
             ]
         }
@@ -50,7 +89,7 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
             text: 'Delete',
             handler: 'onClickDeleteModule',
             tooltip: 'Delete module instance from schema',
-            bind:{
+            bind: {
                 disabled: '{disableDeleteModule}'
             }
         }
