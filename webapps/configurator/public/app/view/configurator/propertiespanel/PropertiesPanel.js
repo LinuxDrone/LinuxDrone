@@ -11,53 +11,63 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
     collapsible: true,
     split: true,
     width: 300,
-    layout: {
-        type: 'accordion',
-        animate: true,
-        activeOnTop: true
-    },
-    items: [
+    layout:'fit',
+
+    items:[
         {
-            title: 'Common Properties',
+            layout: {
+                type: 'accordion',
+                animate: true,
+                activeOnTop: true
+            },
             bind: {
-                //hidden: '{hideInstanceProperties}'
+                hidden: '{hideInstanceProperties}'
             },
             items: [
                 {
-                    xtype: 'propertygrid',
-                    reference: 'commonProperties'
+                    title: 'Common Properties',
+                    items: [
+                        {
+                            xtype: 'propertygrid',
+                            reference: 'commonProperties'
+                        }
+                    ]
+                },
+                {
+                    title: 'Specific Properties',
+                    items: [
+                        {
+                            xtype: 'propertygrid',
+                            reference: 'specificProperties'
+                        }
+                    ]
+                },
+                {
+                    title: 'Telemetry',
+                    items: [
+                        {
+                            xtype: 'propertygrid',
+                            reference: 'telemetrySelect'
+                        }
+                    ]
+                }
+            ],
+            bbar: [
+                {
+                    text: 'Delete',
+                    handler: 'onClickDeleteModule',
+                    tooltip: 'Delete module instance from schema',
+                    bind: {
+                        disabled: '{disableDeleteModule}'
+                    }
                 }
             ]
         },
         {
-            title: 'Specific Properties',
-            bind: {
-                //hidden: '{hideInstanceProperties}'
-            },
-            items: [
-                {
-                    xtype: 'propertygrid',
-                    reference: 'specificProperties'
-                }
-            ]
-        },
-        {
-            title: 'Telemetry',
-            bind: {
-                //hidden: '{hideInstanceProperties}'
-            },
-            items: [
-                {
-                    xtype: 'propertygrid',
-                    reference: 'telemetrySelect'
-                }
-            ]
-        },
-        {
-            title: 'Link Properties',
+            bodyPadding: 5,
             reference: 'panelLinkProperties',
             bind: {
-                //hidden: '{hideLinkProperties}'
+                hidden: '{hideLinkProperties}'
             },
             items: [
                 {
@@ -83,15 +93,7 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
                 }
             ]
         }
-    ],
-    bbar: [
-        {
-            text: 'Delete',
-            handler: 'onClickDeleteModule',
-            tooltip: 'Delete module instance from schema',
-            bind: {
-                disabled: '{disableDeleteModule}'
-            }
-        }
     ]
+
+
 });

@@ -35,18 +35,24 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         });
     },
 
-    onSelectLink: function(link){
+    onSelectLink: function (link) {
         var configuratorModel = this.getView().ownerCt.getViewModel();
+        if (!link) {
+            configuratorModel.set('hideLinkProperties', true);
+        } else {
+            // Значение в комбобоксе выбора типа связи в панели свойств связи
+            configuratorModel.set('typeSelectedLink', link.attributes.mode);
 
-        // Значение в комбобоксе выбора типа связи в панели свойств связи
-        configuratorModel.set('typeSelectedLink',link.attributes.mode);
+            // Заголовок панели свойств
+            configuratorModel.set('nameOfSelectedInstance', link.attributes.source.port + '->' + link.attributes.target.port);
 
-        // Заголовок панели свойств
-        configuratorModel.set('nameOfSelectedInstance', link.attributes.source.port + '->' + link.attributes.target.port);
+            // Показать панель свойств связи
+            configuratorModel.set('hideLinkProperties', false);
 
-        // Показать панель свойств связи
-        configuratorModel.set('hideInstanceProperties', true);
-        configuratorModel.set('hideLinkProperties', false);
+            // Обнулим ссылку на выбранный инстанс
+            var model = this.getView().getViewModel();
+            model.set('selectedCell', null);
+        }
     },
 
 
@@ -354,20 +360,22 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     // Приватная
     // Возвращает имя типа модуля по идентификатору модуля в графической схеме
-    GetModuleTypeByGraphId: function(IdModelInGraph){
+    GetModuleTypeByGraphId: function (IdModelInGraph) {
         var model = this.getView().getViewModel();
         var graph = model.get('graph');
 
-        return _.find(graph.attributes.cells.models, function (model) {
+        return _.find(graph.attributes.cells.models,function (model) {
             return model.id == IdModelInGraph;
         }).attributes.moduleType;
     },
 
 
     // Обработчик выбора модуля на схеме
-    onSwitchCurrentCell: function(cell){
-        if (cell) {
-            var configuratorModel = this.getView().ownerCt.getViewModel();
+    onSwitchCurrentCell: function (cell) {
+        var configuratorModel = this.getView().ownerCt.getViewModel();
+        if (!cell) {
+            configuratorModel.set('hideInstanceProperties', true);
+        } else {
             var model = this.getView().getViewModel();
 
             var currentSchema = model.get('currentSchema');
@@ -378,9 +386,11 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             configuratorModel.set('currentModuleProps', moduleParams);
             configuratorModel.set('nameOfSelectedInstance', instanceName);
 
-            // Показать панель свойств связи
-            configuratorModel.set('hideLinkProperties', true);
+            // Показать панель свойств инстанса
             configuratorModel.set('hideInstanceProperties', false);
+
+            // Обнулим ссылку на выбранную связь
+            model.set('selectedLink', null);
         }
     },
 
@@ -525,7 +535,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
         storeListSchemas.sync(
             {
-                callback :function(batch , options ){
+                callback: function (batch, options) {
                     model.set('schemaChanged', false);
                 }
             });

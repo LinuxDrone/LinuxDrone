@@ -24,7 +24,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
                 cell.attributes["mode"] = "queue";
 
                 var moduleType = model.getView().getController().GetModuleTypeByGraphId(cell.attributes.source.id);
-
                 var storeMetamodules = Ext.data.StoreManager.lookup('StoreMetaModules');
                 var moduleDef = storeMetamodules.findRecord('name', moduleType);
 
@@ -102,5 +101,14 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
             model.set('schemaChanged', true);
         });
 
+        paper.on('blank:pointerdown', function (evt, x, y) {
+            if (evt.button == 0) {
+                // Обнулим ссылку на выбранный инстанс
+                model.set('selectedCell', null);
+
+                // Обнулим ссылку на выбранную связь
+                model.set('selectedLink', null);
+            }
+        });
     }
 });
