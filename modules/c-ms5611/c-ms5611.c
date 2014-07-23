@@ -71,22 +71,27 @@ void c_ms5611_run (module_c_ms5611_t *module)
         rt_task_sleep(rt_timer_ns2ticks(10000000));
         /* Read the pressure conversion */
         D1 = readPressure(&i2c_service, i2c_session);
-printf("Test D1=%f", D1);
+
         /* Start temperature conversion */
         refreshTemperature(&i2c_service, i2c_session, OSR);
         // Waiting for temperature data ready
         rt_task_sleep(rt_timer_ns2ticks(10000000));
         /* Read the temperature conversion */
         D2 = readTemperature(&i2c_service, i2c_session);
-printf("Test D2=%f", D2);
+
         calculatePressureAndTemperature(D1, D2, C, &Temperature, &Pressure);
-        rt_task_sleep(rt_timer_ns2ticks(10000000));
+
+        //printf("Temperature=%f   |   Pressure=%f\n", Temperature, Pressure);
 
         BaroTemp_t* BaroTemp;
         checkout_BaroTemp(module, &BaroTemp);
 
+		// Temperature в градусах цельсия
+		// Pressure    в килопаскалях
+		// PressureHg  в милиметрах ртутного столба
+		// Altitude    в метрах
 
-        BaroTemp->Temperature = Temperature/10.0f;
+        BaroTemp->Temperature = Temperature;
         BaroTemp->Pressure = Pressure/1000.0f;
         BaroTemp->PressureHg = (Pressure * 760.0f) / 101325.0f;
         BaroTemp->Altitude = (44330.0f * (1.00f - powf((Pressure/101325.0f), 0.190295f)));
@@ -195,7 +200,6 @@ void refreshPressure(i2c_service_t* i2c_service, int i2c_session, uint8_t OSR) {
 		print_i2c_error(res);
         //return false;
 	}
-	//rt_task_sleep(rt_timer_ns2ticks(5000000));
 }
 
 /** Read pressure value
@@ -214,42 +218,41 @@ uint32_t readPressure(i2c_service_t* i2c_service, int i2c_session) {
 	return (Data[0] << 16) | (Data[1] << 8) | Data[2];
 }
 
-
 /** Calculate temperature and pressure calculations and perform compensation
  *  More info about these calculations is available in the datasheet.
  */
 void calculatePressureAndTemperature(uint32_t D1, uint32_t D2,  uint16_t *C, float *TEMP, float *PRES) {
 	
-    float dT = D2 - C[5] * pow(2, 8); 
-    *TEMP = (2000 + ((dT * C[6]) / pow(2, 23)));
-    float OFF = C[2] * pow(2, 16) + (C[4] * dT) / pow(2, 7); 
-    float SENS = C[1] * pow(2, 15) + (C[3] * dT) / pow(2, 8); 
+    float dT = (float)D2 - (float)C[4] * pow(2, 8);
+    *TEMP = (2000.0f + ((dT * (float)C[5]) / pow(2, 23)));
+    float OFF = (float)C[1] * pow(2, 16) + ((float)C[3] * dT) / pow(2, 7);
+    float SENS = (float)C[0] * pow(2, 15) + ((float)C[2] * dT) / pow(2, 8);
 
     float T2, OFF2, SENS2;
 
-    if (*TEMP >= 2000)
+    if (*TEMP >= 2000.0f)
     {			
-        T2 = 0;
-        OFF2 = 0;
-        SENS2 = 0;
+        T2 = 0.0f;
+        OFF2 = 0.0f;
+        SENS2 = 0.0f;
     }
-    if (*TEMP < 2000 && *TEMP >= -1500)
+    if (*TEMP < 2000.0f && *TEMP >= -1500.0f)
     {		
         T2 = dT * dT / pow(2, 31);
-        OFF2 = 5 * pow(*TEMP - 2000, 2) / 2;
+        OFF2 = 5.0f * pow(*TEMP - 2000.0f, 2) / 2.0f;
         SENS2 = OFF2 / 2;
     }
     if (*TEMP < -1500)
     {			
-        OFF2 = OFF2 + 7 * pow(*TEMP + 1500, 2);
-        SENS2 = SENS2 + 11 * pow(*TEMP + 1500, 2) / 2;
+        OFF2 = OFF2 + 7.0f * pow(*TEMP + 1500.0f, 2);
+        SENS2 = SENS2 + 11.0f * pow(*TEMP + 1500.0f, 2) / 2.0f;
     }	
 
     *TEMP = *TEMP - T2;
     OFF = OFF - OFF2;
     SENS = SENS - SENS2;
 
-    *PRES = ((D1 * SENS) / pow(2, 21) - OFF) / pow(2, 15) / 100;
+    *PRES = ((D1 * SENS) / pow(2, 21) - OFF) / pow(2, 15);
     *TEMP = *TEMP / 100;
 }
 
