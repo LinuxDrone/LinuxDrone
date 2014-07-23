@@ -93,7 +93,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
 
         // Обработчик выбора связи (клик по иконке свойства связи)
         paper.on('link:options', function(evt, linkView, x, y) {
-            model.set('selectedLink', linkView.model);
+            model.set('selectedLink', linkView);
         });
 
         // Подпишемся на изменения графа

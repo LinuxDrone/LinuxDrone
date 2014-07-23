@@ -20,6 +20,31 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
         this.getView().lookupReference('commonProperties').getStore().on('update', this.markSchemaAsChanged, this);
         this.getView().lookupReference('specificProperties').getStore().on('update', this.markSchemaAsChanged, this);
         this.getView().lookupReference('telemetrySelect').getStore().on('update', this.markSchemaAsChanged, this);
+
+        model.bind('{typeSelectedLink}', function(newVal){
+            var svgpanelmodel = model.children["rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1"];
+            var selectedLink = svgpanelmodel.get('selectedLink');
+            if(selectedLink && selectedLink.model.attributes.mode !== newVal){
+                selectedLink.model.attributes.mode = newVal;
+
+                switch (newVal){
+                    case 'queue':
+                        selectedLink.model.attributes.attrs[".connection"] = { stroke: 'red' };
+                        selectedLink.model.attributes.attrs[".marker-target"].fill = 'red';
+                    break;
+
+                    case 'memory':
+                        selectedLink.model.attributes.attrs[".connection"] = { stroke: 'blue' };
+                        selectedLink.model.attributes.attrs[".marker-target"].fill = 'blue';
+                        break;
+                }
+                selectedLink.update();
+
+                // Пометим схему как измененную
+                svgpanelmodel.set('schemaChanged', true);
+            }
+        });
+
     },
 
     markSchemaAsChanged: function(store, record, operation, modifiedFieldNames, eOpts){

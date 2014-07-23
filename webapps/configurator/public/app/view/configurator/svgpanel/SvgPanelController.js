@@ -35,11 +35,12 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         });
     },
 
-    onSelectLink: function (link) {
+    onSelectLink: function (linkCell) {
         var configuratorModel = this.getView().ownerCt.getViewModel();
-        if (!link) {
+        if (!linkCell) {
             configuratorModel.set('hideLinkProperties', true);
         } else {
+            var link = linkCell.model;
             // Значение в комбобоксе выбора типа связи в панели свойств связи
             configuratorModel.set('typeSelectedLink', link.attributes.mode);
 
