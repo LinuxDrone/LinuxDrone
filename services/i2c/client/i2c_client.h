@@ -121,6 +121,16 @@ int write_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_regi
 int write_raw_i2c(i2c_service_t* service, int session_id, char dev_id, int len_data, char* data);
 
 /**
+ * @brief write_raw_i2c Записывает блок данных в указанное устройство i2с, без указания порта
+ * @param service Указатель на структуру сервиса
+ * @param session_id Идентификатор сессии
+ * @param dev_id Адрес девайса на шине i2c
+ * @param dev_register Внутренний порт девайса
+ * @return < 0 - Ошибка.
+ */
+int write_cmd_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_register);
+
+/**
  * @brief close_i2c Закрывает сессию взаимодействия с шиной i2c
  * @param service Указатель на структуру сервиса
  * @param session_id Идентификатор сессии

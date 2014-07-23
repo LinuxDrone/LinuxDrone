@@ -283,6 +283,34 @@ void run_task_i2c (void *module)
                 }
             break;
 
+            case op_cmd_write_i2c:
+                // В принятых данных, первый байт - адрес устройства на шине
+                // Второй байт - команда для него
+                address_i2c = (address_i2c_t*)request_block.data;
+
+                if(current_dev_id!=address_i2c->dev_id)
+                {
+                    ioctl_err = ioctl(address_i2c->session_id, I2C_SLAVE, address_i2c->dev_id);
+                    current_dev_id=address_i2c->dev_id;
+                }
+                if(ioctl_err<0)
+                {
+                    response_block.opcode=res_error_ioctl;
+                }
+                else
+                {
+                    int size_for_write = sizeof(char);
+                    int writen=0;
+                    // Первым записываемым байтом в поток уходит команда для устройства
+                    writen = write(address_i2c->session_id, &address_i2c->dev_register, size_for_write);
+
+                    if(writen!=size_for_write)
+                    {
+                        response_block.opcode=res_error_write_to_i2c;
+                    }
+                }
+            break;
+
             case op_close_i2c:
                 close_bus(*(int*)request_block.data);
                 break;

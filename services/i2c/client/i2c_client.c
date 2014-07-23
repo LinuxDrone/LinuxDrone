@@ -260,6 +260,43 @@ int write_raw_i2c(i2c_service_t* service, int session_id, char dev_id, int len_d
 }
 
 /**
+ * @brief write_raw_i2c Записывает блок данных в указанное устройство i2с, без указания порта
+ * @param service Указатель на структуру сервиса
+ * @param session_id Идентификатор сессии
+ * @param dev_id Адрес девайса на шине i2c
+ * @param dev_register Внутренний порт девайса
+ * @return < 0 - Ошибка.
+ */
+int write_cmd_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_register)
+{
+    address_i2c_t* address_i2c = (address_i2c_t*)service->data_buf;
+    address_i2c->session_id=session_id;
+    address_i2c->dev_id = dev_id;
+    address_i2c->dev_register = dev_register;
+
+    service->request_data_block.data = service->data_buf;
+    service->request_data_block.size = sizeof(address_i2c_t);
+    service->response_data_block.size = MAX_TRANSFER_BLOCK;
+    service->request_data_block.opcode = op_cmd_write_i2c;
+
+    ssize_t received = rt_task_send(&service->task_i2c_service, &service->request_data_block, &service->response_data_block, TM_INFINITE);
+    if(received<0)
+    {
+        if(received==-ESRCH)
+        {
+            service->connected=false;
+            return 0;
+        }
+        else
+        {
+            return received;
+        }
+    }
+
+    return service->response_data_block.opcode;
+}
+
+/**
  * @brief close_i2c Закрывает сессию взаимодействия с шиной i2c
  * @param service Указатель на структуру сервиса
  * @param session_id Идентификатор сессии

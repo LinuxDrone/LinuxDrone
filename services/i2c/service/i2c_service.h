@@ -22,6 +22,7 @@ typedef enum
     op_data_write_i2c,
     op_raw_read_i2c,
     op_raw_write_i2c,
+    op_cmd_write_i2c,
     op_close_i2c
 
 } operatation;

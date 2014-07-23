@@ -81,7 +81,7 @@ void c_ms5611_run (module_c_ms5611_t *module)
 
         calculatePressureAndTemperature(D1, D2, C, &Temperature, &Pressure);
 
-        //printf("Temperature=%f   |   Pressure=%f\n", Temperature, Pressure);
+        printf("Temperature=%f   |   Pressure=%f\n", Temperature, Pressure);
 
         BaroTemp_t* BaroTemp;
         checkout_BaroTemp(module, &BaroTemp);
@@ -112,14 +112,14 @@ bool init_ms5611(i2c_service_t* i2c_service, int i2c_session, uint16_t *C)
 	/* Reset MS5611 */
     char cmd = 0;
 
-    int res = write_i2c(i2c_service, i2c_session, MS5611_I2C_ADDR, MS5611_RESET, 0, &cmd);
+    int res = write_cmd_i2c(i2c_service, i2c_session, MS5611_I2C_ADDR, MS5611_RESET);
 	if(res<0)
 	{
 		printf("Error Reset MS5611:\t");
 		print_i2c_error(res);
 		return false;
 	}
-	rt_task_sleep(rt_timer_ns2ticks(20000000));
+	rt_task_sleep(rt_timer_ns2ticks(10000000));
 
     char *Data;
     int ret_len;
@@ -159,7 +159,7 @@ void refreshTemperature(i2c_service_t* i2c_service, int i2c_session, uint8_t OSR
 	int  res = 0;
     char cmd = 0;
 
-    res = write_i2c(i2c_service, i2c_session, MS5611_I2C_ADDR, MS5611_TEMP_ADDR + OSR, 0, &cmd);
+    res = write_cmd_i2c(i2c_service, i2c_session, MS5611_I2C_ADDR, MS5611_TEMP_ADDR + OSR);
 	if(res<0)
 	{
 		printf("Error refreshTemperature MS5611:\t");
@@ -193,7 +193,7 @@ void refreshPressure(i2c_service_t* i2c_service, int i2c_session, uint8_t OSR) {
 	int  res = 0;
     char cmd = 0;
 
-    res = write_i2c(i2c_service, i2c_session, MS5611_I2C_ADDR, MS5611_PRES_ADDR + OSR, 0, &cmd);
+    res = write_cmd_i2c(i2c_service, i2c_session, MS5611_I2C_ADDR, MS5611_PRES_ADDR + OSR);
 	if(res<0)
 	{
 		printf("Error refreshPressure MS5611:\t");
