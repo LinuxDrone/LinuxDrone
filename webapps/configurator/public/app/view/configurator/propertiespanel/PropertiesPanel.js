@@ -52,7 +52,7 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
                     ]
                 }
             ],
-            bbar: [
+            buttons: [
                 {
                     text: 'Delete',
                     handler: 'onClickDeleteModule',

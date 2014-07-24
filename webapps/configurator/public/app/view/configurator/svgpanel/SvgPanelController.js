@@ -272,6 +272,24 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     },
 
     onClickZoomOut: function (b, e, eOpts) {
+
+
+        this.getView().logPanel.animate({
+            to: {
+                x: this.getView().getPosition()[0] + 50,
+                y: this.getView().getPosition()[1]//,
+                //opacity: 0.5
+            },
+            duration: 500,
+            listeners: {
+                afteranimate: function () {
+                    log.debug('finished out animating');
+                }
+            }
+        });
+
+
+
         var model = this.getView().getViewModel();
         model.paperScaleX -= 0.1;
         model.paperScaleY -= 0.1;

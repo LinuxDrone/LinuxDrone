@@ -16,6 +16,13 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
     },
     controller: 'svgpanel',
 
+
+    listeners: {
+        afterrender: function(th, options) {
+            th.logPanel.showAt(th.getPosition()[0] + 250, th.getPosition()[1] + th.getHeight() - 230);
+        }
+    },
+
     layout: 'fit',
     items: [
         {xtype: 'svg'}
@@ -86,9 +93,13 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
             }
         ]
     },
-    bbar: [
+    buttons: [
         { text: '-', handler: 'onClickZoomOut', tooltip: 'Zoom Out'},
         { text: '+', handler: 'onClickZoomIn', tooltip: 'Zoom In' }
-    ]
+    ],
+
+    logPanel: Ext.create('RtConfigurator.view.configurator.logpanel.LogPanel', {
+        ownerCt: this.ownerCt
+    })
 
 });
