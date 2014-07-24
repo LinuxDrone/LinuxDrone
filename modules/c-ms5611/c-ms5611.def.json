@@ -1,7 +1,7 @@
 {
   "type": "module_def",
   "name": "c-ms5611",
-  "version": 1,
+  "version": 2,
   "Task Priority": 80,
   "Task Period": 2000,
   "Transfer task period": 200000,
@@ -12,7 +12,7 @@
   },
   "paramsDefinitions": [
     {
-      "name": "I2C Device",
+      "name": "I2C_Device",
       "displayName": {
         "en": "Bus Name",
         "ru": "Имя шины"
@@ -24,6 +24,66 @@
       "type": "const char*",
       "defaultValue": "/dev/i2c-1",
       "validValues": ["/dev/i2c-1","/dev/i2c-2"],
+      "unitMeasured": ""
+    },
+    {
+      "name": "I2C_Address",
+      "displayName": {
+        "en": "Device address",
+        "ru": "Адресс датчика на шине"
+      },
+      "description": {
+        "en": "Device address",
+        "ru": "Адресс датчика на шине"
+      },
+      "type": "char",
+      "defaultValue": 119,
+      "validValues": [118,119],
+      "unitMeasured": ""
+    },
+    {
+      "name": "OverSampling",
+      "displayName": {
+        "en": "Ovesampling",
+        "ru": "Передискретизация"
+      },
+      "description": {
+        "en": "Affect the accuracy of measurement",
+        "ru": "Влияет на точность измерения"
+      },
+      "type": "int",
+      "defaultValue": 4096,
+      "validValues": [256,512,1024,2048,4096],
+      "unitMeasured": "int"
+    },
+    {
+      "name": "calcPress0",
+      "displayName": {
+        "en": "calc Pressure0",
+        "ru": "Расчет Pressure0 для высотометра"
+      },
+      "description": {
+        "en": "Enable calc Pressure0",
+        "ru": "Включить рассчет Pressure0 для высотометра"
+      },
+      "type": "bool",
+      "defaultValue": false,
+      "validValues": [false, true],
+      "unitMeasured": "bool"
+    },
+    {
+      "name": "alfaFiltered",
+      "displayName": {
+        "en": "Alfa filtered data",
+        "ru": "Коэффициент фильтрации данных"
+      },
+      "description": {
+        "en": "Alfa аiltered data",
+        "ru": "Коэффициент фильтрации данных"
+      },
+      "type": "float",
+      "defaultValue": 0.0,
+      "validValues": [0.1,0.5,1.0],
       "unitMeasured": ""
     }
   ],
