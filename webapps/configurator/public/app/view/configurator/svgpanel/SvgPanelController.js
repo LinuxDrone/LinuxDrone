@@ -276,8 +276,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
         this.getView().logPanel.animate({
             to: {
-                x: this.getView().getPosition()[0] + 50,
-                y: this.getView().getPosition()[1]//,
+                x: this.getView().getPosition()[0],
+                y: this.getView().getPosition()[1] + this.getView().getHeight() - this.getView().logPanel.getHeight()//,
                 //opacity: 0.5
             },
             duration: 500,

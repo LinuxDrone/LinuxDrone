@@ -4,10 +4,25 @@
 Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
     extend: 'Ext.form.Panel',
     floating: true,
-    //modal: true,
-    title: 'Logs',
+    //title: 'Logs',
     bodyPadding: 5,
     width: 550,
+
+
+    rbar: [
+        {
+            xtype: 'tool',
+            type: 'up',
+            callback: function (tbar) {
+                tbar.ownerCt.hide();
+            }
+        },
+        {
+            xtype: 'tool',
+            type: 'down'
+        }
+    ],
+
 
     // Fields will be arranged vertically, stretched to full width
     layout: 'anchor',

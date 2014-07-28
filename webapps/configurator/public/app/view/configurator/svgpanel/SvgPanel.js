@@ -18,8 +18,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
 
 
     listeners: {
-        afterrender: function(th, options) {
-            th.logPanel.showAt(th.getPosition()[0] + 250, th.getPosition()[1] + th.getHeight() - 230);
+        afterlayout: function (th, options) {
+            th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - 30);
+            th.logPanel.setWidth(th.getWidth());
         }
     },
 
@@ -27,73 +28,65 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
     items: [
         {xtype: 'svg'}
     ],
-    tbar: {
-        xtype: 'toolbar',
-        border: 5,
-        style: {
-            borderColor: 'red',
-            borderStyle: 'solid'
+    tools: [
+        {
+            xtype: 'combo',
+            editable: false,
+            fieldLabel: 'Schema',
+            bind: {
+                store: '{listSchemasNames}',
+                value: '{currentSchemaName}'
+            },
+            displayField: 'name',
+            listeners: {
+                select: 'onSelectSchema'
+            },
+            queryMode: 'local'
         },
-        items: [
-            {
-                xtype: 'combo',
-                editable: false,
-                fieldLabel: 'Schema',
-                bind: {
-                    store: '{listSchemasNames}',
-                    value: '{currentSchemaName}'
-                },
-                displayField: 'name',
-                listeners: {
-                    select: 'onSelectSchema'
-                },
-                queryMode: 'local'
+        {
+            xtype: 'combo',
+            editable: false,
+            fieldLabel: 'Version',
+            bind: {
+                store: '{listSchemasVersions}',
+                value: '{currentSchemaVersion}'
             },
-            {
-                xtype: 'combo',
-                editable: false,
-                fieldLabel: 'Version',
-                bind: {
-                    store: '{listSchemasVersions}',
-                    value: '{currentSchemaVersion}'
-                },
-                displayField: 'version',
-                valueField: 'version',
-                listeners: {
-                    select: 'onSelectVersion'
-                },
-                queryMode: 'local'
+            displayField: 'version',
+            valueField: 'version',
+            listeners: {
+                select: 'onSelectVersion'
             },
-            {
-                xtype: 'button',
-                text: 'Save',
-                handler: 'onClickSaveSchema',
-                tooltip: 'Save current configuration',
-                bind: {
-                    disabled: '{!schemaChanged}'
-                }
-            },
-            {
-                xtype: 'button',
-                text: 'Save As',
-                handler: 'onClickOpenSaveAsSchemaDialog',
-                tooltip: 'Save as current configuration..',
-                bind: {
-                    //disabled: '{!schemaChanged}'
-                }
-            },
-            {
-                xtype: 'button',
-                text: 'Delete',
-                handler: 'onClickDeleteSchema',
-                tooltip: 'Delete current configuration',
-                bind: {
-                    //disabled: '{!schemaChanged}'
-                }
+            queryMode: 'local'
+        },
+        {
+            xtype: 'button',
+            text: 'Save',
+            handler: 'onClickSaveSchema',
+            tooltip: 'Save current configuration',
+            bind: {
+                disabled: '{!schemaChanged}'
             }
-        ]
-    },
-    buttons: [
+        },
+        {
+            xtype: 'button',
+            text: 'Save As',
+            handler: 'onClickOpenSaveAsSchemaDialog',
+            tooltip: 'Save as current configuration..',
+            bind: {
+                //disabled: '{!schemaChanged}'
+            }
+        },
+        {
+            xtype: 'button',
+            text: 'Delete',
+            handler: 'onClickDeleteSchema',
+            tooltip: 'Delete current configuration',
+            bind: {
+                //disabled: '{!schemaChanged}'
+            }
+        }
+    ],
+    rbar: [
         { text: '-', handler: 'onClickZoomOut', tooltip: 'Zoom Out'},
         { text: '+', handler: 'onClickZoomIn', tooltip: 'Zoom In' }
     ],
