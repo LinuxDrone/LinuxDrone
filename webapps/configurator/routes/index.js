@@ -135,6 +135,17 @@ exports.getconfigs = function (db) {
     };
 };
 
+exports.getconfig = function (db) {
+    return function (req, res) {
+        var collection = db.get('visual_configuration');
+        collection.findOne({_id:req.params.id}, {}, function(o, schema){
+            res.setHeader("Content-Type", "application/json");
+            res.setHeader( "Content-Disposition", "attachment;filename='" + "sss.json'" );
+            res.json(schema);
+        });
+    };
+};
+
 
 var chost=undefined;
 exports.gethoststatus = function (req, res) {
