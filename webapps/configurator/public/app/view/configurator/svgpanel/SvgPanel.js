@@ -28,11 +28,12 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
     items: [
         {xtype: 'svg'}
     ],
-    tools: [
+    tbar: [
         {
             xtype: 'combo',
             editable: false,
             fieldLabel: 'Schema',
+            labelWidth: 50,
             bind: {
                 store: '{listSchemasNames}',
                 value: '{currentSchemaName}'
@@ -47,6 +48,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
             xtype: 'combo',
             editable: false,
             fieldLabel: 'Version',
+            labelWidth: 50,
             bind: {
                 store: '{listSchemasVersions}',
                 value: '{currentSchemaVersion}'

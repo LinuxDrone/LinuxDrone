@@ -140,7 +140,7 @@ exports.getconfig = function (db) {
         var collection = db.get('visual_configuration');
         collection.findOne({_id:req.params.id}, {}, function(o, schema){
             res.setHeader("Content-Type", "application/json");
-            res.setHeader( "Content-Disposition", "attachment;filename='" + "sss.json'" );
+            res.setHeader( "Content-Disposition", "attachment;filename='" + schema.name + "-" + schema.version + ".json'" );
             res.json(schema);
         });
     };
