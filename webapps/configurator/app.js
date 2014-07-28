@@ -41,6 +41,7 @@ app.get('/droneconfig', routes.droneconfig);
 app.get('/metamodules', routes.metamodules(db));
 app.post('/newconfig', routes.newconfig(db));
 app.put('/saveconfig/:id', routes.saveconfig(db));
+app.get('/getconfig/:id', routes.getconfig(db));
 app.get('/getconfigs', routes.getconfigs(db));
 app.delete('/delconfig/:id', routes.delconfig(db));
 app.post('/runhosts', routes.runhosts(db));

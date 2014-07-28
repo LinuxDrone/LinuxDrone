@@ -94,6 +94,11 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
             if (curSchema) {
                 return curSchema.get('version');
             }
+        },
+
+        exportLink: function(get){
+            var curSchema = get('currentSchema');
+            return '<a target="_blank" href="getconfig/'+curSchema.id +'">Export</a>';
         }
     }
 });

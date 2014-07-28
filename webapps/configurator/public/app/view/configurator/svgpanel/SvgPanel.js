@@ -90,6 +90,12 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
                 bind: {
                     //disabled: '{!schemaChanged}'
                 }
+            },
+            {
+                xtype: 'panel',
+                bind: {
+                    html: '{exportLink}'
+                }
             }
         ]
     },
