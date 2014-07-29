@@ -2,7 +2,7 @@
  * Created by vrubel on 24.07.14.
  */
 Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
-    extend: 'Ext.form.Panel',
+    extend: 'Ext.panel.Panel',
 
     requires: [
         'RtConfigurator.view.configurator.logpanel.LogModel',
@@ -18,80 +18,48 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
         type: 'logpanel'
     },
     controller: 'logpanel',
-
-    rbar: [
-        {
-            xtype: 'tool',
-            type: 'up',
-            bind: {
-                hidden : '{expanded}'
-            },
-            callback: function (tbar) {
-                var logPanel = tbar.ownerCt;
-                logPanel.getViewModel().set('expanded', true);
-            }
-        },
-        {
-            xtype: 'tool',
-            type: 'down',
-            bind: {
-                hidden : '{!expanded}'
-            },
-            callback: function (tbar) {
-                var logPanel = tbar.ownerCt;
-                logPanel.getViewModel().set('expanded', false);
-            }
-        }
-    ],
-
-
-    // Fields will be arranged vertically, stretched to full width
-    layout: 'anchor',
-    defaults: {
-        anchor: '100%'
-    },
-
-    // The fields
-    defaultType: 'textfield',
+    bodyPadding: 0,
     items: [
         {
-            fieldLabel: 'Schema',
-            name: 'first',
-            allowBlank: false,
-            bind: {
-                //value: '{newSchemaName}'
-            }
-        },
-        {
-            fieldLabel: 'Version',
-            name: 'last',
-            allowBlank: false,
-            bind: {
-                //value: '{newSchemaVersion}'
-            }
-        }
-    ],
-
-    // Reset and Submit buttons
-    buttons: [
-        {
-            text: 'Cancel',
-            handler: function () {
-                this.up('form').close();
-            }
-        },
-        {
-            text: 'Save',
-            formBind: true, //only enabled once the form is valid
-            disabled: true,
-
-            handler: function () {
-                var form = this.up('form').getForm();
-                if (form.isValid()) {
-                    this.ownerCt.ownerCt.floatParent.controller.onClickSaveAsSchema();
-                    this.up('form').close();
+            xtype: 'tabpanel',
+            tabPosition: 'bottom',
+            height: 200,
+            border: true,
+            items: [
+                {
+                    title: 'Bar',
+                    html: 'A simple tab'
+                },
+                {
+                    title: 'Foo',
+                    html: 'A simple tab 2'
                 }
-            }
+            ],
+            rbar: [
+                {
+                    xtype: 'tool',
+                    type: 'up',
+                    bind: {
+                        hidden: '{expanded}'
+                    },
+                    callback: function (tbar) {
+                        var logPanel = tbar.ownerCt.ownerCt;
+                        logPanel.getViewModel().set('expanded', true);
+                    }
+                },
+                {
+                    xtype: 'tool',
+                    type: 'down',
+                    bind: {
+                        hidden: '{!expanded}'
+                    },
+                    callback: function (tbar) {
+                        var logPanel = tbar.ownerCt.ownerCt;
+                        logPanel.getViewModel().set('expanded', false);
+                    }
+                }
+            ]
+            
         }
     ]
 });
