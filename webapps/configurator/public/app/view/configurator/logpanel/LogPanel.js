@@ -3,23 +3,44 @@
  */
 Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
     extend: 'Ext.form.Panel',
+
+    requires: [
+        'RtConfigurator.view.configurator.logpanel.LogModel',
+        'RtConfigurator.view.configurator.logpanel.LogController'
+    ],
+
     floating: true,
     //title: 'Logs',
     bodyPadding: 5,
     width: 550,
 
+    viewModel: {
+        type: 'logpanel'
+    },
+    controller: 'logpanel',
 
     rbar: [
         {
             xtype: 'tool',
             type: 'up',
+            bind: {
+                hidden : '{expanded}'
+            },
             callback: function (tbar) {
-                tbar.ownerCt.hide();
+                var logPanel = tbar.ownerCt;
+                logPanel.getViewModel().set('expanded', true);
             }
         },
         {
             xtype: 'tool',
-            type: 'down'
+            type: 'down',
+            bind: {
+                hidden : '{!expanded}'
+            },
+            callback: function (tbar) {
+                var logPanel = tbar.ownerCt;
+                logPanel.getViewModel().set('expanded', false);
+            }
         }
     ],
 
