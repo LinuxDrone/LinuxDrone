@@ -4,10 +4,6 @@
 Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
     extend: 'Ext.app.ViewController',
 
-    requires: [
-        'RtConfigurator.view.configurator.SaveAsSchemaDialog'
-    ],
-
     alias: 'controller.configurator',
 
     init: function () {
@@ -89,6 +85,31 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
 
         // Пометим схему как измененную
         svgpanelmodel.set('schemaChanged', true);
+    },
+
+
+    onImportSchema: function () {
+        var formPanel = this.getView().lookupReference('importdialog');
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            var importedSchema = Ext.JSON.decode(e.target.result, true);
+            if(importedSchema==null){
+                Ext.MessageBox.show({
+                    title: 'Error',
+                    msg: 'Invalid file format',
+                    icon: Ext.MessageBox.ERROR,
+                    buttons: Ext.Msg.OK
+                });
+                return;
+            }
+
+
+
+            formPanel.close();
+        };
+        var file = formPanel.getForm().findField('file').extractFileInput().files[0];
+        reader.readAsText(file);
+        formPanel.close();
     }
 
 

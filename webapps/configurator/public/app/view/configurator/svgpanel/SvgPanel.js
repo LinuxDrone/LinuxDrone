@@ -81,7 +81,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
             xtype: 'button',
             text: 'Save As',
             handler: 'onClickOpenSaveAsSchemaDialog',
-            tooltip: 'Save as current configuration..',
+            tooltip: 'Save as current configuration',
             bind: {
                 //disabled: '{!schemaChanged}'
             }
@@ -100,6 +100,12 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
             bind: {
                 html: '{exportLink}'
             }
+        },
+        {
+            xtype: 'button',
+            text: 'Import',
+            handler: 'onClickOpenImportSchemaDialog',
+            tooltip: 'Import Schema from file'
         }
     ],
     rbar: [

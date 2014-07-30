@@ -17,7 +17,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
             proxy: {
                 type: 'rest',
                 reader: {
-                    root: 'data',
+                    rootProperty: 'data',
                     successProperty: 'success',
                     messageProperty: 'message'
                 },

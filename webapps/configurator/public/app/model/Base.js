@@ -1,6 +1,8 @@
 Ext.define('RtConfigurator.model.Base', {
     extend: 'Ext.data.Model',
-
+    requires: [
+        'RtConfigurator.data.MongoIdGenerator'
+    ],
     identifier: 'mongoidgenerator',
 
     fields: [{

@@ -5,7 +5,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     extend: 'Ext.app.ViewController',
 
     requires: [
-        'Ext.MessageBox'
+        'RtConfigurator.view.configurator.dialogs.ImportSchemaDialog'
     ],
 
     alias: 'controller.svgpanel',
@@ -24,6 +24,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
         // После создания папера, отрисуем на нем текущую схему
         model.bind('{paper}', function (paper) {
+            var currentSchema = model.get('currentSchema');
+            if(!currentSchema) return;
             this.getView().controller.onSwitchCurrentSchema(model.get('currentSchema'));
         });
 
@@ -272,24 +274,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     },
 
     onClickZoomOut: function (b, e, eOpts) {
-
-
-        this.getView().logPanel.animate({
-            to: {
-                x: this.getView().getPosition()[0],
-                y: this.getView().getPosition()[1] + this.getView().getHeight() - this.getView().logPanel.getHeight()//,
-                //opacity: 0.5
-            },
-            duration: 500,
-            listeners: {
-                afteranimate: function () {
-                    log.debug('finished out animating');
-                }
-            }
-        });
-
-
-
         var model = this.getView().getViewModel();
         model.paperScaleX -= 0.1;
         model.paperScaleY -= 0.1;
@@ -492,7 +476,20 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var configuratorModel = this.getView().ownerCt.getViewModel();
         configuratorModel.set('newSchemaName', model.get('currentSchemaName'));
 
-        var newSaveAsDialog = Ext.create('RtConfigurator.view.configurator.SaveAsSchemaDialog', {
+        var newSaveAsDialog = Ext.create('RtConfigurator.view.configurator.dialogs.SaveAsSchemaDialog', {
+            ownerCt: this.getView().ownerCt
+        });
+        newSaveAsDialog.show();
+    },
+
+
+    // Обработчик кнопки импортировать схему из файла
+    onClickOpenImportSchemaDialog: function () {
+        var model = this.getView().getViewModel();
+        var configuratorModel = this.getView().ownerCt.getViewModel();
+        //configuratorModel.set('newSchemaName', model.get('currentSchemaName'));
+
+        var newSaveAsDialog = Ext.create('RtConfigurator.view.configurator.dialogs.ImportSchemaDialog', {
             ownerCt: this.getView().ownerCt
         });
         newSaveAsDialog.show();
@@ -558,6 +555,20 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                     model.set('schemaChanged', false);
                 }
             });
+    },
+
+    handleFileSelect: function (evt) {
+        var files = evt.target.files; // FileList object
+
+        // files is a FileList of File objects. List some properties.
+        var output = [];
+        for (var i = 0, f; f = files[i]; i++) {
+            output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
+                f.size, ' bytes, last modified: ',
+                f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
+                '</li>');
+        }
+        //document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
     }
 
 });

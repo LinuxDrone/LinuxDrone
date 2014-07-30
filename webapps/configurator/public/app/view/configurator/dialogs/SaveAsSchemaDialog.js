@@ -1,4 +1,4 @@
-Ext.define('RtConfigurator.view.configurator.SaveAsSchemaDialog', {
+Ext.define('RtConfigurator.view.configurator.dialogs.SaveAsSchemaDialog', {
     extend: 'Ext.form.Panel',
     floating: true,
     modal: true,
