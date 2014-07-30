@@ -90,6 +90,11 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
 
     onImportSchema: function () {
         var formPanel = this.getView().lookupReference('importdialog');
+
+        var model = this.getView().getViewModel();
+        var svgpanelmodel = model.children["rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1"];
+        var svgpanelcontroller = svgpanelmodel.getView().controller;
+
         var reader = new FileReader();
         reader.onload = function (e) {
             var importedSchema = Ext.JSON.decode(e.target.result, true);
@@ -102,8 +107,7 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
                 });
                 return;
             }
-
-
+            svgpanelcontroller.AddNewSchema(importedSchema);
 
             formPanel.close();
         };

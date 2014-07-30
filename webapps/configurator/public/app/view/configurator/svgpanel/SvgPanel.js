@@ -86,6 +86,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
                 //disabled: '{!schemaChanged}'
             }
         },
+        '-',
         {
             xtype: 'button',
             text: 'Delete',
@@ -95,6 +96,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
                 //disabled: '{!schemaChanged}'
             }
         },
+        '-',
         {
             xtype: 'panel',
             bind: {

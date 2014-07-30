@@ -411,7 +411,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         if (jsonGraph) {
             graph.fromJSON(JSON.parse(jsonGraph));
 
-
             var paper = this.getView().getViewModel().get('paper');
             var controller = this.getView().getController();
             // Инициализация портов на модулях, с целью показа их описания в тултипе
@@ -485,10 +484,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     // Обработчик кнопки импортировать схему из файла
     onClickOpenImportSchemaDialog: function () {
-        var model = this.getView().getViewModel();
-        var configuratorModel = this.getView().ownerCt.getViewModel();
-        //configuratorModel.set('newSchemaName', model.get('currentSchemaName'));
-
         var newSaveAsDialog = Ext.create('RtConfigurator.view.configurator.dialogs.ImportSchemaDialog', {
             ownerCt: this.getView().ownerCt
         });
@@ -508,7 +503,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         storeListSchemas.add(newSchema);
 
         var graph = model.get('graph');
-        //"modulesParams": this.getView().getViewModel().get('currentSchema').get('modulesParams')
         newSchema.set('jsonGraph', JSON.stringify(graph.toJSON()));
 
         // Текущая схема перестает быть таковой
@@ -521,7 +515,22 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         newSchema.set('modulesParams', Ext.JSON.decode((Ext.JSON.encode(origModulesParams))));
 
         storeListSchemas.sync();
+        this.RefreshSchemaComboLists(model);
+    },
 
+    AddNewSchema: function(newSchema){
+        var model = this.getView().getViewModel();
+        var storeListSchemas = model.get('listSchemas');
+
+        delete newSchema._id;
+        newSchema.current = true;
+        storeListSchemas.add(newSchema);
+
+        // Текущая схема перестает быть таковой
+        var currentSchema = model.get('currentSchema');
+        currentSchema.set('current', false);
+
+        storeListSchemas.sync();
         this.RefreshSchemaComboLists(model);
     },
 
