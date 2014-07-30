@@ -26,12 +26,7 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogController', {
                     y: newY
                     //opacity: 0.5
                 },
-                duration: 500,
-                listeners: {
-                    afteranimate: function () {
-                        //log.debug('finished out animating');
-                    }
-                }
+                duration: 500
             });
 
 

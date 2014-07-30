@@ -19,8 +19,16 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
 
     listeners: {
         afterlayout: function (th, options) {
-            th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - 30);
             th.logPanel.setWidth(th.getWidth());
+
+            var modelLogPanel = th.logPanel.getViewModel();
+            var expanded = modelLogPanel.get('expanded');
+
+            if(expanded){
+                th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - th.logPanel.getHeight());
+            }else{
+                th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - 30);
+            }
         }
     },
 
@@ -99,8 +107,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
         { text: '+', handler: 'onClickZoomIn', tooltip: 'Zoom In' }
     ],
 
-    logPanel: Ext.create('RtConfigurator.view.configurator.logpanel.LogPanel', {
-        ownerCt: this.ownerCt
-    })
+    logPanel: Ext.create('RtConfigurator.view.configurator.logpanel.LogPanel')
 
 });
