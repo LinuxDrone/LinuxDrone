@@ -10,7 +10,7 @@
      * to "Ext.require". The "app.dir" variable below is expanded to the path where the
      * application resides (the same folder in which this file is located).
      */
-    "classpath": "${app.dir}/app, ${app.dir}/javascripts/joint/src",
+    "classpath": "${app.dir}/app, ${app.dir}/javascripts, ${app.dir}/javascripts/joint/src",
 
     /**
      * The Sencha Framework for this application: "ext" or "touch".

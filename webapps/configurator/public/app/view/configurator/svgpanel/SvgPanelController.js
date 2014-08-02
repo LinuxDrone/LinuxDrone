@@ -10,6 +10,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     alias: 'controller.svgpanel',
 
+    socketTelemetry : undefined,
+    socketHostsOut: undefined,
+
+
     init: function () {
         var model = this.getView().getViewModel();
 
@@ -35,7 +39,105 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         model.get('listSchemas').addListener('load', function (storeListSchemas) {
             refreshSchemaComboLists(model);
         });
+
+        //this.initWebSockets();
     },
+
+
+    initWebSockets: function (){
+        // Пока не установлено соединение вебсокета, кнопки старта и стопа будут красными
+        //res.cssClass4ButtonsRunStop('btn btn-danger');
+
+        var host = window.document.location.host.replace(/:.*/, '');
+        if (typeof MozWebSocket != "undefined") {
+            this.socketTelemetry = new MozWebSocket('ws://' + host + ':7681/xxx', "telemetry-protocol");
+            this.socketHostsOut = new MozWebSocket('ws://' + host + ':3000');
+        } else {
+            this.socketTelemetry = new ReconnectingWebSocket('ws://' + host + ':7681/xxx', "telemetry-protocol");
+            this.socketHostsOut = new ReconnectingWebSocket('ws://' + host + ':3000');
+        }
+        this.socketTelemetry.binaryType = "arraybuffer";
+
+        try {
+            this.socketTelemetry.onopen = function() {
+                document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
+                document.getElementById("wsdi_status").textContent = " websocket connection opened ";
+
+                res.cssClass4ButtonsRunStop('btn btn-success');
+
+                Subscribe2Telemetry("subscribe");
+            }
+
+            this.socketTelemetry.onmessage =function got_packet(msg) {
+                // De serialize it again
+                var obj = BSON.deserialize(new Uint8Array(msg.data));
+//console.log(obj);
+                $.each(obj, function (port, value) {
+                    if(port!="_from" && (obj["_from"] in viewModels.Editor.PreparedLinks) && (port in viewModels.Editor.PreparedLinks[obj["_from"]]))
+                    {
+                        viewModels.Editor.PreparedLinks[obj["_from"]][port].forEach(function(link){
+                            link.label(0, {
+                                position: .5,
+                                attrs: {
+                                    text: {
+                                        text: value.toFixed(2),
+                                        fill: 'white',
+                                        'font-family': 'sans-serif'
+                                    },
+                                    rect: {
+                                        stroke: '#3498DB',
+                                        fill: '#3498DB',
+                                        'stroke-width': 10,
+                                        rx: 3,
+                                        ry: 3
+                                    }
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+
+            this.socketTelemetry.onclose = function(){
+                document.getElementById("wsdi_status").style.backgroundColor = "#ff4040";
+                document.getElementById("wsdi_status").textContent = " websocket connection CLOSED ";
+
+                res.cssClass4ButtonsRunStop('btn btn-danger');
+            }
+        } catch(exception) {
+            alert('<p>Error' + exception);
+        }
+
+        this.socketHostsOut.onmessage = function (event) {
+            var resp = JSON.parse(event.data);
+
+            switch (resp.process) {
+                case 'OS':
+                    res.XenoCPU(resp.data.proc + "%");
+                    break;
+
+                default:
+                    switch (resp.type) {
+                        case 'stdout':
+                            var text = String.fromCharCode.apply(String, resp.data).replace(/\n/g, '<br/>');
+
+                            var text = text.replace(/\x1b\[34m/g, '<span style="color: blue">');
+                            var text = text.replace(/\x1b\[31m/g, '<span style="color: red">');
+                            var text = text.replace(/\x1b\[0m/g, '</span>');
+
+                            document.getElementById('host_out').innerHTML =text;
+                            break;
+
+                        case 'status':
+                            res.hostStatus(resp.data);
+                            document.getElementById('host_out').innerHTML = resp.data;
+                            break;
+                    }
+                    break
+            }
+        };
+    },
+
 
     onSelectLink: function (linkCell) {
         var configuratorModel = this.getView().ownerCt.getViewModel();
@@ -274,6 +376,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     },
 
     onClickZoomOut: function (b, e, eOpts) {
+        this.initWebSockets();
+
         var model = this.getView().getViewModel();
         model.paperScaleX -= 0.1;
         model.paperScaleY -= 0.1;
