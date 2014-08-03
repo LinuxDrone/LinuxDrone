@@ -7,30 +7,34 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogController', {
     alias: 'controller.logpanel',
 
     init: function () {
-        var model = this.getView().getViewModel();
+        var view = this.getView();
+        var model = view.getViewModel();
 
-        model.bind('{expanded}', function (newVal) {
+        model.bind('{expanded}', function (expanded) {
             var logPanel = this.getView();
             if (!logPanel.rendered) return;
 
-            var newY = logPanel.getPosition()[1] + 30;
+            var newY = logPanel.getPosition()[1] + 27;
             logPanel.origY = logPanel.getPosition()[1];
-            if(newVal){
+            if(expanded){
                 newY -= logPanel.getHeight();
             }else{
-                newY += logPanel.getHeight() - 60;
+                newY += logPanel.getHeight() - 54;
             }
 
             logPanel.animate({
                 to: {
                     y: newY
-                    //opacity: 0.5
                 },
                 duration: 500
             });
-
-
         });
+
+/*
+        var labelTelemetryStatus = view.lookupReference('LabelTelemetryStatus');
+
+        console.log(labelTelemetryStatus.rendered);
+*/
 
     }
 });

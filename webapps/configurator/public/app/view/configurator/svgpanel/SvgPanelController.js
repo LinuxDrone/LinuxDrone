@@ -40,6 +40,15 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             refreshSchemaComboLists(model);
         });
 
+        // меняем цвет лабела отражающего статус коннекта вебсокета телеметрии
+        model.bind('{telemetrySocketConnected}', function (socketConnected) {
+            if(socketConnected)
+                this.getView().logPanel.getViewModel().set('telemetryLabelBackground','LightGreen');
+            else
+                this.getView().logPanel.getViewModel().set('telemetryLabelBackground','red');
+        });
+
+
         //this.initWebSockets();
     },
 
@@ -47,6 +56,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     initWebSockets: function (){
         // Пока не установлено соединение вебсокета, кнопки старта и стопа будут красными
         //res.cssClass4ButtonsRunStop('btn btn-danger');
+        var model = this.getView().getViewModel();
 
         var host = window.document.location.host.replace(/:.*/, '');
         if (typeof MozWebSocket != "undefined") {
@@ -60,12 +70,14 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
         try {
             this.socketTelemetry.onopen = function() {
-                document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
-                document.getElementById("wsdi_status").textContent = " websocket connection opened ";
+                model.set('telemetrySocketConnected', true);
 
-                res.cssClass4ButtonsRunStop('btn btn-success');
+                //document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
+                //document.getElementById("wsdi_status").textContent = " websocket connection opened ";
 
-                Subscribe2Telemetry("subscribe");
+                //res.cssClass4ButtonsRunStop('btn btn-success');
+
+                //Subscribe2Telemetry("subscribe");
             }
 
             this.socketTelemetry.onmessage =function got_packet(msg) {
@@ -99,10 +111,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             }
 
             this.socketTelemetry.onclose = function(){
-                document.getElementById("wsdi_status").style.backgroundColor = "#ff4040";
-                document.getElementById("wsdi_status").textContent = " websocket connection CLOSED ";
-
-                res.cssClass4ButtonsRunStop('btn btn-danger');
+                model.set('telemetrySocketConnected', false);
+                //document.getElementById("wsdi_status").style.backgroundColor = "#ff4040";
+                //document.getElementById("wsdi_status").textContent = " websocket connection CLOSED ";
+                //res.cssClass4ButtonsRunStop('btn btn-danger');
             }
         } catch(exception) {
             alert('<p>Error' + exception);

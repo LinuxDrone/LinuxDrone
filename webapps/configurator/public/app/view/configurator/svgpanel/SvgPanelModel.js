@@ -76,7 +76,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
         selectedCell: undefined,
 
         // Связь выбранная на схеме
-        selectedLink: undefined
+        selectedLink: undefined,
+
+        telemetrySocketConnected: false
     },
 
     formulas: {

@@ -27,7 +27,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
             if(expanded){
                 th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - th.logPanel.getHeight());
             }else{
-                th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - 30);
+                th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - 27);
             }
         }
     },
