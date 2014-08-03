@@ -719,6 +719,24 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                 console.log(data);
                 //Subscribe2Telemetry("subscribe");
             });
+    },
+
+    // Публичная функция остановки текущей конфигурации
+    StopConfig: function () {
+        //Subscribe2Telemetry("unsubscribe");
+
+        var model = this.getView().getViewModel();
+        var currentSchema = model.get('currentSchema');
+
+        var data4send = {
+            "name": currentSchema.get('name'),
+            "version": currentSchema.get('version')
+        };
+        $.post("stophosts", data4send,
+            function (data) {
+                var f = 0;
+            });
     }
+
 
 });

@@ -20,6 +20,7 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorPanel', {
     items: [
         {
             xtype: 'grid',
+            autoScroll: true,
             title: 'Modules',
             hideHeaders: true,
             store: 'StoreMetaModules',

@@ -4,6 +4,7 @@
 Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
     extend: 'Ext.Panel',
     alias: 'widget.svgpanel',
+    reference: 'SvgPanel',
 
     requires: [
         'RtConfigurator.view.configurator.svgpanel.SvgPanelController',
@@ -113,11 +114,11 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
     rbar: [
         { text: '<div style="color: green">&#9654;</div>', handler: 'RunConfig', tooltip: 'Start',
         bind:{
-            hidden: '{started}'
+            //hidden: '{started}'
         }},
-        { text: '<div style="color: red">&#9724;</div>', handler: 'onClickZoomIn', tooltip: 'Stop',
+        { text: '<div style="color: red">&#9724;</div>', handler: 'StopConfig', tooltip: 'Stop',
             bind:{
-                hidden: '{!started}'
+                //hidden: '{!started}'
             }},
         '',
         '',

@@ -15,19 +15,19 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
         // При обновлении параметров модуля, пометить схему как измененную.
         this.getView().lookupReference('commonProperties').getStore().on('update', this.markSchemaAsChanged, this);
         this.getView().lookupReference('specificProperties').getStore().on('update', this.markSchemaAsChanged, this);
-        this.getView().lookupReference('telemetrySelect').getStore().on('update', this.markSchemaAsChanged, this);
+        this.getView().lookupReference('telemetrySelect').getStore().on('update', this.onTelemetrySubscribeChanged, this);
 
-        model.bind('{typeSelectedLink}', function(newVal){
+        model.bind('{typeSelectedLink}', function (newVal) {
             var svgpanelmodel = model.children["rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1"];
             var selectedLink = svgpanelmodel.get('selectedLink');
-            if(selectedLink && selectedLink.model.attributes.mode !== newVal){
+            if (selectedLink && selectedLink.model.attributes.mode !== newVal) {
                 selectedLink.model.attributes.mode = newVal;
 
-                switch (newVal){
+                switch (newVal) {
                     case 'queue':
                         selectedLink.model.attributes.attrs[".connection"] = { stroke: 'red' };
                         selectedLink.model.attributes.attrs[".marker-target"].fill = 'red';
-                    break;
+                        break;
 
                     case 'memory':
                         selectedLink.model.attributes.attrs[".connection"] = { stroke: 'blue' };
@@ -43,21 +43,52 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
 
     },
 
-    markSchemaAsChanged: function(store, record, operation, modifiedFieldNames, eOpts){
-        if(operation=='edit'){
+    onTelemetrySubscribeChanged: function (store, record, operation, modifiedFieldNames, eOpts) {
+        if (operation == 'edit') {
+            //var model = this.getView().getViewModel();
+            //model.children['rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1'].set('schemaChanged', true);
+
+            var cmd = 'unsubscribe';
+            if (record.data.value) {
+                cmd = 'subscribe';
+            }
+            var telemetrySelectPanel = this.getView().lookupReference('telemetrySelect');
+            this.Subscribe2Telemetry(cmd, telemetrySelectPanel.ownerCt.ownerCt.ownerCt.title, record.data.name);
+        }
+        this.markSchemaAsChanged(store, record, operation);
+    },
+
+
+    // Приватная. Подписаться, отписаться на телеметрию всех инстансов
+    Subscribe2Telemetry: function (cmd, instanceName, outputName) {
+        var svgController = this.getView().lookupReference('SvgPanel').getController();
+        if (svgController.socketTelemetry.readyState == 1) {
+            var obj = {
+                cmd: cmd,
+                instance: instanceName,
+                out: outputName
+            };
+            var data = BSON.serialize(obj, true, true, false);
+            svgController.socketTelemetry.send(data.buffer);
+        }
+    },
+
+
+    markSchemaAsChanged: function (store, record, operation, modifiedFieldNames, eOpts) {
+        if (operation == 'edit') {
             var model = this.getView().getViewModel();
             model.children['rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1'].set('schemaChanged', true);
         }
     },
 
-    onChangeCurrentModuleProps: function(currentModuleProps){
+    onChangeCurrentModuleProps: function (currentModuleProps) {
         this.getView().lookupReference('commonProperties').setSource(currentModuleProps.common);
         this.getView().lookupReference('specificProperties').setSource(currentModuleProps.specific);
         this.getView().lookupReference('telemetrySelect').setSource(currentModuleProps.telemetrySubscriptions);
     },
 
     // Вызывается при нажатии кнопки Save в диалоге SaveAs (SaveAsSchemaDialog)
-    onClickSaveAsSchema: function(){
+    onClickSaveAsSchema: function () {
         var model = this.getView().getViewModel();
         var svgpanelmodel = model.children["rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1"];
         var svgpanelcontroller = svgpanelmodel.getView().controller;
@@ -65,7 +96,7 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
     },
 
     // Вызывается при нажатии кнопки Save в диалоге SaveAs (SaveAsSchemaDialog)
-    onClickDeleteModule: function(){
+    onClickDeleteModule: function () {
         var model = this.getView().getViewModel();
         var svgpanelmodel = model.children["rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1"];
 
@@ -98,7 +129,7 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
         var reader = new FileReader();
         reader.onload = function (e) {
             var importedSchema = Ext.JSON.decode(e.target.result, true);
-            if(importedSchema==null){
+            if (importedSchema == null) {
                 Ext.MessageBox.show({
                     title: 'Error',
                     msg: 'Invalid file format',
