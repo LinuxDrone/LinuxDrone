@@ -80,7 +80,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
 
         // Состояние вебсокетов
         telemetrySocketConnected: false,
-        logSocketConnected: false
+        logSocketConnected: false,
+        // Статус запущенности процесса :-)
+        started: false
     },
 
     formulas: {

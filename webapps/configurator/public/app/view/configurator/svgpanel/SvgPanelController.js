@@ -704,6 +704,21 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                 '</li>');
         }
         //document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
+    },
+
+    RunConfig: function () {
+        var model = this.getView().getViewModel();
+        var currentSchema = model.get('currentSchema');
+
+        var data4send = {
+            "name": currentSchema.get('name'),
+            "version": currentSchema.get('version')
+        };
+        $.post("runhosts", data4send,
+            function (data) {
+                console.log(data);
+                //Subscribe2Telemetry("subscribe");
+            });
     }
 
 });

@@ -205,6 +205,19 @@ exports.runhosts = function (db) {
             console.log('c-host child process exited with code ' + code);
         });
 
+        chost.on('error', function (code) {
+            chost=undefined;
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'c-host',
+                    type: 'status',
+                    data: 'stopped'
+                }), function() {  });
+            console.log('c-host child process exited with code ' + code);
+        });
+
+
         if(chost!=undefined){
             if(global.ws_server==undefined) return;
             global.ws_server.send(
