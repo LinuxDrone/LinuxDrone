@@ -78,7 +78,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
         // Связь выбранная на схеме
         selectedLink: undefined,
 
-        telemetrySocketConnected: false
+        // Состояние вебсокетов
+        telemetrySocketConnected: false,
+        logSocketConnected: false
     },
 
     formulas: {

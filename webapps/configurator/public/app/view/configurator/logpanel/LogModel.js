@@ -10,6 +10,7 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogModel', {
         // true когда панелька выдвинута
         expanded: false,
 
-        telemetryLabelBackground: 'red'
+        telemetryLabelBackground: 'red',
+        logLabelBackground: 'red'
     }
 });

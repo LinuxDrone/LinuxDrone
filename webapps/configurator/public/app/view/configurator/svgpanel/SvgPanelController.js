@@ -10,7 +10,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     alias: 'controller.svgpanel',
 
-    socketTelemetry : undefined,
+    socketTelemetry: undefined,
     socketHostsOut: undefined,
 
 
@@ -29,7 +29,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         // После создания папера, отрисуем на нем текущую схему
         model.bind('{paper}', function (paper) {
             var currentSchema = model.get('currentSchema');
-            if(!currentSchema) return;
+            if (!currentSchema) return;
             this.getView().controller.onSwitchCurrentSchema(model.get('currentSchema'));
         });
 
@@ -42,18 +42,26 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
         // меняем цвет лабела отражающего статус коннекта вебсокета телеметрии
         model.bind('{telemetrySocketConnected}', function (socketConnected) {
-            if(socketConnected)
-                this.getView().logPanel.getViewModel().set('telemetryLabelBackground','LightGreen');
+            if (socketConnected)
+                this.getView().logPanel.getViewModel().set('telemetryLabelBackground', 'LightGreen');
             else
-                this.getView().logPanel.getViewModel().set('telemetryLabelBackground','red');
+                this.getView().logPanel.getViewModel().set('telemetryLabelBackground', 'red');
+        });
+
+        // меняем цвет лабела отражающего статус коннекта вебсокета логов
+        model.bind('{logSocketConnected}', function (socketConnected) {
+            if (socketConnected)
+                this.getView().logPanel.getViewModel().set('logLabelBackground', 'LightGreen');
+            else
+                this.getView().logPanel.getViewModel().set('logLabelBackground', 'red');
         });
 
 
-        //this.initWebSockets();
+        this.initWebSockets();
     },
 
 
-    initWebSockets: function (){
+    initWebSockets: function () {
         // Пока не установлено соединение вебсокета, кнопки старта и стопа будут красными
         //res.cssClass4ButtonsRunStop('btn btn-danger');
         var model = this.getView().getViewModel();
@@ -69,25 +77,19 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         this.socketTelemetry.binaryType = "arraybuffer";
 
         try {
-            this.socketTelemetry.onopen = function() {
+            this.socketTelemetry.onopen = function () {
                 model.set('telemetrySocketConnected', true);
 
-                //document.getElementById("wsdi_status").style.backgroundColor = "#40ff40";
-                //document.getElementById("wsdi_status").textContent = " websocket connection opened ";
-
-                //res.cssClass4ButtonsRunStop('btn btn-success');
-
                 //Subscribe2Telemetry("subscribe");
-            }
+            };
 
-            this.socketTelemetry.onmessage =function got_packet(msg) {
+            this.socketTelemetry.onmessage = function got_packet(msg) {
                 // De serialize it again
                 var obj = BSON.deserialize(new Uint8Array(msg.data));
 //console.log(obj);
                 $.each(obj, function (port, value) {
-                    if(port!="_from" && (obj["_from"] in viewModels.Editor.PreparedLinks) && (port in viewModels.Editor.PreparedLinks[obj["_from"]]))
-                    {
-                        viewModels.Editor.PreparedLinks[obj["_from"]][port].forEach(function(link){
+                    if (port != "_from" && (obj["_from"] in viewModels.Editor.PreparedLinks) && (port in viewModels.Editor.PreparedLinks[obj["_from"]])) {
+                        viewModels.Editor.PreparedLinks[obj["_from"]][port].forEach(function (link) {
                             link.label(0, {
                                 position: .5,
                                 attrs: {
@@ -108,46 +110,54 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                         });
                     }
                 });
-            }
+            };
 
-            this.socketTelemetry.onclose = function(){
+            this.socketTelemetry.onclose = function () {
                 model.set('telemetrySocketConnected', false);
-                //document.getElementById("wsdi_status").style.backgroundColor = "#ff4040";
-                //document.getElementById("wsdi_status").textContent = " websocket connection CLOSED ";
-                //res.cssClass4ButtonsRunStop('btn btn-danger');
-            }
-        } catch(exception) {
+            };
+        } catch (exception) {
             alert('<p>Error' + exception);
         }
 
-        this.socketHostsOut.onmessage = function (event) {
-            var resp = JSON.parse(event.data);
+        try {
+            this.socketHostsOut.onopen = function () {
+                model.set('logSocketConnected', true);
+            };
+            this.socketHostsOut.onclose = function () {
+                model.set('logSocketConnected', false);
+            };
 
-            switch (resp.process) {
-                case 'OS':
-                    res.XenoCPU(resp.data.proc + "%");
-                    break;
+            this.socketHostsOut.onmessage = function (event) {
+                var resp = JSON.parse(event.data);
 
-                default:
-                    switch (resp.type) {
-                        case 'stdout':
-                            var text = String.fromCharCode.apply(String, resp.data).replace(/\n/g, '<br/>');
+                switch (resp.process) {
+                    case 'OS':
+                        res.XenoCPU(resp.data.proc + "%");
+                        break;
 
-                            var text = text.replace(/\x1b\[34m/g, '<span style="color: blue">');
-                            var text = text.replace(/\x1b\[31m/g, '<span style="color: red">');
-                            var text = text.replace(/\x1b\[0m/g, '</span>');
+                    default:
+                        switch (resp.type) {
+                            case 'stdout':
+                                var text = String.fromCharCode.apply(String, resp.data).replace(/\n/g, '<br/>');
 
-                            document.getElementById('host_out').innerHTML =text;
-                            break;
+                                var text = text.replace(/\x1b\[34m/g, '<span style="color: blue">');
+                                var text = text.replace(/\x1b\[31m/g, '<span style="color: red">');
+                                var text = text.replace(/\x1b\[0m/g, '</span>');
 
-                        case 'status':
-                            res.hostStatus(resp.data);
-                            document.getElementById('host_out').innerHTML = resp.data;
-                            break;
-                    }
-                    break
-            }
-        };
+                                document.getElementById('host_out').innerHTML = text;
+                                break;
+
+                            case 'status':
+                                res.hostStatus(resp.data);
+                                document.getElementById('host_out').innerHTML = resp.data;
+                                break;
+                        }
+                        break
+                }
+            };
+        } catch (exception) {
+            alert('<p>Error' + exception);
+        }
     },
 
 
@@ -388,7 +398,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     },
 
     onClickZoomOut: function (b, e, eOpts) {
-        this.initWebSockets();
+        //this.initWebSockets();
 
         var model = this.getView().getViewModel();
         model.paperScaleX -= 0.1;
@@ -634,7 +644,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         this.RefreshSchemaComboLists(model);
     },
 
-    AddNewSchema: function(newSchema){
+    AddNewSchema: function (newSchema) {
         var model = this.getView().getViewModel();
         var storeListSchemas = model.get('listSchemas');
 

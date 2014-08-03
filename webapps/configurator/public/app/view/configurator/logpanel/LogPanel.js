@@ -87,6 +87,28 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
                     }
                 }
             }
+        },{
+            xtype:'panel',
+            bind: {
+                bodyStyle: {
+                    background : '{logLabelBackground}'
+                }
+            },
+            bodyStyle:{
+                'text-align': 'center'
+            },
+            html: 'L',
+            listeners: {
+                render: {
+                    fn: function( th, eOpts ){
+                        // после рендеринга установим всплывающую подсказку
+                        var tip = Ext.create('Ext.tip.ToolTip', {
+                            target: th.el,
+                            html: 'Log WebSocket status'
+                        });
+                    }
+                }
+            }
         }
     ]
 });

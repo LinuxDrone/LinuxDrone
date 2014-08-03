@@ -111,6 +111,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
         }
     ],
     rbar: [
+        { text: '<div style="color: green">&#9654;</div>', handler: 'onClickZoomIn', tooltip: 'Start'},
+        { text: '<div style="color: red">&#9724;</div>', handler: 'onClickZoomIn', tooltip: 'Stop' },
+        '',
+        '',
         { text: '-', handler: 'onClickZoomOut', tooltip: 'Zoom Out'},
         { text: '+', handler: 'onClickZoomIn', tooltip: 'Zoom In' }
     ],
