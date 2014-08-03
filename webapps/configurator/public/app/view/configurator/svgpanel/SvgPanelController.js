@@ -12,6 +12,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     socketTelemetry: undefined,
     socketHostsOut: undefined,
+    BSON: bson().BSON,
 
 
     init: function () {
@@ -64,6 +65,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     initWebSockets: function () {
         // Пока не установлено соединение вебсокета, кнопки старта и стопа будут красными
         //res.cssClass4ButtonsRunStop('btn btn-danger');
+        var controller = this;
         var model = this.getView().getViewModel();
 
         var host = window.document.location.host.replace(/:.*/, '');
@@ -85,8 +87,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
             this.socketTelemetry.onmessage = function got_packet(msg) {
                 // De serialize it again
-                var obj = BSON.deserialize(new Uint8Array(msg.data));
+                var obj = controller.BSON.deserialize(new Uint8Array(msg.data));
 //console.log(obj);
+                return;
                 $.each(obj, function (port, value) {
                     if (port != "_from" && (obj["_from"] in viewModels.Editor.PreparedLinks) && (port in viewModels.Editor.PreparedLinks[obj["_from"]])) {
                         viewModels.Editor.PreparedLinks[obj["_from"]][port].forEach(function (link) {

@@ -68,7 +68,7 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
                 instance: instanceName,
                 out: outputName
             };
-            var data = BSON.serialize(obj, true, true, false);
+            var data = svgController.BSON.serialize(obj, true, true, false);
             svgController.socketTelemetry.send(data.buffer);
         }
     },
