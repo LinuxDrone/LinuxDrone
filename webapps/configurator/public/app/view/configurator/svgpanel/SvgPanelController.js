@@ -154,6 +154,15 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 if(resp.data==='stopped'){
                                     // Выполнение конфигурации остановлено.
                                     // Следует отписаться от телеметрии
+                                    var currentSchema = model.get('currentSchema');
+                                    $.each(currentSchema.get('modulesParams'), function (instanceName, params) {
+                                        $.each(params.telemetrySubscriptions, function (outName, subscription) {
+                                            if(subscription){
+                                                controller.Subscribe2Telemetry('unsubscribe',instanceName,outName);
+                                                break;
+                                            }
+                                        });
+                                    });
 
                                 }
                                 res.hostStatus(resp.data);
