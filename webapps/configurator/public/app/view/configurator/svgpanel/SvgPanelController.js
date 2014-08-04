@@ -19,7 +19,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var model = this.getView().getViewModel();
 
         // Подписываемся на факт изменения текущей схемы
-        model.bind('{currentSchema}', this.onSwitchCurrentSchema);
+        model.bind('{currentSchema}', this.onSwitchCurrentSchema, this);
 
         // Подписываемся на факт выбора модуля
         model.bind('{selectedCell}', this.onSwitchCurrentCell);
@@ -86,13 +86,13 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             };
 
             this.socketTelemetry.onmessage = function got_packet(msg) {
-                // De serialize it again
+                // Deserialize it again
                 var obj = controller.BSON.deserialize(new Uint8Array(msg.data));
-//console.log(obj);
-                return;
+                var PreparedLinks = model.get('PreparedLinks');
+
                 $.each(obj, function (port, value) {
-                    if (port != "_from" && (obj["_from"] in viewModels.Editor.PreparedLinks) && (port in viewModels.Editor.PreparedLinks[obj["_from"]])) {
-                        viewModels.Editor.PreparedLinks[obj["_from"]][port].forEach(function (link) {
+                    if (port != "_from" && (obj["_from"] in PreparedLinks) && (port in PreparedLinks[obj["_from"]])) {
+                        PreparedLinks[obj["_from"]][port].forEach(function (link) {
                             link.label(0, {
                                 position: .5,
                                 attrs: {
@@ -151,6 +151,11 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 break;
 
                             case 'status':
+                                if(resp.data==='stopped'){
+                                    // Выполнение конфигурации остановлено.
+                                    // Следует отписаться от телеметрии
+
+                                }
                                 res.hostStatus(resp.data);
                                 document.getElementById('host_out').innerHTML = resp.data;
                                 break;
@@ -163,6 +168,18 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         }
     },
 
+    // Приватная. Подписаться, отписаться на телеметрию всех инстансов
+    Subscribe2Telemetry: function (cmd, instanceName, outputName) {
+        if (this.socketTelemetry.readyState == 1) {
+            var obj = {
+                cmd: cmd,
+                instance: instanceName,
+                out: outputName
+            };
+            var data = this.BSON.serialize(obj, true, true, false);
+            this.socketTelemetry.send(data.buffer);
+        }
+    },
 
     onSelectLink: function (linkCell) {
         var configuratorModel = this.getView().ownerCt.getViewModel();
@@ -587,9 +604,34 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         model.set('schemaChanged', false);
 
         //res.instnameSelectedModule("Properties");
-
-        //PrepareListLinks();
+//console.log(this);
+        this.PrepareListLinks();
     },
+
+    // Подготавливает список свзяей в виде объекта, в котором можно добыть связь по имени модуля и имени порта
+    // Для удосбства, при приеме данных из вебсокетов (чтоб не искать каждый раз связь в графе)
+    PrepareListLinks: function () {
+        var model = this.getView().getViewModel();
+        var PreparedLinks = {};
+        var graph = model.get('graph');
+        graph.attributes.cells.models.forEach(function (cell) {
+            if (cell.attributes.type == "link") {
+                var sourceInstanceName = _.find(graph.attributes.cells.models,function (model) {
+                    return model.id == cell.attributes.source.id;
+                }).attributes.attrs[".label"].text;
+
+                if (!PreparedLinks.hasOwnProperty(sourceInstanceName)) {
+                    PreparedLinks[sourceInstanceName] = {};
+                }
+                if (!PreparedLinks[sourceInstanceName][cell.attributes.source.port]) {
+                    PreparedLinks[sourceInstanceName][cell.attributes.source.port] = new Array();
+                }
+                PreparedLinks[sourceInstanceName][cell.attributes.source.port].push(cell);
+            }
+        });
+        model.set('PreparedLinks',PreparedLinks);
+    },
+
 
     // Обработчик кнопки сохранения схемы
     onClickSaveSchema: function () {
@@ -740,6 +782,5 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                 var f = 0;
             });
     }
-
-
-});
+})
+;

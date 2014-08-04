@@ -53,26 +53,11 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
                 cmd = 'subscribe';
             }
             var telemetrySelectPanel = this.getView().lookupReference('telemetrySelect');
-            this.Subscribe2Telemetry(cmd, telemetrySelectPanel.ownerCt.ownerCt.ownerCt.title, record.data.name);
+            var svgController = this.getView().lookupReference('SvgPanel').getController();
+            svgController.Subscribe2Telemetry(cmd, telemetrySelectPanel.ownerCt.ownerCt.ownerCt.title, record.data.name);
         }
-        this.markSchemaAsChanged(store, record, operation);
+        this.markSchemaAsChanged(store, record, operation, null, null);
     },
-
-
-    // Приватная. Подписаться, отписаться на телеметрию всех инстансов
-    Subscribe2Telemetry: function (cmd, instanceName, outputName) {
-        var svgController = this.getView().lookupReference('SvgPanel').getController();
-        if (svgController.socketTelemetry.readyState == 1) {
-            var obj = {
-                cmd: cmd,
-                instance: instanceName,
-                out: outputName
-            };
-            var data = svgController.BSON.serialize(obj, true, true, false);
-            svgController.socketTelemetry.send(data.buffer);
-        }
-    },
-
 
     markSchemaAsChanged: function (store, record, operation, modifiedFieldNames, eOpts) {
         if (operation == 'edit') {

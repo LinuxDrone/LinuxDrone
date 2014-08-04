@@ -82,7 +82,11 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
         telemetrySocketConnected: false,
         logSocketConnected: false,
         // Статус запущенности процесса :-)
-        started: false
+        started: false,
+
+        // Подготовленный список свзяей в виде объекта, в котором можно добыть связь по имени модуля и имени порта
+        // Для удосбства, при приеме данных из вебсокетов (чтоб не искать каждый раз связь в графе)
+        PreparedLinks: undefined
     },
 
     formulas: {
