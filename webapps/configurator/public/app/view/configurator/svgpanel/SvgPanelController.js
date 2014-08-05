@@ -5,7 +5,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     extend: 'Ext.app.ViewController',
 
     requires: [
-        'RtConfigurator.view.configurator.dialogs.ImportSchemaDialog'
+        'RtConfigurator.view.configurator.dialogs.ImportSchemaDialog',
+        'RtConfigurator.view.configurator.logpanel.LogContentPanel'
     ],
 
     alias: 'controller.svgpanel',
@@ -163,6 +164,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 }
                                 var store = logContentPanel.getStore();
                                 store.add({log:text});
+                                if(store.count()>100){
+                                    store.removeAt(0);
+                                }
 
                                 break;
 

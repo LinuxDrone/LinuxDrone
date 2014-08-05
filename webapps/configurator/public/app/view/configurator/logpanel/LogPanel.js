@@ -29,7 +29,7 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
         //opacity: 0.1
     },
 
-
+/*
     items: [
         {
             title: 'Log',
@@ -45,7 +45,7 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
             }
         }
     ],
-
+*/
 
     rbar: [
         {

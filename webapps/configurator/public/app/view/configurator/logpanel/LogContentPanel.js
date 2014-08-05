@@ -22,11 +22,12 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogContentPanel', {
     },
 
     store: Ext.create('Ext.data.Store', {
-        model: 'RtConfigurator.model.LogRecord',
+        model: 'RtConfigurator.model.LogRecord'/*,
         data: [
             {log: 'Spencer'},
             {log: 'Tommy'}
         ]
+        */
     }),
 
     columns: [
