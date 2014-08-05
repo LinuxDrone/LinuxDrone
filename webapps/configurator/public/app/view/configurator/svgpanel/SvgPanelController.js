@@ -151,22 +151,16 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 break;
 
                             case 'status':
-                                if(resp.data==='stopped'){
+                                var currentSchema = model.get('currentSchema');
+                                if (resp.data === 'stopped') {
                                     // Выполнение конфигурации остановлено.
                                     // Следует отписаться от телеметрии
-                                    var currentSchema = model.get('currentSchema');
-                                    $.each(currentSchema.get('modulesParams'), function (instanceName, params) {
-                                        $.each(params.telemetrySubscriptions, function (outName, subscription) {
-                                            if(subscription){
-                                                controller.Subscribe2Telemetry('unsubscribe',instanceName,outName);
-                                                break;
-                                            }
-                                        });
-                                    });
-
+//                                    controller.AllSubscribe2Telemetry(currentSchema, controller, 'unsubscribe');
+                                } else {
+                                    console.log(resp.data);
                                 }
-                                res.hostStatus(resp.data);
-                                document.getElementById('host_out').innerHTML = resp.data;
+                                //res.hostStatus(resp.data);
+                                //document.getElementById('host_out').innerHTML = resp.data;
                                 break;
                         }
                         break
@@ -175,6 +169,19 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         } catch (exception) {
             alert('<p>Error' + exception);
         }
+    },
+
+    // Подписывание\отписывание на телеметрию всех инстансов схемы
+    // type_subscribe = 'subscribe' или ''unsubscribe
+    AllSubscribe2Telemetry: function (currentSchema, controller, type_subscribe) {
+        $.each(currentSchema.get('modulesParams'), function (instanceName, params) {
+            $.each(params.telemetrySubscriptions, function (outName, subscription) {
+                if (subscription) {
+                    controller.Subscribe2Telemetry(type_subscribe, instanceName, outName);
+                    return;
+                }
+            });
+        });
     },
 
     // Приватная. Подписаться, отписаться на телеметрию всех инстансов
@@ -638,7 +645,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                 PreparedLinks[sourceInstanceName][cell.attributes.source.port].push(cell);
             }
         });
-        model.set('PreparedLinks',PreparedLinks);
+        model.set('PreparedLinks', PreparedLinks);
     },
 
 
@@ -763,6 +770,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     RunConfig: function () {
         var model = this.getView().getViewModel();
         var currentSchema = model.get('currentSchema');
+        var controller = this;
 
         var data4send = {
             "name": currentSchema.get('name'),
@@ -770,17 +778,17 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         };
         $.post("runhosts", data4send,
             function (data) {
-                console.log(data);
-                //Subscribe2Telemetry("subscribe");
+                // Выполнение конфигурации начато.
+                // Следует подписаться на телеметрию
+                controller.AllSubscribe2Telemetry(currentSchema, controller, 'subscribe');
             });
     },
 
     // Публичная функция остановки текущей конфигурации
     StopConfig: function () {
-        //Subscribe2Telemetry("unsubscribe");
-
         var model = this.getView().getViewModel();
         var currentSchema = model.get('currentSchema');
+        var controller = this;
 
         var data4send = {
             "name": currentSchema.get('name'),
@@ -788,7 +796,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         };
         $.post("stophosts", data4send,
             function (data) {
-                var f = 0;
+                // Выполнение конфигурации остановлено.
+                // Следует отписаться от телеметрии
+                controller.AllSubscribe2Telemetry(currentSchema, controller, 'unsubscribe');
             });
     }
 })
