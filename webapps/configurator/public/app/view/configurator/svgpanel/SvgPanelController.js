@@ -67,6 +67,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         //res.cssClass4ButtonsRunStop('btn btn-danger');
         var controller = this;
         var model = this.getView().getViewModel();
+        var logPanel = this.getView().logPanel;
 
         var host = window.document.location.host.replace(/:.*/, '');
         if (typeof MozWebSocket != "undefined") {
@@ -81,8 +82,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         try {
             this.socketTelemetry.onopen = function () {
                 model.set('telemetrySocketConnected', true);
-
-                //Subscribe2Telemetry("subscribe");
             };
 
             this.socketTelemetry.onmessage = function got_packet(msg) {
@@ -147,7 +146,24 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 var text = text.replace(/\x1b\[31m/g, '<span style="color: red">');
                                 var text = text.replace(/\x1b\[0m/g, '</span>');
 
-                                document.getElementById('host_out').innerHTML = text;
+                                //document.getElementById('host_out').innerHTML = text;
+
+                                //RtConfigurator.view.configurator.logpanel.LogContentPanel
+                                console.log(resp);
+                                console.log(text);
+                                // Найти панель для данного лога
+
+                                var logContentPanel = logPanel.lookupReference(resp.process);
+                                if(!logContentPanel){
+                                    logContentPanel = Ext.create('RtConfigurator.view.configurator.logpanel.LogContentPanel', {
+                                        title: resp.process,
+                                        reference: resp.process
+                                    });
+                                    logPanel.add(logContentPanel).show();
+                                }
+                                var store = logContentPanel.getStore();
+                                store.add({log:text});
+
                                 break;
 
                             case 'status':

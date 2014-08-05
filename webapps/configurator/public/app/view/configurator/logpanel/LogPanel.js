@@ -11,7 +11,8 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
 
     floating: true,
     autoShow: false,
-    bodyPadding: 5,
+    layout: 'fit',
+    //bodyPadding: 5,
     width: 550,
 
     viewModel: {
@@ -21,18 +22,20 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
     bodyPadding: 0,
 
     tabPosition: 'bottom',
-    height: 200,
+    height: 300,
     border: true,
-    style: 'opacity: 0.8;',
+    bodyStyle:{
+        background:'black'//,
+        //opacity: 0.1
+    },
 
 
     items: [
         {
-            title: 'Bar',
-            html: 'A simple tab',
-            bodyStyle:{
-                background:'black'
-            }
+            title: 'Log',
+            xtype: 'logcontentpanel',
+            reference: 'Log_c-host',
+            html: 'A simple tab 2'
         },
         {
             title: 'Foo',
@@ -42,6 +45,7 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
             }
         }
     ],
+
 
     rbar: [
         {

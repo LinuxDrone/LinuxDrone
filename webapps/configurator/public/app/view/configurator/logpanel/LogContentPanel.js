@@ -3,15 +3,33 @@
  */
 Ext.define('RtConfigurator.view.configurator.logpanel.LogContentPanel', {
     extend: 'Ext.grid.Panel',
-    autoScroll: true,
+    alias: 'widget.logcontentpanel',
+    //autoScroll: true,
     hideHeaders: true,
-    store: 'StoreMetaModules',
-    columns: [
-        { text: 'Module', dataIndex: 'name', padding: 5, width: '80%'},
+    columnLines: false,
+    rowLines: false,
+    viewConfig: {
+        stripeRows: false,
+        trackOver: false
+        //selectedItemCls : 'x-grid-item'
+    },
+    //overCls: 'x-grid-item',
+    scroll: 'vertical',
 
-    ],
-    region: 'west',
-    collapsible: true,
-    width: 250,
-    split: true
+    bodyStyle: {
+        //background:'black',
+        //opacity:0.8
+    },
+
+    store: Ext.create('Ext.data.Store', {
+        model: 'RtConfigurator.model.LogRecord',
+        data: [
+            {log: 'Spencer'},
+            {log: 'Tommy'}
+        ]
+    }),
+
+    columns: [
+        { text: 'log', dataIndex: 'log', padding: 0, width: '100%'}
+    ]
 });
