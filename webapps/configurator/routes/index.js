@@ -21,7 +21,6 @@ exports.metamodules = function (db) {
     };
 };
 
-
 exports.newconfig = function (db) {
     return function (req, res) {
 
@@ -29,47 +28,46 @@ exports.newconfig = function (db) {
 
         //delete req.body._id;
 
-        var wr = collection.insert(req.body, function(err,docs) {
-                if (err) {
-                    res.send(400, err);
-                }
-                else {
-                    res.send(201, docs);
-                }
-            });
-
-
-return ;
-        /*
-        collection.findOne({_id:id}, {}, function(o, schema){
-            db.get('modules_defs').find({}, {}, function (e, metaModules) {
-                if(!schema.modulesParams){
-                    var logMsg = 'In request, not found required property "modulesParams"';
-                    console.log(logMsg);
-                    res.send({"success": false, "message":logMsg});
-                    return;
-                }
-                var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
-                configuration.version = schema.version;
-                configuration.name = schema.name;
-
-                var configurations = db.get('configuration');
-                configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
-                    if (err) {
-                        res.send({"success": false, "message":"There was a problem adding the information to the database."});
-                        return console.log(err);
-                    }
-                    console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
-                });
-                res.send({"success": true});
-            });
+        var wr = collection.insert(req.body, function (err, docs) {
+            if (err) {
+                res.send(400, err);
+            }
+            else {
+                res.send(201, docs);
+            }
         });
-        */
+
+
+        return;
+        /*
+         collection.findOne({_id:id}, {}, function(o, schema){
+         db.get('modules_defs').find({}, {}, function (e, metaModules) {
+         if(!schema.modulesParams){
+         var logMsg = 'In request, not found required property "modulesParams"';
+         console.log(logMsg);
+         res.send({"success": false, "message":logMsg});
+         return;
+         }
+         var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
+         configuration.version = schema.version;
+         configuration.name = schema.name;
+
+         var configurations = db.get('configuration');
+         configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
+         if (err) {
+         res.send({"success": false, "message":"There was a problem adding the information to the database."});
+         return console.log(err);
+         }
+         console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
+         });
+         res.send({"success": true});
+         });
+         });
+         */
 
 
     };
 };
-
 
 exports.saveconfig = function (db) {
     return function (req, res) {
@@ -80,17 +78,17 @@ exports.saveconfig = function (db) {
 
         collection.update({"_id": id}, { $set: req.body }, {"upsert": true }, function (err, count) {
             if (err) {
-                res.send({"success": false, "message":"There was a problem adding the information to the database."});
+                res.send({"success": false, "message": "There was a problem adding the information to the database."});
                 return console.log(err);
             }
             console.log("Save visual configuration for " + id + " - OK.");
 
-            collection.findOne({_id:id}, {}, function(o, schema){
+            collection.findOne({_id: id}, {}, function (o, schema) {
                 db.get('modules_defs').find({}, {}, function (e, metaModules) {
-                    if(!schema.modulesParams){
+                    if (!schema.modulesParams) {
                         var logMsg = 'In request, not found required property "modulesParams"';
                         console.log(logMsg);
-                        res.send({"success": false, "message":logMsg});
+                        res.send({"success": false, "message": logMsg});
                         return;
                     }
                     var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
@@ -100,7 +98,7 @@ exports.saveconfig = function (db) {
                     var configurations = db.get('configuration');
                     configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
                         if (err) {
-                            res.send({"success": false, "message":"There was a problem adding the information to the database."});
+                            res.send({"success": false, "message": "There was a problem adding the information to the database."});
                             return console.log(err);
                         }
                         console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
@@ -115,7 +113,7 @@ exports.saveconfig = function (db) {
 exports.delconfig = function (db) {
     return function (req, res) {
         var collection = db.get('visual_configuration');
-        collection.findOne({_id:req.body._id}, {}, function(o, schema){
+        collection.findOne({_id: req.body._id}, {}, function (o, schema) {
             var configurations = db.get('configuration');
             configurations.remove({"name": req.body.name, "version": req.body.version});
         });
@@ -138,108 +136,137 @@ exports.getconfigs = function (db) {
 exports.getconfig = function (db) {
     return function (req, res) {
         var collection = db.get('visual_configuration');
-        collection.findOne({_id:req.params.id}, {}, function(o, schema){
+        collection.findOne({_id: req.params.id}, {}, function (o, schema) {
             res.setHeader("Content-Type", "application/json");
-            res.setHeader( "Content-Disposition", "attachment;filename='" + schema.name + "-" + schema.version + ".json'" );
+            res.setHeader("Content-Disposition", "attachment;filename='" + schema.name + "-" + schema.version + ".json'");
             res.json(schema);
         });
     };
 };
 
 
-var chost=undefined;
+var chost = undefined;
+
+
+var hostStatus = {
+    status: 'stopped', // running
+    schemaName: '',
+    schemaVersion: ''
+};
+
+
 exports.gethoststatus = function (req, res) {
-console.log(chost);
-    var hoststatus;
-    if (chost!=undefined) {
-        hoststatus = 'running';
-    } else {
-        hoststatus = 'stopped';
-    }
-    res.json(hoststatus);
+    res.json(hostStatus);
 };
 
 
 exports.runhosts = function (db) {
     return function (req, res) {
 
-        if(chost!=undefined){
+        if (hostStatus.status === 'running') {
+            res.send({"success": false, "Host already running": e});
             return;
         }
 
-        res.json(req.body);
+        try {
+            chost = spawn('/usr/local/linuxdrone/bin/c-host', [req.body.name, req.body.version]);
+        } catch (e) {
+            console.log(e);
+            res.send({"success": false, "message": e});
+            return;
+        }
 
-        chost = spawn('/usr/local/linuxdrone/bin/c-host', [req.body.name, req.body.version]);
+
+        hostStatus.status = 'running';
+        hostStatus.schemaName = req.body.name;
+        hostStatus.schemaVersion = req.body.version;
+
 
         chost.stdout.on('data', function (data) {
-            if(global.ws_server==undefined) return;
+            if (global.ws_server == undefined) return;
             global.ws_server.send(
                 JSON.stringify({
                     process: 'c-host',
                     type: 'stdout',
-                    data:data
-                }), function() {  });
+                    data: data
+                }), function () {
+                });
             console.log('stdout: ' + data);
         });
 
         chost.stderr.on('data', function (data) {
-            if(global.ws_server==undefined) return;
+            if (global.ws_server == undefined) return;
             global.ws_server.send(
-            JSON.stringify({
-                process: 'c-host',
-                type: 'stderr',
-                data:data
-            }), function() { /* ignore errors */ });
+                JSON.stringify({
+                    process: 'c-host',
+                    type: 'stderr',
+                    data: data
+                }), function () { /* ignore errors */
+                });
             console.log('stderr: ' + data);
         });
 
         chost.on('close', function (code) {
-            chost=undefined;
-            if(global.ws_server==undefined) return;
-            global.ws_server.send(
-                JSON.stringify({
-                    process: 'c-host',
-                    type: 'status',
-                    data: 'stopped'
-                }), function() {  });
+            chost = undefined;
+
+            hostStatus.status = 'stopped';
+            hostStatus.schemaName = '';
+            hostStatus.schemaVersion = '';
+
+            if (global.ws_server == undefined) return;
+            global.ws_server.send(JSON.stringify(hostStatus), function () {
+            });
             console.log('c-host child process exited with code ' + code);
         });
 
         chost.on('error', function (code) {
-            chost=undefined;
-            if(global.ws_server==undefined) return;
-            global.ws_server.send(
-                JSON.stringify({
-                    process: 'c-host',
-                    type: 'status',
-                    data: 'stopped'
-                }), function() {  });
+            chost = undefined;
+
+            hostStatus.status = 'stopped';
+            hostStatus.schemaName = '';
+            hostStatus.schemaVersion = '';
+
+            if (global.ws_server == undefined) return;
+            global.ws_server.send(JSON.stringify(hostStatus), function () {
+            });
             console.log('c-host child process exited with code ' + code);
         });
 
 
-        if(chost!=undefined){
-            if(global.ws_server==undefined) return;
-            global.ws_server.send(
-                JSON.stringify({
-                    process: 'c-host',
-                    type: 'status',
-                    data: 'running'
-                }), function() {  });
+        if (global.ws_server != undefined) {
+            global.ws_server.send(JSON.stringify(hostStatus), function () {});
         }
+
+        res.send({"success": true});
     };
 };
 
 exports.stophosts = function (db) {
     return function (req, res) {
 
-        if(chost==undefined){
+        if (chost == undefined) {
+            res.send({"success": false, "Host already stopped": e});
             return;
         }
 
-        res.json(req.body);
+        try {
+            chost.kill();
+        } catch (e) {
+            console.log(e);
+            res.send({"success": false, "message": e});
+            return;
+        }
+        chost = undefined;
 
-        chost.kill();
+        hostStatus.status = 'stopped';
+        hostStatus.schemaName = '';
+        hostStatus.schemaVersion = '';
+
+        if (global.ws_server != undefined) {
+            global.ws_server.send(JSON.stringify(hostStatus), function () {});
+        }
+
+        res.send({"success": true});
     };
 };
 
@@ -368,7 +395,7 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
             "inInst": GetInstanceName(graph, cell.target.id),
             "outPin": cell.source.port,
             "inPin": cell.target.port,
-            "nameOutGroup" : cell.nameOutGroup
+            "nameOutGroup": cell.nameOutGroup
         });
     }
 }

@@ -11,23 +11,12 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogContentPanel', {
     viewConfig: {
         stripeRows: false,
         trackOver: false
-        //selectedItemCls : 'x-grid-item'
     },
-    //overCls: 'x-grid-item',
+    cls: 'custom-grid',
     scroll: 'vertical',
 
-    bodyStyle: {
-        //background:'black',
-        //opacity:0.8
-    },
-
     store: Ext.create('Ext.data.Store', {
-        model: 'RtConfigurator.model.LogRecord'/*,
-        data: [
-            {log: 'Spencer'},
-            {log: 'Tommy'}
-        ]
-        */
+        model: 'RtConfigurator.model.LogRecord'
     }),
 
     columns: [

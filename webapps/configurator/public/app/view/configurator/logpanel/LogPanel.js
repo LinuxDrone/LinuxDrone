@@ -20,33 +20,14 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
     },
     controller: 'logpanel',
     bodyPadding: 0,
+    //resizable: true,
 
     tabPosition: 'bottom',
     height: 300,
     border: true,
     bodyStyle:{
-        background:'black'//,
-        //opacity: 0.1
+        opacity: 0.8
     },
-
-/*
-    items: [
-        {
-            title: 'Log',
-            xtype: 'logcontentpanel',
-            reference: 'Log_c-host',
-            html: 'A simple tab 2'
-        },
-        {
-            title: 'Foo',
-            html: 'A simple tab 2',
-            bodyStyle:{
-                background:'black'
-            }
-        }
-    ],
-*/
-
     rbar: [
         {
             xtype: 'tool',
