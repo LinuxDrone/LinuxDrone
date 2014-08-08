@@ -133,6 +133,18 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             this.socketHostsOut.onmessage = function (event) {
                 var resp = JSON.parse(event.data);
 
+                //console.log(resp);
+
+                switch (resp.status) {
+                    case 'running':
+                        model.set('started', true);
+                        break;
+
+                    case 'stopped':
+                        model.set('started', false);
+                        break;
+                }
+
                 switch (resp.process) {
                     case 'OS':
                         res.XenoCPU(resp.data.proc + "%");
@@ -221,6 +233,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var configuratorModel = this.getView().ownerCt.getViewModel();
         if (!linkCell) {
             configuratorModel.set('hideLinkProperties', true);
+            if(configuratorModel.get('hideInstanceProperties')){
+                configuratorModel.set('nameOfSelectedInstance', 'Properties');
+            }
         } else {
             var link = linkCell.model;
             // Значение в комбобоксе выбора типа связи в панели свойств связи
@@ -560,6 +575,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var configuratorModel = this.getView().ownerCt.getViewModel();
         if (!cell) {
             configuratorModel.set('hideInstanceProperties', true);
+            if(configuratorModel.get('hideLinkProperties')){
+                configuratorModel.set('nameOfSelectedInstance', 'Properties');
+            }
         } else {
             var model = this.getView().getViewModel();
 

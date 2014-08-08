@@ -25,9 +25,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
             var modelLogPanel = th.logPanel.getViewModel();
             var expanded = modelLogPanel.get('expanded');
 
-            if(expanded){
+            if (expanded) {
                 th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - th.logPanel.getHeight());
-            }else{
+            } else {
                 th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - 27);
             }
         }
@@ -37,88 +37,94 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
     items: [
         {xtype: 'svg'}
     ],
-    tbar: [
-        {
-            xtype: 'combo',
-            editable: false,
-            fieldLabel: 'Schema',
-            labelWidth: 50,
-            bind: {
-                store: '{listSchemasNames}',
-                value: '{currentSchemaName}'
+    tbar: {
+        bind: {
+            disabled: '{started}'
+        },
+        items: [
+
+            {
+                xtype: 'combo',
+                editable: false,
+                fieldLabel: 'Schema',
+                labelWidth: 50,
+                bind: {
+                    store: '{listSchemasNames}',
+                    value: '{currentSchemaName}'
+                },
+                displayField: 'name',
+                listeners: {
+                    select: 'onSelectSchema'
+                },
+                queryMode: 'local'
             },
-            displayField: 'name',
-            listeners: {
-                select: 'onSelectSchema'
+            {
+                xtype: 'combo',
+                editable: false,
+                fieldLabel: 'Version',
+                labelWidth: 50,
+                bind: {
+                    store: '{listSchemasVersions}',
+                    value: '{currentSchemaVersion}'
+                },
+                displayField: 'version',
+                valueField: 'version',
+                listeners: {
+                    select: 'onSelectVersion'
+                },
+                queryMode: 'local'
             },
-            queryMode: 'local'
-        },
-        {
-            xtype: 'combo',
-            editable: false,
-            fieldLabel: 'Version',
-            labelWidth: 50,
-            bind: {
-                store: '{listSchemasVersions}',
-                value: '{currentSchemaVersion}'
+            {
+                xtype: 'button',
+                text: 'Save',
+                handler: 'onClickSaveSchema',
+                tooltip: 'Save current configuration',
+                bind: {
+                    disabled: '{!schemaChanged}'
+                }
             },
-            displayField: 'version',
-            valueField: 'version',
-            listeners: {
-                select: 'onSelectVersion'
+            {
+                xtype: 'button',
+                text: 'Save As',
+                handler: 'onClickOpenSaveAsSchemaDialog',
+                tooltip: 'Save as current configuration',
+                bind: {
+                    //disabled: '{!schemaChanged}'
+                }
             },
-            queryMode: 'local'
-        },
-        {
-            xtype: 'button',
-            text: 'Save',
-            handler: 'onClickSaveSchema',
-            tooltip: 'Save current configuration',
-            bind: {
-                disabled: '{!schemaChanged}'
+            '-',
+            {
+                xtype: 'button',
+                text: 'Delete',
+                handler: 'onClickDeleteSchema',
+                tooltip: 'Delete current configuration',
+                bind: {
+                    //disabled: '{!schemaChanged}'
+                }
+            },
+            '-',
+            {
+                xtype: 'panel',
+                bind: {
+                    html: '{exportLink}'
+                }
+            },
+            {
+                xtype: 'button',
+                text: 'Import',
+                handler: 'onClickOpenImportSchemaDialog',
+                tooltip: 'Import Schema from file'
             }
-        },
-        {
-            xtype: 'button',
-            text: 'Save As',
-            handler: 'onClickOpenSaveAsSchemaDialog',
-            tooltip: 'Save as current configuration',
-            bind: {
-                //disabled: '{!schemaChanged}'
-            }
-        },
-        '-',
-        {
-            xtype: 'button',
-            text: 'Delete',
-            handler: 'onClickDeleteSchema',
-            tooltip: 'Delete current configuration',
-            bind: {
-                //disabled: '{!schemaChanged}'
-            }
-        },
-        '-',
-        {
-            xtype: 'panel',
-            bind: {
-                html: '{exportLink}'
-            }
-        },
-        {
-            xtype: 'button',
-            text: 'Import',
-            handler: 'onClickOpenImportSchemaDialog',
-            tooltip: 'Import Schema from file'
-        }
-    ],
+        ]
+    },
     rbar: [
         { text: '<div style="color: green">&#9654;</div>', handler: 'RunConfig', tooltip: 'Start',
-        bind:{
-            //hidden: '{started}'
-        }},
+            bind: {
+                hidden: '{started}'
+            }},
         { text: '<div style="color: red">&#9724;</div>', handler: 'StopConfig', tooltip: 'Stop',
-            bind:{
-                //hidden: '{!started}'
+            bind: {
+                hidden: '{!started}'
             }},
         '',
         '',

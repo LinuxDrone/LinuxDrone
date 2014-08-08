@@ -164,7 +164,7 @@ exports.runhosts = function (db) {
     return function (req, res) {
 
         if (hostStatus.status === 'running') {
-            res.send({"success": false, "Host already running": e});
+            res.send({"success": false, message: "Host already running"});
             return;
         }
 
@@ -210,12 +210,13 @@ exports.runhosts = function (db) {
             chost = undefined;
 
             hostStatus.status = 'stopped';
+            if (global.ws_server != undefined) {
+                global.ws_server.send(JSON.stringify(hostStatus), function () {
+                });
+            }
             hostStatus.schemaName = '';
             hostStatus.schemaVersion = '';
 
-            if (global.ws_server == undefined) return;
-            global.ws_server.send(JSON.stringify(hostStatus), function () {
-            });
             console.log('c-host child process exited with code ' + code);
         });
 
@@ -223,18 +224,20 @@ exports.runhosts = function (db) {
             chost = undefined;
 
             hostStatus.status = 'stopped';
+            if (global.ws_server != undefined) {
+                global.ws_server.send(JSON.stringify(hostStatus), function () {
+                });
+            }
             hostStatus.schemaName = '';
             hostStatus.schemaVersion = '';
 
-            if (global.ws_server == undefined) return;
-            global.ws_server.send(JSON.stringify(hostStatus), function () {
-            });
             console.log('c-host child process exited with code ' + code);
         });
 
 
         if (global.ws_server != undefined) {
-            global.ws_server.send(JSON.stringify(hostStatus), function () {});
+            global.ws_server.send(JSON.stringify(hostStatus), function () {
+            });
         }
 
         res.send({"success": true});
@@ -245,7 +248,7 @@ exports.stophosts = function (db) {
     return function (req, res) {
 
         if (chost == undefined) {
-            res.send({"success": false, "Host already stopped": e});
+            res.send({"success": false, message: "Host already stopped"});
             return;
         }
 
@@ -258,14 +261,15 @@ exports.stophosts = function (db) {
         }
         chost = undefined;
 
-        hostStatus.status = 'stopped';
-        hostStatus.schemaName = '';
-        hostStatus.schemaVersion = '';
-
-        if (global.ws_server != undefined) {
-            global.ws_server.send(JSON.stringify(hostStatus), function () {});
-        }
-
+        /*
+         hostStatus.status = 'stopped';
+         if (global.ws_server != undefined) {
+         global.ws_server.send(JSON.stringify(hostStatus), function () {
+         });
+         }
+         hostStatus.schemaName = '';
+         hostStatus.schemaVersion = '';
+         */
         res.send({"success": true});
     };
 };

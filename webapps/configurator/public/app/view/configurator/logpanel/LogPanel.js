@@ -20,9 +20,10 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
     },
     controller: 'logpanel',
     bodyPadding: 0,
-    //resizable: true,
+    resizable: true,
+    resizeHandles: 'n',
 
-    tabPosition: 'bottom',
+        tabPosition: 'bottom',
     height: 300,
     border: true,
     bodyStyle:{

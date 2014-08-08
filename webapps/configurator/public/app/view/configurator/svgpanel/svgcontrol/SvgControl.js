@@ -85,10 +85,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
             if (cellView.model.attributes.type == "devs.Model") {
                 model.set('selectedCell', cellView.model);
             }
-            else {
-                if (cellView.model.attributes.type == "link") {
-                }
-            }
         });
 
         // Обработчик выбора связи (клик по иконке свойства связи)
