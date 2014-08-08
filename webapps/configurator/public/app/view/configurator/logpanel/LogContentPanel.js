@@ -13,7 +13,7 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogContentPanel', {
         trackOver: false
     },
     cls: 'custom-grid',
-    scroll: 'vertical',
+    //scroll: 'vertical',
 
     store: Ext.create('Ext.data.Store', {
         model: 'RtConfigurator.model.LogRecord'

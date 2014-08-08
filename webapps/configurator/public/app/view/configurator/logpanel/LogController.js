@@ -11,6 +11,7 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogController', {
         var model = view.getViewModel();
 
         model.bind('{expanded}', function (expanded) {
+            /*
             var logPanel = this.getView();
             if (!logPanel.rendered) return;
 
@@ -28,6 +29,7 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogController', {
                 },
                 duration: 500
             });
+            */
         });
 
 /*

@@ -44,31 +44,33 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
         // меняем цвет лабела отражающего статус коннекта вебсокета телеметрии
         model.bind('{telemetrySocketConnected}', function (socketConnected) {
+            var logPanel = this.getView().ownerCt.ownerCt.items.items[4].items.items[3].items.items[0];
+
+            console.log(logPanel);
+
             if (socketConnected)
-                this.getView().logPanel.getViewModel().set('telemetryLabelBackground', 'LightGreen');
+                logPanel.getViewModel().set('telemetryLabelBackground', 'LightGreen');
             else
-                this.getView().logPanel.getViewModel().set('telemetryLabelBackground', 'red');
+                logPanel.getViewModel().set('telemetryLabelBackground', 'red');
         });
 
         // меняем цвет лабела отражающего статус коннекта вебсокета логов
         model.bind('{logSocketConnected}', function (socketConnected) {
+            var logPanel = this.getView().ownerCt.ownerCt.items.items[4].items.items[3].items.items[0];
             if (socketConnected)
-                this.getView().logPanel.getViewModel().set('logLabelBackground', 'LightGreen');
+                logPanel.getViewModel().set('logLabelBackground', 'LightGreen');
             else
-                this.getView().logPanel.getViewModel().set('logLabelBackground', 'red');
+                logPanel.getViewModel().set('logLabelBackground', 'red');
         });
-
-
-        this.initWebSockets();
     },
 
 
-    initWebSockets: function () {
+    initWebSockets: function (logPanel) {
         // Пока не установлено соединение вебсокета, кнопки старта и стопа будут красными
-        //res.cssClass4ButtonsRunStop('btn btn-danger');
         var controller = this;
         var model = this.getView().getViewModel();
-        var logPanel = this.getView().logPanel;
+        //var logPanel = this.getView().ownerCt.lookupReference('LogPanel');
+//console.log(logPanel);
 
         var host = window.document.location.host.replace(/:.*/, '');
         if (typeof MozWebSocket != "undefined") {
@@ -133,6 +135,22 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             this.socketHostsOut.onmessage = function (event) {
                 var resp = JSON.parse(event.data);
 
+                console.log(resp);
+
+                switch (resp.status) {
+                    case 'running':
+                        model.set('started', true);
+                        break;
+
+                    case 'stopped':
+                        model.set('started', false);
+                        break;
+                }
+
+                if(resp.status){
+
+                }
+
                 switch (resp.process) {
                     case 'OS':
                         res.XenoCPU(resp.data.proc + "%");
@@ -147,10 +165,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 var text = text.replace(/\x1b\[31m/g, '<span style="color: red">');
                                 var text = text.replace(/\x1b\[0m/g, '</span>');
 
-                                //document.getElementById('host_out').innerHTML = text;
-
-                                //RtConfigurator.view.configurator.logpanel.LogContentPanel
-                                console.log(resp);
                                 console.log(text);
                                 // Найти панель для данного лога
 
@@ -167,7 +181,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 if(store.count()>100){
                                     store.removeAt(0);
                                 }
-
                                 break;
 
                             case 'status':
@@ -179,11 +192,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 } else {
                                     console.log(resp.data);
                                 }
-                                //res.hostStatus(resp.data);
-                                //document.getElementById('host_out').innerHTML = resp.data;
                                 break;
                         }
-                        break
+                        break;
                 }
             };
         } catch (exception) {

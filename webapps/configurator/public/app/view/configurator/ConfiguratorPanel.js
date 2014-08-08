@@ -66,9 +66,31 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorPanel', {
             xtype: 'propertiespanel'
         },
         {
+            xtype: 'panel',
             region: 'center',
-            xtype: 'svgpanel'
+            layout: 'border',
+            items: [
+                {
+                    region: 'center',
+                    xtype: 'svgpanel'
+                },
+                {
+                    region: 'south',
+                    layout: 'fit',
+                    collapsible: true,
+                    split: true,
+                    collapsed: true,
+                    height: 250,
+                    items: [
+                        {
+                            xtype: 'logpanel',
+                            layout: 'fit'
+                        }
+                    ]
+                }
+            ]
         }
     ]
 
-});
+})
+;
