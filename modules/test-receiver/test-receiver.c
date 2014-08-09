@@ -62,7 +62,7 @@ void test_receiver_run (module_test_receiver_t *module)
         char motor = cycle/30;
         if(motor>245)
             motor=245;
-printf("motor=%i\n", motor);
+//printf("motor=%i\n", motor);
 
         res = write_i2c(&i2c_service, session_id, dev, reg, sizeof(char), &motor);
         if(res<0)

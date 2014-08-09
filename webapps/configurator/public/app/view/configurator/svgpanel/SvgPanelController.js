@@ -58,7 +58,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                 this.getView().logPanel.getViewModel().set('logLabelBackground', 'red');
         });
 
-
         this.initWebSockets();
     },
 
@@ -157,6 +156,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
                                 var text = text.replace(/\x1b\[34m/g, '<span style="color: blue">');
                                 var text = text.replace(/\x1b\[31m/g, '<span style="color: red">');
+                                var text = text.replace(/\x1b\[33m/g, '<span style="color: yellow">');
                                 var text = text.replace(/\x1b\[0m/g, '</span>');
 
                                 //document.getElementById('host_out').innerHTML = text;
@@ -837,6 +837,24 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                 // Выполнение конфигурации остановлено.
                 // Следует отписаться от телеметрии
                 controller.AllSubscribe2Telemetry(currentSchema, controller, 'unsubscribe');
+            });
+    },
+
+    // Запрос статуса процесса выполнения
+    GetHostStatus: function () {
+        var model = this.getView().getViewModel();
+        $.getJSON("gethoststatus",
+            function (resp) {
+console.log(resp);
+                switch (resp.status) {
+                    case 'running':
+                        model.set('started', true);
+                        break;
+
+                    case 'stopped':
+                        model.set('started', false);
+                        break;
+                }
             });
     }
 })

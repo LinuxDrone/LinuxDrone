@@ -106,5 +106,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
                 model.set('selectedLink', null);
             }
         });
+
+        var svgPanelController = this.ownerCt.getController();
+        svgPanelController.GetHostStatus();
     }
 });

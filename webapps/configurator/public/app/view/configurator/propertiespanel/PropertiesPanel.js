@@ -10,7 +10,7 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
     },
     collapsible: true,
     split: true,
-    width: 300,
+    width: 225,
     layout:'fit',
 
     items:[
