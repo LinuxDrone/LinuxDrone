@@ -4,7 +4,6 @@
     "version": 2,
     "Task Priority": 80,
     "Task Period": 200,
-    "Notify on change": false,
     "paramsDefinitions": [
         {
             "name": "I2C Device",

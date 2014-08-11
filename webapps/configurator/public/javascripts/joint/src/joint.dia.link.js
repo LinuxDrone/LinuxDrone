@@ -12,7 +12,7 @@ if (typeof exports === 'object') {
     };
     var Backbone = require('backbone');
     var _ = require('lodash');
-    var g = require('./geometry').g;
+    var g = require('./geometry');
 }
 
 
@@ -112,7 +112,9 @@ joint.dia.Link = joint.dia.Cell.extend({
 
 joint.dia.LinkView = joint.dia.CellView.extend({
 
-    className: 'link',
+    className: function() {
+        return _.unique(this.model.get('type').split('.').concat('link')).join(' ');
+    },
 
     options: {
 
@@ -123,14 +125,20 @@ joint.dia.LinkView = joint.dia.CellView.extend({
 
         joint.dia.CellView.prototype.initialize.apply(this, arguments);
 
-        // create method shortcuts
-        this.watchSource = this._createWatcher('source');
-        this.watchTarget = this._createWatcher('target');
+        // create methods in prototype, so they can be accessed from any instance and
+        // don't need to be create over and over
+        if (typeof this.constructor.prototype.watchSource !== 'function') {
+            this.constructor.prototype.watchSource = this._createWatcher('source');
+            this.constructor.prototype.watchTarget = this._createWatcher('target');
+        }
 
         // `_.labelCache` is a mapping of indexes of labels in the `this.get('labels')` array to
         // `<g class="label">` nodes wrapped by Vectorizer. This allows for quick access to the
         // nodes in `updateLabelPosition()` in order to update the label positions.
         this._labelCache = {};
+
+        // keeps markers bboxes and positions again for quicker access
+        this._markerCache = {};
 
         // bind events
         this.startListening();
@@ -139,7 +147,7 @@ joint.dia.LinkView = joint.dia.CellView.extend({
     startListening: function() {
 
 	this.listenTo(this.model, 'change:markup', this.render);
-	this.listenTo(this.model, 'change:smooth change:manhattan', this.update);
+	this.listenTo(this.model, 'change:smooth change:manhattan change:router change:connector', this.update);
         this.listenTo(this.model, 'change:toolMarkup', function() {
             this.renderTools().updateToolsPosition();
         });
@@ -175,7 +183,7 @@ joint.dia.LinkView = joint.dia.CellView.extend({
         if (!_.isArray(children)) children = [children];
 
         // Cache all children elements for quicker access.
-        this._V = {} // vectorized markup;
+        this._V = {}; // vectorized markup;
         _.each(children, function(child) {
             var c = child.attr('class');
             c && (this._V[$.camelCase(c)] = child);
@@ -228,8 +236,8 @@ joint.dia.LinkView = joint.dia.CellView.extend({
             var $text = $(labelNode).find('text');
             var $rect = $(labelNode).find('rect');
 
-            // Text attributes with the default `text-anchor` set.
-            var textAttributes = _.extend({ 'text-anchor': 'middle' }, joint.util.getByPath(label, 'attrs/text', '/'));
+            // Text attributes with the default `text-anchor` and font-size set.
+            var textAttributes = _.extend({ 'text-anchor': 'middle', 'font-size': 14 }, joint.util.getByPath(label, 'attrs/text', '/'));
             
             $text.attr(_.omit(textAttributes, 'text'));
                 
@@ -282,7 +290,7 @@ joint.dia.LinkView = joint.dia.CellView.extend({
         var tool = V(toolTemplate());
 
         $tools.append(tool.node);
-
+        
         // Cache the tool node so that the `updateToolsPosition()` can update the tool position quickly.
         this._toolCache = tool;
 
@@ -322,10 +330,10 @@ joint.dia.LinkView = joint.dia.CellView.extend({
         // SVG elements for .marker-vertex and .marker-vertex-remove tools.
         var markupTemplate = _.template(this.model.get('arrowheadMarkup') || this.model.arrowheadMarkup);
 
-        this._sourceArrowhead = V(markupTemplate({ end: 'source' }));
-        this._targetArrowhead = V(markupTemplate({ end: 'target' }));
+        this._V.sourceArrowhead = V(markupTemplate({ end: 'source' }));
+        this._V.targetArrowhead = V(markupTemplate({ end: 'target' }));
 
-        $markerArrowheads.append(this._sourceArrowhead.node, this._targetArrowhead.node);
+        $markerArrowheads.append(this._V.sourceArrowhead.node, this._V.targetArrowhead.node);
 
         return this;
     },
@@ -352,55 +360,81 @@ joint.dia.LinkView = joint.dia.CellView.extend({
             }
         }, this);
 
-        var vertices = this.model.get('vertices');
+        // Path finding
+        var vertices = this.route = this.findRoute(this.model.get('vertices') || []);
 
-        if (this.model.get('manhattan')) {
-            // If manhattan routing is enabled, find new vertices so that the link is orthogonally routed.
-            vertices = this.findManhattanRoute(vertices);
-        }
-
-        this._firstVertex = _.first(vertices);
-        this._sourcePoint = this.getConnectionPoint(
-            'source',
-            this.model.get('source'),
-            this._firstVertex || this.model.get('target')).round();
-
-        this._lastVertex = _.last(vertices);
-        this._targetPoint = this.getConnectionPoint(
-            'target',
-            this.model.get('target'),
-            this._lastVertex || this._sourcePoint
-        );
-
-        // Make the markers "point" to their sticky points being auto-oriented towards
-        // `targetPosition`/`sourcePosition`. And do so only if there is a markup for them.
-        if (this._V.markerSource) {
-            this._V.markerSource.translateAndAutoOrient(
-                this._sourcePoint,
-                this._firstVertex || this._targetPoint,
-                this.paper.viewport
-            );
-        }
-
-        if (this._V.markerTarget) {
-            this._V.markerTarget.translateAndAutoOrient(
-                this._targetPoint,
-                this._lastVertex || this._sourcePoint,
-                this.paper.viewport
-            );
-        }
+        // finds all the connection points taking new vertices into account
+        this._findConnectionPoints(vertices);
 
         var pathData = this.getPathData(vertices);
+
         // The markup needs to contain a `.connection`
         this._V.connection.attr('d', pathData);
         this._V.connectionWrap && this._V.connectionWrap.attr('d', pathData);
+
+        this._translateAndAutoOrientArrows(this._V.markerSource, this._V.markerTarget);
 
         //partials updates
         this.updateLabelPositions();
         this.updateToolsPosition();
         this.updateArrowheadMarkers();
 
+        delete this.options.perpendicular;
+
         return this;
+    },
+
+    _findConnectionPoints: function(vertices) {
+
+        // cache source and target points
+        var sourcePoint, targetPoint, sourceMarkerPoint, targetMarkerPoint;
+
+        var firstVertex = _.first(vertices);
+
+        sourcePoint = this.getConnectionPoint(
+            'source', this.model.get('source'), firstVertex || this.model.get('target')
+        ).round();
+
+        var lastVertex = _.last(vertices);
+
+        targetPoint = this.getConnectionPoint(
+            'target', this.model.get('target'), lastVertex || sourcePoint
+        ).round();
+
+        // Move the source point by the width of the marker taking into account
+        // its scale around x-axis. Note that scale is the only transform that
+        // makes sense to be set in `.marker-source` attributes object
+        // as all other transforms (translate/rotate) will be replaced
+        // by the `translateAndAutoOrient()` function.
+        var cache = this._markerCache;
+
+        if (this._V.markerSource) {
+
+            cache.sourceBBox = cache.sourceBBox || this._V.markerSource.bbox(true);
+
+            sourceMarkerPoint = g.point(sourcePoint).move(
+                firstVertex || targetPoint,
+                cache.sourceBBox.width * this._V.markerSource.scale().sx * -1
+            ).round();
+        }
+
+        if (this._V.markerTarget) {
+
+            cache.targetBBox = cache.targetBBox || this._V.markerTarget.bbox(true);
+
+            targetMarkerPoint = g.point(targetPoint).move(
+                lastVertex || sourcePoint,
+                cache.targetBBox.width * this._V.markerTarget.scale().sx * -1
+            ).round();
+        }
+
+        // if there was no markup for the marker, use the connection point.
+        cache.sourcePoint = sourceMarkerPoint || sourcePoint;
+        cache.targetPoint = targetMarkerPoint || targetPoint;
+
+        // make connection points public
+        this.sourcePoint = sourcePoint;
+        this.targetPoint = targetPoint;
     },
 
     updateLabelPositions: function() {
@@ -466,26 +500,17 @@ joint.dia.LinkView = joint.dia.CellView.extend({
         // getting bbox of an element with `display="none"` in IE9 ends up with access violation
         if ($.css(this._V.markerArrowheads.node, 'display') === 'none') return this;
 
-        var sx = this.getConnectionLength() < this.options.shortLinkLength ? .5 : 1
-        this._sourceArrowhead.scale(sx);
-        this._targetArrowhead.scale(sx);
+        var sx = this.getConnectionLength() < this.options.shortLinkLength ? .5 : 1;
+        this._V.sourceArrowhead.scale(sx);
+        this._V.targetArrowhead.scale(sx);
 
-        // Make the markers "point" to their sticky points being auto-oriented towards `targetPosition`/`sourcePosition`.
-        this._sourceArrowhead.translateAndAutoOrient(
-            this._sourcePoint,
-            this._firstVertex || this._targetPoint,
-            this.paper.viewport
-        );
-
-        this._targetArrowhead.translateAndAutoOrient(
-            this._targetPoint,
-            this._lastVertex || this._sourcePoint,
-            this.paper.viewport
-        );
+        this._translateAndAutoOrientArrows(this._V.sourceArrowhead, this._V.targetArrowhead);
 
         return this;
     },
 
+    // Returns a function observing changes on an end of the link. If a change happens and new end is a new model,
+    // it stops listening on the previous one and starts listening to the new one.
     _createWatcher: function(endType) {
 
         function watchEnd(link, end) {
@@ -493,25 +518,37 @@ joint.dia.LinkView = joint.dia.CellView.extend({
             end = end || {};
 
             var previousEnd = link.previous(endType) || {};
+
+            // Pick updateMethod this._sourceBboxUpdate or this._targetBboxUpdate.
+            var updateEndFunction = this['_' + endType + 'BBoxUpdate'];
+
             if (this._isModel(previousEnd)) {
-                this.stopListening(this.paper.getModelById(previousEnd.id), 'change');
+                this.stopListening(this.paper.getModelById(previousEnd.id), 'change', updateEndFunction);
             }
 
             if (this._isModel(end)) {
-                this.listenTo(this.paper.getModelById(end.id), 'change', function() {
-                    this._cacheEndBbox(endType, end).update();
-                });
+                // If the observed model changes, it caches a new bbox and do the link update.
+                this.listenTo(this.paper.getModelById(end.id), 'change', updateEndFunction);
             }
 
-            return this._cacheEndBbox(endType, end);
+            _.bind(updateEndFunction, this)({ cacheOnly: true });
+
+            return this;
         }
 
         return watchEnd;
     },
 
-    _cacheEndBbox: function(endType, end) {
+    // It's important to keep both methods (sourceBboxUpdate and targetBboxUpdate) as unique methods
+    // because of loop links. We have to be able to determine, which method we want to stop listen to.
+    // ListenTo(model, event, handler) as model and event will be identical.
+    _sourceBBoxUpdate: function(update) {
 
-        var cacheBbox = '_' + endType + 'Bbox';
+        // keep track which end had been changed very last
+        this.lastEndChange = 'source';
+
+        update = update || {};
+        var end = this.model.get('source');
 
         if (this._isModel(end)) {
 
@@ -519,19 +556,60 @@ joint.dia.LinkView = joint.dia.CellView.extend({
             var view = this.paper.findViewByModel(end.id);
             var magnetElement = this.paper.viewport.querySelector(selector);
 
-            this[cacheBbox] = view.getStrokeBBox(magnetElement);
+            this.sourceBBox = view.getStrokeBBox(magnetElement);
 
         } else {
             // the link end is a point ~ rect 1x1
-            this[cacheBbox] = {
-                width: 1, height: 1,
-                x: end.x, y: end.y
-            };
+            this.sourceBBox = g.rect(end.x, end.y, 1, 1);
         }
 
-        return this;
+        if (!update.cacheOnly) this.update();
     },
 
+    _targetBBoxUpdate: function(update) {
+
+        // keep track which end had been changed very last
+        this.lastEndChange = 'target';
+
+        update = update || {};
+        var end = this.model.get('target');
+
+        if (this._isModel(end)) {
+
+            var selector = this._makeSelector(end);
+            var view = this.paper.findViewByModel(end.id);
+            var magnetElement = this.paper.viewport.querySelector(selector);
+
+            this.targetBBox = view.getStrokeBBox(magnetElement);
+
+        } else {
+            // the link end is a point ~ rect 1x1
+            this.targetBBox = g.rect(end.x, end.y, 1, 1);
+        }
+
+        if (!update.cacheOnly) this.update();
+    },
+
+    _translateAndAutoOrientArrows: function(sourceArrow, targetArrow) {
+
+        // Make the markers "point" to their sticky points being auto-oriented towards
+        // `targetPosition`/`sourcePosition`. And do so only if there is a markup for them.
+        if (sourceArrow) {
+            sourceArrow.translateAndAutoOrient(
+                this.sourcePoint,
+                _.first(this.route) || this.targetPoint,
+                this.paper.viewport
+            );
+        }
+
+        if (targetArrow) {
+            targetArrow.translateAndAutoOrient(
+                this.targetPoint,
+                _.last(this.route) || this.sourcePoint,
+                this.paper.viewport
+            );
+        }
+    },
 
     removeVertex: function(idx) {
 
@@ -584,7 +662,7 @@ joint.dia.LinkView = joint.dia.CellView.extend({
         while (idx--) {
 
             vertices.splice(idx, 0, vertex);
-            V(path).attr('d', this.getPathData(vertices));
+            V(path).attr('d', this.getPathData(this.findRoute(vertices)));
 
             pathLength = path.getTotalLength();
 
@@ -609,60 +687,61 @@ joint.dia.LinkView = joint.dia.CellView.extend({
         return Math.max(idx, 0);
     },
 
-    // Return the `d` attribute value of the `<path>` element representing the link between `source` and `target`.
+
+    findRoute: function(oldVertices) {
+
+        var router = this.model.get('router');
+
+        if (!router) {
+
+            if (this.model.get('manhattan')) {
+                // backwards compability
+                router = { name: 'orthogonal' };
+            } else {
+
+                return oldVertices;
+            }
+        }
+
+        var fn = joint.routers[router.name];
+
+        if (!_.isFunction(fn)) {
+
+            throw 'unknown router: ' + router.name;
+        }
+
+        var newVertices = fn.call(this, oldVertices || [], router.args || {}, this);
+
+        return newVertices;
+    },
+
+    // Return the `d` attribute value of the `<path>` element representing the link
+    // between `source` and `target`.
     getPathData: function(vertices) {
 
-        var sourcePoint = g.point(this._sourcePoint);
-        var targetPoint = g.point(this._targetPoint);
+        var connector = this.model.get('connector');
 
-        // Move the source point by the width of the marker taking into account its scale around x-axis.
-        // Note that scale is the only transform that makes sense to be set in `.marker-source` attributes object
-        // as all other transforms (translate/rotate) will be replaced by the `translateAndAutoOrient()` function.
+        if (!connector) {
 
-        if (this._V.markerSource) {
-            this._markerSourceBbox = this._markerSourceBbox || this._V.markerSource.bbox(true);
-            sourcePoint.move(
-                this._firstVertex || targetPoint,
-                this._markerSourceBbox.width * -this._V.markerSource.scale().sx
-            );
+            // backwards compability
+            connector = this.model.get('smooth') ? { name: 'smooth' } : { name: 'normal' };
         }
 
-        if (this._V.markerTarget) {
-            this._markerTargetBbox = this._markerTargetBbox || this._V.markerTarget.bbox(true);
-            targetPoint.move(
-                this._lastVertex || sourcePoint,
-                this._markerTargetBbox.width * -this._V.markerTarget.scale().sx
-            );
+        if (!_.isFunction(joint.connectors[connector.name])) {
+
+            throw 'unknown connector: ' + connector.name;
         }
 
-        var d;
-        if (this.model.get('smooth')) {
+        var pathData = joint.connectors[connector.name].call(
+            this,
+            this._markerCache.sourcePoint, // Note that the value is translated by the size
+            this._markerCache.targetPoint, // of the marker. (We'r not using this.sourcePoint)
+            vertices || (this.model.get('vertices') || {}),
+            connector.args || {}, // options
+            this
+        );
 
-            if (vertices && vertices.length) {
-                d = g.bezier.curveThroughPoints([sourcePoint].concat(vertices || []).concat([targetPoint]));
-            } else {
-                // if we have no vertices use a default cubic bezier curve, cubic bezier requires two control points.
-                // the two control points are both defined with X as mid way between the source and target points.
-                // sourceControlPoint Y is equal to sourcePoint Y and targetControlPointY being equal to targetPointY.
-                // handle situation were sourcePointX is greater or less then targetPointX.
-                var controlPointX = (sourcePoint.x < targetPoint.x) 
-                    ? targetPoint.x - ((targetPoint.x - sourcePoint.x) / 2)
-                    : sourcePoint.x - ((sourcePoint.x - targetPoint.x) / 2);
-                    d = ['M', sourcePoint.x, sourcePoint.y, 'C', controlPointX, sourcePoint.y, controlPointX, targetPoint.y, targetPoint.x, targetPoint.y];
-            }
-            
-        } else {
-            
-            // Construct the `d` attribute of the `<path>` element.
-            d = ['M', sourcePoint.x, sourcePoint.y];
-            _.each(vertices, function(vertex) {
-
-                d.push(vertex.x, vertex.y);
-            });
-            d.push(targetPoint.x, targetPoint.y);
-        }
-
-        return d.join(' ');
+        return pathData;
     },
 
     // Find a point that is the start of the connection.
@@ -684,9 +763,9 @@ joint.dia.LinkView = joint.dia.CellView.extend({
             // to the reference point (or reference element).
             // Get the bounding box of the spot relative to the paper viewport. This is necessary
             // in order to follow paper viewport transformations (scale/rotate).
-            // `_sourceBbox` and `_targetBbox` come both from `_cacheEndBbox` method, they exist
-            // since first render and are automatically updated
-            var spotBbox = end === 'source' ? this._sourceBbox : this._targetBbox;
+            // `_sourceBbox` (`_targetBbox`) comes from `_sourceBboxUpdate` (`_sourceBboxUpdate`)
+            // method, it exists since first render and are automatically updated
+            var spotBbox = end === 'source' ? this.sourceBBox : this.targetBBox;
             
             var reference;
             
@@ -701,7 +780,7 @@ joint.dia.LinkView = joint.dia.CellView.extend({
                 // element boundary closest to the source element.
                 // Get the bounding box of the spot relative to the paper viewport. This is necessary
                 // in order to follow paper viewport transformations (scale/rotate).
-                var referenceBbox = end === 'source' ? this._targetBbox : this._sourceBbox;
+                var referenceBbox = end === 'source' ? this.targetBBox : this.sourceBBox;
 
                 reference = g.rect(referenceBbox).intersectionWithLineFromCenterToPoint(g.rect(spotBbox).center());
                 reference = reference || g.rect(referenceBbox).center();
@@ -710,7 +789,7 @@ joint.dia.LinkView = joint.dia.CellView.extend({
             // If `perpendicularLinks` flag is set on the paper and there are vertices
             // on the link, then try to find a connection point that makes the link perpendicular
             // even though the link won't point to the center of the targeted object.
-            if (this.paper.options.perpendicularLinks) {
+            if (this.paper.options.perpendicularLinks || this.options.perpendicular) {
 
                 var horizontalLineRect = g.rect(0, reference.y, this.paper.options.width, 1);
                 var verticalLineRect = g.rect(reference.x, 0, 1, this.paper.options.height);
@@ -790,124 +869,6 @@ joint.dia.LinkView = joint.dia.CellView.extend({
         return selector;
     },
 
-    // Return points that one needs to draw a connection through in order to have a manhattan link routing from
-    // source to target going through `vertices`.
-    findManhattanRoute: function(vertices) {
-
-        vertices = (vertices || []).slice();
-        var manhattanVertices = [];
-
-        // Return the direction that one would have to take traveling from `p1` to `p2`.
-        // This function assumes the line between `p1` and `p2` is orthogonal.
-        function direction(p1, p2) {
-            
-            if (p1.y < p2.y && p1.x === p2.x) {
-                return 'down';
-            } else if (p1.y > p2.y && p1.x === p2.x) {
-                return 'up';
-            } else if (p1.x < p2.x && p1.y === p2.y) {
-                return 'right';
-            }
-            return 'left';
-        }
-        
-        function bestDirection(p1, p2, preferredDirection) {
-
-            var directions;
-
-            // This branching determines possible directions that one can take to travel
-            // from `p1` to `p2`.
-            if (p1.x < p2.x) {
-                
-                if (p1.y > p2.y) { directions = ['up', 'right']; }
-                else if (p1.y < p2.y) { directions = ['down', 'right']; }
-                else { directions = ['right']; }
-                
-            } else if (p1.x > p2.x) {
-                
-                if (p1.y > p2.y) { directions = ['up', 'left']; }
-                else if (p1.y < p2.y) { directions = ['down', 'left']; }
-                else { directions = ['left']; }
-                
-            } else {
-                
-                if (p1.y > p2.y) { directions = ['up']; }
-                else { directions = ['down']; }
-            }
-            
-            if (_.contains(directions, preferredDirection)) {
-                return preferredDirection;
-            }
-            
-            var direction = _.first(directions);
-
-            // Should the direction be the exact opposite of the preferred direction,
-            // try another one if such direction exists.
-            switch (preferredDirection) {
-              case 'down': if (direction === 'up') return _.last(directions); break;
-              case 'up': if (direction === 'down') return _.last(directions); break;
-              case 'left': if (direction === 'right') return _.last(directions); break;
-              case 'right': if (direction === 'left') return _.last(directions); break;
-            }
-            return direction;
-        }
-        
-        // Find a vertex in between the vertices `p1` and `p2` so that the route between those vertices
-        // is orthogonal. Prefer going the direction determined by `preferredDirection`.
-        function findMiddleVertex(p1, p2, preferredDirection) {
-            
-            var direction = bestDirection(p1, p2, preferredDirection);
-            if (direction === 'down' || direction === 'up') {
-                return { x: p1.x, y: p2.y, d: direction };
-            }
-            return { x: p2.x, y: p1.y, d: direction };
-        }
-
-        var sourceCenter = g.rect(this._sourceBbox).center();
-        var targetCenter = g.rect(this._targetBbox).center();
-
-        vertices.unshift(sourceCenter);
-        vertices.push(targetCenter);
-
-        var manhattanVertex;
-        var lastManhattanVertex;
-        var vertex;
-        var nextVertex;
-
-        // For all the pairs of link model vertices...
-        for (var i = 0; i < vertices.length - 1; i++) {
-
-            vertex = vertices[i];
-            nextVertex = vertices[i + 1];
-            lastManhattanVertex = _.last(manhattanVertices);
-            
-            if (i > 0) {
-                // Push all the link vertices to the manhattan route.
-                manhattanVertex = vertex;
-                // Determine a direction between the last vertex and the new one.
-                // Therefore, each vertex contains the `d` property describing the direction that one
-                // would have to take to travel to that vertex.
-                manhattanVertex.d = lastManhattanVertex ? direction(lastManhattanVertex, vertex) : 'top';
-                manhattanVertices.push(manhattanVertex);
-                lastManhattanVertex = manhattanVertex;
-            }
-
-            // Make sure that we don't create a vertex that would go the opposite direction then that of the
-            // previous one. Othwerwise, a 'spike' segment would be created which is not desirable.
-            // Find a dummy vertex to keep the link orthogonal. Preferably, take the same direction
-            // as the previous one.
-            var d = lastManhattanVertex && lastManhattanVertex.d;
-            manhattanVertex = findMiddleVertex(vertex, nextVertex, d);
-
-            // Do not add a new vertex that is the same as one of the vertices already added.
-            if (!g.point(manhattanVertex).equals(g.point(vertex)) && !g.point(manhattanVertex).equals(g.point(nextVertex))) {
-
-                manhattanVertices.push(manhattanVertex);
-            }
-        }
-        return manhattanVertices;
-    },
-
     // Public API
     // ----------
 
@@ -972,7 +933,7 @@ joint.dia.LinkView = joint.dia.CellView.extend({
         var end = this.model.get(oppositeArrowhead);
 
         if (end.id) {
-            args[i] = this.paper.findViewByModel(end.id)
+            args[i] = this.paper.findViewByModel(end.id);
             args[i+1] = end.selector && args[i].el.querySelector(end.selector);
         }
 
@@ -1059,40 +1020,114 @@ joint.dia.LinkView = joint.dia.CellView.extend({
 
           case 'arrowhead-move':
 
-            // Touchmove event's target is not reflecting the element under the coordinates as mousemove does.
-            // It holds the element when a touchstart triggered.
-            var target = (evt.type === 'mousemove')
-                ? evt.target
-                : document.elementFromPoint(evt.clientX, evt.clientY)
+            if (this.paper.options.snapLinks) {
 
-            if (this._targetEvent !== target) {
-                // Unhighlight the previous view under pointer if there was one.
-                this._magnetUnderPointer && this._viewUnderPointer.unhighlight(this._magnetUnderPointer);
-                this._viewUnderPointer = this.paper.findView(target);
-                if (this._viewUnderPointer) {
-                    // If we found a view that is under the pointer, we need to find the closest
-                    // magnet based on the real target element of the event.
-                    this._magnetUnderPointer = this._viewUnderPointer.findMagnet(target);
+                // checking view in close area of the pointer
 
-                    if (this._magnetUnderPointer && this.paper.options.validateConnection.apply(
-                        this.paper, this._validateConnectionArgs(this._viewUnderPointer, this._magnetUnderPointer)
-                    )) {
-                        // If there was no magnet found, do not highlight anything and assume there
-                        // is no view under pointer we're interested in reconnecting to.
-                        // This can only happen if the overall element has the attribute `'.': { magnet: false }`.
-                        this._magnetUnderPointer && this._viewUnderPointer.highlight(this._magnetUnderPointer);
+                var r = this.paper.options.snapLinks.radius || 50;
+                var viewsInArea = this.paper.findViewsInArea({ x: x - r, y: y - r, width: 2 * r, height: 2 * r });
+
+                this._closestView && this._closestView.unhighlight(this._closestEnd.selector);
+                this._closestView = this._closestEnd = null;
+
+                var pointer = g.point(x,y);
+                var distance, minDistance = Number.MAX_VALUE;
+
+                _.each(viewsInArea, function(view) {
+
+                    // skip connecting to the element in case '.': { magnet: false } attribute present
+                    if (view.el.getAttribute('magnet') !== 'false') {
+
+                        // find distance from the center of the model to pointer coordinates
+                        distance = view.model.getBBox().center().distance(pointer);
+
+                        // the connection is looked up in a circle area by `distance < r`
+                        if (distance < r && distance < minDistance) {
+
+                            if (this.paper.options.validateConnection.apply(
+                                this.paper, this._validateConnectionArgs(view, null)
+                            )) {
+                                minDistance = distance;
+                                this._closestView = view;
+                                this._closestEnd = { id: view.model.id };
+                            }
+                        }
+                    }
+
+                    view.$('[magnet]').each(_.bind(function(index, magnet) {
+
+                        var bbox = V(magnet).bbox(false, this.paper.viewport);
+
+                        distance = pointer.distance({
+                            x: bbox.x + bbox.width / 2,
+                            y: bbox.y + bbox.height / 2
+                        });
+
+                        if (distance < r && distance < minDistance) {
+
+                            if (this.paper.options.validateConnection.apply(
+                                this.paper, this._validateConnectionArgs(view, magnet)
+                            )) {
+                                minDistance = distance;
+                                this._closestView = view;
+                                this._closestEnd = {
+                                    id: view.model.id,
+                                    selector: view.getSelector(magnet),
+                                    port: magnet.getAttribute('port')
+                                };
+                            }
+                        }
+
+                    }, this));
+
+                }, this);
+
+                this._closestView && this._closestView.highlight(this._closestEnd.selector);
+
+                this.model.set(this._arrowhead, this._closestEnd || { x: x, y: y });
+
+            } else {
+
+                // checking views right under the pointer
+
+                // Touchmove event's target is not reflecting the element under the coordinates as mousemove does.
+                // It holds the element when a touchstart triggered.
+                var target = (evt.type === 'mousemove')
+                    ? evt.target
+                    : document.elementFromPoint(evt.clientX, evt.clientY);
+
+                if (this._targetEvent !== target) {
+                    // Unhighlight the previous view under pointer if there was one.
+                    this._magnetUnderPointer && this._viewUnderPointer.unhighlight(this._magnetUnderPointer);
+                    this._viewUnderPointer = this.paper.findView(target);
+                    if (this._viewUnderPointer) {
+                        // If we found a view that is under the pointer, we need to find the closest
+                        // magnet based on the real target element of the event.
+                        this._magnetUnderPointer = this._viewUnderPointer.findMagnet(target);
+
+                        if (this._magnetUnderPointer && this.paper.options.validateConnection.apply(
+                            this.paper,
+                            this._validateConnectionArgs(this._viewUnderPointer, this._magnetUnderPointer)
+                        )) {
+                            // If there was no magnet found, do not highlight anything and assume there
+                            // is no view under pointer we're interested in reconnecting to.
+                            // This can only happen if the overall element has the attribute `'.': { magnet: false }`.
+                            this._magnetUnderPointer && this._viewUnderPointer.highlight(this._magnetUnderPointer);
+                        } else {
+                            // This type of connection is not valid. Disregard this magnet.
+                            this._magnetUnderPointer = null;
+                        }
                     } else {
-                        // This type of connection is not valid. Disregard this magnet.
+                        // Make sure we'll delete previous magnet
                         this._magnetUnderPointer = null;
                     }
-                } else {
-                    // Make sure we'll delete previous magnet
-                    this._magnetUnderPointer = null;
                 }
+
+	        this._targetEvent = target;
+
+                this.model.set(this._arrowhead, { x: x, y: y });
             }
 
-	    this._targetEvent = target;
-            this.model.set(this._arrowhead, { x: x, y: y });
             break;
         }
 
@@ -1106,23 +1141,31 @@ joint.dia.LinkView = joint.dia.CellView.extend({
 
         if (this._action === 'arrowhead-move') {
 
-            if (this._magnetUnderPointer) {
-                this._viewUnderPointer.unhighlight(this._magnetUnderPointer);
-                // Find a unique `selector` of the element under pointer that is a magnet. If the
-                // `this._magnetUnderPointer` is the root element of the `this._viewUnderPointer` itself,
-                // the returned `selector` will be `undefined`. That means we can directly pass it to the
-                // `source`/`target` attribute of the link model below.
-		this.model.set(this._arrowhead, {
-                    id: this._viewUnderPointer.model.id,
-                    selector: this._viewUnderPointer.getSelector(this._magnetUnderPointer),
-                    port: $(this._magnetUnderPointer).attr('port')
-                });
-            }
+            if (this.paper.options.snapLinks) {
 
-            delete this._viewUnderPointer;
-            delete this._magnetUnderPointer;
-            delete this._staticView;
-            delete this._staticMagnet;
+                this._closestView && this._closestView.unhighlight(this._closestEnd.selector);
+                this._closestView = this._closestEnd = null;
+
+            } else {
+
+                if (this._magnetUnderPointer) {
+                    this._viewUnderPointer.unhighlight(this._magnetUnderPointer);
+                    // Find a unique `selector` of the element under pointer that is a magnet. If the
+                    // `this._magnetUnderPointer` is the root element of the `this._viewUnderPointer` itself,
+                    // the returned `selector` will be `undefined`. That means we can directly pass it to the
+                    // `source`/`target` attribute of the link model below.
+		    this.model.set(this._arrowhead, {
+                        id: this._viewUnderPointer.model.id,
+                        selector: this._viewUnderPointer.getSelector(this._magnetUnderPointer),
+                        port: $(this._magnetUnderPointer).attr('port')
+                    });
+                }
+
+                delete this._viewUnderPointer;
+                delete this._magnetUnderPointer;
+                delete this._staticView;
+                delete this._staticMagnet;
+            }
 
             this._afterArrowheadMove();
         }

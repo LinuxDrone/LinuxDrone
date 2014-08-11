@@ -153,11 +153,13 @@ void run_task_i2c (void *module)
             continue;
         }
 
+        response_block.size=0;
+        response_block.opcode=res_successfully;
+
         switch (request_block.opcode)
         {
             case op_open_i2c:
                 response_block.opcode = open_bus(request_block.data);
-                response_block.size=0;
                 break;
 
 
@@ -175,22 +177,23 @@ void run_task_i2c (void *module)
                 if(ioctl_err<0)
                 {
                     response_block.opcode=res_error_ioctl;
-                    break;
                 }
-
-                if(request->addr_and_dev_register.dev_register>0)
+                else
                 {
-                    // Если читаем не просто из девайса, а указывая предварительно номера порта
-                    int len = write(request->addr_and_dev_register.session_id, &request->addr_and_dev_register.dev_register, sizeof(char));
-                    if(len!=sizeof(request->addr_and_dev_register.dev_register))
+                    if(request->addr_and_dev_register.dev_register>0)
                     {
-                        response_block.size=0;
-                        response_block.opcode=res_error_write_to_i2c;
-                        break;
+                        // Если читаем не просто из девайса, а указывая предварительно номера порта
+                        int len = write(request->addr_and_dev_register.session_id, &request->addr_and_dev_register.dev_register, sizeof(char));
+                        if(len!=sizeof(request->addr_and_dev_register.dev_register))
+                        {
+                            response_block.opcode=res_error_write_to_i2c;
+                        }
+                    }
+                    if(response_block.opcode==res_successfully)
+                    {
+                        response_block.size = read(request->addr_and_dev_register.session_id, response_block.data, request->len_requested_data);
                     }
                 }
-                response_block.size = read(request->addr_and_dev_register.session_id, response_block.data, request->len_requested_data);
-                response_block.opcode=res_successfully;
             }
             break;
 
@@ -230,7 +233,6 @@ void run_task_i2c (void *module)
 
                     if(writen!=size_for_write)
                     {
-                        response_block.size=0;
                         response_block.opcode=res_error_write_to_i2c;
                     }
                 }

@@ -42,3 +42,5 @@ cmake_install.cmake
 # Ignore Idea files
 *.idea
 
+/webapps/configurator/public/ext-5.0.0
+webapps/configurator/public/build

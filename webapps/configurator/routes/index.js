@@ -21,49 +21,106 @@ exports.metamodules = function (db) {
     };
 };
 
-exports.saveconfig = function (db) {
+exports.newconfig = function (db) {
     return function (req, res) {
-        //req.body.version = parseInt(req.body.version);
-        //console.log(req.body);
+
         var collection = db.get('visual_configuration');
 
-        collection.update({"name": req.body.name, "version": req.body.version}, req.body, {"upsert": true }, function (err, count) {
+        //delete req.body._id;
+
+        var wr = collection.insert(req.body, function (err, docs) {
             if (err) {
-                res.send("There was a problem adding the information to the database.");
-                return console.log(err);
+                res.send(400, err);
             }
-            console.log("Save configuration " + req.body.name + " v." + req.body.version + " - OK.");
+            else {
+                res.send(201, docs);
+            }
         });
 
-        db.get('modules_defs').find({}, {}, function (e, metaModules) {
-            var configuration = ConvertGraph2Configuration(JSON.parse(req.body.jsonGraph), req.body.modulesParams, metaModules);
-            configuration.version = req.body.version;
-            configuration.name = req.body.name;
 
-            var configurations = db.get('configuration');
-            configurations.update({"name": req.body.name, "version": req.body.version}, configuration, {"upsert": true }, function (err, count) {
-                if (err) {
-                    res.send("There was a problem adding the information to the database.");
-                    return console.log(err);
-                }
-                console.log("Save LinuxDrone configuration " + req.body.name + " v." + req.body.version + " - OK.");
+        return;
+        /*
+         collection.findOne({_id:id}, {}, function(o, schema){
+         db.get('modules_defs').find({}, {}, function (e, metaModules) {
+         if(!schema.modulesParams){
+         var logMsg = 'In request, not found required property "modulesParams"';
+         console.log(logMsg);
+         res.send({"success": false, "message":logMsg});
+         return;
+         }
+         var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
+         configuration.version = schema.version;
+         configuration.name = schema.name;
+
+         var configurations = db.get('configuration');
+         configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
+         if (err) {
+         res.send({"success": false, "message":"There was a problem adding the information to the database."});
+         return console.log(err);
+         }
+         console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
+         });
+         res.send({"success": true});
+         });
+         });
+         */
+
+
+    };
+};
+
+exports.saveconfig = function (db) {
+    return function (req, res) {
+        var collection = db.get('visual_configuration');
+
+        var id = req.body._id;
+        delete req.body._id;
+
+        collection.update({"_id": id}, { $set: req.body }, {"upsert": true }, function (err, count) {
+            if (err) {
+                res.send({"success": false, "message": "There was a problem adding the information to the database."});
+                return console.log(err);
+            }
+            console.log("Save visual configuration for " + id + " - OK.");
+
+            collection.findOne({_id: id}, {}, function (o, schema) {
+                db.get('modules_defs').find({}, {}, function (e, metaModules) {
+                    if (!schema.modulesParams) {
+                        var logMsg = 'In request, not found required property "modulesParams"';
+                        console.log(logMsg);
+                        res.send({"success": false, "message": logMsg});
+                        return;
+                    }
+                    var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
+                    configuration.version = schema.version;
+                    configuration.name = schema.name;
+
+                    var configurations = db.get('configuration');
+                    configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
+                        if (err) {
+                            res.send({"success": false, "message": "There was a problem adding the information to the database."});
+                            return console.log(err);
+                        }
+                        console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
+                    });
+                    res.send({"success": true});
+                });
             });
-            res.send("OK");
         });
     };
 };
 
 exports.delconfig = function (db) {
     return function (req, res) {
-        //req.body.version = parseInt(req.body.version);
-
         var collection = db.get('visual_configuration');
-        collection.remove({"name": req.body.name, "version": req.body.version});
+        collection.findOne({_id: req.body._id}, {}, function (o, schema) {
+            var configurations = db.get('configuration');
+            configurations.remove({"name": req.body.name, "version": req.body.version});
+        });
 
-        var configurations = db.get('configuration');
-        configurations.remove({"name": req.body.name, "version": req.body.version});
+        collection.remove({"_id": req.body._id});
 
-        res.send("OK");
+        res.send({"success": true});
     };
 };
 
@@ -76,87 +133,144 @@ exports.getconfigs = function (db) {
     };
 };
 
+exports.getconfig = function (db) {
+    return function (req, res) {
+        var collection = db.get('visual_configuration');
+        collection.findOne({_id: req.params.id}, {}, function (o, schema) {
+            res.setHeader("Content-Type", "application/json");
+            res.setHeader("Content-Disposition", "attachment;filename='" + schema.name + "-" + schema.version + ".json'");
+            res.json(schema);
+        });
+    };
+};
 
-var chost=undefined;
+
+var chost = undefined;
+
+
+var hostStatus = {
+    status: 'stopped', // running
+    schemaName: '',
+    schemaVersion: ''
+};
+
+
 exports.gethoststatus = function (req, res) {
-console.log(chost);
-    var hoststatus;
-    if (chost!=undefined) {
-        hoststatus = 'running';
-    } else {
-        hoststatus = 'stopped';
-    }
-    res.json(hoststatus);
+    res.json(hostStatus);
 };
 
 
 exports.runhosts = function (db) {
     return function (req, res) {
 
-        if(chost!=undefined){
+        if (hostStatus.status === 'running') {
+            res.send({"success": false, message: "Host already running"});
             return;
         }
 
-        res.json(req.body);
+        try {
+            chost = spawn('/usr/local/linuxdrone/bin/c-host', [req.body.name, req.body.version]);
+        } catch (e) {
+            console.log(e);
+            res.send({"success": false, "message": e});
+            return;
+        }
 
-        chost = spawn('/usr/local/linuxdrone/bin/c-host', [req.body.name, req.body.version]);
+
+        hostStatus.status = 'running';
+        hostStatus.schemaName = req.body.name;
+        hostStatus.schemaVersion = req.body.version;
+
 
         chost.stdout.on('data', function (data) {
-            if(global.ws_server==undefined) return;
+            if (global.ws_server == undefined) return;
             global.ws_server.send(
                 JSON.stringify({
                     process: 'c-host',
                     type: 'stdout',
-                    data:data
-                }), function() {  });
+                    data: data
+                }), function () {
+                });
             console.log('stdout: ' + data);
         });
 
         chost.stderr.on('data', function (data) {
-            if(global.ws_server==undefined) return;
+            if (global.ws_server == undefined) return;
             global.ws_server.send(
-            JSON.stringify({
-                process: 'c-host',
-                type: 'stderr',
-                data:data
-            }), function() { /* ignore errors */ });
+                JSON.stringify({
+                    process: 'c-host',
+                    type: 'stderr',
+                    data: data
+                }), function () { /* ignore errors */
+                });
             console.log('stderr: ' + data);
         });
 
         chost.on('close', function (code) {
-            chost=undefined;
-            if(global.ws_server==undefined) return;
-            global.ws_server.send(
-                JSON.stringify({
-                    process: 'c-host',
-                    type: 'status',
-                    data: 'stopped'
-                }), function() {  });
+            chost = undefined;
+
+            hostStatus.status = 'stopped';
+            if (global.ws_server != undefined) {
+                global.ws_server.send(JSON.stringify(hostStatus), function () {
+                });
+            }
+            hostStatus.schemaName = '';
+            hostStatus.schemaVersion = '';
+
             console.log('c-host child process exited with code ' + code);
         });
 
-        if(chost!=undefined){
-            if(global.ws_server==undefined) return;
-            global.ws_server.send(
-                JSON.stringify({
-                    process: 'c-host',
-                    type: 'status',
-                    data: 'running'
-                }), function() {  });
+        chost.on('error', function (code) {
+            chost = undefined;
+
+            hostStatus.status = 'stopped';
+            if (global.ws_server != undefined) {
+                global.ws_server.send(JSON.stringify(hostStatus), function () {
+                });
+            }
+            hostStatus.schemaName = '';
+            hostStatus.schemaVersion = '';
+
+            console.log('c-host child process exited with code ' + code);
+        });
+
+
+        if (global.ws_server != undefined) {
+            global.ws_server.send(JSON.stringify(hostStatus), function () {
+            });
         }
+
+        res.send({"success": true});
     };
 };
 
 exports.stophosts = function (db) {
     return function (req, res) {
 
-        if(chost==undefined){
+        if (chost == undefined) {
+            res.send({"success": false, message: "Host already stopped"});
             return;
         }
 
-        res.json(req.body);
+        try {
+            chost.kill();
+        } catch (e) {
+            console.log(e);
+            res.send({"success": false, "message": e});
+            return;
+        }
+        chost = undefined;
 
-        chost.kill();
+        /*
+         hostStatus.status = 'stopped';
+         if (global.ws_server != undefined) {
+         global.ws_server.send(JSON.stringify(hostStatus), function () {
+         });
+         }
+         hostStatus.schemaName = '';
+         hostStatus.schemaVersion = '';
+         */
+        res.send({"success": true});
     };
 };
 
@@ -224,14 +338,14 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
         });
 
         // Перенос общих (определенных для всех типов модулей) параметров
-        if (modulesParams[module.instance].common) { //modulesParams[module.instance] &&
+        if (modulesParams && modulesParams[module.instance].common) { //&& modulesParams[module.instance]
             var commonParams = modulesParams[module.instance].common;
             Object.keys(commonParams).forEach(function (paramName) {
                 var metaParam = _.find(commonModuleParams.commonModuleParamsDefinition, function (meta) {
                     return meta.name == paramName;
                 });
                 if (!metaParam) {
-                    console.log("Not found metadata for parameter '" + paramName + "'  in common definition for modules ");
+                    console.log("In instance " + module.instance + ". Not found metadata for parameter '" + paramName + "'  in common definition for modules ");
                 }
                 var typedValue = CastValue2Type(commonParams[paramName], metaParam.type);
                 if (typedValue === undefined) {
@@ -285,7 +399,7 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
             "inInst": GetInstanceName(graph, cell.target.id),
             "outPin": cell.source.port,
             "inPin": cell.target.port,
-            "nameOutGroup" : cell.nameOutGroup
+            "nameOutGroup": cell.nameOutGroup
         });
     }
 }
