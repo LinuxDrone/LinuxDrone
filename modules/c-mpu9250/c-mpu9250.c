@@ -458,7 +458,7 @@ bool read_all(struct mpu9250Config *cfg){
     for(i=0; i<3; i++) {
         bit_data=((int16_t)res_data[i*2]<<8)|res_data[i*2+1];
         data=(float)bit_data;
-        cfg->accelerometer_data[i]=data/cfg->acc_divider;
+        cfg->accelerometer_data[i]=10.0f*data/cfg->acc_divider;
     }
 
     //Get temperature
