@@ -206,6 +206,7 @@ add_subdirectory(${MOD_DIR}/c-ms5611)
 add_subdirectory(${MOD_DIR}/c-bmp180)
 add_subdirectory(${MOD_DIR}/c-generator)
 add_subdirectory(${MOD_DIR}/c-mpu9250)
+add_subdirectory(${MOD_DIR}/c-attitude)
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
