@@ -139,6 +139,7 @@ wss.on('connection', function(ws) {
 
 var telemetry_service;
 var i2c_service;
+var spi_service;
 function StartTelemetryService() {
         if(telemetry_service!=undefined){
             return;
@@ -273,6 +274,74 @@ function Starti2cService() {
     }
 };
 
+function StartSPIService() {
+    if(spi_service!=undefined){
+        return;
+    }
+
+    var servicePath = '/usr/local/linuxdrone/services/spi_service';
+    spi_service = spawn(servicePath);
+
+    telemetry_service.on('error', function (data) {
+        if(data.code==="ENOENT"){
+            console.log('Not run service' + servicePath);
+            if(global.ws_server==undefined) return;
+            global.ws_server.send(
+                JSON.stringify({
+                    process: 'nodejs',
+                    type: 'error',
+                    data:'error run spi_service'
+                }), function() {  });
+        }
+    });
+
+
+   spi_service.stdout.on('data', function (data) {
+        if(global.ws_server==undefined) return;
+        global.ws_server.send(
+            JSON.stringify({
+                process: 'spi_service',
+                type: 'stdout',
+                data:data
+            }), function() {  });
+        console.log('stdout: ' + data);
+    });
+
+    spi_service.stderr.on('data', function (data) {
+        if(global.ws_server==undefined) return;
+        global.ws_server.send(
+            JSON.stringify({
+                process: 'spi_service',
+                type: 'stderr',
+                data:data
+            }), function() { /* ignore errors */ });
+        console.log('stderr: ' + data);
+    });
+
+    spi_service.on('close', function (code) {
+        if(global.ws_server==undefined) return;
+        spi_service=undefined;
+        global.ws_server.send(
+            JSON.stringify({
+                process: 'spi_service',
+                type: 'status',
+                data: 'stopped'
+            }), function() {  });
+        console.log('spi_service child process exited with code ' + code);
+    });
+
+    if(spi_service!=undefined){
+        if(global.ws_server==undefined) return;
+        global.ws_server.send(
+            JSON.stringify({
+                process: 'spi_service',
+                type: 'status',
+                data: 'running'
+            }), function() {  });
+    }
+};
+
 
 StartTelemetryService();
 Starti2cService();
+StartSPIService();
