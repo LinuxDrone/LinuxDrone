@@ -36,6 +36,9 @@ struct mpu9250Config {
     float acc_divider;
     float gyro_divider;
 
+    char accel_scale;
+    char gyro_scale;
+
     int calib_data[3];
     float magnetometer_ASA[3];
 
@@ -67,13 +70,16 @@ void c_mpu9250_run (module_c_mpu9250_t *module)
 
     memset(&cfg_mpu9250, 0, sizeof(struct mpu9250Config));
 
-    cfg_mpu9250.SPIBusName      = "/dev/spidev0.1";
+    //cfg_mpu9250.SPIBusName      = "/dev/spidev0.1";
     cfg_mpu9250.spi_session     = -1004;
     cfg_mpu9250.mpu_initialized = false;
 
-    cfg_mpu9250.speed_hz       = 1000000;
-    cfg_mpu9250.bits_per_word  = 8;
-    cfg_mpu9250.delay_usecs    = 0;
+    //cfg_mpu9250.speed_hz        = 1000000;
+    cfg_mpu9250.bits_per_word   = 8;
+    cfg_mpu9250.delay_usecs     = 0;
+
+    //cfg_mpu9250.accel_scale     = BITS_FS_16G;
+    //cfg_mpu9250.gyro_scale      = BITS_FS_2000DPS;
 
 
     while(1) {
@@ -115,8 +121,8 @@ void c_mpu9250_run (module_c_mpu9250_t *module)
         // Чтение данных с датчика
         read_all(&cfg_mpu9250);
 
-        printf("test temperature %f\n", cfg_mpu9250.temperature);
-        printf("test accelZ %f\n", cfg_mpu9250.accelerometer_data[2]);
+        //printf("test temperature %f\n", cfg_mpu9250.temperature);
+        //printf("test accelZ %f\n", cfg_mpu9250.accelerometer_data[2]);
 
         rt_task_sleep(rt_timer_ns2ticks(100000000));
 
@@ -148,8 +154,83 @@ void c_mpu9250_run (module_c_mpu9250_t *module)
  */
 bool settingsLoad(struct mpu9250Config *cfg, params_c_mpu9250_t *params)
 {
-    cfg->SPIBusName    = params->SPI_Device;
-    cfg->low_pass_filter = BITS_DLPF_CFG_188HZ;
+    cfg->SPIBusName = params->SPI_Device;
+    cfg->speed_hz   = params->spiBusSpeed;
+
+
+    switch (params->gyroDLPF)
+    {
+        case 188:
+            cfg->low_pass_filter = BITS_DLPF_CFG_188HZ;
+            break;
+
+        case 98:
+            cfg->low_pass_filter = BITS_DLPF_CFG_188HZ;
+            break;
+
+        case 42:
+            cfg->low_pass_filter = BITS_DLPF_CFG_98HZ;
+            break;
+
+        case 20:
+            cfg->low_pass_filter = BITS_DLPF_CFG_42HZ;
+            break;
+
+        case 10:
+            cfg->low_pass_filter = BITS_DLPF_CFG_20HZ;
+            break;
+
+        case 5:
+            cfg->low_pass_filter = BITS_DLPF_CFG_10HZ;
+            break;
+
+        default:
+            cfg->low_pass_filter = BITS_DLPF_CFG_188HZ;
+    }
+
+    switch (params->gyroScale)
+    {
+        case 250:
+            cfg->gyro_scale = BITS_FS_250DPS;
+            break;
+
+        case 500:
+            cfg->gyro_scale = BITS_FS_500DPS;
+            break;
+
+        case 1000:
+            cfg->gyro_scale = BITS_FS_1000DPS;
+            break;
+
+        case 2000:
+            cfg->gyro_scale = BITS_FS_2000DPS;
+            break;
+
+        default:
+            cfg->gyro_scale = BITS_FS_2000DPS;
+    }
+
+    switch (params->accelScale)
+    {
+        case 2:
+            cfg->accel_scale = BITS_FS_2G;
+            break;
+
+        case 4:
+            cfg->accel_scale = BITS_FS_4G;
+            break;
+
+        case 8:
+            cfg->accel_scale = BITS_FS_8G;
+            break;
+
+        case 16:
+            cfg->accel_scale = BITS_FS_16G;
+            break;
+
+        default:
+            cfg->accel_scale = BITS_FS_16G;
+    }
 
     return true;
 }
@@ -228,8 +309,8 @@ bool init_mpu9250(struct mpu9250Config *cfg)
         rt_task_sleep(rt_timer_ns2ticks(10000000));
     }
 
-    set_acc_scale(cfg, BITS_FS_16G);
-    set_gyro_scale(cfg, BITS_FS_2000DPS);
+    set_acc_scale(cfg, cfg->accel_scale);
+    set_gyro_scale(cfg, cfg->gyro_scale);
 
     calib_mag(cfg);
 
@@ -246,7 +327,7 @@ bool init_mpu9250(struct mpu9250Config *cfg)
                     BITS_FS_2G
                     BITS_FS_4G
                     BITS_FS_8G
-                    BITS_FS_16G
+                    BITS_FS_8G
  * @return true - Успешная передача данных в датчик
  */
 bool set_acc_scale(struct mpu9250Config *cfg, char scale)
@@ -325,8 +406,8 @@ bool set_gyro_scale(struct mpu9250Config *cfg, char scale)
  * @param cfg   - Указатель на структуру с локальными параметрами и переменными модуля
  * @return true - Успешная калибровка датчика
  */
-bool calib_mag(struct mpu9250Config *cfg){
-
+bool calib_mag(struct mpu9250Config *cfg)
+{
     char res_data[3];
     int res;
 
