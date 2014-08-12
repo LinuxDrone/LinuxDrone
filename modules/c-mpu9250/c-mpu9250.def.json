@@ -1,0 +1,81 @@
+{
+  "type": "module_def",
+  "name": "c-mpu9250",
+  "version": 1,
+  "Task Priority": 80,
+  "Task Period": 2000,
+  "Transfer task period": 200000,
+  "Notify on change": false,
+  "description": {
+    "en": "IMU 9DoF sensor fusion",
+    "ru": "9 осевой датчик ориентации"
+  },
+  "paramsDefinitions": [
+    {
+      "name": "SPI_Device",
+      "displayName": {
+        "en": "Bus Name",
+        "ru": "Имя шины"
+      },
+      "description": {
+        "en": "Path to spi device",
+        "ru": "Путь к файлу spi устройства"
+      },
+      "type": "const char*",
+      "defaultValue": "/dev/spidev0.1",
+      "validValues": ["/dev/spidev0.0","/dev/spidev0.1"],
+      "unitMeasured": ""
+    }
+  ],
+  "outputs": [
+    {
+      "name": "AGMT",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+            "accelX": {
+                "type": "float",
+                "required": true
+            },
+            "accelY": {
+                "type": "float",
+                "required": true
+            },
+            "accelZ": {
+                "type": "float",
+                "required": true
+            },
+            "gyroX": {
+                "type": "float",
+                "required": true
+            },
+            "gyroY": {
+                "type": "float",
+                "required": true
+            },
+            "gyroZ": {
+                "type": "float",
+                "required": true
+            },
+            "magX": {
+                "type": "float",
+                "required": true
+            },
+            "magY": {
+                "type": "float",
+                "required": true
+            },
+            "magZ": {
+                "type": "float",
+                "required": true
+            },
+            "temperature": {
+                "type": "float",
+                "required": true
+            }
+        }
+      }
+    }
+  ]
+}
