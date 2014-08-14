@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "c-attitude.helper.h"
+#include "attitude.helper.h"
 
 enum TrimFlight {TRIMFLIGHT_START,TRIMFLIGHT_LOAD,TRIMFLIGHT_NORMAL};
 
@@ -19,7 +19,7 @@ public:
     CAttitude();
     ~CAttitude();
 
-    void run(module_c_attitude_t *module);
+    void run(module_attitude_t *module);
 
 private:
     float rpy[3];
@@ -60,7 +60,7 @@ private:
     bool printEnable;
 
     void init();
-    void settingsLoad(params_c_attitude_t *params);
+    void settingsLoad(params_attitude_t *params);
     void rotateBoard();
     void correctBias();
     void accelFilter(const float *raw, float *filtered);

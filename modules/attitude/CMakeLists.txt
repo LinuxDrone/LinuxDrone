@@ -23,23 +23,23 @@ set(EXTRA_LIBS
 )
 
 ADD_CUSTOM_COMMAND(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/c-attitude.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-attitude.def.json ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-attitude.def.json
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/attitude.helper.c
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/attitude.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/attitude.def.json
 )
 
-add_library(c-attitude MODULE ${INC} ${SRC} c-attitude.helper.c)
+add_library(attitude MODULE ${INC} ${SRC} attitude.helper.c)
 
-target_link_libraries(c-attitude ${EXTRA_LIBS})
+target_link_libraries(attitude ${EXTRA_LIBS})
 
 IF(${DO_POST_BUILD})
     add_custom_command(
-        TARGET c-attitude
+        TARGET attitude
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-attitude.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-attitude/libc-attitude.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-attitude/c-attitude.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-attitude/c-attitude.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libattitude.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/attitude/libattitude.so
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/attitude/attitude.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/attitude/attitude.def.json
     )
 ENDIF()
 
-install(TARGETS c-attitude DESTINATION modules/c-attitude)
-install(FILES c-attitude.def.json DESTINATION modules/c-attitude)
+install(TARGETS attitude DESTINATION modules/attitude)
+install(FILES attitude.def.json DESTINATION modules/attitude)

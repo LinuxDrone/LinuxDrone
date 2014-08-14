@@ -14,8 +14,8 @@
 //--------------------------------------------------------------------
 
 #include <native/timer.h>
-#include "c-attitude.h"
-#include "c-attitude.helper.h"
+#include "attitude.h"
+#include "attitude.helper.h"
 #include "quaternion-functions.h"
 //#include "math/quaternion.h"
 #include "math.h"
@@ -30,7 +30,7 @@ CAttitude::~CAttitude()
 {
 }
 
-void CAttitude::run(module_c_attitude_t *module)
+void CAttitude::run(module_attitude_t *module)
 {
     // Указатель на структуру с входными данными модуля.
     input_t* input;
@@ -59,7 +59,7 @@ void CAttitude::run(module_c_attitude_t *module)
             init();
 
             // Read settings in MongoDB
-            settingsLoad(&module->params_c_attitude);
+            settingsLoad(&module->params_attitude);
         }
 
         // проверим, обновились ли данные
@@ -216,7 +216,7 @@ void CAttitude::init()
 * И сохраняет в структуре attitude_data_t
 */
 
-void CAttitude::settingsLoad(params_c_attitude_t *params)
+void CAttitude::settingsLoad(params_attitude_t *params)
 {
     accelKp_copy = accelKp = params->AccelKp;
     accelKi_copy = accelKi = params->AccelKi;
@@ -446,10 +446,10 @@ void CAttitude::calcAttitude()
 
 extern "C" {
 /**
- * @brief c_attitude_run Функция рабочего потока модуля
+ * @brief attitude_run Функция рабочего потока модуля
  * @param module Указатель на структуру модуля
  */
-void c_attitude_run (module_c_attitude_t *module)
+void attitude_run (module_attitude_t *module)
 {
     CAttitude attitude;
     attitude.run(module);

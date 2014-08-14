@@ -1,6 +1,6 @@
 {
     "type": "module_def",
-    "name": "c-attitude",
+    "name": "attitude",
     "version": 1,
     "Task Priority": 80,
     "Task Period": 2000,
