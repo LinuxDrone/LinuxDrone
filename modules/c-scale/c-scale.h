@@ -12,6 +12,22 @@
 
 #pragma once
 
-#include "pid.h"
+#include <stdbool.h>
+
+// Структура хранит параметры модуля
+typedef struct scaleChParams {
+    bool  in_Invert;
+    float in_RangeLow;
+    float in_RangeCenter;
+    float in_RangeHigh;
+    float out_RangeLow;
+    float out_RangeCenter;
+    float out_RangeHigh;
+
+    float scaleLow;
+    float scaleHigh;
+
+} scaleChParams_t;
+
 
 enum channel {Roll, Pitch, Yaw};

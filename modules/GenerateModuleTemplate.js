@@ -15,16 +15,16 @@ function CreateCMakeLists(module_name) {
     r += "file(GLOB_RECURSE INC \"*.h\")\n";
     r += "file(GLOB_RECURSE SRC \"*.c\")\n\n";
 
-    r += "include_directories(${LIB_DIR}/c-sdk/include ${CMAKE_CURRENT_BINARY_DIR})\n";
+    r += "include_directories(${LIB_DIR}/sdk/include ${CMAKE_CURRENT_BINARY_DIR})\n";
     r += "include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)\n\n";
 
     r += "set(EXTRA_LIBS\n";
-    r += "    c-sdk\n";
+    r += "    sdk\n";
     r += ")\n\n";
 
     r += "ADD_CUSTOM_COMMAND(\n";
     r += "    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/" + module_name + ".helper.c\n";
-    r += "    COMMAND ${NODEJS} ${LIB_DIR}/c-sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/" + module_name + ".def.json ${CMAKE_CURRENT_BINARY_DIR}\n";
+    r += "    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/" + module_name + ".def.json ${CMAKE_CURRENT_BINARY_DIR}\n";
     r += "    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/" + module_name + ".def.json\n";
     r += ")\n\n";
 

@@ -22,6 +22,10 @@ typedef struct pidParams {
     double dT;
     double iSum;
     double lastError;
+
+    double filteredAlfa;
+    double limitAccum;
+    double dreadband;
 } pidParams_t;
 
 
@@ -30,6 +34,9 @@ double calcPID(pidParams_t *p, double error, double dT);
 void setPID(pidParams_t *p, double Kp, double Ki, double Kd, double iLimit);
 
 void zeroPID(pidParams_t *p);
+
+double filtered(pidParams_t *p, double ferr, double err);
+
 
 /*
 void setKp(double Kp);

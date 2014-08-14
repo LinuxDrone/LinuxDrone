@@ -19,26 +19,27 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 
 set(EXTRA_LIBS
     sdk
+    m
 )
 
 ADD_CUSTOM_COMMAND(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/short_terminator.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/short_terminator.def.json ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/short_terminator.def.json
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/c-scale.helper.c
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-scale.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-scale.def.json
 )
 
-add_library(short_terminator MODULE ${INC} ${SRC} short_terminator.helper.c)
+add_library(c-scale MODULE ${INC} ${SRC} c-scale.helper.c)
 
-target_link_libraries(short_terminator ${EXTRA_LIBS})
+target_link_libraries(c-scale ${EXTRA_LIBS})
 
 IF(${DO_POST_BUILD})
     add_custom_command(
-        TARGET short_terminator
+        TARGET c-scale
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libshort_terminator.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/short_terminator/libshort_terminator.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/short_terminator/short_terminator.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/short_terminator/short_terminator.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-scale.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-scale/libc-scale.so
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-scale/c-scale.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-scale/c-scale.def.json
     )
 ENDIF()
 
-install(TARGETS short_terminator DESTINATION modules/short_terminator)
-install(FILES short_terminator.def.json DESTINATION modules/short_terminator)
+install(TARGETS c-scale DESTINATION modules/c-scale)
+install(FILES c-scale.def.json DESTINATION modules/c-scale)

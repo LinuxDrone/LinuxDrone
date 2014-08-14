@@ -11,7 +11,7 @@
 #--------------------------------------------------------------------
 
 file(GLOB_RECURSE INC "*.h")
-file(GLOB_RECURSE SRC "*.c")
+file(GLOB_RECURSE SRC "*.c" "*.cpp")
 
 include_directories(${LIB_DIR}/sdk/include ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
@@ -23,23 +23,23 @@ set(EXTRA_LIBS
 )
 
 ADD_CUSTOM_COMMAND(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/c-pid.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-pid.def.json ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-pid.def.json
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/attitude.helper.c
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/attitude.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/attitude.def.json
 )
 
-add_library(c-pid MODULE ${INC} ${SRC} c-pid.helper.c)
+add_library(attitude MODULE ${INC} ${SRC} attitude.helper.c)
 
-target_link_libraries(c-pid ${EXTRA_LIBS})
+target_link_libraries(attitude ${EXTRA_LIBS})
 
 IF(${DO_POST_BUILD})
     add_custom_command(
-        TARGET c-pid
+        TARGET attitude
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-pid.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pid/libc-pid.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-pid/c-pid.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pid/c-pid.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libattitude.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/attitude/libattitude.so
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/attitude/attitude.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/attitude/attitude.def.json
     )
 ENDIF()
 
-install(TARGETS c-pid DESTINATION modules/c-pid)
-install(FILES c-pid.def.json DESTINATION modules/c-pid)
+install(TARGETS attitude DESTINATION modules/attitude)
+install(FILES attitude.def.json DESTINATION modules/attitude)

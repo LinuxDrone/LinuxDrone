@@ -76,7 +76,7 @@ ENDIF()
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
 #SET(SSH_PORT_TARGET_SYSTEM 1234)
 
-SET(URL_TARGET_SYSTEM root@192.168.1.4)
+SET(URL_TARGET_SYSTEM root@192.168.1.43)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
 # MongoDB
@@ -120,7 +120,7 @@ IF(BUILD_DOCUMENTATION)
         OUTPUT ${doxy_ru_index}
         COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile.ru
         MAIN_DEPENDENCY ${doxyfile_ru} ${doxyfile_in}
-        DEPENDS c-sdk ${doxy_extra_files}
+        DEPENDS sdk ${doxy_extra_files}
         COMMENT "Generating RU HTML documentation"
     )
 
@@ -134,7 +134,7 @@ IF(BUILD_DOCUMENTATION)
         OUTPUT ${doxy_en_index}
         COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile.en
         MAIN_DEPENDENCY ${doxyfile_en} ${doxyfile_in}
-        DEPENDS c-sdk ${doxy_extra_files}
+        DEPENDS sdk ${doxy_extra_files}
         COMMENT "Generating EN HTML documentation"
     )
 
@@ -160,7 +160,7 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 #add_subdirectory(${LIB_DIR}/core)
 #add_subdirectory(${LIB_DIR}/sdk)
 #add_subdirectory(${LIB_DIR}/dotnet-sdk)
-add_subdirectory(${LIB_DIR}/c-sdk)
+add_subdirectory(${LIB_DIR}/sdk)
 
 # Loadable modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
@@ -172,9 +172,11 @@ add_subdirectory(${MOD_DIR}/c-gy87)
 add_subdirectory(${MOD_DIR}/test-sender)
 add_subdirectory(${MOD_DIR}/test-receiver)
 add_subdirectory(${MOD_DIR}/test-sender-receiver)
-#add_subdirectory(${MOD_DIR}/c-pru-pwmout)
-#add_subdirectory(${MOD_DIR}/c-pru-pwmin)
+add_subdirectory(${MOD_DIR}/c-pru-pwmout)
+add_subdirectory(${MOD_DIR}/c-pru-pwmin)
 add_subdirectory(${MOD_DIR}/c-pid)
+add_subdirectory(${MOD_DIR}/c-sum-scale)
+add_subdirectory(${MOD_DIR}/c-scale)
 #add_subdirectory(${MOD_DIR}/MyModule)
 #add_subdirectory(${MOD_DIR}/bmp180)
 #add_subdirectory(${MOD_DIR}/ms5611)
@@ -184,6 +186,8 @@ add_subdirectory(${MOD_DIR}/c-pid)
 #add_subdirectory(${MOD_DIR}/SimpleTransform)
 #add_subdirectory(${MOD_DIR}/SerialGps)
 add_subdirectory(${MOD_DIR}/c-bmp180)
+add_subdirectory(${MOD_DIR}/c-attitude)
+add_subdirectory(${MOD_DIR}/c-generator)
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 

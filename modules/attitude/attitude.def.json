@@ -1,0 +1,254 @@
+{
+    "type": "module_def",
+    "name": "attitude",
+    "version": 1,
+    "Task Priority": 80,
+    "Task Period": 2000,
+    "Transfer task period": 200000,
+    "Notify on change": false,
+    "description": {
+    "en": "Attitude module",
+    "ru": "Определение ориентации в пространстве"
+    },
+    "paramsDefinitions": [
+        {   "name": "AccelKp",
+            "displayName": {
+                "en": "Accel Kp",
+                "ru": "Accel Kp"
+            },
+            "description": {
+                "ru": "Коэффициент пропорциональности для акселерометра"
+            },
+            "type": "float",
+            "defaultValue": 0.05,
+            "unitMeasured": ""
+        },
+        {   "name": "AccelKi",
+            "displayName": {
+                "en": "Accel Ki",
+                "ru": "Accel Ki"
+            },
+            "description": {
+                "ru": "Коэффициент интегрирования для акселерометра"
+            },
+            "type": "float",
+            "defaultValue": 0.0001,
+            "unitMeasured": ""
+        },
+        {   "name": "YawBiasRate",
+            "displayName": {
+                "en": "Yaw Bias Rate",
+                "ru": "Yaw Bias Rate"
+            },
+            "description": {
+                "ru": "Кофэффициент мастшабирования дрейфа гироскопа по оси yaw"
+            },
+            "type": "float",
+            "defaultValue": 0.000001,
+            "unitMeasured": ""
+        },
+        {   "name": "GyroGain",
+            "displayName": {
+                "en": "Gyro Gain",
+                "ru": "Gyro Gain"
+            },
+            "description": {
+                "ru": "Коэффициент усиления сигнала гироскопа"
+            },
+            "type": "float",
+            "defaultValue": 0.42,
+            "unitMeasured": "(rad/s)/lsb"
+        },
+        {   "name": "AccelTau",
+            "displayName": {
+                "en": "Accel Tau",
+                "ru": "Accel Tau"
+            },
+            "description": {
+                "en": "Accel filter alpha, in the same way as for gyro data in stabilization module"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": ""
+        },
+        {   "name": "AccelBias X",
+            "displayName": {
+                "en": "Accel Bias X",
+                "ru": "Accel Bias X"
+            },
+            "description": {
+                "ru": "Дрейф акселерометра по X"
+            },
+            "type": "float",
+            "defaultValue": 0,
+            "unitMeasured": "lsb"
+        },
+        {   "name": "AccelBias Y",
+            "displayName": {
+                "en": "Accel Bias Y",
+                "ru": "Accel Bias Y"
+            },
+            "description": {
+                "ru": "Дрейф акселерометра по Y"
+            },
+            "type": "float",
+            "defaultValue": 0,
+            "unitMeasured": "lsb"
+        },
+        {   "name": "AccelBias Z",
+            "displayName": {
+                "en": "Accel Bias Z",
+                "ru": "Accel Bias Z"
+            },
+            "description": {
+                "ru": "Дрейф акселерометра по Z"
+            },
+            "type": "float",
+            "defaultValue": 0,
+            "unitMeasured": "lsb"
+        },
+        {   "name": "GyroBias X",
+            "displayName": {
+                "en": "Gyro Bias X",
+                "ru": "Gyro Bias X"
+            },
+            "description": {
+                "ru": "Дрейф гироскопа по X"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": "deg/s"
+        },
+        {   "name": "GyroBias Y",
+            "displayName": {
+                "en": "Gyro Bias Y",
+                "ru": "Gyro Bias Y"
+            },
+            "description": {
+                "ru": "Дрейф гироскопа по Y"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": "deg/s"
+        },
+        {   "name": "GyroBias Z",
+            "displayName": {
+                "en": "Gyro Bias Z",
+                "ru": "Gyro Bias Z"
+            },
+            "description": {
+                "ru": "Дрейф гироскопа по Z"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": "deg/s"
+        },
+        {   "name": "BoardRotation Roll",
+            "displayName": {
+                "en": "Board Rotation Roll",
+                "ru": "Board Rotation Roll"
+            },
+            "description": {
+                "ru": "Ориентация датчика по оси Roll"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": "deg"
+        },
+        {   "name": "BoardRotation Pitch",
+            "displayName": {
+                "en": "Board Rotation Pitch",
+                "ru": "Board Rotation Pitch"
+            },
+            "description": {
+                "ru": "Ориентация датчика по оси Pitch"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": "deg"
+        },
+        {   "name": "BoardRotation Yaw",
+            "displayName": {
+                "en": "Board Rotation Yaw",
+                "ru": "Board Rotation Yaw"
+            },
+            "description": {
+                "ru": "Ориентация датчика по оси Yaw"
+            },
+            "type": "float",
+            "defaultValue": 0.0,
+            "unitMeasured": "deg"
+        }
+    ],
+    "inputShema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+            "accel_x": {
+                "type": "float",
+                "required": true
+            },
+            "accel_y": {
+                "type": "float",
+                "required": true
+            },
+            "accel_z": {
+                "type": "float",
+                "required": true
+            },
+            "gyro_x": {
+                "type": "float",
+                "required": true
+            },
+            "gyro_y": {
+                "type": "float",
+                "required": true
+            },
+            "gyro_z": {
+                "type": "float",
+                "required": true
+            }
+ 
+        }
+    },
+    "outputs": [
+        {
+            "name": "qrpy_out",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "roll": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "pitch": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "yaw": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "q1": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "q2": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "q3": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "q4": {
+                        "type": "float",
+                        "required": true
+                    }
+                }
+            }
+        }
+    ]
+}
+

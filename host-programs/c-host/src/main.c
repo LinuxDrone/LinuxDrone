@@ -2,7 +2,6 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <bcon.h>
-#include <bson.h>
 #include <mongoc.h>
 #include "module-functions.h"
 
@@ -24,12 +23,7 @@ bson_t* get_bson_from_db(const char* configuration_name, const char* configurati
     mongoc_client_t *client;
     mongoc_cursor_t *cursor;
     const bson_t *item;
-    bson_error_t error;
-    bson_oid_t oid;
     bson_t *query;
-    //bson_t *doc;
-    char *str;
-    bool r;
 
     /* get a handle to our collection */
     client = mongoc_client_new (DB_HOST);

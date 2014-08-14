@@ -12,6 +12,17 @@
 
 #pragma once
 
-#include "pid.h"
+#include <stdbool.h>
 
-enum channel {Roll, Pitch, Yaw};
+// Структура хранит параметры модуля
+typedef struct generatorParams {
+    bool  enState;
+    bool  enMeander;
+    bool  enSine;
+    float period;
+    float dutyCycle;
+    float stateData;
+    float rangeLow;
+    float rangeCenter;
+    float rangeHigh;
+} generatorParams_t;

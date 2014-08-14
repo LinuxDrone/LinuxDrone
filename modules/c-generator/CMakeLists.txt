@@ -19,26 +19,27 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 
 set(EXTRA_LIBS
     sdk
+    m
 )
 
 ADD_CUSTOM_COMMAND(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/short_terminator.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/short_terminator.def.json ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/short_terminator.def.json
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/c-generator.helper.c
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-generator.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-generator.def.json
 )
 
-add_library(short_terminator MODULE ${INC} ${SRC} short_terminator.helper.c)
+add_library(c-generator MODULE ${INC} ${SRC} c-generator.helper.c)
 
-target_link_libraries(short_terminator ${EXTRA_LIBS})
+target_link_libraries(c-generator ${EXTRA_LIBS})
 
 IF(${DO_POST_BUILD})
     add_custom_command(
-        TARGET short_terminator
+        TARGET c-generator
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libshort_terminator.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/short_terminator/libshort_terminator.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/short_terminator/short_terminator.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/short_terminator/short_terminator.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-generator.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-generator/libc-generator.so
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-generator/c-generator.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-generator/c-generator.def.json
     )
 ENDIF()
 
-install(TARGETS short_terminator DESTINATION modules/short_terminator)
-install(FILES short_terminator.def.json DESTINATION modules/short_terminator)
+install(TARGETS c-generator DESTINATION modules/c-generator)
+install(FILES c-generator.def.json DESTINATION modules/c-generator)

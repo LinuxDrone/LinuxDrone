@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../libraries/c-sdk/include/module-functions.h"
+#include "../../../libraries/sdk/include/module-functions.h"
 
 #define TASK_NAME_I2C "i2c_service_task"
 
