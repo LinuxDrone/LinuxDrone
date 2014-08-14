@@ -33,6 +33,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
 
                 cell.attributes["nameOutGroup"] = group.name;
                 cell.attributes["portType"] = group.Schema.properties[cell.attributes.source.port].type;
+
+                cell.toBack();
             }
         });
 
@@ -42,7 +44,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
         var paper = new joint.dia.Paper({
             el: this.el.dom,
             model: graph,
-            gridSize: 1,
+            gridSize: 15,
             width: "2880px",
             height: "1620px",
             defaultLink: new joint.dia.Link({
@@ -50,7 +52,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
                     '.marker-target': {fill: 'red', d: 'M 10 0 L 0 5 L 10 10 z' },
                     '.connection': {stroke: 'red', 'stroke-width': "2"}//, 'stroke-dasharray':"5, 5"
                 },
-                //manhattan: true,
+                router: { name: 'metro' }, // manhattan
+                connector: { name: 'rounded' },
                 toolMarkup: [
                     '<g class="link-tool">',
                     '<g class="tool-remove" event="remove">',
@@ -108,6 +111,18 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
                 model.set('selectedLink', null);
             }
         });
+
+        graph.on('change:position', function(cell) {
+            var PreparedLinks = model.get('PreparedLinks');
+
+            $.each(PreparedLinks, function (name, instance) {
+                $.each(instance, function (port, value) {
+                    paper.findViewByModel(value[0]).update();
+                });
+            });
+        });
+
+
 
         var svgPanelController = this.ownerCt.getController();
         svgPanelController.GetHostStatus();
