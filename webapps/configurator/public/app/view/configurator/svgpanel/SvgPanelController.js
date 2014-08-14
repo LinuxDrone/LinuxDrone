@@ -770,7 +770,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     },
 
     // Приватная функция сохранения конфигурации (текущего графа) с именем и версией
-    SaveCurrentConfig: function (name, version, isNew) {
+    SaveCurrentConfig: function (name, version, callback) {
         var model = this.getView().getViewModel();
         var graph = model.get('graph');
         var storeListSchemas = model.get('listSchemas');
@@ -787,6 +787,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             {
                 callback: function (batch, options) {
                     model.set('schemaChanged', false);
+                    if(callback){
+                        callback();
+                    }
                 }
             });
     },
@@ -809,17 +812,28 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var model = this.getView().getViewModel();
         var currentSchema = model.get('currentSchema');
         var controller = this;
-
         var data4send = {
             "name": currentSchema.get('name'),
             "version": currentSchema.get('version')
         };
-        $.post("runhosts", data4send,
-            function (data) {
-                // Выполнение конфигурации начато.
-                // Следует подписаться на телеметрию
-                controller.AllSubscribe2Telemetry(currentSchema, controller, 'subscribe');
+
+        if(model.get('schemaChanged')){
+            controller.SaveCurrentConfig(data4send.name, data4send.version, function(){
+                $.post("runhosts", data4send,
+                    function (data) {
+                        // Выполнение конфигурации начато.
+                        // Следует подписаться на телеметрию
+                        controller.AllSubscribe2Telemetry(currentSchema, controller, 'subscribe');
+                    });
             });
+        }else{
+            $.post("runhosts", data4send,
+                function (data) {
+                    // Выполнение конфигурации начато.
+                    // Следует подписаться на телеметрию
+                    controller.AllSubscribe2Telemetry(currentSchema, controller, 'subscribe');
+                });
+        }
     },
 
     // Публичная функция остановки текущей конфигурации
@@ -845,7 +859,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var model = this.getView().getViewModel();
         $.getJSON("gethoststatus",
             function (resp) {
-console.log(resp);
                 switch (resp.status) {
                     case 'running':
                         model.set('started', true);
