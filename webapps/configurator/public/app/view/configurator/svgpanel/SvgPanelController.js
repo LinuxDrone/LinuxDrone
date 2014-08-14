@@ -89,6 +89,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                 var obj = controller.BSON.deserialize(new Uint8Array(msg.data));
                 var PreparedLinks = model.get('PreparedLinks');
 
+                model.set('blockChangeSchema', true);
                 $.each(obj, function (port, value) {
                     if (port != "_from" && (obj["_from"] in PreparedLinks) && (port in PreparedLinks[obj["_from"]])) {
                         PreparedLinks[obj["_from"]][port].forEach(function (link) {
@@ -112,6 +113,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                         });
                     }
                 });
+                model.set('blockChangeSchema', false);
             };
 
             this.socketTelemetry.onclose = function () {

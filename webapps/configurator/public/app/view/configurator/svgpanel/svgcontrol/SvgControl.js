@@ -94,7 +94,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
 
         // Подпишемся на изменения графа
         graph.on('change', function () {
-            model.set('schemaChanged', true);
+            if(model.get('blockChangeSchema') === false){
+                model.set('schemaChanged', true);
+            }
         });
 
         paper.on('blank:pointerdown', function (evt, x, y) {

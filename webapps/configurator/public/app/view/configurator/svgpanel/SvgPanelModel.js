@@ -72,6 +72,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
         // Сигнализирует о том, что схема изменилась (изменился graph - визуальное представление)
         schemaChanged: false,
 
+        // Сигнализирует о том, что не стоит реагировать на эвент о измении схемы и менять значение переменной schemaChanged
+        // Так как изменение схемы не сутевые, а сводятся к измененияем меток телеметрии на связях инстансов
+        blockChangeSchema: false,
+
         // Модуль выбранный на схеме
         selectedCell: undefined,
 
