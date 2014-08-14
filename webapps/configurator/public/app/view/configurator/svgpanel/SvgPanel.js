@@ -28,10 +28,14 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
             if (expanded) {
                 th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - th.logPanel.getHeight());
             } else {
-                th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - 27);
+                th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight());
             }
         }
     },
+
+    autoScroll: true,
+    overflowX: 'auto',
+    margin: '0 0 30 0',
 
     layout: 'fit',
     items: [

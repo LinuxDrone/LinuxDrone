@@ -43,8 +43,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
             el: this.el.dom,
             model: graph,
             gridSize: 1,
-            width: "100%",
-            height: "99%",
+            width: "2880px",
+            height: "1620px",
             defaultLink: new joint.dia.Link({
                 attrs: {
                     '.marker-target': {fill: 'red', d: 'M 10 0 L 0 5 L 10 10 z' },
