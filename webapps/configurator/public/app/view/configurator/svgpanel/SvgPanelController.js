@@ -297,7 +297,11 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     AddModule2Scheme: function (metaOfModule) {
         var model = this.getView().getViewModel();
-        model.get('graph').addCell(this.MakeVisualModule(metaOfModule, model.get('graph')));
+        var cell = this.MakeVisualModule(metaOfModule, model.get('graph'));
+        model.get('graph').addCell(cell);
+
+        // Создадим тултипы для портов модуля
+        this.MakeToolTipsForPortsOfInstance(cell, model.get('paper'), this, Ext.data.StoreManager.lookup('StoreMetaModules'));
     },
 
     svgColors: {
@@ -600,6 +604,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     // Обработчик смены текущей схемы на другую
     onSwitchCurrentSchema: function (curSchema) {
         var model = this.getView().getViewModel();
+        var controller = this;
 
         var graph = model.get('graph');
 
@@ -614,52 +619,55 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             var paper = this.getView().getViewModel().get('paper');
             var controller = this.getView().getController();
             // Инициализация портов на модулях, с целью показа их описания в тултипе
+            var storeMetamodules = Ext.data.StoreManager.lookup('StoreMetaModules');
             var elements = graph.getElements();
             $.each(elements, function (i, element) {
-                var view = paper.findViewByModel(element);
-                $.each([2, 3], function (i, s) {
-                    $.each(view.el.childNodes[0].childNodes[s].childNodes, function (k, port) {
-                        port.childNodes[0].onmouseenter = function (e) {
-                            var groupsPorts = new Array();
-                            var moduleType = element.attributes.moduleType;
-                            var portName = port.textContent;
-
-                            var storeMetamodules = Ext.data.StoreManager.lookup('StoreMetaModules');
-                            var meta = storeMetamodules.findRecord('name', moduleType);
-                            if (s == 2) {
-                                groupsPorts.push(meta.get('inputShema').properties);
-                            }
-                            else {
-                                $.each(meta.get('outputs'), function (i, m) {
-                                    groupsPorts.push(m.Schema.properties);
-                                });
-                            }
-
-                            var toolTipText = '';
-                            $.each(groupsPorts, function (i, gp) {
-                                var propsObj = gp;
-                                if (propsObj.hasOwnProperty(portName)) {
-                                    var portMeta = propsObj[portName];
-                                    toolTipText = portMeta.type;
-                                    toolTipText += "<br>" + controller.Geti18nProperty(portMeta, "description");
-                                }
-                            });
-
-                            var tip = Ext.create('Ext.tip.ToolTip', {
-                                target: e.currentTarget,
-                                html: toolTipText
-                            });
-                        };
-                    });
-                });
+                controller.MakeToolTipsForPortsOfInstance(element, paper, controller, storeMetamodules);
             });
         }
 
         model.set('schemaChanged', false);
 
-        //res.instnameSelectedModule("Properties");
-//console.log(this);
         this.PrepareListLinks();
+    },
+
+    // Создает тултипы для портов инстанса
+    MakeToolTipsForPortsOfInstance: function(element, paper, controller, storeMetamodules){
+        var view = paper.findViewByModel(element);
+        $.each([2, 3], function (i, s) {
+            $.each(view.el.childNodes[0].childNodes[s].childNodes, function (k, port) {
+                port.childNodes[0].onmouseenter = function (e) {
+                    var groupsPorts = new Array();
+                    var moduleType = element.attributes.moduleType;
+                    var portName = port.textContent;
+
+                    var meta = storeMetamodules.findRecord('name', moduleType);
+                    if (s == 2) {
+                        groupsPorts.push(meta.get('inputShema').properties);
+                    }
+                    else {
+                        $.each(meta.get('outputs'), function (i, m) {
+                            groupsPorts.push(m.Schema.properties);
+                        });
+                    }
+
+                    var toolTipText = '';
+                    $.each(groupsPorts, function (i, gp) {
+                        var propsObj = gp;
+                        if (propsObj.hasOwnProperty(portName)) {
+                            var portMeta = propsObj[portName];
+                            toolTipText = portMeta.type;
+                            toolTipText += "<br>" + controller.Geti18nProperty(portMeta, "description");
+                        }
+                    });
+
+                    var tip = Ext.create('Ext.tip.ToolTip', {
+                        target: e.currentTarget,
+                        html: toolTipText
+                    });
+                };
+            });
+        });
     },
 
     // Подготавливает список свзяей в виде объекта, в котором можно добыть связь по имени модуля и имени порта
