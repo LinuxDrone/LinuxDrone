@@ -54,9 +54,9 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
             ],
             buttons: [
                 {
-                    text: 'Delete',
+                    text: 'Delete Instance',
                     handler: 'onClickDeleteModule',
-                    tooltip: 'Delete module instance from schema',
+                    //tooltip: 'Delete module instance from schema',
                     bind: {
                         disabled: '{disableDeleteModule}'
                     }
