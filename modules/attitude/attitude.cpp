@@ -49,7 +49,7 @@ void CAttitude::run(module_attitude_t *module)
         if(rt_timer_read() - last_print_time > print_period)
         {
             printEnable = true;
-            printf("\ntimeElapsed      = %f\n", timeElapsed);
+            //printf("\ntimeElapsed      = %f\n", timeElapsed);
 
             last_print_time = rt_timer_read();
         }
