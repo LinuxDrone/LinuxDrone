@@ -16,7 +16,7 @@ function CreateCMakeLists(module_name) {
     r += "file(GLOB_RECURSE SRC \"*.c\")\n\n";
 
     r += "include_directories(${LIB_DIR}/sdk/include ${CMAKE_CURRENT_BINARY_DIR})\n";
-    r += "include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)\n\n";
+    r += "include_directories(${BSON_INCLUDE_DIR})\n\n";
 
     r += "set(EXTRA_LIBS\n";
     r += "    sdk\n";

@@ -1,0 +1,132 @@
+{
+  "type": "module_def",
+  "name": "c-mpu9250",
+  "version": 1,
+  "Task Priority": 80,
+  "Task Period": 2000,
+  "Transfer task period": 200000,
+  "Notify on change": false,
+  "description": {
+    "en": "IMU 9DoF sensor fusion",
+    "ru": "9 осевой датчик ориентации"
+  },
+  "paramsDefinitions": [
+    {
+      "name": "SPI_Device",
+      "displayName": {
+        "en": "Bus Name",
+        "ru": "Имя шины"
+      },
+      "description": {
+        "en": "Path to spi device",
+        "ru": "Путь к файлу spi устройства"
+      },
+      "type": "const char*",
+      "defaultValue": "/dev/spidev0.1",
+      "validValues": ["/dev/spidev0.0","/dev/spidev0.1"],
+      "unitMeasured": ""
+    },
+    {
+      "name": "spiBusSpeed",
+      "displayName": {
+        "en": "SPI bus speed"
+      },
+      "description": {
+        "en": "Use DLPF set Gyroscope bandwidth Hz"
+      },
+      "type": "int",
+      "defaultValue": 1000000,
+      "unitMeasured": "Hz"
+    },
+    {
+      "name": "gyroDLPF",
+      "displayName": {
+        "en": "Use DLPF set Gyroscope bandwidth Hz"
+      },
+      "description": {
+        "en": "Use DLPF set Gyroscope bandwidth Hz"
+      },
+      "type": "int",
+      "defaultValue": 188,
+      "validValues": [188, 98, 42, 20, 10, 5],
+      "unitMeasured": "Hz"
+    },
+    {
+      "name": "gyroScale",
+      "displayName": {
+        "en": "Use set Gyroscope scale"
+      },
+      "description": {
+        "en": "Use set Gyroscope scale"
+      },
+      "type": "int",
+      "defaultValue": 2000,
+      "validValues": [250, 500, 1000, 2000],
+      "unitMeasured": "DPS"
+    },
+    {
+      "name": "accelScale",
+      "displayName": {
+        "en": "Use set Accelerometr scale"
+      },
+      "description": {
+        "en": "Use set Accelerometr scale"
+      },
+      "type": "int",
+      "defaultValue": 16,
+      "validValues": [2, 4, 8, 16],
+      "unitMeasured": "G"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "AGMT",
+      "Schema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+            "accelX": {
+                "type": "float",
+                "required": true
+            },
+            "accelY": {
+                "type": "float",
+                "required": true
+            },
+            "accelZ": {
+                "type": "float",
+                "required": true
+            },
+            "gyroX": {
+                "type": "float",
+                "required": true
+            },
+            "gyroY": {
+                "type": "float",
+                "required": true
+            },
+            "gyroZ": {
+                "type": "float",
+                "required": true
+            },
+            "magX": {
+                "type": "float",
+                "required": true
+            },
+            "magY": {
+                "type": "float",
+                "required": true
+            },
+            "magZ": {
+                "type": "float",
+                "required": true
+            },
+            "temperature": {
+                "type": "float",
+                "required": true
+            }
+        }
+      }
+    }
+  ]
+}

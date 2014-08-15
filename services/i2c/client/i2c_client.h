@@ -50,7 +50,7 @@ bool connect_i2c_service(i2c_service_t* service);
 
 
 /**
- * @brief disconnect_i2c_service Разраывает соединение с сервисом i2c
+ * @brief disconnect_i2c_service Разрывает соединение с сервисом i2c
  * @param service
  */
 void disconnect_i2c_service(i2c_service_t* service);
@@ -70,7 +70,7 @@ int open_i2c(i2c_service_t* service, const char* bus_name);
 
 
 /**
- * @brief read_i2c Считываеи блок данных с указанного девайса i2c, запрашиваемой длины,
+ * @brief read_i2c Считывает блок данных с указанного девайса i2c, запрашиваемой длины,
  * начиная с указанного внутреннего порта девайса.
  * @param service Указатель на структуру сервиса
  * @param session_id Идентификатор сессии
@@ -82,6 +82,19 @@ int open_i2c(i2c_service_t* service, const char* bus_name);
  * @return < 0 - Ошибка. Распечатать ошибку можно при помощи функции print_task_send_error
  */
 int read_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_register, int len_requested_data, char** ret_data, int* ret_len);
+
+/**
+ * @brief read_raw_i2c Считывает блок данных с указанного устройства i2c, запрашиваемой длины,
+ * без указания внутреннего порта устройства.
+ * @param service Указатель на структуру сервиса
+ * @param session_id Идентификатор сессии
+ * @param dev_id Адрес девайса на шине i2c
+ * @param len_requested_data Запрашиваемая длина считываемых данных (необходимо считать)
+ * @param ret_data Блок считанных данных
+ * @param ret_len Длина считанных данных (фактически считано)
+ * @return < 0 - Ошибка. Распечатать ошибку можно при помощи функции print_task_send_error
+ */
+int read_raw_i2c(i2c_service_t* service, int session_id, char dev_id, int len_requested_data, char** ret_data, int* ret_len);
 
 
 /**
@@ -96,6 +109,26 @@ int read_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_regis
  */
 int write_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_register, int len_data, char* data);
 
+/**
+ * @brief write_raw_i2c Записывает блок данных в указанное устройство i2с, без указания порта
+ * @param service Указатель на структуру сервиса
+ * @param session_id Идентификатор сессии
+ * @param dev_id Адрес девайса на шине i2c
+ * @param len_data Длина блока записываемых данных
+ * @param data Указатель на блок записываемых данных
+ * @return < 0 - Ошибка.
+ */
+int write_raw_i2c(i2c_service_t* service, int session_id, char dev_id, int len_data, char* data);
+
+/**
+ * @brief write_cmd_i2c Записывает байт команды в указанное устройство i2с
+ * @param service Указатель на структуру сервиса
+ * @param session_id Идентификатор сессии
+ * @param dev_id Адрес девайса на шине i2c
+ * @param dev_register Команда отправляемая устройству на шине
+ * @return < 0 - Ошибка.
+ */
+int write_cmd_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_register);
 
 /**
  * @brief close_i2c Закрывает сессию взаимодействия с шиной i2c
