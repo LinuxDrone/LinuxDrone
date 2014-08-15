@@ -25,15 +25,15 @@ set(EXTRA_LIBS
     pthread
 )
 
-add_library(i2c_client ${INC} ${SRC})
-target_link_libraries(i2c_client ${EXTRA_LIBS})
+add_executable(spi_service ${INC} ${SRC})
+target_link_libraries(spi_service ${EXTRA_LIBS})
 
 IF(${DO_POST_BUILD})
     add_custom_command(
-        TARGET i2c_client
+        TARGET spi_service
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libi2c_client.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/lib/libi2c_client.so
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} spi_service ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/services/spi_service
     )
 ENDIF()
 
-install(TARGETS i2c_client DESTINATION lib)
+install(TARGETS spi_service DESTINATION services)

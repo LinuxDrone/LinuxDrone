@@ -19,27 +19,28 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 
 set(EXTRA_LIBS
     sdk
+    spi_client
     m
 )
 
 ADD_CUSTOM_COMMAND(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/c-scale.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-scale.def.json ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-scale.def.json
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/c-mpu9250.helper.c
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-mpu9250.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-mpu9250.def.json
 )
 
-add_library(c-scale MODULE ${INC} ${SRC} c-scale.helper.c)
+add_library(c-mpu9250 MODULE ${INC} ${SRC} c-mpu9250.helper.c)
 
-target_link_libraries(c-scale ${EXTRA_LIBS})
+target_link_libraries(c-mpu9250 ${EXTRA_LIBS})
 
 IF(${DO_POST_BUILD})
     add_custom_command(
-        TARGET c-scale
+        TARGET c-mpu9250
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-scale.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-scale/libc-scale.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-scale/c-scale.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-scale/c-scale.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-mpu9250.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-mpu9250/libc-mpu9250.so
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-mpu9250/c-mpu9250.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-mpu9250/c-mpu9250.def.json
     )
 ENDIF()
 
-install(TARGETS c-scale DESTINATION modules/c-scale)
-install(FILES c-scale.def.json DESTINATION modules/c-scale)
+install(TARGETS c-mpu9250 DESTINATION modules/c-mpu9250)
+install(FILES c-mpu9250.def.json DESTINATION modules/c-mpu9250)

@@ -13,16 +13,16 @@
 file(GLOB_RECURSE INC "include/*")
 file(GLOB_RECURSE SRC "src/*.c")
 
-include_directories(${RFS_DIR}/usr/local/include/libbson-1.0)
-include_directories(${RFS_DIR}/usr/local/include/libmongoc-1.0)
+include_directories(${BSON_INCLUDE_DIR})
+include_directories(${MongoC_INCLUDE_DIR})
 include_directories(${LIB_DIR}/sdk/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 
 set(EXTRA_LIBS
     sdk
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
-    ${RFS_DIR}/usr/local/lib/libbson-1.0.so
-    ${RFS_DIR}/usr/local/lib/libmongoc-1.0.so
+    ${BSON_LIBRARIES}
+    ${MongoC_LIBRARIES}
     rt
     dl
     pthread

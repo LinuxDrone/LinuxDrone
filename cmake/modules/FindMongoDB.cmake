@@ -19,7 +19,8 @@ else(MongoDB_INCLUDE_DIR AND MongoDB_LIBRARIES)
       /usr/local/include/
       /usr/include/mongo/
       /usr/local/include/mongo/
-	  /opt/mongo/include/
+      /usr/local/mongo/include/
+      /opt/mongo/include/
       $ENV{ProgramFiles}/Mongo/*/include
       $ENV{SystemDrive}/Mongo/*/include
       )
@@ -37,7 +38,9 @@ else(WIN32)
       /usr/lib/mongo
       /usr/local/lib
       /usr/local/lib/mongo
-	  /opt/mongo/lib
+      /usr/local/mongo/lib
+      /opt/mongo/lib
+
       )
 endif(WIN32)
 

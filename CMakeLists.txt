@@ -33,7 +33,11 @@ project(linuxdrone)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME})
 
 # Compiler options
-add_definitions(-mfpu=neon ${XENOMAI_DEFINITIONS}) #-std=c++11
+IF(${BOARD_TYPE} STREQUAL "beaglebone")
+    add_definitions(-mfpu=neon ${XENOMAI_DEFINITIONS}) #-std=c++11
+ELSEIF(${BOARD_TYPE} STREQUAL "rpi")
+    add_definitions(${XENOMAI_DEFINITIONS})
+ENDIF()
 
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
@@ -47,8 +51,7 @@ set(SYS_DIR ${PROJECT_SOURCE_DIR}/system)
 set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
 set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
 set(WEB_DIR ${PROJECT_SOURCE_DIR}/webapps)
-set(RFS_DIR ${TLS_DIR}/rootfs/beaglebone)
-
+set(RFS_DIR ${TLS_DIR}/rootfs/${BOARD_TYPE})
 
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(SCP ${TLS_DIR}/pscp.exe)
@@ -57,7 +60,7 @@ IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(DTC ${TLS_DIR}/dtc/dtc.exe)
 ELSEIF(${CMAKE_HOST_SYSTEM} MATCHES "Linux")
     SET(SCP scp)
-    SET(NODEJS node)
+    SET(NODEJS nodejs)
     SET(PASM ${TLS_DIR}/pasm/pasm)
     SET(DTC dtc)
 ELSE()
@@ -67,7 +70,7 @@ ELSE()
     SET(DTC ${TLS_DIR}/dtc/dtc)
 ENDIF()
 
-#SET(DO_POST_BUILD YES)
+SET(DO_POST_BUILD NO)
 
 #SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 #SET(URL_TARGET_SYSTEM root@192.168.1.2)
@@ -84,11 +87,16 @@ SET(SSH_PORT_TARGET_SYSTEM 22)
 find_package(MongoDB REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 
+# MongoC
+# Libraries: ${MongoC_LIBRARIES}
+find_package(MongoC REQUIRED)
+include_directories(${INCLUDE_DIRECTORIES} ${MongoC_INCLUDE_DIR})
+
 # Boost
 # Libraries: ${Boost_LIBRARIES}
-set(Boost_USE_STATIC_LIBS OFF) 
-find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
-include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
+#set(Boost_USE_STATIC_LIBS OFF) 
+#find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
+#include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
 
 # Xenomai libraries
 # Libraries: ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
@@ -99,6 +107,15 @@ include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
 # Threads
 find_package(Threads)
 
+# BSON
+# Libraries: ${BSON_LIBRARIES}
+find_package(BSON REQUIRED)
+include_directories(${INCLUDE_DIRECTORIES} ${BSON_INCLUDE_DIR})
+
+# WebSockets
+# Libraries: ${WebSockets_LIBRARIES}
+find_package(WebSockets REQUIRED)
+include_directories(${INCLUDE_DIRECTORIES} ${WebSockets_INCLUDE_DIR})
 
 #option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
 IF(BUILD_DOCUMENTATION)
@@ -172,11 +189,12 @@ add_subdirectory(${MOD_DIR}/c-gy87)
 add_subdirectory(${MOD_DIR}/test-sender)
 add_subdirectory(${MOD_DIR}/test-receiver)
 add_subdirectory(${MOD_DIR}/test-sender-receiver)
-add_subdirectory(${MOD_DIR}/c-pru-pwmout)
-add_subdirectory(${MOD_DIR}/c-pru-pwmin)
+#add_subdirectory(${MOD_DIR}/c-pru-pwmout)
+#add_subdirectory(${MOD_DIR}/c-pru-pwmin)
 add_subdirectory(${MOD_DIR}/c-pid)
 add_subdirectory(${MOD_DIR}/c-sum-scale)
 add_subdirectory(${MOD_DIR}/c-scale)
+add_subdirectory(${MOD_DIR}/c-ms5611)
 #add_subdirectory(${MOD_DIR}/MyModule)
 #add_subdirectory(${MOD_DIR}/bmp180)
 #add_subdirectory(${MOD_DIR}/ms5611)
@@ -186,8 +204,9 @@ add_subdirectory(${MOD_DIR}/c-scale)
 #add_subdirectory(${MOD_DIR}/SimpleTransform)
 #add_subdirectory(${MOD_DIR}/SerialGps)
 add_subdirectory(${MOD_DIR}/c-bmp180)
-add_subdirectory(${MOD_DIR}/c-attitude)
 add_subdirectory(${MOD_DIR}/c-generator)
+add_subdirectory(${MOD_DIR}/c-mpu9250)
+add_subdirectory(${MOD_DIR}/attitude)
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
@@ -197,6 +216,7 @@ add_subdirectory(${HST_DIR}/c-host)
 # Services
 add_subdirectory(${SVC_DIR}/telemetry)
 add_subdirectory(${SVC_DIR}/i2c)
+add_subdirectory(${SVC_DIR}/spi)
 
 # Main project target
 #add_subdirectory(${TGT_DIR}/beaglebone) 

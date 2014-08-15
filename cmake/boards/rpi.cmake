@@ -11,13 +11,13 @@
 #--------------------------------------------------------------------
 
 # Include guard
-if(__BEAGLEBONE_CMAKE)
+if(__RPI_CMAKE)
     return()
 endif()
-set(__BEAGLEBONE_CMAKE 1)
+set(__RPI_CMAKE 1)
 
 #
-# BeagleBone Black, Ubuntu 13.10, gcc-linaro-arm-linux-gnueabihf-4.8-2013.10
+# RPI, Debian Wheezy, gcc-linaro-arm-linux-gnueabihf-raspbian Debian EGLIBC 2.13-37+rpi1
 #
 
 set(CMAKE_SYSTEM_NAME Linux)
@@ -33,13 +33,13 @@ include(FindProjectDirectories)
 if(CROSS_COMPILED_USE)
 	# Define the cross compiler details (as extracted from distribution)
 	if(CMAKE_HOST_WIN32)
-		set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-4.8-2013.10_win32")
+		set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-raspbian-x64_win32")
 		set(CMAKE_HOST_EXECUTABLE_SUFFIX ".exe")
 	elseif(CMAKE_HOST_APPLE)
-		set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-4.8-2013.10_osx")
+		set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-raspbian-x64_osx")
 		set(CMAKE_HOST_EXECUTABLE_SUFFIX "")
 	else()
-		set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-4.8-2013.10_linux")
+		set(TOOLCHAIN_SUBDIR "gcc-linaro-arm-linux-gnueabihf-raspbian-x64_linux")
 		set(CMAKE_HOST_EXECUTABLE_SUFFIX "")
 	endif()
 	set(CROSS_TOOLCHAIN_PREFIX arm-linux-gnueabihf-)
@@ -55,7 +55,7 @@ else()
 endif()
 
 # Where is the target environment
-set(BOARD_ROOTFS ${ROOTFS_DIR}/beaglebone)
+set(BOARD_ROOTFS ${ROOTFS_DIR}/rpi)
 set(CMAKE_FIND_ROOT_PATH  ${BOARD_ROOTFS})
 
 # Search for programs in the build host directories
