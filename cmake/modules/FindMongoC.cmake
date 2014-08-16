@@ -10,47 +10,94 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-# - Find MongoC
 #  Find the MongoC includes and library
 #  This module defines
-#  MongoC_INCLUDE_DIR, where to find mongo/client/dbclient.h
+#  MongoC_FOUND - system has the MongoC library
+#  MongoC_INCLUDE_DIR, where to find libmongoc-1.0/mongoc.h
 #  MongoC_LIBRARIES, the libraries needed to use MongoC.
-#  MongoC_Found, If false, do not try to use MongoC.
+#  MongoC_VERSION - This is set to $major.$minor.$revision$path (eg. 0.4.1)
 
-if(MongoC_INCLUDE_DIR AND MongoC_LIBRARIES)
-   set(MongoC_Found TRUE)
+if (UNIX)
+  find_package(PkgConfig QUIET)
+  pkg_check_modules(_MongoC QUIET libmongoc-1.0)
+endif ()
 
-else(MongoC_INCLUDE_DIR AND MongoC_LIBRARIES)
+find_path(MongoC_INCLUDE_DIR
+  NAMES
+    libmongoc-1.0/mongoc.h
+  HINTS
+    ${MongoC_ROOT_DIR}
+    ${_MongoC_INCLUDEDIR}
+  PATH_SUFFIXES
+    /usr/includes/
+    /usr/local/includes/
+)
 
-  find_path(
-      MongoC_INCLUDE_DIR
-      NAMES libmongoc-1.0/mongoc.h
-      /usr/include/
-      /usr/local/include/
-      )
+set(MongoC_INCLUDE_DIR "${MongoC_INCLUDE_DIR}/libmongoc-1.0")
 
-  set(MongoC_INCLUDE_DIR "${MongoC_INCLUDE_DIR}/libmongoc-1.0")
+if(WIN32 AND NOT CYGWIN)
+  if(MSVC)
+    find_library(MongoC
+      NAMES
+        "mongoc-1.0"
+      HINTS
+        ${MongoC_ROOT_DIR}
+      PATH_SUFFIXES
+        /usr/lib
+        /usr/local/lib
+    )
 
-  find_library(
+    mark_as_advanced(MongoC)
+    set(MongoC_LIBRARIES ${MongoC} ws2_32)
+  else()
+      # bother supporting this?
+  endif()
+else()
+
+  find_library(MongoC_LIBRARY
+    NAMES
+      mongoc-1.0
+    HINTS
+      ${_MongoC_LIBDIR}
+    PATH_SUFFIXES
+      lib
+  )
+
+  mark_as_advanced(MongoC_LIBRARY)
+
+  set(MongoC_LIBRARIES ${MongoC_LIBRARY})
+
+endif()
+
+if (MongoC_INCLUDE_DIR)
+  if (_MongoC_VERSION)
+     set(MongoC_VERSION "${_MongoC_VERSION}")
+  elseif(MongoC_INCLUDE_DIR AND EXISTS "${MongoC_INCLUDE_DIR}/mongoc-version.h")
+     file(STRINGS "${MongoC_INCLUDE_DIR}/mongoc-version.h" MongoC_version_str
+        REGEX "^#define[\t ]+MongoC_VERSION[\t ]+\([0-9.]+\)[\t ]+$")
+
+     string(REGEX REPLACE "^.*MongoC_VERSION[\t ]+\([0-9.]+\)[\t ]+$"
+        "\\1" MongoC_VERSION "${MongoC_version_str}")
+  endif ()
+endif ()
+
+include(FindPackageHandleStandardArgs)
+
+if (MongoC_VERSION)
+   find_package_handle_standard_args(MongoC
+    REQUIRED_VARS
       MongoC_LIBRARIES
-      NAMES mongoc-1.0
-      #PATHS
-      /usr/lib
-      /usr/local/lib
-      )
+      MongoC_INCLUDE_DIR
+    VERSION_VAR
+      MongoC_VERSION
+    FAIL_MESSAGE
+      "Could NOT find MongoC version"
+  )
+else ()
+   find_package_handle_standard_args(MongoC "Could NOT find MongoC uuuurh"
+      MongoC_LIBRARIES
+      MongoC_INCLUDE_DIR
+  )
+endif ()
 
-  if(MongoC_INCLUDE_DIR AND MongoC_LIBRARIES)
-    set(MongoC_Found TRUE)
-    message(STATUS "Found MongoC: ${MongoC_INCLUDE_DIR}, ${MongoC_LIBRARIES}")
-  else(MongoC_INCLUDE_DIR AND MongoC_LIBRARIES)
-    set(MongoC_FOUND FALSE)
-    if (MongoC_FIND_REQUIRED)
-		message(FATAL_ERROR "MongoC not found.")
-	else (MongoC_FIND_REQUIRED)
-		message(STATUS "MongoC not found.")
-	endif (MongoC_FIND_REQUIRED)
-  endif(MongoC_INCLUDE_DIR AND MongoC_LIBRARIES)
-
-  mark_as_advanced(MongoC_INCLUDE_DIR MongoC_LIBRARIES)
-
-endif(MongoC_INCLUDE_DIR AND MongoC_LIBRARIES)
+mark_as_advanced(MongoC_INCLUDE_DIR MongoC_LIBRARIES)
