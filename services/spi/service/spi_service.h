@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../libraries/c-sdk/include/module-functions.h"
+#include "../../../libraries/sdk/include/module-functions.h"
 
 #define TASK_NAME_SPI "spi_service_task"
 #define MAX_SIZE_BUS_NAME 30
