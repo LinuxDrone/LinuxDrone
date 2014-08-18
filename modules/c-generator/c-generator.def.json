@@ -5,7 +5,6 @@
     "Task Priority": 80,
     "Task Period": 100,
     "Transfer task period": 200000,
-    "Notify on change": false,
     "description": {
         "en": "One signal generator",
         "ru": "Одноканальный генератор сигнала"
