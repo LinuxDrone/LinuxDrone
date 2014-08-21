@@ -124,7 +124,7 @@ void c_mpu9250_run (module_c_mpu9250_t *module)
         //printf("test temperature %f\n", cfg_mpu9250.temperature);
         //printf("test accelZ %f\n", cfg_mpu9250.accelerometer_data[2]);
 
-        rt_task_sleep(rt_timer_ns2ticks(100000000));
+        //rt_task_sleep(rt_timer_ns2ticks(100000000));
 
         AGMT_t* AGMT;
         checkout_AGMT(module, &AGMT);
