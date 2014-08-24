@@ -139,9 +139,9 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
     r += "        printf(\"Error: func bson2" + outName + ", NULL parameter\\n\");\n";
     r += "        return -1;\n";
     r += "    }\n\n";
-    if(set_update_fact){
+    if (set_update_fact) {
         r += "    " + outName + "_t* obj = (" + outName + "_t*)module->input_data;\n";
-    }else{
+    } else {
         r += "    " + outName + "_t* obj = (" + outName + "_t*)module->specific_params;\n";
     }
     r += "    bson_iter_t iter;\n";
@@ -198,7 +198,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
                 console.log("Unknown type " + properties[key].type + " for port " + propName);
                 break;
         }
-        if(set_update_fact){
+        if (set_update_fact) {
             r += "            module->updated_input_properties |= " + propName + ";\n";
         }
         r += "            continue;\n";
@@ -209,11 +209,11 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
     r += "}\n\n";
 
     r += "// Helper function. Print structure " + outName + "\n";
-    if(outName=="input"){
+    if (outName == "input") {
         r += "void print_" + module_type + "(void* obj1)\n";
         r += "{\n";
         r += "    " + outName + "_t* obj=obj1;\n";
-    }else{
+    } else {
         r += "void print_" + outName + "(" + outName + "_t* obj)\n";
         r += "{\n";
     }
@@ -312,20 +312,20 @@ function Create_H_file(module) {
     r += "void " + module_type + "_delete(module_" + module_type + "_t* module);\n\n";
 
     if ('paramsDefinitions' in module) {
-    r += "/**\n";
-    r += "* @brief \\~russian Заполняет указатель адресом на структуру, содержащую настроечные параметры модуля\n";
-    r += "* @param module\n";
-    r += "* @param params\n";
-    r += "* @return\n";
-    r += "*/\n";
-    r += "int checkout_params_" + module_type + "(module_t* module, void** params);\n\n";
+        r += "/**\n";
+        r += "* @brief \\~russian Заполняет указатель адресом на структуру, содержащую настроечные параметры модуля\n";
+        r += "* @param module\n";
+        r += "* @param params\n";
+        r += "* @return\n";
+        r += "*/\n";
+        r += "int checkout_params_" + module_type + "(module_t* module, void** params);\n\n";
 
-    r += "/**\n";
-    r += "* @brief \\~russian Освобождает мьютекс, удерживаемый на время работы со структурой параметров\n";
-    r += "* @param module\n";
-    r += "* @return\n";
-    r += "*/\n";
-    r += "int checkin_params_" + module_type + "(module_t* module);\n\n";
+        r += "/**\n";
+        r += "* @brief \\~russian Освобождает мьютекс, удерживаемый на время работы со структурой параметров\n";
+        r += "* @param module\n";
+        r += "* @return\n";
+        r += "*/\n";
+        r += "int checkin_params_" + module_type + "(module_t* module);\n\n";
         if (module.outputs) {
             module.outputs.forEach(function (out) {
                 var outName = out.name.replace(/\+/g, "");
@@ -335,6 +335,22 @@ function Create_H_file(module) {
         }
     }
 
+    // Формирование перечисления типов команд
+    if ('commands' in module) {
+        r += "// Enum of command types\n";
+        r += "typedef enum\n";
+        r += "{\n";
+        var i = 0;
+        module.commands.forEach(function (cmd) {
+            var cmdName = cmd.name.replace(/\-/g, "_");
+            if (i != 0) {
+                r += ",\n";
+            }
+            r += "    cmd_" + cmdName;
+            i++;
+        });
+        r += "\n} " + module_type + "_command_t;\n";
+    }
 
     r += "\n#ifdef __cplusplus\n";
     r += "}\n"
@@ -367,12 +383,12 @@ function Create_C_file(module) {
         r += "int get_inputmask_by_inputname(char* input_name)\n";
         r += "{\n";
         for (var key in module.inputShema.properties) {
-            r += "    if(!strncmp(input_name, \""+key+"\", XNOBJECT_NAME_LEN))\n";
-            r += "        return "+key+";\n";
+            r += "    if(!strncmp(input_name, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
+            r += "        return " + key + ";\n";
         }
         r += "\n    return 0;\n";
         r += "}\n\n";
-        r += make_Bson2Structure(module.inputShema.properties,  "input", module_type, true);
+        r += make_Bson2Structure(module.inputShema.properties, "input", module_type, true);
     }
 
     if (module.outputs) {
@@ -433,9 +449,9 @@ function Create_C_file(module) {
         r += "int get_offset_in_input_by_inpinname(module_" + module_type + "_t* module, char* name_inpin)\n";
         r += "{\n";
         for (var key in module.inputShema.properties) {
-            r += "    if(!strncmp(name_inpin, \""+key+"\", XNOBJECT_NAME_LEN))\n";
+            r += "    if(!strncmp(name_inpin, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
             r += "    {\n";
-            r += "        return (void*)&module->input4module."+key+" - (void*)&module->input4module;\n";
+            r += "        return (void*)&module->input4module." + key + " - (void*)&module->input4module;\n";
             r += "    }\n";
         }
         r += "    printf(\"Not found property \\\"%s\\\" among properties in input object\\n\", name_inpin);\n";
@@ -623,7 +639,7 @@ function main() {
         var module_type = module.name;
 
         //commonModuleParams.commonModuleParamsDefinition.forEach(function (param) {
-          //  module.paramsDefinitions.push(param);
+        //  module.paramsDefinitions.push(param);
         //});
 
         var text_H_file = Create_H_file(module);
