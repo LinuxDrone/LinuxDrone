@@ -226,7 +226,7 @@ function Starti2cService() {
     var servicePath = '/usr/local/linuxdrone/services/i2c_service';
     i2c_service = spawn(servicePath);
 
-    telemetry_service.on('error', function (data) {
+    i2c_service.on('error', function (data) {
         if (data.code === "ENOENT") {
             console.log('Not run service' + servicePath);
             if (global.ws_server == undefined) return;
@@ -298,7 +298,7 @@ function StartSPIService() {
     var servicePath = '/usr/local/linuxdrone/services/spi_service';
     spi_service = spawn(servicePath);
 
-    telemetry_service.on('error', function (data) {
+    spi_service.on('error', function (data) {
         if(data.code === "ENOENT"){
             console.log('Not run service' + servicePath);
             if(global.ws_server == undefined) return;

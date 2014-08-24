@@ -35,23 +35,21 @@ void CAttitude::run(module_attitude_t *module)
     // Указатель на структуру с входными данными модуля.
     input_t* input;
 
-    long last_print_time = (long)rt_timer_read();
-    long print_period = rt_timer_ns2ticks(1000000000);
-
-    static SRTIME  timeTick, timeTickold;
-    timeTickold = timeTick = (SRTIME)rt_timer_read();
+    float   last_print_time = 0;
+    float   last_input_time = 0;
 
     attitude_initialized = false;
 
     while(1) {
         get_input_data((module_t *)module);
 
-        if(rt_timer_read() - last_print_time > print_period)
+        time_elapsed = ((float)rt_timer_ticks2ns((SRTIME)rt_timer_read() - time_tick_start))/1000000000.0f;
+
+        // print period = 1 seconds
+        if(time_elapsed - last_print_time > 1)
         {
             printEnable = true;
-            //printf("\ntimeElapsed      = %f\n", timeElapsed);
-
-            last_print_time = rt_timer_read();
+            last_print_time = time_elapsed;
         }
 
         if(!attitude_initialized)
@@ -65,6 +63,10 @@ void CAttitude::run(module_attitude_t *module)
         // проверим, обновились ли данные
         if(module->module_info.updated_input_properties!=0)
         {
+            // computation time between the arrival of the input data
+            dT = time_elapsed - last_input_time;
+            last_input_time = time_elapsed;
+
             // есть новые данные
             input = (input_t*)module->module_info.input_data;
 
@@ -76,14 +78,10 @@ void CAttitude::run(module_attitude_t *module)
             gyros[2]    = -input->gyro_z;
 
             //rt_task_sleep(module->module_info.queue_timeout);
-            timeTick = (SRTIME)rt_timer_read();
-            dT = ((float)((rt_timer_ticks2ns(timeTick  - timeTickold)))/1000000000.0f);
-            timeElapsed += dT;
-            timeTickold = timeTick;
 
             //if(el < 0.0018f) printf("\nDT_time      = %f\n", el);
 
-            if (timeElapsed < TIMESTART && timeElapsed > 1.0f) {
+            if (time_elapsed < TIMESTART && time_elapsed > 1.0f) {
                 // Use accels to initialise attitude and calculate gyro bias
                 accelKp     = 1.0f;
                 accelKi     = 0.0f;
@@ -156,6 +154,9 @@ void CAttitude::run(module_attitude_t *module)
         //if(printEnable) printf("gyro_correct_int2   = %f\n",p_ad->gyro_correct_int[2]);
         //if(printEnable) printf("p_ad->gyros[2]c   = %f\n",p_ad->gyros[2]);
 
+        //if(printEnable) printf("timeElapsed = %f\n", time_elapsed);
+        //if(printEnable) printf("dT = %f\n", dT);
+
         printEnable = false;
 
         // TODO: убрать!
@@ -196,7 +197,8 @@ void CAttitude::init()
     zero_during_arming = false;
     initSeting = 0;
     dT = 0.0f;
-    timeElapsed = 0.0f;
+    time_elapsed = 0.0f;
+    time_tick_start = (SRTIME)rt_timer_read();
     samplesCalib = 0.0f;
 
     q[0] = 1;

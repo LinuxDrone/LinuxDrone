@@ -47,8 +47,12 @@ private:
     float boardRotation[3];
     char  trimFlight;
     uint8_t initSeting;
-    float dT;                   // in seconds
-    float timeElapsed;          // in miliseconds
+
+    // in seconds
+    SRTIME  time_tick_start;
+    float   time_elapsed;
+    float   dT;
+
     bool attitude_initialized;
     float samplesCalib;
 
