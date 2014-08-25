@@ -17,6 +17,7 @@ function CreateCMakeLists(module_name) {
 
     r += "include_directories(${LIB_DIR}/sdk/include ${CMAKE_CURRENT_BINARY_DIR})\n";
     r += "include_directories(${BSON_INCLUDE_DIR})\n\n";
+    r += "include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)\n";
 
     r += "set(EXTRA_LIBS\n";
     r += "    sdk\n";
@@ -49,136 +50,285 @@ function CreateCMakeLists(module_name) {
 
 function CreateModuleDefinition(module_name) {
     var obj_def = {
-  "type": "module_def",
-  "name": module_name,
-  "version": 2,
-  "Task Priority": 80,
-  "Task Period": 200000,
-  "Transfer task period": 200000,
-  "Notify on change": false,
-  "description": {
-    "en": "en description",
-    "ru": "русское описание"
-  },
-  "paramsDefinitions": [
-    {
-      "name": "I2C Device",
-      "displayName": {
-        "en": "param 1",
-        "ru": "параметр 1"
-      },
-      "description": {
-        "en": "en description",
-        "ru": "русское описание"
-      },
-      "type": "string",
-      "defaultValue": "default value",
-      "validValues": [
-        "str1",
-        "str2"
-      ],
-      "unitMeasured": ""
-    },
-    {
-      "name": "Test Number Param",
-      "displayName": {
-        "en": "param 2",
-        "ru": "параметр 2"
-      },
-      "description": {
-        "en": "en description",
-        "ru": "русское описание"
-      },
-      "type": "int",
-      "defaultValue": 123,
-      "validValues": [
-        56,
-        123
-      ],
-      "unitMeasured": "Ms"
-    },
-    {
-      "name": "Test Boolean Param",
-      "displayName": {
-        "en": "param 3",
-        "ru": "параметр 3"
-      },
-      "description": {
-        "en": "en description",
-        "ru": "русское описание"
-      },
-      "type": "boolean",
-      "defaultValue": false,
-      "unitMeasured": "bool"
-    }
-  ],
-  "outputs": [
-    {
-      "name": "Output1",
-      "Schema": {
-        "type": "object",
-        "id": "http://jsonschema.net",
-        "properties": {
-          "char_out": {
-            "type": "char",
-            "required": true
-          },
-          "short_out": {
-            "type": "short",
-            "required": true
-          },
-          "int_out": {
-            "type": "int",
-            "required": true
-          },
-          "long_out": {
-            "type": "long",
-            "required": true
-          },
-          "long_long_out": {
-            "type": "long long",
-            "required": true
-          },
-          "float_out": {
-            "type": "float",
-            "required": true
-          },
-          "double_out": {
-            "type": "double",
-            "required": true
-          },
-          "string_out": {
-            "type": "const char*",
-            "required": true
-          }
-        }
-      }
-    },
-    {
-      "name": "Output2",
-      "Schema": {
-        "type": "object",
-        "id": "http://jsonschema.net",
-        "properties": {
-          "out3": {
-            "type": "int",
-            "required": true
-          }
-        }
-      }
-    }
-  ]
-};
+        "type": "module_def",
+        "name": module_name,
+        "version": 2,
+        "Task Priority": 80,
+        "Task Period": 200000,
+        "Transfer task period": 200000,
+        "Notify on change": false,
+        "description": {
+            "en": "en description",
+            "ru": "русское описание"
+        },
+        "paramsDefinitions": [
+            {
+                "name": "I2C Device",
+                "displayName": {
+                    "en": "param 1",
+                    "ru": "параметр 1"
+                },
+                "description": {
+                    "en": "en description",
+                    "ru": "русское описание"
+                },
+                "type": "const char*",
+                "defaultValue": "default value",
+                "validValues": [
+                    "str1",
+                    "str2"
+                ],
+                "unitMeasured": ""
+            },
+            {
+                "name": "Test Number Param",
+                "displayName": {
+                    "en": "param 2",
+                    "ru": "параметр 2"
+                },
+                "description": {
+                    "en": "en description",
+                    "ru": "русское описание"
+                },
+                "type": "int",
+                "defaultValue": 123,
+                "validValues": [
+                    56,
+                    123
+                ],
+                "unitMeasured": "Ms"
+            },
+            {
+                "name": "Test Boolean Param",
+                "displayName": {
+                    "en": "param 3",
+                    "ru": "параметр 3"
+                },
+                "description": {
+                    "en": "en description",
+                    "ru": "русское описание"
+                },
+                "type": "bool",
+                "defaultValue": false,
+                "unitMeasured": "bool"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "Output1",
+                "Schema": {
+                    "type": "object",
+                    "id": "http://jsonschema.net",
+                    "properties": {
+                        "char_out": {
+                            "type": "char",
+                            "required": true
+                        },
+                        "short_out": {
+                            "type": "short",
+                            "required": true
+                        },
+                        "int_out": {
+                            "type": "int",
+                            "required": true
+                        },
+                        "long_out": {
+                            "type": "long",
+                            "required": true
+                        },
+                        "long_long_out": {
+                            "type": "long long",
+                            "required": true
+                        },
+                        "float_out": {
+                            "type": "float",
+                            "required": true
+                        },
+                        "double_out": {
+                            "type": "double",
+                            "required": true
+                        },
+                        "string_out": {
+                            "type": "const char*",
+                            "required": true
+                        }
+                    }
+                }
+            },
+            {
+                "name": "Output2",
+                "Schema": {
+                    "type": "object",
+                    "id": "http://jsonschema.net",
+                    "properties": {
+                        "out3": {
+                            "type": "int",
+                            "required": true
+                        }
+                    }
+                }
+            }
+        ],
+        "inputShema": {
+            "type": "object",
+            "id": "http://jsonschema.net",
+            "properties": {
+                "in1": {
+                    "type": "float",
+                    "required": true,
+                    "description": {
+                        "en": "input 1",
+                        "ru": "Вход 1"
+                    }
+                },
+                "in2": {
+                    "type": "float",
+                    "required": true,
+                    "description": {
+                        "en": "input 2",
+                        "ru": "Вход 2"
+                    }
+                }
+            }
+        },
+        "commands": [
+            {
+                "name": "command0"
+            },
+            {
+                "name": "command1",
+                "displayName": {
+                    "en": "Command 1",
+                    "ru": "Команда 1"
+                },
+                "description": {
+                    "en": "en description",
+                    "ru": "русское описание"
+                },
+                "commandParams": [
+                    {
+                        "name": "Command Char Param",
+                        "displayName": {
+                            "en": "param 1",
+                            "ru": "параметр 1"
+                        },
+                        "description": {
+                            "en": "en description",
+                            "ru": "русское описание"
+                        },
+                        "type": "const char*",
+                        "defaultValue": "default value",
+                        "validValues": [
+                            "str1",
+                            "str2"
+                        ],
+                        "unitMeasured": ""
+                    },
+                    {
+                        "name": "Command Number Param",
+                        "displayName": {
+                            "en": "param 2",
+                            "ru": "параметр 2"
+                        },
+                        "description": {
+                            "en": "en description",
+                            "ru": "русское описание"
+                        },
+                        "type": "int",
+                        "defaultValue": 123,
+                        "validValues": [
+                            56,
+                            123
+                        ],
+                        "unitMeasured": "Ms"
+                    },
+                    {
+                        "name": "Command Boolean Param",
+                        "displayName": {
+                            "en": "param 3",
+                            "ru": "параметр 3"
+                        },
+                        "description": {
+                            "en": "en description",
+                            "ru": "русское описание"
+                        },
+                        "type": "bool",
+                        "defaultValue": false,
+                        "unitMeasured": "bool"
+                    }
+                ]
+            },
+            {
+                "name": "command2",
+                "description": {
+                    "en": "en description",
+                    "ru": "русское описание"
+                },
+                "commandParams": [
+                    {
+                        "name": "Command float Param",
+                        "displayName": {
+                            "en": "param 1",
+                            "ru": "параметр 1"
+                        },
+                        "description": {
+                            "en": "en description",
+                            "ru": "русское описание"
+                        },
+                        "type": "float",
+                        "defaultValue": "default value",
+                        "validValues": [
+                            "1.0",
+                            "2.3"
+                        ],
+                        "unitMeasured": ""
+                    },
+                    {
+                        "name": "Command Number Param",
+                        "displayName": {
+                            "en": "param 2",
+                            "ru": "параметр 2"
+                        },
+                        "description": {
+                            "en": "en description",
+                            "ru": "русское описание"
+                        },
+                        "type": "int",
+                        "defaultValue": 123,
+                        "validValues": [
+                            56,
+                            123
+                        ],
+                        "unitMeasured": "Ms"
+                    },
+                    {
+                        "name": "Command Boolean Param",
+                        "displayName": {
+                            "en": "param 3",
+                            "ru": "параметр 3"
+                        },
+                        "description": {
+                            "en": "en description",
+                            "ru": "русское описание"
+                        },
+                        "type": "bool",
+                        "defaultValue": false,
+                        "unitMeasured": "bool"
+                    }
+                ]
+            }
+        ]
+    };
 
     return obj_def;
 }
 
-function CreateModuleCFile(obj_def){
+function CreateModuleCFile(obj_def) {
     var module_name = obj_def.name;
     var r = "";
     r += "#include \"" + module_name + ".helper.h\"\n\n";
     module_name = module_name.replace(/-/g, "_");
-    r += "void "+module_name+"_run (module_"+module_name+"_t *module)\n";
+    r += "void " + module_name + "_run (module_" + module_name + "_t *module)\n";
     r += "{\n";
     r += "    int cycle=0;\n";
     r += "    while(1) {\n";
@@ -202,17 +352,17 @@ function CreateModuleCFile(obj_def){
             var outName = out.name.replace(/\+/g, "");
             r += "        " + outName + "_t* obj" + outName + ";\n";
             r += "        checkout_" + outName + "(module, &obj" + outName + ");\n";
-            var i=2;
+            var i = 2;
             for (var key in out.Schema.properties) {
-                if(out.Schema.properties[key].type=="const char*"){
+                if (out.Schema.properties[key].type == "const char*") {
                     r += "        char buffer_" + key + " [32];\n";
                     r += "        snprintf(buffer_" + key + ", 32, \"data: %d\", cycle);\n";
                     r += "        obj" + outName + "->" + key + " = buffer_" + key + ";\n";
-                }else{
+                } else {
                     if ('inputShema' in obj_def) {
-                        r += "        obj" + outName + "->" + key + " = input->in1*"+i+"+cycle;\n";
+                        r += "        obj" + outName + "->" + key + " = input->in1*" + i + "+cycle;\n";
                         i++;
-                    }else{
+                    } else {
                         r += "        obj" + outName + "->" + key + " = cycle;\n";
                     }
                 }
@@ -237,6 +387,24 @@ function CreateModuleCFile(obj_def){
     }
     r += "        cycle++;\n";
     r += "    }\n";
+    r += "}\n\n";
+
+
+    // Функция обработки команды
+    r += "void " + module_name + "_command (" + module_name + "_command_t type_command, void* params)\n";
+    r += "{\n";
+    if ('commands' in obj_def) {
+        r += "    switch (type_command)\n";
+        r += "    {\n";
+        obj_def.commands.forEach(function (cmd) {
+            var cmdName = cmd.name.replace(/\-/g, "_");
+            r += "        case cmd_" + cmdName + ":\n";
+            r += "        break;\n\n";
+        });
+        r += "        default:\n";
+        r += "            printf(\"" + module_name + "_command. Unknown command: %i.\\n\", type_command);\n";
+        r += "    }\n";
+    }
     r += "}\n";
 
     return r;

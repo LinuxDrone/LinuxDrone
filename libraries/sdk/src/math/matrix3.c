@@ -12,6 +12,7 @@
 
 #include "../../include/math/matrix3.h"
 #include <math.h>
+#include <string.h>
 
 #if defined(__ARM_NEON__)
 #include <arm_neon.h>
