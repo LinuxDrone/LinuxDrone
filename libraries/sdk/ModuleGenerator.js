@@ -376,7 +376,13 @@ function Create_C_file(module) {
     else {
         r += "#define count_outs 0\n\n";
     }
-    r += "extern t_cycle_function " + module_type + "_run;\n\n";
+    r += "extern t_cycle_function " + module_type + "_run;\n";
+
+    if ('commands' in module) {
+        r += "extern t_cmd_function " + module_type + "_command;\n";
+    }
+    r += "\n";
+
 
 
     if ('inputShema' in module) {
@@ -523,7 +529,22 @@ function Create_C_file(module) {
         r += "    module->module_info.input_data = NULL;\n";
     }
     r += "\n";
-    r += "    module->module_info.func = &" + module_type + "_run;\n\n";
+
+    r += "    // Сохранение ссылки на бизнес-функцию.\n";
+    r += "    module->module_info.func = &" + module_type + "_run;\n";
+
+
+    // Формирование перечисления типов команд
+    if ('commands' in module) {
+        r += "    // Сохранение ссылки на функцию-обработчик команды.\n";
+        r += "    module->module_info.cmd_func = &" + module_type + "_command;\n";
+    }else{
+        r += "    // В определении модуля нет команд, а значит нет и фунции их обработки.\n";
+        r += "    module->module_info.cmd_func = NULL;\n";
+    }
+    r += "\n";
+
+
     if ('inputShema' in module) {
         r += "    module->module_info.print_input = &print_" + module_type + ";\n\n";
     }
