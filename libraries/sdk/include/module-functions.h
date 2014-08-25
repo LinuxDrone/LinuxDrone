@@ -229,7 +229,7 @@ typedef t_cycle_function* p_cycle_function;
 /**
  * \~russian Определение типа функции-обработчика команды
  */
-typedef void (t_cmd_function)(void *cookie);
+typedef void (t_cmd_function)(int type_command, void* params);
 
 /**
  * \~russian Определение типа указателя на функцию-обработчик команды
