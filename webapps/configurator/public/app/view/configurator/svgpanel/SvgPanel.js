@@ -46,7 +46,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
             disabled: '{started}'
         },
         items: [
-
             {
                 xtype: 'combo',
                 editable: false,
@@ -133,7 +132,13 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
         '',
         '',
         { text: '-', handler: 'onClickZoomOut', tooltip: 'Zoom Out'},
-        { text: '+', handler: 'onClickZoomIn', tooltip: 'Zoom In' }
+        { text: '+', handler: 'onClickZoomIn', tooltip: 'Zoom In' },
+        {
+            xtype: 'panel',
+            bind: {
+                html: '{XenoCPU}'
+            }
+        }
     ],
 
     logPanel: Ext.create('RtConfigurator.view.configurator.logpanel.LogPanel')

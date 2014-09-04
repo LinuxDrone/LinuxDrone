@@ -90,7 +90,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
 
         // Подготовленный список свзяей в виде объекта, в котором можно добыть связь по имени модуля и имени порта
         // Для удосбства, при приеме данных из вебсокетов (чтоб не искать каждый раз связь в графе)
-        PreparedLinks: undefined
+        PreparedLinks: undefined,
+
+        // Загрузка процессора риалтаймовой частью
+        XenoCPU: 'NA'
     },
 
     formulas: {

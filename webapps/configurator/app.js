@@ -115,30 +115,26 @@ wss.on('connection', function (ws) {
     });
 
     if (timerProcStat === undefined) {
-//        timerProcStat = setInterval(function() {
-//
-//
-//            fs.readFile('/proc/xenomai/stat', 'utf8', function (err, data) {
-//                if (err) {
-//                    console.log('Not read file /proc/xenomai/stat. Error:' + err);
-//                    return;
-//                }
-//                if(global.ws_server==undefined) return;
-//
-//                //console.log(data.split('\n')[1].match(/([1-9]*)\.([1-9])/g)[0]);
-//
-//                global.ws_server.send(
-//                    JSON.stringify({
-//                        process: 'OS',
-//                        type: 'stat',
-//                        data:{
-//                            proc: (100-data.split('\n')[1].match(/(\d)+(\.)?(\d)?(?=(\ )+ROOT\/0)/g)[0]).toFixed(1)
-//                        }
-//                    }), function() {  });
-//            });
-//
-//
-//        }, 1000);
+        timerProcStat = setInterval(function() {
+            fs.readFile('/proc/xenomai/stat', 'utf8', function (err, data) {
+                if (err) {
+                    console.log('Not read file /proc/xenomai/stat. Error:' + err);
+                    return;
+                }
+                if(global.ws_server==undefined) return;
+
+                //console.log(data.split('\n')[1].match(/([1-9]*)\.([1-9])/g)[0]);
+
+                global.ws_server.send(
+                    JSON.stringify({
+                        process: 'OS',
+                        type: 'stat',
+                        data:{
+                            proc: (100-data.split('\n')[1].match(/(\d)+(\.)?(\d)?(?=(\ )+ROOT\/0)/g)[0]).toFixed(1)
+                        }
+                    }), function() {  });
+            });
+        }, 1000);
     }
 });
 

@@ -148,7 +148,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
                 switch (resp.process) {
                     case 'OS':
-                        res.XenoCPU(resp.data.proc + "%");
+                        model.set('XenoCPU', resp.data.proc + "%");
                         break;
 
                     default:
