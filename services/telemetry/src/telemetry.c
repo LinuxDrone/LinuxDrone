@@ -29,6 +29,7 @@ size_t ar_bufs_len=0;
 
 RT_TASK task_read_shmem;
 RT_COND cond;
+RT_MUTEX 	mutex;
 int priority_task_read_shmem = 50;
 
 int pipe_fd;
@@ -103,6 +104,8 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
     const char* module_out_name;
     const char* cmd_name;
 
+fprintf(stdout, "reason=%i\n", reason);
+
     switch (reason)
     {
 
@@ -112,7 +115,42 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         break;
 
     case LWS_CALLBACK_SERVER_WRITEABLE:
-        read_len= read(pipe_fd, pipe_buf, sizeof(pipe_buf));
+
+fprintf(stdout, "LWS_CALLBACK_SERVER_WRITEABLE\n");
+
+        // Дадим сигнал риалтаймовому потоку, что пора проснуться и вычитать данные для нас из разделяемой памяти.
+        int res = rt_cond_signal(&cond);
+        if (res)
+        {
+            printf("Error rt_cond_signal\n");
+            return;
+        }
+        // Вся идея в том, что риалтаймовый поток, получив сигнал (при выходе из функции rt_cond_wait), успевает залочить мьютекс быстрее, чем данный поток на следующем шаге.
+        // Если это не так, надо будет дать поспать этому потоку перед вызовом rt_mutex_acquire в следующей команде
+
+        // Проснувшись, риалтаймовый поток сразу залочивает мьютекс, на котором мы и поспим, пока он вычитывает данные
+        // из разделяемой памяти и напихивает их для нас в трубу
+        int err = rt_mutex_acquire(&mutex, TM_INFINITE);
+        if (err)
+        {
+            printf("Error rt_mutex_acquire in LWS_CALLBACK_SERVER_WRITEABLE\n");
+            return;
+        }
+
+        while(read_len = read(pipe_fd, pipe_buf, sizeof(pipe_buf)) > 0) {
+            //printf("read_len: %i\toffset:%i\n", read_len, offset);
+            m = libwebsocket_write(wsi, (unsigned char *)pipe_buf, read_len, LWS_WRITE_BINARY);
+            if (m < read_len) {
+                lwsl_err("ERROR %d writing to di socket\n", n);
+            }
+        }
+
+        err = rt_mutex_release(&mutex);
+        if (err)
+        {
+            printf("Error rt_mutex_release in LWS_CALLBACK_SERVER_WRITEABLE\n");
+            return;
+        }
 
         if(read_len < 0) {
             // If this condition passes, there is no data to be read
@@ -121,31 +159,12 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
                 return -1;
             }
         }
-
-        if(read_len > 0) {
-            //printf("read_len: %i\toffset:%i\n", read_len, offset);
-            m = libwebsocket_write(wsi, (unsigned char *)pipe_buf, read_len, LWS_WRITE_BINARY);
-            if (m < read_len) {
-                lwsl_err("ERROR %d writing to di socket\n", n);
-                return -1;
-            }
-
-            int res = rt_cond_signal(&cond);
-            if (res)
-            {
-                printf("Error rt_cond_signal\n");
-                return;
-            }
-        }
-        else
-        {
-            usleep(10000);
-        }
         //printf("EXIT WHILE read_len: %i\n", read_len);
         break;
 
 
     case LWS_CALLBACK_RECEIVE:
+    {
         bson_request = bson_new_from_data (in, len);
 //debug_print_bson("received", bson_request);
 
@@ -197,6 +216,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         }
 
         bson_destroy(bson_request);
+    }
         break;
 
 
@@ -242,7 +262,6 @@ static struct libwebsocket_protocols protocols[] = {
 void run_task_read_shmem (void *module)
 {
     RT_PIPE pipe_between_rt;
-    RT_MUTEX 	mutex;
 
     int err;
     err = rt_pipe_create(&pipe_between_rt, "telemetry", 0, 500);
@@ -261,7 +280,6 @@ void run_task_read_shmem (void *module)
         return;
     }
 
-
     err = rt_mutex_acquire(&mutex,TM_NONBLOCK);
     if (err)
     {
@@ -272,8 +290,18 @@ void run_task_read_shmem (void *module)
 
     while(1)
     {
+        // Бесконечно спим в ожидании команды, от нериалтаймового потока, на вычитку данных из разделяемой памяти
+        err = rt_cond_wait(&cond, &mutex, TM_INFINITE );
+        if (err)
+        {
+            printf("Error rt_cond_wait\n");
+            return;
+        }
+
+
         bool was_data = false;
         int i;
+        // Вычитываем данные из разделяемой памяти и напихиваем их в очередь (ведущую в не риалтаймовому потоку)
         for(i=0; i < remote_shmems.remote_shmems_len; i++)
         {
             shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[i];
@@ -300,20 +328,16 @@ void run_task_read_shmem (void *module)
             }
             bson_destroy(bson);
 
-            err = rt_cond_wait(&cond, &mutex, TM_INFINITE );
-            if (err)
-            {
-                printf("Error rt_cond_wait\n");
-                return;
-            }
             was_data = true;
         }
 
+/*
         if(!was_data)
         {
             //printf("remote_shmems.remote_shmems_len:%i\n", remote_shmems.remote_shmems_len);
             rt_task_sleep(rt_timer_ns2ticks(5000000));
         }
+*/
     }
 }
 
@@ -445,12 +469,17 @@ int main(int argc, char **argv)
     }
 
     n = 0;
-    while (n >= 0 && !force_exit) {
-        if(remote_shmems.f_connected_in_links)
-        {
-            libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_TELEMETRY]);
-        }
-        else
+//    int count=0;
+    while (n >= 0 && !force_exit)
+    {
+            // Вызов данной функции проверит появилась ли возможность записать очередную партию данных в сокет,
+            // и если да, то вызовет калбэк (для указанного протокола) с причиной  LWS_CALLBACK_SERVER_WRITEABLE
+        libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_TELEMETRY]);
+
+//fprintf(stdout, "%i libwebsocket_callback_on_writable_all_protocol\n", count++);
+
+        // Если не все конекты с расщиряемой памяти установлены, то попытаемся это сделать
+        if(!remote_shmems.f_connected_in_links)
         {
             char* local_instance_name = "telemetry";
             connect_in_links(&remote_shmems, local_instance_name);
@@ -464,7 +493,9 @@ int main(int argc, char **argv)
          * If no socket needs service, it'll return anyway after
          * the number of ms in the second argument.
          */
-        n = libwebsocket_service(context, 5);
+        // Функция проверят, есть ли какие то данные прием из сокета. Есдли есть то вызывает калбэк с указанной причиной LWS_CALLBACK_RECEIVE
+        // Потом спит указанное количество миллисекунд
+        n = libwebsocket_service(context, 200);
     }
     libwebsocket_context_destroy(context);
 
