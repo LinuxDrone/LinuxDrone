@@ -40,18 +40,18 @@ enum demo_protocols {
 };
 
 static struct option options[] = {
-    { "help",	no_argument,		NULL, 'h' },
-    { "debug",	required_argument,	NULL, 'd' },
-    { "port",	required_argument,	NULL, 'p' },
-    { "ssl",	no_argument,		NULL, 's' },
-    { "allow-non-ssl",	no_argument,		NULL, 'a' },
-    { "interface",  required_argument,	NULL, 'i' },
-    { "closetest",  no_argument,		NULL, 'c' },
-    { "libev",  no_argument,		NULL, 'e' },
-    #ifndef LWS_NO_DAEMONIZE
-    { "daemonize", 	no_argument,		NULL, 'D' },
-    #endif
-    { NULL, 0, 0, 0 }
+{ "help",	no_argument,		NULL, 'h' },
+{ "debug",	required_argument,	NULL, 'd' },
+{ "port",	required_argument,	NULL, 'p' },
+{ "ssl",	no_argument,		NULL, 's' },
+{ "allow-non-ssl",	no_argument,		NULL, 'a' },
+{ "interface",  required_argument,	NULL, 'i' },
+{ "closetest",  no_argument,		NULL, 'c' },
+{ "libev",  no_argument,		NULL, 'e' },
+#ifndef LWS_NO_DAEMONIZE
+{ "daemonize", 	no_argument,		NULL, 'D' },
+#endif
+{ NULL, 0, 0, 0 }
 };
 
 
@@ -82,21 +82,21 @@ struct per_session_data__telemetry {
     int number;
 };
 
-bson_t** ar_bson2send = NULL;
+typedef struct{
+    bson_t* bson;
+    void* buf;
+} buf_and_bson_t;
+
+buf_and_bson_t* ar_bson2send = NULL;
 int len_bson2send = 0;
 
 static int callback_telemetry(struct libwebsocket_context *context, struct libwebsocket *wsi, enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
 {
-    int n, m, res, i;
+    int n, m, i, k;
     unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
     unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
     struct per_session_data__telemetry *pss = (struct per_session_data__telemetry *)user;
 
-    //bson_t bson;
-    bson_oid_t oid;
-    bson_t *doc;
-
-    char pipe_buf[500]; // TODO:
     ssize_t read_len;
 
     bson_t* bson_request;
@@ -113,64 +113,100 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         break;
 
     case LWS_CALLBACK_SERVER_WRITEABLE:
+printf("begin LWS_CALLBACK_SERVER_WRITEABLE\n");
         // Вычистим из памяти ранеее отправленные данные
         for(i=0; i < len_bson2send; i++)
         {
-            if(ar_bson2send[i])
+fprintf(stdout, "begin destroy=%i\n", i);
+            buf_and_bson_t buf_and_bson = ar_bson2send[i];
+
+            if(buf_and_bson.bson)
             {
-fprintf(stdout, "bson_destroy=%i\n", i);
-                bson_destroy(ar_bson2send[i]);
-                ar_bson2send[i] = NULL;
+                bson_destroy(buf_and_bson.bson);
+                buf_and_bson.bson = NULL;
             }
+
+            if(buf_and_bson.buf)
+            {
+                free(buf_and_bson.buf);
+                buf_and_bson.buf = NULL;
+            }
+fprintf(stdout, "end destroy=%i\n", i);
         }
+
+fprintf(stdout, "remote_shmems.remote_shmems_len=%i\n", remote_shmems.remote_shmems_len);
 
         // Выделим память под массив
         if(len_bson2send!=remote_shmems.remote_shmems_len)
         {
             len_bson2send = remote_shmems.remote_shmems_len;
+fprintf(stdout, "begin malloc=%i\n", len_bson2send);
+
+            int ar_count_bytes = len_bson2send * sizeof(buf_and_bson_t);
+fprintf(stdout, "ar_count_bytes=%i\n", ar_count_bytes);
             if(ar_bson2send){
-                ar_bson2send = realloc(ar_bson2send, len_bson2send);
-                memset(ar_bson2send, 0, len_bson2send * sizeof(bson_t*));
+                ar_bson2send = realloc(ar_bson2send, ar_count_bytes);
+                memset(ar_bson2send, 0, ar_count_bytes);
             }
             else
-                ar_bson2send = calloc(1, len_bson2send);
+                ar_bson2send = calloc(1, ar_count_bytes);
+fprintf(stdout, "end malloc=%i\n", len_bson2send);
         }
 
 
         // Вычитываем данные из разделяемой памяти и напихиваем их в очередь (ведущую в не риалтаймовому потоку)
-        for(i=0; i < remote_shmems.remote_shmems_len; i++)
+        for(k=0; k < remote_shmems.remote_shmems_len; k++)
         {
-            shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[i];
+//fprintf(stdout, "for(i=0; i < remote_shmems.remote_shmems_len; i++)=%i\n", i);
+            shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[k];
 
             if(!remote_shmem->f_shmem_connected)
                 continue;
 
             //TODO: Определить размер буфера где нибудь в настройках
             // и вынести в структуру
-            char buf[500];
-            unsigned short retlen;
-            retlen=0;
-            read_shmem(remote_shmem, buf, &retlen);
+//fprintf(stdout, "buf_and_bson_t* buf_and_bson = ar_bson2send[i];%i\n", i);
+fprintf(stdout, "ar_bson2send=0x%08X\n", ar_bson2send);
+
+
+            buf_and_bson_t buf_and_bson = ar_bson2send[k];
+//fprintf(stdout, "buf_and_bson=0x%08X\n", &buf_and_bson);
+            buf_and_bson.buf = malloc(500);
+
+            //char* buf = buf_and_bson.buf;
+printf("buf = 0x%08X\n", buf_and_bson.buf);
+            unsigned short retlen = 0;
+printf("before read_shmem\n");
+            read_shmem(remote_shmem, buf_and_bson.buf, &retlen);
+printf("after read_shmem retlen=%i\n", retlen);
+
+
             if (retlen < 1)
                 continue;
 
-            bson_t* bson = bson_new_from_data (buf, retlen);
-            bson_append_utf8 (bson, "_from", -1, remote_shmem->name_instance, -1);
-            //debug_print_bson("bson_append_utf8", bson);
-            ar_bson2send[i] = bson;
+printf("before bson_new_from_data\n");
+            buf_and_bson.bson = bson_new_from_data(buf_and_bson.buf, retlen);
+printf("after bson_new_from_data\n");
+            bson_append_utf8 (buf_and_bson.bson, "_from", -1, remote_shmem->name_instance, -1);
+//debug_print_bson("after bson_append_utf8", buf_and_bson.bson);
 
-            m = libwebsocket_write(wsi, (unsigned char *)bson_get_data(bson), bson->len, LWS_WRITE_BINARY);
-            if (m < read_len) {
+printf("before bson_get_data buf_and_bson = 0x%08X\n", &buf_and_bson);
+            unsigned char * bson_data = (unsigned char *)bson_get_data(buf_and_bson.bson);
+printf("before libwebsocket_write bson_data = 0x%08X\n", bson_data);
+            m = libwebsocket_write(wsi, bson_data, buf_and_bson.bson->len, LWS_WRITE_BINARY);
+printf("after libwebsocket_write m=%i read_len=%i\n", m, buf_and_bson.bson->len);
+            if (m < buf_and_bson.bson->len) {
                 lwsl_err("ERROR %d writing to di socket\n", n);
             }
         }
+printf("end LWS_CALLBACK_SERVER_WRITEABLE\n\n");
         break;
 
 
     case LWS_CALLBACK_RECEIVE:
-    {
+printf("begin LWS_CALLBACK_RECEIVE\n");
         bson_request = bson_new_from_data (in, len);
-        debug_print_bson("received", bson_request);
+debug_print_bson("received", bson_request);
 
         // Get Instance Name
         bson_iter_t iter_instance_name;
@@ -220,9 +256,8 @@ fprintf(stdout, "bson_destroy=%i\n", i);
         }
 
         bson_destroy(bson_request);
-    }
+printf("end LWS_CALLBACK_RECEIVE\n\n");
         break;
-
     }
 
     return 0;
@@ -233,19 +268,19 @@ fprintf(stdout, "bson_destroy=%i\n", i);
 /* list of supported protocols and callbacks */
 static struct libwebsocket_protocols protocols[] = {
     /* first protocol must always be HTTP handler */
-    {
-        "http-only",
-        callback_http,
-        0,
-        0,
-    },
-    {
-        "telemetry-protocol",
-        callback_telemetry,
-        sizeof(struct per_session_data__telemetry),
-        100,
-    },
-    { NULL, NULL, 0, 0 } /* terminator */
+{
+    "http-only",
+    callback_http,
+    0,
+    0,
+},
+{
+    "telemetry-protocol",
+    callback_telemetry,
+    sizeof(struct per_session_data__telemetry),
+    100,
+},
+{ NULL, NULL, 0, 0 } /* terminator */
 };
 
 

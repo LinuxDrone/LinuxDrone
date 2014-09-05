@@ -72,10 +72,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var host = window.document.location.host.replace(/:.*/, '');
         if (typeof MozWebSocket != "undefined") {
             this.socketTelemetry = new MozWebSocket('ws://' + host + ':7681/xxx', "telemetry-protocol");
-            this.socketHostsOut = new MozWebSocket('ws://' + host + ':3000');
+            this.socketHostsOut = new MozWebSocket('ws://' + host + ':4000');
         } else {
             this.socketTelemetry = new ReconnectingWebSocket('ws://' + host + ':7681/xxx', "telemetry-protocol");
-            this.socketHostsOut = new ReconnectingWebSocket('ws://' + host + ':3000');
+            this.socketHostsOut = new ReconnectingWebSocket('ws://' + host + ':4000');
         }
         this.socketTelemetry.binaryType = "arraybuffer";
 
