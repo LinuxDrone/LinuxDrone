@@ -213,6 +213,39 @@ void print_rt_mutex_bind_error(int err) {
 }
 
 
+void print_rt_mutex_acquire(int err) {
+    switch (err)
+    {
+        case -EINVAL:
+            printf("is returned if mutex is not a mutex descriptor.\n");
+            break;
+
+        case -EIDRM:
+            printf("is returned if mutex is a deleted mutex descriptor, including if the deletion occurred while the caller was sleeping on it.\n");
+            break;
+
+        case -EWOULDBLOCK:
+            printf("is returned if timeout is equal to TM_NONBLOCK and the mutex is not immediately available.\n");
+            break;
+
+        case -EINTR:
+            printf("is returned if rt_task_unblock() has been called for the waiting task before the mutex has become available.\n");
+            break;
+
+        case -ETIMEDOUT:
+            printf("is returned if the mutex cannot be made available to the calling task within the specified amount of time.\n");
+            break;
+
+        case -EPERM:
+            printf("is returned if this service was called from a context which cannot be given the ownership of the mutex (e.g. interrupt, non-realtime context).\n");
+            break;
+
+        default:
+            printf("Unknown rt_mutex_acquire error: %i.\n", err);
+    }
+}
+
+
 void print_task_bind_error(int err) {
     switch (err)
     {

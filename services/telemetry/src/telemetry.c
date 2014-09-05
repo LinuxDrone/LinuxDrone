@@ -28,8 +28,6 @@ void** ar_bufs = NULL;
 size_t ar_bufs_len=0;
 
 RT_TASK task_read_shmem;
-RT_COND cond;
-RT_MUTEX 	mutex;
 int priority_task_read_shmem = 50;
 
 int pipe_fd;
@@ -84,10 +82,12 @@ struct per_session_data__telemetry {
     int number;
 };
 
+bson_t** ar_bson2send = NULL;
+int len_bson2send = 0;
 
 static int callback_telemetry(struct libwebsocket_context *context, struct libwebsocket *wsi, enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
 {
-    int n, m;
+    int n, m, res, i;
     unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
     unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
     struct per_session_data__telemetry *pss = (struct per_session_data__telemetry *)user;
@@ -104,8 +104,6 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
     const char* module_out_name;
     const char* cmd_name;
 
-fprintf(stdout, "reason=%i\n", reason);
-
     switch (reason)
     {
 
@@ -115,58 +113,64 @@ fprintf(stdout, "reason=%i\n", reason);
         break;
 
     case LWS_CALLBACK_SERVER_WRITEABLE:
-
-fprintf(stdout, "LWS_CALLBACK_SERVER_WRITEABLE\n");
-
-        // Дадим сигнал риалтаймовому потоку, что пора проснуться и вычитать данные для нас из разделяемой памяти.
-        int res = rt_cond_signal(&cond);
-        if (res)
+        // Вычистим из памяти ранеее отправленные данные
+        for(i=0; i < len_bson2send; i++)
         {
-            printf("Error rt_cond_signal\n");
-            return;
-        }
-        // Вся идея в том, что риалтаймовый поток, получив сигнал (при выходе из функции rt_cond_wait), успевает залочить мьютекс быстрее, чем данный поток на следующем шаге.
-        // Если это не так, надо будет дать поспать этому потоку перед вызовом rt_mutex_acquire в следующей команде
-
-        // Проснувшись, риалтаймовый поток сразу залочивает мьютекс, на котором мы и поспим, пока он вычитывает данные
-        // из разделяемой памяти и напихивает их для нас в трубу
-        int err = rt_mutex_acquire(&mutex, TM_INFINITE);
-        if (err)
-        {
-            printf("Error rt_mutex_acquire in LWS_CALLBACK_SERVER_WRITEABLE\n");
-            return;
+            if(ar_bson2send[i])
+            {
+fprintf(stdout, "bson_destroy=%i\n", i);
+                bson_destroy(ar_bson2send[i]);
+                ar_bson2send[i] = NULL;
+            }
         }
 
-        while(read_len = read(pipe_fd, pipe_buf, sizeof(pipe_buf)) > 0) {
-            //printf("read_len: %i\toffset:%i\n", read_len, offset);
-            m = libwebsocket_write(wsi, (unsigned char *)pipe_buf, read_len, LWS_WRITE_BINARY);
+        // Выделим память под массив
+        if(len_bson2send!=remote_shmems.remote_shmems_len)
+        {
+            len_bson2send = remote_shmems.remote_shmems_len;
+            if(ar_bson2send){
+                ar_bson2send = realloc(ar_bson2send, len_bson2send);
+                memset(ar_bson2send, 0, len_bson2send * sizeof(bson_t*));
+            }
+            else
+                ar_bson2send = calloc(1, len_bson2send);
+        }
+
+
+        // Вычитываем данные из разделяемой памяти и напихиваем их в очередь (ведущую в не риалтаймовому потоку)
+        for(i=0; i < remote_shmems.remote_shmems_len; i++)
+        {
+            shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[i];
+
+            if(!remote_shmem->f_shmem_connected)
+                continue;
+
+            //TODO: Определить размер буфера где нибудь в настройках
+            // и вынести в структуру
+            char buf[500];
+            unsigned short retlen;
+            retlen=0;
+            read_shmem(remote_shmem, buf, &retlen);
+            if (retlen < 1)
+                continue;
+
+            bson_t* bson = bson_new_from_data (buf, retlen);
+            bson_append_utf8 (bson, "_from", -1, remote_shmem->name_instance, -1);
+            //debug_print_bson("bson_append_utf8", bson);
+            ar_bson2send[i] = bson;
+
+            m = libwebsocket_write(wsi, (unsigned char *)bson_get_data(bson), bson->len, LWS_WRITE_BINARY);
             if (m < read_len) {
                 lwsl_err("ERROR %d writing to di socket\n", n);
             }
         }
-
-        err = rt_mutex_release(&mutex);
-        if (err)
-        {
-            printf("Error rt_mutex_release in LWS_CALLBACK_SERVER_WRITEABLE\n");
-            return;
-        }
-
-        if(read_len < 0) {
-            // If this condition passes, there is no data to be read
-            if(errno != EAGAIN) {
-                printf("Error read from pipe\n");
-                return -1;
-            }
-        }
-        //printf("EXIT WHILE read_len: %i\n", read_len);
         break;
 
 
     case LWS_CALLBACK_RECEIVE:
     {
         bson_request = bson_new_from_data (in, len);
-//debug_print_bson("received", bson_request);
+        debug_print_bson("received", bson_request);
 
         // Get Instance Name
         bson_iter_t iter_instance_name;
@@ -219,19 +223,6 @@ fprintf(stdout, "LWS_CALLBACK_SERVER_WRITEABLE\n");
     }
         break;
 
-
-    /*
-     * this just demonstrates how to use the protocol filter. If you won't
-     * study and reject connections based on header content, you don't need
-     * to handle this callback
-     */
-    case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
-        //dump_handshake_info(wsi);
-        /* you could return non-zero here and kill the connection */
-        break;
-
-    default:
-        break;
     }
 
     return 0;
@@ -261,84 +252,30 @@ static struct libwebsocket_protocols protocols[] = {
 
 void run_task_read_shmem (void *module)
 {
-    RT_PIPE pipe_between_rt;
-
-    int err;
-    err = rt_pipe_create(&pipe_between_rt, "telemetry", 0, 500);
-    if (err)
+    int n = 0;
+    int count=0;
+    while (n >= 0 && !force_exit)
     {
-        printf("Error create pipe\n");
-        return;
-    }
+        // Вызов данной функции проверит появилась ли возможность записать очередную партию данных в сокет,
+        // и если да, то вызовет калбэк (для указанного протокола) с причиной  LWS_CALLBACK_SERVER_WRITEABLE
+        libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_TELEMETRY]);
 
-    err = rt_mutex_create(&mutex, "telemetry_mutex");
+        //fprintf(stdout, "%i %i libwebsocket_callback_on_writable_all_protocol\n", count++, n);
 
-    err = rt_cond_create(&cond, "telemetry_cond");
-    if (err)
-    {
-        printf("Error rt_cond_create\n");
-        return;
-    }
-
-    err = rt_mutex_acquire(&mutex,TM_NONBLOCK);
-    if (err)
-    {
-        printf("Error rt_mutex_acquire\n");
-        return;
-    }
-
-
-    while(1)
-    {
-        // Бесконечно спим в ожидании команды, от нериалтаймового потока, на вычитку данных из разделяемой памяти
-        err = rt_cond_wait(&cond, &mutex, TM_INFINITE );
-        if (err)
+        // Если не все конекты с расщиряемой памяти установлены, то попытаемся это сделать
+        if(!remote_shmems.f_connected_in_links)
         {
-            printf("Error rt_cond_wait\n");
-            return;
+            char* local_instance_name = "telemetry";
+            connect_in_links(&remote_shmems, local_instance_name);
         }
 
+        // Функция проверят, есть ли какие то данные прием из сокета. Если есть то вызывает калбэк с указанной причиной LWS_CALLBACK_RECEIVE
+        // Потом спит указанное количество миллисекунд
+        n = libwebsocket_service(context, 0);
 
-        bool was_data = false;
-        int i;
-        // Вычитываем данные из разделяемой памяти и напихиваем их в очередь (ведущую в не риалтаймовому потоку)
-        for(i=0; i < remote_shmems.remote_shmems_len; i++)
-        {
-            shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[i];
-
-            if(!remote_shmem->f_shmem_connected)
-                continue;
-
-            //TODO: Определить размер буфера где нибудь в настройках
-            // и вынести в структуру
-            char buf[500];
-            unsigned short retlen;
-            retlen=0;
-            read_shmem(remote_shmem, buf, &retlen);
-            if (retlen < 1)
-                continue;
-
-            bson_t* bson = bson_new_from_data (buf, retlen);
-            bson_append_utf8 (bson, "_from", -1, remote_shmem->name_instance, -1);
-            //debug_print_bson("bson_append_utf8", bson);
-            ssize_t send = rt_pipe_write(&pipe_between_rt, bson_get_data(bson), bson->len, P_NORMAL);
-            if(send<0 && send!=-ENOMEM)
-            {
-                print_rt_pipe_write_error(send);
-            }
-            bson_destroy(bson);
-
-            was_data = true;
-        }
-
-/*
-        if(!was_data)
-        {
-            //printf("remote_shmems.remote_shmems_len:%i\n", remote_shmems.remote_shmems_len);
-            rt_task_sleep(rt_timer_ns2ticks(5000000));
-        }
-*/
+        rt_task_sleep(rt_timer_ns2ticks(200000000));
     }
+
 }
 
 
@@ -453,53 +390,13 @@ int main(int argc, char **argv)
 
     init_rt_task();
 
+    printf("\nPress ENTER for exit\n\n");
+    getchar();
 
-    pipe_fd = open("/proc/xenomai/registry/native/pipes/telemetry", O_RDWR);
-    if (pipe_fd < 0)
-    {
-        printf("Error open pipe /proc/xenomai/registry/native/pipes/telemetry\n");
-        return -1;
-    }
-
-    int flags = fcntl(pipe_fd, F_GETFL, 0);
-    if(fcntl(pipe_fd, F_SETFL, flags | O_NONBLOCK))
-    {
-        fprintf(stderr, "Error fcntl for pipe_fd\n");
-        return -1;
-    }
-
-    n = 0;
-//    int count=0;
-    while (n >= 0 && !force_exit)
-    {
-            // Вызов данной функции проверит появилась ли возможность записать очередную партию данных в сокет,
-            // и если да, то вызовет калбэк (для указанного протокола) с причиной  LWS_CALLBACK_SERVER_WRITEABLE
-        libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_TELEMETRY]);
-
-//fprintf(stdout, "%i libwebsocket_callback_on_writable_all_protocol\n", count++);
-
-        // Если не все конекты с расщиряемой памяти установлены, то попытаемся это сделать
-        if(!remote_shmems.f_connected_in_links)
-        {
-            char* local_instance_name = "telemetry";
-            connect_in_links(&remote_shmems, local_instance_name);
-        }
-
-        /*
-         * If libwebsockets sockets are all we care about,
-         * you can use this api which takes care of the poll()
-         * and looping through finding who needed service.
-         *
-         * If no socket needs service, it'll return anyway after
-         * the number of ms in the second argument.
-         */
-        // Функция проверят, есть ли какие то данные прием из сокета. Есдли есть то вызывает калбэк с указанной причиной LWS_CALLBACK_RECEIVE
-        // Потом спит указанное количество миллисекунд
-        n = libwebsocket_service(context, 200);
-    }
     libwebsocket_context_destroy(context);
 
     lwsl_notice("libwebsockets-test-server exited cleanly\n");
 
     return 0;
 }
+

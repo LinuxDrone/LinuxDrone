@@ -610,6 +610,8 @@ void print_task_receive_error(int err);
 void print_task_reply_error(int err);
 void print_task_bind_error(int err);
 void print_task_send_error(int err);
+void print_rt_mutex_bind_error(int err);
+void print_rt_mutex_acquire(int err);
 
 void debug_print_bson(char* where, bson_t* bson);
 
