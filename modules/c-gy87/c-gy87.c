@@ -192,6 +192,11 @@ void c_gy87_run (module_c_gy87_t *module)
 
         if(!mpu_initialized)
         {
+            params_c_gy87_t* params_gy87;
+            checkout_params_c_gy87(module, &params_gy87);
+            const char*  i2cDevice = params_gy87->I2C_Device;
+            checkin_params_c_gy87(module);
+
             // Открываем сессию с i2c шиной
             if(i2c_session<1)
             {
@@ -202,14 +207,14 @@ void c_gy87_run (module_c_gy87_t *module)
                     continue;
                 }
 
-                i2c_session = open_i2c(&i2c_service, module->params_c_gy87.I2C_Device);
+                i2c_session = open_i2c(&i2c_service, i2cDevice);
                 continue;
             }
 
 
-            if(!initMpu(&i2c_service, i2c_session, module->params_c_gy87.I2C_Device))
+            if(!initMpu(&i2c_service, i2c_session, i2cDevice))
             {
-                printf("Error init MPU6050 on bus %s\n", module->params_c_gy87.I2C_Device);
+                printf("Error init MPU6050 on bus %s\n", i2cDevice);
                 rt_task_sleep(rt_timer_ns2ticks(200000000));
                 continue;
             }

@@ -318,14 +318,14 @@ function Create_H_file(module) {
         r += "* @param params\n";
         r += "* @return\n";
         r += "*/\n";
-        r += "int checkout_params_" + module_type + "(module_t* module, void** params);\n\n";
+        r += "int checkout_params_" + module_type + "(module_" + module_type + "_t* module, params_" + module_type + "_t** params);\n\n";
 
         r += "/**\n";
         r += "* @brief \\~russian Освобождает мьютекс, удерживаемый на время работы со структурой параметров\n";
         r += "* @param module\n";
         r += "* @return\n";
         r += "*/\n";
-        r += "int checkin_params_" + module_type + "(module_t* module);\n\n";
+        r += "int checkin_params_" + module_type + "(module_" + module_type + "_t* module);\n\n";
         if (module.outputs) {
             module.outputs.forEach(function (out) {
                 var outName = out.name.replace(/\+/g, "");
@@ -607,15 +607,15 @@ function Create_C_file(module) {
         r += "* @param params\n";
         r += "* @return\n";
         r += "*/\n";
-        r += "int checkout_params_" + module_type + "(module_t* module, void** params)\n";
+        r += "int checkout_params_" + module_type + "(module_" + module_type + "_t* module, params_" + module_type + "_t** params)\n";
         r += "{\n";
-        r += "  int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);\n";
+        r += "  int res = rt_mutex_acquire(&module->module_info.mutex_obj_exchange, TM_INFINITE);\n";
         r += "  if (res != 0)\n";
         r += "  {\n";
         r += "      printf(\"error checkout_params_" + module_type + ": rt_mutex_acquire\\n\");\n";
         r += "      return res;\n";
         r += "  }\n";
-        r += "  *params = module->specific_params;\n";
+        r += "  *params = module->module_info.specific_params;\n";
         r += "  return 0;\n";
         r += "}\n\n";
 
@@ -624,9 +624,9 @@ function Create_C_file(module) {
         r += "* @param module\n";
         r += "* @return\n";
         r += "*/\n";
-        r += "int checkin_params_" + module_type + "(module_t* module)\n";
+        r += "int checkin_params_" + module_type + "(module_" + module_type + "_t* module)\n";
         r += "{\n";
-        r += "  int res = rt_mutex_release(&module->mutex_obj_exchange);\n";
+        r += "  int res = rt_mutex_release(&module->module_info.mutex_obj_exchange);\n";
         r += "  if (res != 0)\n";
         r += "  {\n";
         r += "      printf(\"error checkin_params_" + module_type + ":  rt_mutex_release\\n\");\n";
