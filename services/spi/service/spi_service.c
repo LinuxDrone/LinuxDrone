@@ -71,7 +71,7 @@ int open_bus(open_request_spi_t* request)
         strcpy(bus_info->bus_name, request->bus_name);
         bus_info->m_file = open(bus_info->bus_name, O_RDWR);
         if (bus_info->m_file < 0) {
-            printf("Failed to open the bus (\" %s \")", bus_info->bus_name);
+            fprintf(stderr, "Failed to open the bus (\" %s \")", bus_info->bus_name);
             bus_info->m_file = 0;
         }
         // Сохраняем параметры для настройки режима шины
@@ -84,7 +84,7 @@ int open_bus(open_request_spi_t* request)
     else
     {
         // Указанное устройство шины уже зарегистрировано
-        printf("The device file is already open on the bus: %s \n", bus_info->bus_name);
+        fprintf(stderr, "The device file is already open on the bus: %s \n", bus_info->bus_name);
         //return res_error_already_open_bus;
     }
 
@@ -139,7 +139,7 @@ void run_task_spi (void *module)
         int flowid = rt_task_receive(&request_block, TM_INFINITE);
         if(flowid<0)
         {
-            printf("Function: run_task_spi, print_task_receive_error:");
+            fprintf(stderr, "Function: run_task_spi, print_task_receive_error:");
             print_task_receive_error(flowid);
             rt_task_sleep(rt_timer_ns2ticks(200000000));
             continue;
@@ -198,7 +198,7 @@ void run_task_spi (void *module)
 
 
             default:
-                printf("Unknown request to spi service: %i\n", request_block.opcode);
+                fprintf(stderr, "Unknown request to spi service: %i\n", request_block.opcode);
                 break;
         }
 
@@ -206,7 +206,7 @@ void run_task_spi (void *module)
         int err = rt_task_reply(flowid, &response_block);
         if(err!=0)
         {
-            printf("Function: run_task_spi, print_task_reply_error:");
+            fprintf(stderr, "Function: run_task_spi, print_task_reply_error:");
             print_task_reply_error(err);
         }
     }
@@ -227,10 +227,10 @@ int main(int argc, char **argv)
 
     int err = rt_task_spawn(&task_spi, TASK_NAME_SPI, TASK_STKSZ, priority_task_spi, TASK_MODE, &run_task_spi, NULL);
     if (err != 0)
-        printf("Error start service task\n");
+        fprintf(stderr, "Error start service task\n");
 
 
-    printf("\nPress ENTER for exit\n\n");
+    fprintf(stderr, "\nPress ENTER for exit\n\n");
     getchar();
 
     rt_task_delete(&task_spi);

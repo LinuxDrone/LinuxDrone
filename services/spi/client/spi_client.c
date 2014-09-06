@@ -57,7 +57,7 @@ int open_spi(spi_service_t* service, const char* bus_name, unsigned int speed_hz
 {
     if(strlen(bus_name) > MAX_SIZE_BUS_NAME)
     {
-        printf("Error bus name > MAX_SIZE_BUS_NAME\n");
+        fprintf(stderr, "Error bus name > MAX_SIZE_BUS_NAME\n");
         return -1;
     }
 
@@ -308,11 +308,11 @@ void print_spi_error(int err)
     switch (err)
     {
     case res_error_write_to_spi:
-        printf("Error write to spi device\n");
+        fprintf(stderr, "Error write to spi device\n");
         break;
 
     case res_error_ioctl:
-        printf("ioctl error:%i\n", err);
+        fprintf(stderr, "ioctl error:%i\n", err);
         break;
 
     default:

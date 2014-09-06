@@ -171,7 +171,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
                                 //RtConfigurator.view.configurator.logpanel.LogContentPanel
                                 console.log(resp);
-                                console.log(text);
+                                //console.log(text);
                                 // Найти панель для данного лога
 
                                 var logContentPanel = logPanel.lookupReference(resp.process);
