@@ -26,7 +26,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
             var expanded = modelLogPanel.get('expanded');
 
             if (expanded) {
-                th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - th.logPanel.getHeight());
+                th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight() - th.logPanel.getHeight()+27);
             } else {
                 th.logPanel.showAt(th.getPosition()[0], th.getPosition()[1] + th.getHeight());
             }
@@ -137,6 +137,17 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
             xtype: 'panel',
             bind: {
                 html: '{XenoCPU}'
+            },
+            listeners: {
+                render: {
+                    fn: function( th, eOpts ){
+                        // после рендеринга установим всплывающую подсказку
+                        var tip = Ext.create('Ext.tip.ToolTip', {
+                            target: th.el,
+                            html: 'CPU Load by realtime threads'
+                        });
+                    }
+                }
             }
         }
     ],

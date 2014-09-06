@@ -85,9 +85,13 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             };
 
             this.socketTelemetry.onmessage = function got_packet(msg) {
-                // Deserialize it again
-                var obj = controller.BSON.deserialize(new Uint8Array(msg.data));
                 var PreparedLinks = model.get('PreparedLinks');
+                if(!PreparedLinks){
+                    return;
+                }
+
+                // Deserialize
+                var obj = controller.BSON.deserialize(new Uint8Array(msg.data));
 
                 model.set('blockChangeSchema', true);
                 $.each(obj, function (port, value) {
