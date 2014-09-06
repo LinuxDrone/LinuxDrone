@@ -476,8 +476,8 @@ typedef struct {
 
     /**
      * @brief \~russian Указатель на структуру с настроечными параметрами модуля
-     * Необращаться напрямую!
-     * Использовать функции checkout_params_MODULENAME и checkin_params_c_gy87_MODULENAME
+     * Не обращаться напрямую!
+     * Использовать функции checkout_params_MODULENAME и checkin_params_MODULENAME
      */
     void* specific_params;
 

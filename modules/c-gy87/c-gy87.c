@@ -25,7 +25,7 @@ bool check_mpu6050_id(i2c_service_t* i2c_service, int i2c_session)
 
     if(ret_len>0)
     {
-        printf("mpuId = 0x%02X\n", *data);
+        fprintf(stderr,"mpuId = 0x%02X\n", *data);
         // Check magic number for mpu6050
         if(*data == 0x68)
             return true;
@@ -42,7 +42,7 @@ bool configureRanges(i2c_service_t* i2c_service, int i2c_session)
     int res = write_i2c(i2c_service, i2c_session, MPU6050_I2C_ADDR, MpuRegs_DlpfCfg, sizeof(char), &cmd);
     if(res<0)
     {
-        printf("Error set MpuRegs_DlpfCfg to MpuFilter_Lowpass256Hz:\t");
+        fprintf(stderr,"Error set MpuRegs_DlpfCfg to MpuFilter_Lowpass256Hz:\t");
         print_i2c_error(res);
         return false;
     }
@@ -54,7 +54,7 @@ bool configureRanges(i2c_service_t* i2c_service, int i2c_session)
     res = write_i2c(i2c_service, i2c_session, MPU6050_I2C_ADDR, MpuRegs_SmplRtDiv, sizeof(char), &cmd);
     if(res<0)
     {
-        printf("Error set MpuRegs_SmplRtDiv to 11:\t");
+        fprintf(stderr,"Error set MpuRegs_SmplRtDiv to 11:\t");
         print_i2c_error(res);
         return false;
     }
@@ -66,7 +66,7 @@ bool configureRanges(i2c_service_t* i2c_service, int i2c_session)
     res = write_i2c(i2c_service, i2c_session, MPU6050_I2C_ADDR, MpuRegs_GyroCfg, sizeof(char), &cmd);
     if(res<0)
     {
-        printf("Error set MpuRegs_GyroCfg to MpuRange_Scale2000Deg:\t");
+        fprintf(stderr,"Error set MpuRegs_GyroCfg to MpuRange_Scale2000Deg:\t");
         print_i2c_error(res);
         return false;
     }
@@ -78,7 +78,7 @@ bool configureRanges(i2c_service_t* i2c_service, int i2c_session)
     res = write_i2c(i2c_service, i2c_session, MPU6050_I2C_ADDR, MpuRegs_AccellCfg, sizeof(char), &cmd);
     if(res<0)
     {
-        printf("Error set MpuRegs_AccellCfg to MpuAccelrange_Accel8G:\t");
+        fprintf(stderr,"Error set MpuRegs_AccellCfg to MpuAccelrange_Accel8G:\t");
         print_i2c_error(res);
         return false;
     }
@@ -92,7 +92,7 @@ bool initMpu(i2c_service_t* i2c_service, int i2c_session, const char* I2CBusName
 {
     if(!check_mpu6050_id(i2c_service, i2c_session))
     {
-        printf("Not found chip MPU6050 on bus %s\n", I2CBusName);
+        fprintf(stderr,"Not found chip MPU6050 on bus %s\n", I2CBusName);
         rt_task_sleep(rt_timer_ns2ticks(200000000));
         return false;
     }
@@ -103,7 +103,7 @@ bool initMpu(i2c_service_t* i2c_service, int i2c_session, const char* I2CBusName
     int res = write_i2c(i2c_service, i2c_session, MPU6050_I2C_ADDR, MpuRegs_PwrMgmt, sizeof(char), &cmd);
     if(res<0)
     {
-        printf("Error reset chip CGY87_PWRMGMT_IMU_RST:\t");
+        fprintf(stderr,"Error reset chip CGY87_PWRMGMT_IMU_RST:\t");
         print_i2c_error(res);
         return false;
     }
@@ -115,7 +115,7 @@ bool initMpu(i2c_service_t* i2c_service, int i2c_session, const char* I2CBusName
     res = write_i2c(i2c_service, i2c_session, MPU6050_I2C_ADDR, MpuRegs_UserCtrl, sizeof(char), &cmd);
     if(res<0)
     {
-        printf("Error attempt reset chip and fifo:\t");
+        fprintf(stderr,"Error attempt reset chip and fifo:\t");
         print_i2c_error(res);
         return false;
     }
@@ -127,7 +127,7 @@ bool initMpu(i2c_service_t* i2c_service, int i2c_session, const char* I2CBusName
     res = write_i2c(i2c_service, i2c_session, MPU6050_I2C_ADDR, MpuRegs_PwrMgmt, sizeof(char), &cmd);
     if(res<0)
     {
-        printf("Error attempt Power management CGY87_PWRMGMT_PLL_X_CLK:\t");
+        fprintf(stderr,"Error attempt Power management CGY87_PWRMGMT_PLL_X_CLK:\t");
         print_i2c_error(res);
         return false;
     }
@@ -144,7 +144,7 @@ bool initMpu(i2c_service_t* i2c_service, int i2c_session, const char* I2CBusName
     res = write_i2c(i2c_service, i2c_session, MPU6050_I2C_ADDR, MpuRegs_UserCtrl, sizeof(char), &cmd);
     if(res<0)
     {
-        printf("Error attempt Interrupt configuration:\t");
+        fprintf(stderr,"Error attempt Interrupt configuration:\t");
         print_i2c_error(res);
         return false;
     }
@@ -157,7 +157,7 @@ bool initMpu(i2c_service_t* i2c_service, int i2c_session, const char* I2CBusName
     res = write_i2c(i2c_service, i2c_session, MPU6050_I2C_ADDR, MpuRegs_IntCfg, sizeof(char), &cmd);
     if(res<0)
     {
-        printf("Error attempt Interrupt configuration:\t");
+        fprintf(stderr,"Error attempt Interrupt configuration:\t");
         print_i2c_error(res);
         return false;
     }
@@ -214,7 +214,7 @@ void c_gy87_run (module_c_gy87_t *module)
 
             if(!initMpu(&i2c_service, i2c_session, i2cDevice))
             {
-                printf("Error init MPU6050 on bus %s\n", i2cDevice);
+                fprintf(stderr,"Error init MPU6050 on bus %s\n", i2cDevice);
                 rt_task_sleep(rt_timer_ns2ticks(200000000));
                 continue;
             }
@@ -254,7 +254,7 @@ void c_gy87_run (module_c_gy87_t *module)
         count_reads++;
         if(rt_timer_read() - last_print_time > print_period)
         {
-            //printf("count_reads=%i", count_reads);
+            //fprintf(stderr,"count_reads=%i", count_reads);
             //print_GyroAccelMagTemp(GyroAccelMagTemp);
 
             last_print_time = rt_timer_read();

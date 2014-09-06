@@ -180,7 +180,7 @@ int write_i2c(i2c_service_t* service, int session_id, char dev_id, char dev_regi
 {
     if(len_data>MAX_TRANSFER_BLOCK-sizeof(address_i2c_t))
     {
-        printf("Length of transfered data > MAX_TRANSFER_BLOCK-sizeof(address_i2c_t)\n");
+        fprintf(stderr, "Length of transfered data > MAX_TRANSFER_BLOCK-sizeof(address_i2c_t)\n");
         return -1;
     }
 
@@ -227,7 +227,7 @@ int write_raw_i2c(i2c_service_t* service, int session_id, char dev_id, int len_d
 {
     if(len_data>MAX_TRANSFER_BLOCK-sizeof(address_i2c_t))
     {
-        printf("Length of transfered data > MAX_TRANSFER_BLOCK-sizeof(address_i2c_t)\n");
+        fprintf(stderr, "Length of transfered data > MAX_TRANSFER_BLOCK-sizeof(address_i2c_t)\n");
         return -1;
     }
 
@@ -335,11 +335,11 @@ void print_i2c_error(int err)
     switch (err)
     {
     case res_error_write_to_i2c:
-        printf("Error write to i2c device\n");
+        fprintf(stderr, "Error write to i2c device\n");
         break;
 
     case res_error_ioctl:
-        printf("ioctl error:%i\n", err);
+        fprintf(stderr, "ioctl error:%i\n", err);
         break;
 
     default:
