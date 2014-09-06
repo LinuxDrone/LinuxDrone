@@ -164,6 +164,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 var text = text.replace(/\x1b\[34m/g, '<span style="color: blue">');
                                 var text = text.replace(/\x1b\[31m/g, '<span style="color: red">');
                                 var text = text.replace(/\x1b\[33m/g, '<span style="color: yellow">');
+                                var text = text.replace(/\x1b\[32m/g, '<span style="color: green">');
                                 var text = text.replace(/\x1b\[0m/g, '</span>');
 
                                 //document.getElementById('host_out').innerHTML = text;
@@ -177,7 +178,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 if(!logContentPanel){
                                     logContentPanel = Ext.create('RtConfigurator.view.configurator.logpanel.LogContentPanel', {
                                         title: resp.process,
-                                        reference: resp.process
+                                        reference: resp.process,
+                                        store: Ext.create('Ext.data.Store', {
+                                            model: 'RtConfigurator.model.LogRecord'
+                                        })
                                     });
                                     logPanel.add(logContentPanel).show();
                                 }

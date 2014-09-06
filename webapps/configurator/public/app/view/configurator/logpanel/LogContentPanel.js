@@ -14,11 +14,6 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogContentPanel', {
     },
     cls: 'custom-grid',
     scroll: 'vertical',
-
-    store: Ext.create('Ext.data.Store', {
-        model: 'RtConfigurator.model.LogRecord'
-    }),
-
     columns: [
         { text: 'log', dataIndex: 'log', padding: 0, width: '100%'}
     ]
