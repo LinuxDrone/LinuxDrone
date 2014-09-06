@@ -113,98 +113,62 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         break;
 
     case LWS_CALLBACK_SERVER_WRITEABLE:
-printf("begin LWS_CALLBACK_SERVER_WRITEABLE\n");
         // Вычистим из памяти ранеее отправленные данные
         for(i=0; i < len_bson2send; i++)
         {
-fprintf(stdout, "begin destroy=%i\n", i);
             buf_and_bson_t buf_and_bson = ar_bson2send[i];
-
             if(buf_and_bson.bson)
             {
                 bson_destroy(buf_and_bson.bson);
                 buf_and_bson.bson = NULL;
             }
-
             if(buf_and_bson.buf)
             {
                 free(buf_and_bson.buf);
                 buf_and_bson.buf = NULL;
             }
-fprintf(stdout, "end destroy=%i\n", i);
         }
-
-fprintf(stdout, "remote_shmems.remote_shmems_len=%i\n", remote_shmems.remote_shmems_len);
 
         // Выделим память под массив
         if(len_bson2send!=remote_shmems.remote_shmems_len)
         {
             len_bson2send = remote_shmems.remote_shmems_len;
-fprintf(stdout, "begin malloc=%i\n", len_bson2send);
-
             int ar_count_bytes = len_bson2send * sizeof(buf_and_bson_t);
-fprintf(stdout, "ar_count_bytes=%i\n", ar_count_bytes);
             if(ar_bson2send){
                 ar_bson2send = realloc(ar_bson2send, ar_count_bytes);
                 memset(ar_bson2send, 0, ar_count_bytes);
             }
             else
                 ar_bson2send = calloc(1, ar_count_bytes);
-fprintf(stdout, "end malloc=%i\n", len_bson2send);
         }
-
 
         // Вычитываем данные из разделяемой памяти и напихиваем их в очередь (ведущую в не риалтаймовому потоку)
         for(k=0; k < remote_shmems.remote_shmems_len; k++)
         {
-//fprintf(stdout, "for(i=0; i < remote_shmems.remote_shmems_len; i++)=%i\n", i);
             shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[k];
-
             if(!remote_shmem->f_shmem_connected)
                 continue;
 
-            //TODO: Определить размер буфера где нибудь в настройках
-            // и вынести в структуру
-//fprintf(stdout, "buf_and_bson_t* buf_and_bson = ar_bson2send[i];%i\n", i);
-fprintf(stdout, "ar_bson2send=0x%08X\n", ar_bson2send);
-
-
             buf_and_bson_t buf_and_bson = ar_bson2send[k];
-//fprintf(stdout, "buf_and_bson=0x%08X\n", &buf_and_bson);
             buf_and_bson.buf = malloc(500);
-
-            //char* buf = buf_and_bson.buf;
-printf("buf = 0x%08X\n", buf_and_bson.buf);
             unsigned short retlen = 0;
-printf("before read_shmem\n");
             read_shmem(remote_shmem, buf_and_bson.buf, &retlen);
-printf("after read_shmem retlen=%i\n", retlen);
-
-
             if (retlen < 1)
                 continue;
 
-printf("before bson_new_from_data\n");
             buf_and_bson.bson = bson_new_from_data(buf_and_bson.buf, retlen);
-printf("after bson_new_from_data\n");
             bson_append_utf8 (buf_and_bson.bson, "_from", -1, remote_shmem->name_instance, -1);
-//debug_print_bson("after bson_append_utf8", buf_and_bson.bson);
 
-printf("before bson_get_data buf_and_bson = 0x%08X\n", &buf_and_bson);
             unsigned char * bson_data = (unsigned char *)bson_get_data(buf_and_bson.bson);
-printf("before libwebsocket_write bson_data = 0x%08X\n", bson_data);
             m = libwebsocket_write(wsi, bson_data, buf_and_bson.bson->len, LWS_WRITE_BINARY);
-printf("after libwebsocket_write m=%i read_len=%i\n", m, buf_and_bson.bson->len);
             if (m < buf_and_bson.bson->len) {
                 lwsl_err("ERROR %d writing to di socket\n", n);
             }
         }
-printf("end LWS_CALLBACK_SERVER_WRITEABLE\n\n");
         break;
 
 
     case LWS_CALLBACK_RECEIVE:
-printf("begin LWS_CALLBACK_RECEIVE\n");
         bson_request = bson_new_from_data (in, len);
 debug_print_bson("received", bson_request);
 
@@ -244,7 +208,6 @@ debug_print_bson("received", bson_request);
         }
         cmd_name = bson_iter_utf8(&iter_cmd, NULL);
 
-
         //printf("module_instance_name: %s\tmodule_out_name: %s\n", module_instance_name, module_out_name);
         if(strcmp(cmd_name, "subscribe")==0)
         {
@@ -256,7 +219,6 @@ debug_print_bson("received", bson_request);
         }
 
         bson_destroy(bson_request);
-printf("end LWS_CALLBACK_RECEIVE\n\n");
         break;
     }
 
