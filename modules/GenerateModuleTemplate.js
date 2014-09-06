@@ -332,7 +332,7 @@ function CreateModuleCFile(obj_def) {
     r += "{\n";
     r += "    int cycle=0;\n";
     r += "    while(1) {\n";
-    r += "        get_input_data(module);\n\n";
+    r += "        get_input_data((module_t*)module);\n\n";
     r += "        // проверим, обновились ли данные\n";
     r += "        if(module->module_info.updated_input_properties!=0)\n";
     r += "        {\n";
