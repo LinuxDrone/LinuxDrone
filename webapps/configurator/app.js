@@ -148,24 +148,36 @@ function StartTelemetryService() {
     }
 
     var servicePath = '/usr/local/linuxdrone/services/telemetry';
-    telemetry_service = spawn(servicePath);
+    try {
+        telemetry_service = spawn(servicePath);
+    } catch (e) {
+        console.log(e);
+        if (global.ws_server == undefined) return;
+        global.ws_server.send(
+            JSON.stringify({
+                process: 'nodejs',
+                type: 'error',
+                data: 'error start telemetry'
+            }));
+        return;
+    }
 
     telemetry_service.on('error', function (data) {
+        console.log('telemetry_service error: ' + data);
         if (data.code === "ENOENT") {
-            console.log('Not run service: ' + servicePath);
             if (global.ws_server == undefined) return;
             global.ws_server.send(
                 JSON.stringify({
                     process: 'nodejs',
                     type: 'error',
-                    data: 'error run telemetry'
-                }), function () {
-                });
+                    data: data
+                }));
         }
     });
 
 
     telemetry_service.stdout.on('data', function (data) {
+        console.log('telemetry_service stdout: ' + data);
         if (global.ws_server == undefined) return;
         global.ws_server.send(
             JSON.stringify({
@@ -174,10 +186,10 @@ function StartTelemetryService() {
                 data: data
             }), function () {
             });
-        console.log('stdout: ' + data);
     });
 
     telemetry_service.stderr.on('data', function (data) {
+        console.log('telemetry_service stderr: ' + data);
         if (global.ws_server == undefined) return;
         global.ws_server.send(
             JSON.stringify({
@@ -186,10 +198,10 @@ function StartTelemetryService() {
                 data: data
             }), function () { /* ignore errors */
             });
-        console.log('stderr: ' + data);
     });
 
     telemetry_service.on('close', function (code) {
+        console.log('telemetry child process exited with code ' + code);
         telemetry_service = undefined;
         if (global.ws_server == undefined) return;
         global.ws_server.send(
@@ -199,18 +211,17 @@ function StartTelemetryService() {
                 data: 'stopped'
             }), function () {
             });
-        console.log('telemetry child process exited with code ' + code);
     });
 
     if (telemetry_service != undefined) {
+        console.log('telemetry started\n');
         if (global.ws_server == undefined) return;
         global.ws_server.send(
             JSON.stringify({
                 process: 'telemetry',
                 type: 'status',
                 data: 'running'
-            }), function () {
-            });
+            }));
     }
 };
 

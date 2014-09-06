@@ -158,6 +158,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                     default:
                         switch (resp.type) {
                             case 'stdout':
+                            case 'stderr':
                                 var text = String.fromCharCode.apply(String, resp.data).replace(/\n/g, '<br/>');
 
                                 var text = text.replace(/\x1b\[34m/g, '<span style="color: blue">');

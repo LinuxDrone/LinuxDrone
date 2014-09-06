@@ -34,7 +34,7 @@ int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool wa
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
     {
-        printf("error checkout4transmiter: rt_mutex_acquire\n");
+        fprintf(stderr, "error checkout4transmiter: rt_mutex_acquire\n");
         return res;
     }
 
@@ -56,7 +56,7 @@ int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool wa
     int res1 = rt_mutex_release(&module->mutex_obj_exchange);
     if (res1 != 0)
     {
-        printf("error checkout4transmiter:  rt_mutex_release\n");
+        fprintf(stderr, "error checkout4transmiter:  rt_mutex_release\n");
         return res1;
     }
     return res;
@@ -76,7 +76,7 @@ int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
     {
-        printf("error checkin4transmiter: rt_mutex_acquire\n");
+        fprintf(stderr, "error checkin4transmiter: rt_mutex_acquire\n");
         return res;
     }
 
@@ -96,10 +96,10 @@ int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was
     }
     else
     {
-        printf("checkin4transmiter: Error in logic use function checkin4transmiter.\n Impossible combination statuses\n");
+        fprintf(stderr, "checkin4transmiter: Error in logic use function checkin4transmiter.\n Impossible combination statuses\n");
         print_obj_status(1, set->status_obj1);
         print_obj_status(2, set->status_obj2);
-        printf("\n");
+        fprintf(stderr, "\n");
         res = -1;
     }
 
@@ -108,7 +108,7 @@ int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was
     int res1 = rt_mutex_release(&module->mutex_obj_exchange);
     if (res1 != 0)
     {
-        printf("error checkin4transmiter:  rt_mutex_release\n");
+        fprintf(stderr, "error checkin4transmiter:  rt_mutex_release\n");
         return res1;
     }
     return res;
@@ -144,12 +144,12 @@ int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name
         print_heap_create_error(err);
         return err;
     }
-//printf("shmem name=%s\n", name_shmem);
+//fprintf(stderr, "shmem name=%s\n", name_shmem);
 
     // Alloc shared memory block
     err = rt_heap_alloc(&shmem->h_shmem, 0, TM_INFINITE, &shmem->shmem);
     if (err != 0)
-        printf("Error rt_heap_alloc for block1 err=%i\n", err);
+        fprintf(stderr, "Error rt_heap_alloc for block1 err=%i\n", err);
     memset(shmem->shmem, 0, shmem->shmem_len);
 
     // Create event service
@@ -251,7 +251,7 @@ shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, cons
 {
     if(ar_remote_shmems==NULL)
     {
-        printf("Function \"register_remote_shmem\" null parameter ar_remote_shmems\n");
+        fprintf(stderr, "Function \"register_remote_shmem\" null parameter ar_remote_shmems\n");
         return NULL;
     }
 
@@ -290,7 +290,7 @@ int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* na
 {
     if(ar_remote_shmems==NULL)
     {
-        printf("Function \"unregister_remote_shmem\" null parameter ar_remote_shmems\n");
+        fprintf(stderr, "Function \"unregister_remote_shmem\" null parameter ar_remote_shmems\n");
         return 0;
     }
 
@@ -351,7 +351,7 @@ remote_queue_t* register_remote_queue(module_t* module, const char* name_remote_
 {
     if(module==NULL)
     {
-        printf("Function \"register_remote_queue\" null parameter module\n");
+        fprintf(stderr, "Function \"register_remote_queue\" null parameter module\n");
         return NULL;
     }
 
@@ -399,11 +399,11 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
      */
     bson_iter_t iter;
     if (!bson_iter_init_find(&iter, &bson, "instance")) {
-        printf("Not found property \"instance\"");
+        fprintf(stderr, "Not found property \"instance\"");
         return -1;
     }
     if (!BSON_ITER_HOLDS_UTF8(&iter)) {
-        printf("Property \"instance\" not UTF8 type");
+        fprintf(stderr, "Property \"instance\" not UTF8 type");
         return -1;
     }
     module->instance_name = bson_iter_utf8(&iter, NULL);
@@ -429,11 +429,11 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
 
     // Поиск узла специфичных параметров модуля
     if (!bson_iter_init_find(&iter, &bson, "params")) {
-        printf("Not found property \"params\"");
+        fprintf(stderr, "Not found property \"params\"");
         return -1;
     }
     if (!BSON_ITER_HOLDS_DOCUMENT(&iter)) {
-        printf("Property \"params\" not Document type");
+        fprintf(stderr, "Property \"params\" not Document type");
         return -1;
     }
     bson_t bson_params;
@@ -456,7 +456,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     if (bson_iter_init_find(&iter, &bson, "out_links"))
     {
         if (!BSON_ITER_HOLDS_ARRAY(&iter)) {
-            printf("Property \"out_links\" not ARRAY type");
+            fprintf(stderr, "Property \"out_links\" not ARRAY type");
             return -1;
         }
 
@@ -467,7 +467,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         bson_init_static(&bson_queue_links, array_buf, array_buf_len);
 
         uint32_t count_links = bson_count_keys (&bson_queue_links);
-        //printf("count_links=%i\n", count_links);
+        //fprintf(stderr, "count_links=%i\n", count_links);
 
         bson_iter_t iter_links;
         if(!bson_iter_init (&iter_links, &bson_queue_links))
@@ -492,11 +492,11 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             // Получим имя инстанса модуля подписчика
             bson_iter_t iter_subscriber_instance_name;
             if (!bson_iter_init_find(&iter_subscriber_instance_name, &bson_out_link, "inInst")) {
-                printf("Not found property \"inInst\" in bson_out_link");
+                fprintf(stderr, "Not found property \"inInst\" in bson_out_link");
                 return -1;
             }
             if (!BSON_ITER_HOLDS_UTF8(&iter_subscriber_instance_name)) {
-                printf("Property \"inInst\" in bson_out_link not UTF8 type");
+                fprintf(stderr, "Property \"inInst\" in bson_out_link not UTF8 type");
                 return -1;
             }
             const char* subscriber_instance_name = bson_iter_utf8(&iter_subscriber_instance_name, NULL);
@@ -507,11 +507,11 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             // Получим название выходного пина данного модуля
             bson_iter_t iter_outpin_name;
             if (!bson_iter_init_find(&iter_outpin_name, &bson_out_link, "outPin")) {
-                printf("Not found property \"outPin\" in bson_out_link");
+                fprintf(stderr, "Not found property \"outPin\" in bson_out_link");
                 return -1;
             }
             if (!BSON_ITER_HOLDS_UTF8(&iter_outpin_name)) {
-                printf("Property \"outPin\" in bson_out_link not UTF8 type");
+                fprintf(stderr, "Property \"outPin\" in bson_out_link not UTF8 type");
                 return -1;
             }
             const char* outpin_name = bson_iter_utf8(&iter_outpin_name, NULL);
@@ -520,11 +520,11 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             // Получим название входного пина модуля получателя
             bson_iter_t iter_remote_inpin_name;
             if (!bson_iter_init_find(&iter_remote_inpin_name, &bson_out_link, "inPin")) {
-                printf("Not found property \"inPin\" in bson_out_link");
+                fprintf(stderr, "Not found property \"inPin\" in bson_out_link");
                 return -1;
             }
             if (!BSON_ITER_HOLDS_UTF8(&iter_remote_inpin_name)) {
-                printf("Property \"inPin\" in bson_out_link not UTF8 type");
+                fprintf(stderr, "Property \"inPin\" in bson_out_link not UTF8 type");
                 return -1;
             }
             const char* remote_inpin_name = bson_iter_utf8(&iter_remote_inpin_name, NULL);
@@ -533,18 +533,18 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             // Получим название типа данных связи
             bson_iter_t iter_portType_name;
             if (!bson_iter_init_find(&iter_portType_name, &bson_out_link, "portType")) {
-                printf("Not found property \"portType\" in bson_out_link");
+                fprintf(stderr, "Not found property \"portType\" in bson_out_link");
                 return -1;
             }
             if (!BSON_ITER_HOLDS_UTF8(&iter_portType_name)) {
-                printf("Property \"portType\" in bson_out_link not UTF8 type");
+                fprintf(stderr, "Property \"portType\" in bson_out_link not UTF8 type");
                 return -1;
             }
             const char* portType_name = bson_iter_utf8(&iter_portType_name, NULL);
             TypeFieldObj port_type = convert_port_type_str2type(portType_name);
             if(port_type==-1)
             {
-                printf("Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", outpin_name, portType_name, module->instance_name);
+                fprintf(stderr, "Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", outpin_name, portType_name, module->instance_name);
                 return -1;
             }
 
@@ -558,13 +558,13 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             }
             else
             {
-                printf("Not found OUT PIN \"%s\" in instance \"%s\"\n", outpin_name, module->instance_name);
+                fprintf(stderr, "Not found OUT PIN \"%s\" in instance \"%s\"\n", outpin_name, module->instance_name);
             }
         }
     }
     else
     {
-        //printf("Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
+        //fprintf(stderr, "Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
         //debug_print_bson("Function \"init\" module-functions.c on error", &bson);
     }
 
@@ -576,7 +576,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     if (bson_iter_init_find(&iter, &bson, "in_links"))
     {
         if (!BSON_ITER_HOLDS_ARRAY(&iter)) {
-            printf("Property \"in_links\" not ARRAY type");
+            fprintf(stderr, "Property \"in_links\" not ARRAY type");
             return -1;
         }
 
@@ -587,7 +587,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
         bson_init_static(&bson_queue_links, array_buf, array_buf_len);
 
         //uint32_t count_links = bson_count_keys (&bson_queue_links);
-        //printf("count_links=%i\n", count_links);
+        //fprintf(stderr, "count_links=%i\n", count_links);
 
         bson_iter_t iter_links;
         if(!bson_iter_init (&iter_links, &bson_queue_links))
@@ -612,11 +612,11 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             // Получим имя инстанса модуля поставщика
             bson_iter_t iter_publisher_instance_name;
             if (!bson_iter_init_find(&iter_publisher_instance_name, &bson_in_link, "outInst")) {
-                printf("Not found property \"outInst\" in bson_out_link");
+                fprintf(stderr, "Not found property \"outInst\" in bson_out_link");
                 return -1;
             }
             if (!BSON_ITER_HOLDS_UTF8(&iter_publisher_instance_name)) {
-                printf("Property \"outInst\" in bson_out_link not UTF8 type");
+                fprintf(stderr, "Property \"outInst\" in bson_out_link not UTF8 type");
                 return -1;
             }
             const char* publisher_instance_name = bson_iter_utf8(&iter_publisher_instance_name, NULL);
@@ -625,11 +625,11 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             // Получим имя группы пинов инстанса поставщика
             bson_iter_t iter_publisher_nameOutGroup;
             if (!bson_iter_init_find(&iter_publisher_nameOutGroup, &bson_in_link, "nameOutGroup")) {
-                printf("Not found property \"nameOutGroup\" in bson_out_link");
+                fprintf(stderr, "Not found property \"nameOutGroup\" in bson_out_link");
                 return -1;
             }
             if (!BSON_ITER_HOLDS_UTF8(&iter_publisher_nameOutGroup)) {
-                printf("Property \"nameOutGroup\" in bson_out_link not UTF8 type");
+                fprintf(stderr, "Property \"nameOutGroup\" in bson_out_link not UTF8 type");
                 return -1;
             }
             const char* publisher_nameOutGroup = bson_iter_utf8(&iter_publisher_nameOutGroup, NULL);
@@ -642,11 +642,11 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             // Получим название выходного пина инстанса поставщика
             bson_iter_t iter_outpin_name;
             if (!bson_iter_init_find(&iter_outpin_name, &bson_in_link, "outPin")) {
-                printf("Not found property \"outPin\" in bson_out_link");
+                fprintf(stderr, "Not found property \"outPin\" in bson_out_link");
                 return -1;
             }
             if (!BSON_ITER_HOLDS_UTF8(&iter_outpin_name)) {
-                printf("Property \"outPin\" in bson_out_link not UTF8 type");
+                fprintf(stderr, "Property \"outPin\" in bson_out_link not UTF8 type");
                 return -1;
             }
             const char* remote_out_pin_name = bson_iter_utf8(&iter_outpin_name, NULL);
@@ -656,18 +656,18 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             // Получим название типа данных связи
             bson_iter_t iter_portType_name;
             if (!bson_iter_init_find(&iter_portType_name, &bson_in_link, "portType")) {
-                printf("Not found property \"portType\" in bson_out_link");
+                fprintf(stderr, "Not found property \"portType\" in bson_out_link");
                 return -1;
             }
             if (!BSON_ITER_HOLDS_UTF8(&iter_portType_name)) {
-                printf("Property \"portType\" in bson_out_link not UTF8 type");
+                fprintf(stderr, "Property \"portType\" in bson_out_link not UTF8 type");
                 return -1;
             }
             const char* portType_name = bson_iter_utf8(&iter_portType_name, NULL);
             TypeFieldObj port_type = convert_port_type_str2type(portType_name);
             if(port_type==-1)
             {
-                printf("Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", remote_out_pin_name, portType_name, module->instance_name);
+                fprintf(stderr, "Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", remote_out_pin_name, portType_name, module->instance_name);
                 return -1;
             }
 
@@ -676,11 +676,11 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             // Получим название входного пина данного модуля
             bson_iter_t iter_remote_inpin_name;
             if (!bson_iter_init_find(&iter_remote_inpin_name, &bson_in_link, "inPin")) {
-                printf("Not found property \"inPin\" in bson_out_link");
+                fprintf(stderr, "Not found property \"inPin\" in bson_out_link");
                 return -1;
             }
             if (!BSON_ITER_HOLDS_UTF8(&iter_remote_inpin_name)) {
-                printf("Property \"inPin\" in bson_out_link not UTF8 type");
+                fprintf(stderr, "Property \"inPin\" in bson_out_link not UTF8 type");
                 return -1;
             }
             const char* input_pin_name = bson_iter_utf8(&iter_remote_inpin_name, NULL);
@@ -697,13 +697,13 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             }
             else
             {
-                printf("Not found INPUT PIN \"%s\" in instance \"%s\"\n", input_pin_name, module->instance_name);
+                fprintf(stderr, "Not found INPUT PIN \"%s\" in instance \"%s\"\n", input_pin_name, module->instance_name);
             }
         }
     }
     else
     {
-        //printf("Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
+        //fprintf(stderr, "Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
         //debug_print_bson("Function \"init\" module-functions.c on error", &bson);
     }
 
@@ -724,10 +724,10 @@ void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datale
     int res = rt_event_clear(&shmem->eflags, ~SHMEM_WRITER_MASK, &after_mask);
     if (res != 0)
     {
-        printf("error write_shmem: rt_event_clear1\n");
+        fprintf(stderr, "error write_shmem: rt_event_clear1\n");
         return;
     }
-    //printf("was mask = 0x%08X\n", after_mask);
+    //fprintf(stderr, "was mask = 0x%08X\n", after_mask);
 
     /**
      * \~russian Подождем, пока все читающие потоки выйдут из функции чтения и обнулят счетчик читающих потоков
@@ -736,7 +736,7 @@ void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datale
 
     if (res != 0)
     {
-        printf("error write_shmem: rt_event_wait\n");
+        fprintf(stderr, "error write_shmem: rt_event_wait\n");
         return;
     }
 
@@ -746,17 +746,17 @@ void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datale
     RT_HEAP_INFO info;
     rt_heap_inquire	(&shmem->h_shmem, &info);
 
-//printf("write to shmem=%s\n", info.name);
+//fprintf(stderr, "write to shmem=%s\n", info.name);
 
     // в буфер (со смещением в два байта) копируем блок данных
     memcpy(shmem->shmem + sizeof(unsigned short), data, datalen);
 
-//printf("datalen write_shmem: %i\n", datalen);
+//fprintf(stderr, "datalen write_shmem: %i\n", datalen);
 
     res = rt_event_signal(&shmem->eflags, ~SHMEM_WRITER_MASK);
     if (res != 0)
     {
-        printf("error write_shmem: rt_event_signal\n");
+        fprintf(stderr, "error write_shmem: rt_event_signal\n");
         return;
     }
 }
@@ -778,7 +778,7 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
      */
     int res = rt_event_wait(&shmem->eflags, ~SHMEM_WRITER_MASK, &after_mask, EV_ALL, TM_INFINITE);
     if (res != 0) {
-        printf("error read_shmem: rt_event_wait\n");
+        fprintf(stderr, "error read_shmem: rt_event_wait\n");
         print_event_wait_error(res);
         return;
     }
@@ -789,7 +789,7 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
     res = rt_mutex_acquire(&shmem->mutex_read_shmem, TM_INFINITE);
     if (res != 0)
     {
-        printf("error read_shmem: rt_mutex_acquire1\n");
+        fprintf(stderr, "error read_shmem: rt_mutex_acquire1\n");
         return;
     }
 
@@ -799,37 +799,37 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
     RT_EVENT_INFO info;
     res = rt_event_inquire(&shmem->eflags, &info);
     if (res != 0) {
-        printf("error read_shmem: rt_event_inquire1\n");
+        fprintf(stderr, "error read_shmem: rt_event_inquire1\n");
         return;
     }
-    //printf("read raw mask = 0x%08X\n", info.value);
+    //fprintf(stderr, "read raw mask = 0x%08X\n", info.value);
 
     // инкрементируем показания счетчика
     unsigned long count = (~(info.value & SHMEM_WRITER_MASK)) & SHMEM_WRITER_MASK;
-    //printf("masked raw mask = 0x%08X\n", count);
+    //fprintf(stderr, "masked raw mask = 0x%08X\n", count);
     if (count == 0)
         count = 1;
     else
         count = count << 1;
 
-    //printf("clear mask = 0x%08X\n", count);
+    //fprintf(stderr, "clear mask = 0x%08X\n", count);
 
     // Сбросим флаги в соответствии со значением счетчика
     res = rt_event_clear(&shmem->eflags, count, &after_mask);
     if (res != 0) {
-        printf("error read_shmem: rt_event_clear\n");
+        fprintf(stderr, "error read_shmem: rt_event_clear\n");
         return;
     }
 
     res = rt_mutex_release(&shmem->mutex_read_shmem);
     if (res != 0) {
-        printf("error read_shmem:  rt_mutex_release1\n");
+        fprintf(stderr, "error read_shmem:  rt_mutex_release1\n");
         return;
     }
 
     // из первых двух байт считываем блину последующего блока
     unsigned short buflen = *((unsigned short*) shmem->shmem);
-    //printf("buflen read_shmem: %i\n", buflen);
+    //fprintf(stderr, "buflen read_shmem: %i\n", buflen);
 
     if (buflen != 0) {
         // со смещением в два байта читаем следующий блок данных
@@ -842,7 +842,7 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
      */
     res = rt_mutex_acquire(&shmem->mutex_read_shmem, TM_INFINITE);
     if (res != 0) {
-        printf("error read_shmem: rt_mutex_acquire2\n");
+        fprintf(stderr, "error read_shmem: rt_mutex_acquire2\n");
         return;
     }
 
@@ -851,7 +851,7 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
      */
     res = rt_event_inquire(&shmem->eflags, &info);
     if (res != 0) {
-        printf("error read_shmem: rt_event_inquire1\n");
+        fprintf(stderr, "error read_shmem: rt_event_inquire1\n");
         return;
     }
     // декрементируем показания счетчика
@@ -859,19 +859,19 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
 
     count = count ^ (count >> 1);
 
-    //printf("set mask = 0x%08X\n", count);
+    //fprintf(stderr, "set mask = 0x%08X\n", count);
 
     // Установим флаги в соответствии со значением счетчика
     res = rt_event_signal(&shmem->eflags, count);
     if (res != 0) {
-        printf("error read_shmem: rt_event_signal\n");
+        fprintf(stderr, "error read_shmem: rt_event_signal\n");
         return;
     }
 
     res = rt_mutex_release(&shmem->mutex_read_shmem);
     if (res != 0)
     {
-        printf("error read_shmem:  rt_mutex_release2\n");
+        fprintf(stderr, "error read_shmem:  rt_mutex_release2\n");
         return;
     }
 }
@@ -940,7 +940,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
                 break;
 
                 default:
-                    printf("Function \"send2queues\" Unknown type remote field: %i\n", remote_obj_field->type_field_obj);
+                    fprintf(stderr, "Function \"send2queues\" Unknown type remote field: %i\n", remote_obj_field->type_field_obj);
                     break;
             }
         }
@@ -950,7 +950,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
         int res = rt_queue_write(&out_queue_set->out_queue->remote_queue, bson_get_data(bson_obj), bson_obj->len, Q_NORMAL);
         if(res<0)
         {
-            printf("Warning: %i rt_queue_write\n", res);
+            fprintf(stderr, "Warning: %i rt_queue_write\n", res);
             // TODO: если нет коннекта у очереди, то сбросить флаг коннекта всех очередей.
         }
 
@@ -976,7 +976,7 @@ void get_input_data(module_t *module)
         //здесь просто поспать потоку
         rt_task_sleep(module->common_params.Task_Period);
 
-        //printf("Module don't have input\n");
+        //fprintf(stderr, "Module don't have input\n");
         return;
     }
 
@@ -994,11 +994,11 @@ void get_input_data(module_t *module)
 //debug_print_bson("get_input_data", &bson);
         if ((*module->input_bson2obj)(module, &bson) != 0)
         {
-            printf("Error: func get_input_data, input_bson2obj\n");
+            fprintf(stderr, "Error: func get_input_data, input_bson2obj\n");
         }
         else
         {
-//printf("%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
+//fprintf(stderr, "%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
 //(*module->print_input)(module->input_data);
         }
         bson_destroy(&bson);
@@ -1012,10 +1012,10 @@ void get_input_data(module_t *module)
     // 3) часть нужного
     // мне из полученного:      0010001 получается логическим И 1&2
     // 4) осталось получить:    0100000 получается исключающим ИЛИ 2^3
-    //printf("before logic oper mask=0x%08X\n", module->refresh_input_mask);
-    //printf("updated_input_properties=0x%08X\n", module->updated_input_properties);
+    //fprintf(stderr, "before logic oper mask=0x%08X\n", module->refresh_input_mask);
+    //fprintf(stderr, "updated_input_properties=0x%08X\n", module->updated_input_properties);
     module->refresh_input_mask ^= (module->refresh_input_mask & module->updated_input_properties);
-    //printf("before refresh mask=0x%08X\n", module->refresh_input_mask);
+    //fprintf(stderr, "before refresh mask=0x%08X\n", module->refresh_input_mask);
 
 
     if(!module->ar_remote_shmems.f_connected_in_links)
@@ -1023,7 +1023,7 @@ void get_input_data(module_t *module)
         // Если не все связи модуля установлены, то будем пытаться их установить
         if(rt_timer_read() - module->time_attempt_link_modules > 100000000)
         {
-            //printf("попытка in связи\n");
+            //fprintf(stderr, "попытка in связи\n");
 
             connect_in_links(&module->ar_remote_shmems, module->instance_name);
 
@@ -1059,18 +1059,18 @@ int connect_out_links(void *p_module)
         strcat(name_queue, info_remote_queue->name_instance);
         strcat(name_queue, SUFFIX_QUEUE);
 
-        //printf("attempt connect %s to %s\n", module->instance_name, name_queue);
+        //fprintf(stderr, "attempt connect %s to %s\n", module->instance_name, name_queue);
 
         int res = rt_queue_bind	(&info_remote_queue->remote_queue, name_queue, TM_NONBLOCK);
         if(res!=0)
         {
-            //printf("Error:%i rt_queue_bind instance=%s to queue %s\n", res, module->instance_name, name_queue);
+            //fprintf(stderr, "Error:%i rt_queue_bind instance=%s to queue %s\n", res, module->instance_name, name_queue);
             continue;
         }
         else
         {
             info_remote_queue->f_queue_connected=true;
-            printf("%sCONNECTED: %s to queue %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_queue, ANSI_COLOR_RESET);
+            fprintf(stderr, "%sCONNECTED: %s to queue %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_queue, ANSI_COLOR_RESET);
         }
 
         count_connected++;
@@ -1079,7 +1079,7 @@ int connect_out_links(void *p_module)
     if(count_connected==module->remote_queues_len)
     {
         module->f_connected_out_links=true;
-        printf("%s%s: ALL QUEUES CONNECTED%s\n", ANSI_COLOR_GREEN, module->instance_name, ANSI_COLOR_RESET);
+        fprintf(stderr, "%s%s: ALL QUEUES CONNECTED%s\n", ANSI_COLOR_GREEN, module->instance_name, ANSI_COLOR_RESET);
     }
 
     return 0;
@@ -1101,7 +1101,7 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
 
         if(!remote_shmem->f_shmem_connected)
         {
-            //printf("attempt connect %s to %s\n", instance_name, name_shmem);
+            //fprintf(stderr, "attempt connect %s to %s\n", instance_name, name_shmem);
             char name_shmem[XNOBJECT_NAME_LEN] = "";
             strcat(name_shmem, remote_shmem->name_instance);
             strcat(name_shmem, remote_shmem->name_outgroup);
@@ -1118,11 +1118,11 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
             int err = rt_heap_alloc(&remote_shmem->remote_shmem.h_shmem, 0, TM_INFINITE, &remote_shmem->remote_shmem.shmem);
             if (err != 0)
             {
-                printf("Function: connect_in_links, Error rt_heap_alloc for \"%s\", err=%i\n", name_shmem, err);
+                fprintf(stderr, "Function: connect_in_links, Error rt_heap_alloc for \"%s\", err=%i\n", name_shmem, err);
                 continue;
             }
 
-            printf("%sCONNECTED: %s to shmem %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_shmem, ANSI_COLOR_RESET);
+            fprintf(stderr, "%sCONNECTED: %s to shmem %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_shmem, ANSI_COLOR_RESET);
             remote_shmem->f_shmem_connected = true;
         }
 
@@ -1140,7 +1140,7 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
                     print_rt_event_bind_error(res);
                 continue;
             }
-printf("%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_event, ANSI_COLOR_RESET);
+fprintf(stderr, "%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_event, ANSI_COLOR_RESET);
             remote_shmem->f_event_connected = true;
         }
 
@@ -1158,7 +1158,7 @@ printf("%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, instance_na
                     print_rt_mutex_bind_error(res);
                 continue;
             }
-printf("%sCONNECTED: %s to mutex service %s%s\n\n", ANSI_COLOR_YELLOW, instance_name, name_mutex, ANSI_COLOR_RESET);
+fprintf(stderr, "%sCONNECTED: %s to mutex service %s%s\n\n", ANSI_COLOR_YELLOW, instance_name, name_mutex, ANSI_COLOR_RESET);
             remote_shmem->f_mutex_connected = true;
         }
 
@@ -1168,7 +1168,7 @@ printf("%sCONNECTED: %s to mutex service %s%s\n\n", ANSI_COLOR_YELLOW, instance_
     if(ar_remote_shmems->remote_shmems_len>0 && count_connected==ar_remote_shmems->remote_shmems_len)
     {
         ar_remote_shmems->f_connected_in_links=true;
-printf("%s%s: ALL SHMEMS CONNECTED%s\n", ANSI_COLOR_GREEN, instance_name, ANSI_COLOR_RESET);
+fprintf(stderr, "%s%s: ALL SHMEMS CONNECTED%s\n", ANSI_COLOR_GREEN, instance_name, ANSI_COLOR_RESET);
     }
 
     return 0;
@@ -1182,11 +1182,11 @@ int disconnect_in_links(shmem_in_set_t* remote_shmem)
         int res = rt_heap_unbind	(&remote_shmem->remote_shmem.h_shmem);
         if(res!=0)
         {
-            printf("Error:%i rt_heap_unbind for instance=%s\n", res, remote_shmem->name_instance);
+            fprintf(stderr, "Error:%i rt_heap_unbind for instance=%s\n", res, remote_shmem->name_instance);
             return -1;
         }
 
-        printf("%sDISCONNECTED: %s shmem%s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
+        fprintf(stderr, "%sDISCONNECTED: %s shmem%s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
         remote_shmem->f_shmem_connected = false;
     }
 
@@ -1196,10 +1196,10 @@ int disconnect_in_links(shmem_in_set_t* remote_shmem)
         int res = rt_event_unbind(&remote_shmem->remote_shmem.eflags);
         if(res!=0)
         {
-            printf("Error:%i rt_event_unbind instance=%s\n", res, remote_shmem->name_instance);
+            fprintf(stderr, "Error:%i rt_event_unbind instance=%s\n", res, remote_shmem->name_instance);
             return -1;
         }
-        printf("%sDISCONNECTED: %s event service %s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
+        fprintf(stderr, "%sDISCONNECTED: %s event service %s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
         remote_shmem->f_event_connected = false;
     }
 
@@ -1209,10 +1209,10 @@ int disconnect_in_links(shmem_in_set_t* remote_shmem)
         int res = rt_mutex_unbind(&remote_shmem->remote_shmem.mutex_read_shmem);
         if(res!=0)
         {
-            printf("Error:%i rt_mutex_unbind instance=%s\n", res, remote_shmem->name_instance);
+            fprintf(stderr, "Error:%i rt_mutex_unbind instance=%s\n", res, remote_shmem->name_instance);
             return -1;
         }
-        printf("%sDISCONNECTED: %s to mutex service %s\n\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
+        fprintf(stderr, "%sDISCONNECTED: %s to mutex service %s\n\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
         remote_shmem->f_mutex_connected = false;
     }
 
@@ -1233,7 +1233,7 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
         if(!time2publish2shmem && !to_queue)
             continue;
 
-        //printf("outside=%i bool=%i\n",i,time2publish2shmem);
+        //fprintf(stderr, "outside=%i bool=%i\n",i,time2publish2shmem);
         // Нашли обновившийся в основном потоке объект
         // Пуш в очереди подписчиков
         if(to_queue)
@@ -1242,7 +1242,7 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
             if(obj!=NULL)
             {
                 send2queues(out_object, obj, &bson_tr);
-//printf("send2queues\t");
+//fprintf(stderr, "send2queues\t");
 //(*out_object->print_obj)(obj);
                 checkin4transmiter(module, out_object, &obj, true);
             }
@@ -1290,7 +1290,7 @@ void task_transmit(void *p_module)
         int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
         if (res != 0)
         {
-            printf("error function task_transmit_body: rt_mutex_acquire\n");
+            fprintf(stderr, "error function task_transmit_body: rt_mutex_acquire\n");
             return;
         }
         // Если нет заполненных объектов, то поспим пока они не появятся
@@ -1300,7 +1300,7 @@ void task_transmit(void *p_module)
         int res1 = rt_mutex_release(&module->mutex_obj_exchange);
         if (res1 != 0)
         {
-            printf("task_transmit: error: %i rt_mutex_release\n", res1);
+            fprintf(stderr, "task_transmit: error: %i rt_mutex_release\n", res1);
             return;
         }
 
@@ -1315,17 +1315,17 @@ void task_transmit(void *p_module)
         }
         else
         {
-            printf("error=%i in task_transmit_body:  rt_cond_wait\n", res);
+            fprintf(stderr, "error=%i in task_transmit_body:  rt_cond_wait\n", res);
             return;
         }
 
-        //printf("task_transmit cycle %i\n", cycle++);
+        //fprintf(stderr, "task_transmit cycle %i\n", cycle++);
         if(!module->f_connected_out_links)
         {
             // Если не все связи модуля установлены, то будем пытаться их установить
             if(rt_timer_read() - time_attempt_link_modules > 100000000)
             {
-//printf("попытка out связи\n");
+//fprintf(stderr, "попытка out связи\n");
 
                 connect_out_links(module);
 
@@ -1345,24 +1345,24 @@ int start(void* p_module)
      */
     int err = create_xenomai_services(module);
     if (err != 0) {
-        printf("Error create xenomai services\n");
+        fprintf(stderr, "Error create xenomai services\n");
         return err;
     }
 
 
     if (module == NULL) {
-        printf("Function \"start\". Param \"module\" is null\n");
+        fprintf(stderr, "Function \"start\". Param \"module\" is null\n");
         return -1;
     }
 
     if (module->func == NULL) {
-        printf("module->func for main task required\n");
+        fprintf(stderr, "module->func for main task required\n");
         return -1;
     }
 
     err = rt_task_start(&module->task_main, module->func, p_module);
     if (err != 0)
-        printf("Error start main task\n");
+        fprintf(stderr, "Error start main task\n");
 
     // Если нет выходов не нужна и таска передатчика
     if(module->out_objects[0]==NULL)
@@ -1370,7 +1370,7 @@ int start(void* p_module)
 
     err = rt_task_start(&module->task_transmit, &task_transmit, p_module);
     if (err != 0) {
-        printf("Error start transmit task. err=%i\n", err);
+        fprintf(stderr, "Error start transmit task. err=%i\n", err);
         print_task_start_error(err);
     }
 
@@ -1481,7 +1481,7 @@ int checkout4writer(module_t* module, out_object_t* set, void** obj)
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
     {
-        printf("error checkout4writer: rt_mutex_acquire\n");
+        fprintf(stderr, "error checkout4writer: rt_mutex_acquire\n");
         return res;
     }
 
@@ -1497,10 +1497,10 @@ int checkout4writer(module_t* module, out_object_t* set, void** obj)
     }
     else
     {
-        printf("checkout4writer: Error in logic use function checkout4writer.\n Impossible combination statuses\n");
+        fprintf(stderr, "checkout4writer: Error in logic use function checkout4writer.\n Impossible combination statuses\n");
         print_obj_status(1, set->status_obj1);
         print_obj_status(2, set->status_obj2);
-        printf("\n");
+        fprintf(stderr, "\n");
         (*obj)=NULL;
         res = -1;
     }
@@ -1508,7 +1508,7 @@ int checkout4writer(module_t* module, out_object_t* set, void** obj)
     int res1 = rt_mutex_release(&module->mutex_obj_exchange);
     if (res1 != 0)
     {
-        printf("checkout4writer: error:  rt_mutex_release\n");
+        fprintf(stderr, "checkout4writer: error:  rt_mutex_release\n");
         return res1;
     }
     return res;
@@ -1528,7 +1528,7 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
     {
-        printf("error checkin4writer: rt_mutex_acquire\n");
+        fprintf(stderr, "error checkin4writer: rt_mutex_acquire\n");
         return res;
     }
 
@@ -1542,10 +1542,10 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
     }
     else
     {
-        printf("checkin4writer: Error in logic use function checkin4writer.\n Impossible combination statuses\n");
+        fprintf(stderr, "checkin4writer: Error in logic use function checkin4writer.\n Impossible combination statuses\n");
         print_obj_status(1, set->status_obj1);
         print_obj_status(2, set->status_obj2);
-        printf("\n");
+        fprintf(stderr, "\n");
         res = -1;
     }
 
@@ -1554,7 +1554,7 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
     int res1 = rt_mutex_release(&module->mutex_obj_exchange);
     if (res1 != 0)
     {
-        printf("error checkin4writer:  rt_mutex_release\n");
+        fprintf(stderr, "error checkin4writer:  rt_mutex_release\n");
         return res1;
     }
 
@@ -1562,7 +1562,7 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
     int res2 = rt_cond_signal(&module->obj_cond);
     if (res2 != 0)
     {
-        printf("error checkin4writer:  rt_cond_signal\n");
+        fprintf(stderr, "error checkin4writer:  rt_cond_signal\n");
         return res2;
     }
 
@@ -1600,7 +1600,7 @@ int refresh_input(void* p_module)
             unsigned short retlen;
             retlen=0;
             read_shmem(remote_shmem, buf, &retlen);
-            //printf("retlen=%i\n", retlen);
+            //fprintf(stderr, "retlen=%i\n", retlen);
             bson_t bson;
             if (retlen > 0) {
                 bson_init_static(&bson, buf, retlen);
@@ -1616,7 +1616,7 @@ int refresh_input(void* p_module)
 
                     bson_iter_t iter;
                     if (!bson_iter_init_find(&iter, &bson, remote_in_obj_field->remote_field_name)) {
-                        printf("Not found property \"%s\" in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                        fprintf(stderr, "Not found property \"%s\" in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
                         return -1;
                     }
 
@@ -1625,7 +1625,7 @@ int refresh_input(void* p_module)
                     {
                         case field_char:
                             if (!BSON_ITER_HOLDS_INT32(&iter)) {
-                                printf("Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
                                 return -1;
                             }
                             *((char*)pval) = bson_iter_int32(&iter);
@@ -1633,7 +1633,7 @@ int refresh_input(void* p_module)
 
                         case field_short:
                             if (!BSON_ITER_HOLDS_INT32(&iter)) {
-                                printf("Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
                                 return -1;
                             }
                             *((short*)pval) = bson_iter_int32(&iter);
@@ -1642,7 +1642,7 @@ int refresh_input(void* p_module)
 
                         case field_int:
                             if (!BSON_ITER_HOLDS_INT32(&iter)) {
-                                printf("Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
                                 return -1;
                             }
                             *((int*)pval) = bson_iter_int32(&iter);
@@ -1650,7 +1650,7 @@ int refresh_input(void* p_module)
 
                         case field_long:
                             if (!BSON_ITER_HOLDS_INT32(&iter)) {
-                                printf("Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
                                 return -1;
                             }
                             *((long*)pval) = bson_iter_int32(&iter);
@@ -1659,7 +1659,7 @@ int refresh_input(void* p_module)
 
                         case field_long_long:
                             if (!BSON_ITER_HOLDS_INT64(&iter)) {
-                                printf("Property \"%s\" not INT64 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                fprintf(stderr, "Property \"%s\" not INT64 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
                                 return -1;
                             }
                             *((long long*)pval) = bson_iter_int64(&iter);
@@ -1667,7 +1667,7 @@ int refresh_input(void* p_module)
 
                         case field_float:
                             if (!BSON_ITER_HOLDS_DOUBLE(&iter)) {
-                                printf("Property \"%s\" not DOUBLE type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                fprintf(stderr, "Property \"%s\" not DOUBLE type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
                                 return -1;
                             }
                             *((float*)pval) = bson_iter_double(&iter);
@@ -1675,7 +1675,7 @@ int refresh_input(void* p_module)
 
                         case field_double:
                             if (!BSON_ITER_HOLDS_DOUBLE(&iter)) {
-                                printf("Property \"%s\" not DOUBLE type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                fprintf(stderr, "Property \"%s\" not DOUBLE type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
                                 return -1;
                             }
                             *((double*)pval) = bson_iter_double(&iter);
@@ -1683,7 +1683,7 @@ int refresh_input(void* p_module)
 
                         case field_const_char:
                             if (!BSON_ITER_HOLDS_UTF8(&iter)) {
-                                printf("Property \"%s\" not UTF8 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                fprintf(stderr, "Property \"%s\" not UTF8 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
                                 return -1;
                             }
                             //pval = bson_iter_utf8(&iter, &length);
@@ -1692,18 +1692,18 @@ int refresh_input(void* p_module)
 
                         case field_bool:
                             if (!BSON_ITER_HOLDS_BOOL(&iter)) {
-                                printf("Property \"%s\" not BOOL type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                                fprintf(stderr, "Property \"%s\" not BOOL type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
                                 return -1;
                             }
                             *((bool*)pval) = bson_iter_bool(&iter);
                             break;
 
                         default:
-                            printf("Function \"refresh_input\" Unknown type remote field\n");
+                            fprintf(stderr, "Function \"refresh_input\" Unknown type remote field\n");
                             break;
                     }
                 }
-//printf("%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
+//fprintf(stderr, "%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
 //(*module->print_input)(module->input_data);
                 bson_destroy(&bson);
             }
