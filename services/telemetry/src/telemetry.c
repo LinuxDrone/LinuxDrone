@@ -162,7 +162,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
             unsigned char * bson_data = (unsigned char *)bson_get_data(buf_and_bson.bson);
             m = libwebsocket_write(wsi, bson_data, buf_and_bson.bson->len, LWS_WRITE_BINARY);
             if (m < buf_and_bson.bson->len) {
-                lwsl_err("ERROR %d writing to di socket\n", n);
+                //lwsl_err("ERROR %d writing to di socket\n", n);
             }
         }
         break;
@@ -170,7 +170,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
 
     case LWS_CALLBACK_RECEIVE:
         bson_request = bson_new_from_data (in, len);
-debug_print_bson("received", bson_request);
+        //debug_print_bson("received", bson_request);
 
         // Get Instance Name
         bson_iter_t iter_instance_name;
