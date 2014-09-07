@@ -87,6 +87,38 @@ typedef struct{
     void* buf;
 } buf_and_bson_t;
 
+
+/*
+int send_command(i2c_service_t* service, int session_id, char dev_id, char dev_register)
+{
+    address_i2c_t* address_i2c = (address_i2c_t*)service->data_buf;
+    address_i2c->session_id=session_id;
+    address_i2c->dev_id = dev_id;
+    address_i2c->dev_register = dev_register;
+
+    service->request_data_block.data = service->data_buf;
+    service->request_data_block.size = sizeof(address_i2c_t);
+    service->response_data_block.size = MAX_TRANSFER_BLOCK;
+    service->request_data_block.opcode = op_cmd_write_i2c;
+
+    ssize_t received = rt_task_send(&service->task_i2c_service, &service->request_data_block, &service->response_data_block, TM_INFINITE);
+    if(received<0)
+    {
+        if(received==-ESRCH)
+        {
+            service->connected=false;
+            return 0;
+        }
+        else
+        {
+            return received;
+        }
+    }
+
+    return service->response_data_block.opcode;
+}
+*/
+
 buf_and_bson_t* ar_bson2send = NULL;
 int len_bson2send = 0;
 
@@ -184,18 +216,6 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         }
         module_instance_name = bson_iter_utf8(&iter_instance_name, NULL);
 
-        // Get Out Name
-        bson_iter_t iter_out_name;
-        if (!bson_iter_init_find(&iter_out_name, bson_request, "out")) {
-            fprintf(stderr, "Not found property \"out\" in module_out");
-            return -1;
-        }
-        if (!BSON_ITER_HOLDS_UTF8(&iter_out_name)) {
-            fprintf(stderr, "Property \"out\" in module_out not UTF8 type");
-            return -1;
-        }
-        module_out_name = bson_iter_utf8(&iter_out_name, NULL);
-
         // Get Command Name
         bson_iter_t iter_cmd;
         if (!bson_iter_init_find(&iter_cmd, bson_request, "cmd")) {
@@ -209,19 +229,82 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         cmd_name = bson_iter_utf8(&iter_cmd, NULL);
 
         //fprintf(stderr, "module_instance_name: %s\tmodule_out_name: %s\n", module_instance_name, module_out_name);
-        if(strcmp(cmd_name, "subscribe")==0)
+
+        if(strcmp(cmd_name, "subscribe")==0 || strcmp(cmd_name, "unsubscribe")==0)
         {
-            register_remote_shmem(&remote_shmems, module_instance_name, module_out_name);
+            /*
+             * JSON
+             * {
+             *      cmd: 'subscribe'/'unsubscribe',
+             *      instance: instanceName,
+             *      out: outputName
+             * }
+             */
+
+            // Get Out Name
+            bson_iter_t iter_out_name;
+            if (!bson_iter_init_find(&iter_out_name, bson_request, "out")) {
+                fprintf(stderr, "Not found property \"out\" in module_out");
+                return -1;
+            }
+            if (!BSON_ITER_HOLDS_UTF8(&iter_out_name)) {
+                fprintf(stderr, "Property \"out\" in module_out not UTF8 type");
+                return -1;
+            }
+            module_out_name = bson_iter_utf8(&iter_out_name, NULL);
+
+            if(strcmp(cmd_name, "subscribe")==0)
+            {
+                register_remote_shmem(&remote_shmems, module_instance_name, module_out_name);
+            }
+            else if(strcmp(cmd_name, "unsubscribe")==0)
+            {
+                unregister_remote_shmem(&remote_shmems, module_instance_name, module_out_name);
+            }
         }
-        else if(strcmp(cmd_name, "unsubscribe")==0)
+        else if(strcmp(cmd_name, "command")==0)
         {
-            unregister_remote_shmem(&remote_shmems, module_instance_name, module_out_name);
+            /*
+             * JSON
+             * {
+             *      cmd: 'command',         // Тип операции 'command' (выполняемой сервисом телеметрии)
+             *                              // подразумевает передачу команды инстансу
+             *      name: COMMAND_NAME      // Имя команды передаваемой в инстанс
+             *      params: []
+             *      instance: instanceName
+             * }
+             */
+
+        }
+        else if(strcmp(cmd_name, "getParams")==0)
+        {
+            /*
+             * JSON
+             * {
+             *      cmd: getParams,
+             *      instance: instanceName
+             * }
+             */
+        }
+        else if(strcmp(cmd_name, "setParams")==0)
+        {
+            /*
+             * JSON
+             * {
+             *      cmd: getParams,
+             *      instance: instanceName
+             *      params: []
+             * }
+             */
+        }
+        else
+        {
+            fprintf(stderr, "Function: callback_telemetry, unknown command \"%s\" module_instance_name: %s\n", cmd_name, module_instance_name);
         }
 
         bson_destroy(bson_request);
         break;
     }
-
     return 0;
 }
 
