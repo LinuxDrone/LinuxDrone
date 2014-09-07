@@ -996,6 +996,12 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 void process_commands(module_t *module)
 {
     int flowid = rt_task_receive(&request_block, TM_NONBLOCK);
+    if(flowid==-EWOULDBLOCK)
+    {
+        // Нормальная ситуация. Означает, что нет потоков решивших отправить мессагу данному потоку.
+        return;
+    }
+
     if(flowid<0)
     {
         fprintf(stderr, "Function: process_commands, task_receive_error:");
