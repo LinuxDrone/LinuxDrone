@@ -30,7 +30,14 @@ int priority_task_i2c = 99;
 RT_TASK_MCB request_block;
 RT_TASK_MCB response_block;
 
+/**
+ * @brief \~russian Буфер данных, передаваемых в качестве ответа на запрос клиента сервиса
+ */
 char response_block_buf[MAX_TRANSFER_BLOCK];
+
+/**
+ * @brief \~russian Буфер данных для приема запроса от клиента сервиса
+ */
 char request_block_buf[MAX_TRANSFER_BLOCK];
 
 // Девайс выбранный для общений на шине в текущий момент
@@ -139,13 +146,11 @@ void close_bus(int m_file)
 void run_task_i2c (void *module)
 {
     data_request_i2c_t* request;
-    address_i2c_t* address_i2c;
-
+    address_i2c_t* address_i2c;            
     int ioctl_err=0;
 
     while(1)
     {
-        request_block.size=MAX_TRANSFER_BLOCK;
         int flowid = rt_task_receive(&request_block, TM_INFINITE);
         if(flowid<0)
         {
@@ -196,6 +201,7 @@ void run_task_i2c (void *module)
                 }
             }
             break;
+
 
             case op_raw_read_i2c:
             {
@@ -254,6 +260,7 @@ void run_task_i2c (void *module)
                 }
             break;
 
+
             case op_raw_write_i2c:
                 // В принятых данных, первый байт - адрес устройства на шине
                 // Остальные данные - на передачу в устройство без указания порта
@@ -284,6 +291,7 @@ void run_task_i2c (void *module)
                 }
             break;
 
+
             case op_cmd_write_i2c:
                 // В принятых данных, первый байт - адрес устройства на шине
                 // Второй байт - команда для него
@@ -311,6 +319,7 @@ void run_task_i2c (void *module)
                     }
                 }
             break;
+
 
             case op_close_i2c:
                 close_bus(*(int*)request_block.data);
@@ -340,6 +349,7 @@ int main(int argc, char **argv)
 
     // Подготовим буфер для приема запроса
     request_block.data = request_block_buf;
+    request_block.size=MAX_TRANSFER_BLOCK;
 
     // Подготовим буфер для отправки ответа
     response_block.data = response_block_buf;
