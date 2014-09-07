@@ -91,6 +91,18 @@ typedef void (*p_print_obj)(void* obj);
 // Тип функции возвращающей маску входного порта, по его имени
 typedef t_mask (*p_get_inputmask_by_inputname)(const char* input_name);
 
+
+/**
+ * \~russian Тип команды получаемой рабочим потоком
+ */
+typedef enum
+{
+    cmd_command,    // Задание на выполнение команды
+    cmd_set_params, // Установка специфичных для модуля параметров
+    cmd_get_params  // Считывание специфичных для модуля параметров
+} commands;
+
+
 /**
  * @brief
  * \~russian Структура данных, необходимых для записи в блок разделяемой памяти
@@ -346,9 +358,22 @@ typedef void (t_cmd_function)(int type_command, void* params);
 
 
 /**
+ * @brief \~russian Определение типа функции-преобразования имя команды в идентификатор
+ */
+typedef int (t_get_idcmd_by_strcmd)(const char* cmd_name);
+
+
+/**
  * @brief \~russian Определение типа указателя на функцию-обработчик команды
  */
 typedef t_cmd_function* p_cmd_function;
+
+
+/**
+ * @brief \~russian Определение типа указателя на функцию-преобразования имя команды в идентификатор
+ */
+typedef t_get_idcmd_by_strcmd* p_get_idcmd_by_strcmd;
+
 
 
 /**
@@ -454,6 +479,14 @@ typedef struct {
      * \~russian Указатель на функцию обработки команды (переданной инстансу модуля)
      */
     p_cmd_function cmd_func;
+
+
+    /**
+     * @brief
+     * \~russian Указатель на функцию преобразования имя команды (передаваемой инстансу) в идентификатор (определенный в перечислении)
+     */
+    p_get_idcmd_by_strcmd get_idcmd_by_strcmd;
+
 
     /**
      * @brief

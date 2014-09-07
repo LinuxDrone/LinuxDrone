@@ -136,7 +136,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
 
 
     r += "    {\n";
-    r += "        printf(\"Error: func bson2" + outName + ", NULL parameter\\n\");\n";
+    r += "        fprintf(stderr, \"Error: func bson2" + outName + ", NULL parameter\\n\");\n";
     r += "        return -1;\n";
     r += "    }\n\n";
     if (set_update_fact) {
@@ -147,7 +147,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
     r += "    bson_iter_t iter;\n";
     r += "    if(!bson_iter_init (&iter, bson))\n";
     r += "    {\n";
-    r += "        printf(\"Error: func bson2" + outName + ", bson_iter_init\\n\");\n";
+    r += "        fprintf(stderr, \"Error: func bson2" + outName + ", bson_iter_init\\n\");\n";
     r += "        return -1;\n";
     r += "    }\n\n";
     r += "    while(bson_iter_next(&iter))\n";
@@ -163,7 +163,8 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
                 r += "            if(BSON_ITER_HOLDS_DOUBLE(&iter))\n";
                 r += "            {\n";
                 r += "                obj->" + propName + " = bson_iter_double(&iter);\n";
-                r += "            }\nelse ";
+                r += "            }\n";
+                r += "            else\n";
 
             case "char":
             case "short":
@@ -180,7 +181,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
                 r += "            }\n";
                 r += "            else\n";
                 r += "            {\n";
-                r += "                printf(\"Unknown type for Number parameter " + propName + "\t\");\n";
+                r += "                fprintf(stderr, \"Unknown type for Number parameter " + propName + "\t\");\n";
                 r += "            }\n";
                 break;
 
@@ -225,20 +226,20 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
             case "int":
             case "long":
             case "long long":
-                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stderr, \"" + propName + "=%i\\t\", obj->" + propName + ");\n";
                 break;
 
             case "float":
             case "double":
-                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stderr, \"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
                 break;
 
             case "const char*":
-                r += "    printf(\"" + propName + "=%s\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stderr, \"" + propName + "=%s\\t\", obj->" + propName + ");\n";
                 break;
 
             case "bool":
-                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stderr, \"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
                 break;
 
             default:
@@ -246,7 +247,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
                 break;
         }
     }
-    r += "    printf(\"\\n\");\n";
+    r += "    fprintf(stderr, \"\\n\");\n";
     r += "}\n\n";
 
     return r;
@@ -446,7 +447,7 @@ function Create_C_file(module) {
                 ;
             });
         }
-        r += "    printf(\"Not found property \\\"%s\\\" among properties out objects\\n\", name_out_pin);\n";
+        r += "    fprintf(stderr, \"Not found property \\\"%s\\\" among properties out objects\\n\", name_out_pin);\n";
         r += "    return NULL;\n";
         r += "}\n\n";
     }
@@ -460,7 +461,7 @@ function Create_C_file(module) {
             r += "        return (void*)&module->input4module." + key + " - (void*)&module->input4module;\n";
             r += "    }\n";
         }
-        r += "    printf(\"Not found property \\\"%s\\\" among properties in input object\\n\", name_inpin);\n";
+        r += "    fprintf(stderr, \"Not found property \\\"%s\\\" among properties in input object\\n\", name_inpin);\n";
         r += "    return -1;\n";
         r += "}\n\n";
     }
@@ -485,6 +486,35 @@ function Create_C_file(module) {
     if ('paramsDefinitions' in module) {
         r += make_Structure2Bson(params, "params_" + module_type);
         r += make_Bson2Structure(params, "params_" + module_type, "", false);
+    }
+
+
+    // Функция преобразования имя команды в идентификатор (из перечесления)
+    if ('commands' in module) {
+        r += "/**\n";
+        r += " * @brief \~russian Преобразует имя команды в числоввой идентифкатор (член перечесления)\n";
+        r += " * @param \~russian Строковое имя команды\n";
+        r += " * @return \~russian Числовой идентификатор команды (определенный в перечеслении)\n";
+        r += " */\n";
+        r += "int get_idcmd_by_strcmd_" + module_type + "(const char* cmd_name)\n";
+        r += "{\n";
+        var i = 0;
+        module.commands.forEach(function (cmd) {
+            var cmdName = cmd.name.replace(/\-/g, "_");
+            if (i != 0) {
+                r += "    else\n";
+            }
+            r += "    if(!strncmp(cmd_name, \""+cmdName+"\", XNOBJECT_NAME_LEN))\n";
+            r += "    {\n";
+            r += "        return cmd_"+cmdName+";\n";
+            r += "    }\n";
+            i++;
+        });
+        r += "    {\n";
+        r += "        fprintf(stderr, \"Unknown command name %s\\n\", cmd_name);\n";
+        r += "    }\n";
+        r += "    return -1;\n";
+        r += "}\n\n";
     }
 
 
@@ -534,13 +564,16 @@ function Create_C_file(module) {
     r += "    module->module_info.func = &" + module_type + "_run;\n";
 
 
-    // Формирование перечисления типов команд
+    // Сохранение ссылки на функцию-обработчик команды
     if ('commands' in module) {
         r += "    // Сохранение ссылки на функцию-обработчик команды.\n";
-        r += "    module->module_info.cmd_func = &" + module_type + "_command;\n";
+        r += "    module->module_info.cmd_func = &" + module_type + "_command;\n\n";
+        r += "    // Сохранение ссылки на функцию-преобразования имя команды в идентификатор.\n";
+        r += "    module->module_info.get_idcmd_by_strcmd = &get_idcmd_by_strcmd_" + module_type + ";\n";
     }else{
-        r += "    // В определении модуля нет команд, а значит нет и фунции их обработки.\n";
+        r += "    // В определении модуля нет команд, а значит нет и фунциий их обработки.\n";
         r += "    module->module_info.cmd_func = NULL;\n";
+        r += "    module->module_info.get_idcmd_by_strcmd = NULL;\n";
     }
     r += "\n";
 
@@ -612,7 +645,7 @@ function Create_C_file(module) {
         r += "  int res = rt_mutex_acquire(&module->module_info.mutex_obj_exchange, TM_INFINITE);\n";
         r += "  if (res != 0)\n";
         r += "  {\n";
-        r += "      printf(\"error checkout_params_" + module_type + ": rt_mutex_acquire\\n\");\n";
+        r += "      fprintf(stderr, \"error checkout_params_" + module_type + ": rt_mutex_acquire\\n\");\n";
         r += "      return res;\n";
         r += "  }\n";
         r += "  *params = module->module_info.specific_params;\n";
@@ -629,11 +662,11 @@ function Create_C_file(module) {
         r += "  int res = rt_mutex_release(&module->module_info.mutex_obj_exchange);\n";
         r += "  if (res != 0)\n";
         r += "  {\n";
-        r += "      printf(\"error checkin_params_" + module_type + ":  rt_mutex_release\\n\");\n";
+        r += "      fprintf(stderr, \"error checkin_params_" + module_type + ":  rt_mutex_release\\n\");\n";
         r += "      return res;\n";
         r += "  }\n";
         r += "  return 0;\n";
-        r += "}\n";
+        r += "}\n\n";
 
     }
 

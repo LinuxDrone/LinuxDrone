@@ -18,6 +18,31 @@
 #define SHMEM_BLOCK1_SIZE	200
 
 
+/**
+ * \~russian Максимальный размер блока данных, передаваемый как команда рабочему потоку
+ */
+#define MAX_COMMAND_BLOCK 256
+
+/**
+ * @brief \~russian Переменная для приема команды потоком
+ */
+RT_TASK_MCB request_block;
+
+/**
+ * @brief \~russian Переменная для ответа на команду принятйю потоком потоком
+ */
+RT_TASK_MCB response_block;
+
+/**
+ * @brief \~russian Буфер данных для приема команды
+ */
+char request_block_buf[MAX_COMMAND_BLOCK];
+
+/**
+ * @brief \~russian Буфер данных, передаваемых в качестве ответа, после приема команды
+ */
+char response_block_buf[MAX_COMMAND_BLOCK];
+
 
 /**
  * @brief
@@ -708,6 +733,10 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     }
 
 
+    // Подготовим буфер для приема команды
+    request_block.data = request_block_buf;
+    request_block.size=MAX_COMMAND_BLOCK;
+
     return 0;
 }
 
@@ -877,8 +906,6 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
 }
 
 
-
-
 /**
  * @brief send2queues Рассылает объект по входным очередям инстансов подписчиков
  * @param out_object
@@ -962,6 +989,95 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 
 
 /**
+ * @brief \~russian Функцияпроверяет наличие команд переданных потоку посредством механизма ксеномай rt_task_send/rt_task_receive
+ * и в случае приема команды, парсит ее (и ее параметры) и вызывает, реализуемую создателем модуля, функцию MODULENAME_command
+ * @param module
+ */
+void process_commands(module_t *module)
+{
+    int flowid = rt_task_receive(&request_block, TM_NONBLOCK);
+    if(flowid<0)
+    {
+        fprintf(stderr, "Function: process_commands, task_receive_error:");
+        print_task_receive_error(flowid);
+        return;
+    }
+
+    // из первых двух байт считываем блину последующего блока
+    unsigned short buflen = *((unsigned short*) request_block.data);
+    //fprintf(stderr, "buflen process_commands: %i\n", buflen);
+    if (buflen == 0) {
+        fprintf(stderr, "Error: buflen==0 process_commands");
+        return;
+    }
+    // со смещением в два байта читаем следующий блок данных
+    bson_t* bson_cmd = bson_new_from_data (request_block.data + sizeof(unsigned short), buflen);
+    //debug_print_bson("Function process_commands, received command", bson_cmd);
+
+    switch (request_block.opcode)
+    {
+        case cmd_command:
+        {
+           /*
+            * JSON Command structure
+            * {
+            *  name: 'COMMAND_NAME',
+            *  params: [
+            *      {}
+            *  ]
+            * }
+            */
+
+            if(!module->get_idcmd_by_strcmd)
+            {
+                // Если нет команды, то и нехер ее вызывать
+                return;
+            }
+
+            // Get Command Name
+            bson_iter_t iter_cmd_name;
+            if (!bson_iter_init_find(&iter_cmd_name, bson_cmd, "name")) {
+                fprintf(stderr, "Not found property \"instance\" in command for instance");
+                return;
+            }
+            if (!BSON_ITER_HOLDS_UTF8(&iter_cmd_name)) {
+                fprintf(stderr, "Property \"name\" in command for instance not UTF8 type");
+                return;
+            }
+            const char* cmd_name = bson_iter_utf8(&iter_cmd_name, NULL);
+
+
+            int id_cmdfunc = (*module->get_idcmd_by_strcmd)(cmd_name);
+            if(id_cmdfunc<0)
+            {
+                fprintf(stderr, "Error convert command name \"%s\" (for instance\"%s\") to enum value", cmd_name, module->instance_name);
+                return;
+            }
+
+            // Invoke instance function for process command
+            (*module->cmd_func)(id_cmdfunc, NULL);
+        }
+        break;
+
+
+        default:
+            fprintf(stderr, "Unknown command \"%i\" for instance: %s\n", request_block.opcode, module->instance_name);
+            break;
+    }
+    bson_destroy(bson_cmd);
+
+
+    int err = rt_task_reply(flowid, &response_block);
+    if(err!=0)
+    {
+        fprintf(stderr, "Function: process_commands, task_reply_error:");
+        print_task_reply_error(err);
+    }
+}
+
+
+
+/**
  * @brief get_input_data Функция получения данных
  * Должна вызываться из бизнес функции модуля. Доставляет данные из входной очереди и из шаред мемори инстансов поставщиков
  * @param p_module
@@ -971,6 +1087,11 @@ void get_input_data(module_t *module)
     if (!module) {
         return;
     }
+
+    // прием и обработка поступивших команд, если таковые будут
+    process_commands(module);
+
+
     if(module->input_data==NULL)
     {
         //здесь просто поспать потоку
