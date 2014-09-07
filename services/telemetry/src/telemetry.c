@@ -59,11 +59,11 @@ static volatile int force_exit = 0;
 static struct libwebsocket_context *context;
 
 void debug_print_bson(char* where, bson_t* bson) {
-    printf("%s\n", where);
+    fprintf(stdout, "%s\n", where);
     char* str = bson_as_json(bson, NULL);
     fprintf(stdout, "%s\n", str);
     bson_free(str);
-    printf("\n");
+    fprintf(stdout, "\n");
 }
 
 /* this protocol server (always the first one) just knows how to do HTTP */
@@ -175,23 +175,23 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         // Get Instance Name
         bson_iter_t iter_instance_name;
         if (!bson_iter_init_find(&iter_instance_name, bson_request, "instance")) {
-            printf("Not found property \"instance\" in module_instance");
+            fprintf(stderr, "Not found property \"instance\" in module_instance");
             return -1;
         }
         if (!BSON_ITER_HOLDS_UTF8(&iter_instance_name)) {
-            printf("Property \"instance\" in module_instance not UTF8 type");
+            fprintf(stderr, "Property \"instance\" in module_instance not UTF8 type");
             return -1;
         }
         module_instance_name = bson_iter_utf8(&iter_instance_name, NULL);
 
-        // Get Instance Name
+        // Get Out Name
         bson_iter_t iter_out_name;
         if (!bson_iter_init_find(&iter_out_name, bson_request, "out")) {
-            printf("Not found property \"out\" in module_out");
+            fprintf(stderr, "Not found property \"out\" in module_out");
             return -1;
         }
         if (!BSON_ITER_HOLDS_UTF8(&iter_out_name)) {
-            printf("Property \"out\" in module_out not UTF8 type");
+            fprintf(stderr, "Property \"out\" in module_out not UTF8 type");
             return -1;
         }
         module_out_name = bson_iter_utf8(&iter_out_name, NULL);
@@ -199,16 +199,16 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         // Get Command Name
         bson_iter_t iter_cmd;
         if (!bson_iter_init_find(&iter_cmd, bson_request, "cmd")) {
-            printf("Not found property \"cmd\" in module_out");
+            fprintf(stderr, "Not found property \"cmd\" in module_out");
             return -1;
         }
         if (!BSON_ITER_HOLDS_UTF8(&iter_cmd)) {
-            printf("Property \"cmd\" in module_out not UTF8 type");
+            fprintf(stderr, "Property \"cmd\" in module_out not UTF8 type");
             return -1;
         }
         cmd_name = bson_iter_utf8(&iter_cmd, NULL);
 
-        //printf("module_instance_name: %s\tmodule_out_name: %s\n", module_instance_name, module_out_name);
+        //fprintf(stderr, "module_instance_name: %s\tmodule_out_name: %s\n", module_instance_name, module_out_name);
         if(strcmp(cmd_name, "subscribe")==0)
         {
             register_remote_shmem(&remote_shmems, module_instance_name, module_out_name);
@@ -288,7 +288,7 @@ int init_rt_task()
 
     err = rt_task_start(&task_read_shmem, &run_task_read_shmem, NULL);
     if (err != 0)
-        printf("Error start main task\n");
+        fprintf(stderr, "Error start main task\n");
 
     return 0;
 }
@@ -387,7 +387,7 @@ int main(int argc, char **argv)
 
     init_rt_task();
 
-    printf("\nPress ENTER for exit\n\n");
+    fprintf(stderr, "\nPress ENTER for exit\n\n");
     getchar();
 
     libwebsocket_context_destroy(context);
