@@ -190,6 +190,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 if(store.count()>100){
                                     store.removeAt(0);
                                 }
+                                //logContentPanel.doLayout();
 
                                 break;
 
@@ -239,6 +240,21 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             this.socketTelemetry.send(data.buffer);
         }
     },
+
+
+    SendCommand2Instance: function (cmd, instanceName, outputName) {
+        console.log('command!!!');
+        if (this.socketTelemetry.readyState == 1) {
+            var obj = {
+                cmd: 'command',
+                name: 'command0',
+                instance: 'my_test-1'
+            };
+            var data = this.BSON.serialize(obj, true, true, false);
+            this.socketTelemetry.send(data.buffer);
+        }
+    },
+
 
     onSelectLink: function (linkCell) {
         var configuratorModel = this.getView().ownerCt.getViewModel();

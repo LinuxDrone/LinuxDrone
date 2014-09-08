@@ -7,17 +7,18 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <assert.h>
-
 #include <syslog.h>
 #include <sys/time.h>
 #include <unistd.h>
-
 
 #include <native/pipe.h>
 #include "libwebsockets.h"
 
 #include "../include/telemetry.h"
 
+
+// Максимальный размер блока данных, передаваемый между потоками
+#define MAX_TRANSFER_BLOCK 256
 
 ar_remote_shmems_t remote_shmems;
 
@@ -88,36 +89,53 @@ typedef struct{
 } buf_and_bson_t;
 
 
-/*
-int send_command(i2c_service_t* service, int session_id, char dev_id, char dev_register)
+
+bson_t* send_command(const char* instance_name, void *cmd_data, size_t cmd_len)
 {
-    address_i2c_t* address_i2c = (address_i2c_t*)service->data_buf;
-    address_i2c->session_id=session_id;
-    address_i2c->dev_id = dev_id;
-    address_i2c->dev_register = dev_register;
+    char task_name[XNOBJECT_NAME_LEN] = "";
+    strcat(task_name, instance_name);
+    strcat(task_name, SUFFIX_TASK);
 
-    service->request_data_block.data = service->data_buf;
-    service->request_data_block.size = sizeof(address_i2c_t);
-    service->response_data_block.size = MAX_TRANSFER_BLOCK;
-    service->request_data_block.opcode = op_cmd_write_i2c;
-
-    ssize_t received = rt_task_send(&service->task_i2c_service, &service->request_data_block, &service->response_data_block, TM_INFINITE);
-    if(received<0)
+    RT_TASK recipient_task;
+    int err = rt_task_bind(&recipient_task, task_name, TM_NONBLOCK);
+    if(err!=0)
     {
-        if(received==-ESRCH)
-        {
-            service->connected=false;
-            return 0;
-        }
-        else
-        {
-            return received;
-        }
+        fprintf(stderr, "send_command, ERROR \"%i\" rt_task_bind, task instance:\"%s\"\n", err, task_name);
+        return BCON_NEW ("status", BCON_UTF8 ("error"), "instance", BCON_UTF8(instance_name), "message", BCON_UTF8("rt_task_bind"));
     }
 
-    return service->response_data_block.opcode;
+    char request_buf[MAX_TRANSFER_BLOCK];
+    // В первые два байта сохраняем длину блока
+    *((unsigned short*) request_buf) = cmd_len;
+    // в буфер (со смещением в два байта) копируем блок данных
+    memcpy(request_buf + sizeof(unsigned short), cmd_data, cmd_len);
+
+    RT_TASK_MCB request_block;
+    request_block.data = request_buf;
+    request_block.size = cmd_len + sizeof(unsigned short);
+    request_block.opcode = cmd_command;
+
+    RT_TASK_MCB response_block;
+    char response_buf[MAX_TRANSFER_BLOCK];
+    response_block.data = response_buf;
+    response_block.size = MAX_TRANSFER_BLOCK;
+
+fprintf(stderr, "send_command, BEFORE SEND, task instance:\"%s\"\n", task_name);
+    ssize_t received = rt_task_send(&recipient_task, &request_block, &response_block, TM_INFINITE);
+fprintf(stderr, "send_command, AFTER SEND, task instance:\"%s\"\n", task_name);
+    rt_task_unbind(&recipient_task);
+    if(received<=0)
+    {
+        fprintf(stderr, "send_command, ERROR \"%i\" rt_task_send, instance:\"%s\"\n", received, instance_name);
+        return NULL;//BCON_NEW ("status", BCON_UTF8 ("error"), "instance", BCON_UTF8(instance_name), "message", BCON_UTF8("rt_task_send"));
+    }
+
+    //return service->response_data_block.opcode;
+
+    return bson_new_from_data (response_block.data, received);
 }
-*/
+
+
 
 buf_and_bson_t* ar_bson2send = NULL;
 int len_bson2send = 0;
@@ -274,6 +292,17 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
              *      instance: instanceName
              * }
              */
+
+fprintf(stderr, "callback_telemetry BEFORE send_command\n");
+            bson_t* resp_bson = send_command(module_instance_name, in, len);
+fprintf(stderr, "callback_telemetry AFTER send_command\n");
+            if(resp_bson)
+            {
+                // ответим в вебсокет
+                //libwebsocket_write(wsi, (unsigned char *)bson_get_data(resp_bson), resp_bson->len, LWS_WRITE_BINARY);
+
+                bson_destroy(resp_bson);
+            }
 
         }
         else if(strcmp(cmd_name, "getParams")==0)

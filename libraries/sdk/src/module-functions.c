@@ -10,6 +10,7 @@
 #include <native/heap.h>
 #include <native/event.h>
 #include <native/timer.h>
+#include <bcon.h>
 #include "../include/module-functions.h"
 
 #define SHMEM_WRITER_MASK	0x7FFFFFFF
@@ -29,7 +30,7 @@
 RT_TASK_MCB request_block;
 
 /**
- * @brief \~russian Переменная для ответа на команду принятйю потоком потоком
+ * @brief \~russian Переменная для ответа на команду принятую основным потоком
  */
 RT_TASK_MCB response_block;
 
@@ -1001,24 +1002,28 @@ void process_commands(module_t *module)
         // Нормальная ситуация. Означает, что нет потоков решивших отправить мессагу данному потоку.
         return;
     }
-
+fprintf(stderr, "Function: process_commands, BEGIN\n");
     if(flowid<0)
     {
         fprintf(stderr, "Function: process_commands, task_receive_error:");
         print_task_receive_error(flowid);
         return;
     }
+    bson_t* response_bson = NULL;
+    response_block.size = 0;
+    response_block.data = NULL;
+
 
     // из первых двух байт считываем блину последующего блока
     unsigned short buflen = *((unsigned short*) request_block.data);
-    //fprintf(stderr, "buflen process_commands: %i\n", buflen);
+fprintf(stderr, "buflen process_commands: %i\n", buflen);
     if (buflen == 0) {
         fprintf(stderr, "Error: buflen==0 process_commands");
-        return;
+        goto exit;
     }
     // со смещением в два байта читаем следующий блок данных
     bson_t* bson_cmd = bson_new_from_data (request_block.data + sizeof(unsigned short), buflen);
-    //debug_print_bson("Function process_commands, received command", bson_cmd);
+debug_print_bson("Function process_commands, received command", bson_cmd);
 
     switch (request_block.opcode)
     {
@@ -1037,18 +1042,19 @@ void process_commands(module_t *module)
             if(!module->get_idcmd_by_strcmd)
             {
                 // Если нет команды, то и нехер ее вызывать
-                return;
+fprintf(stderr, "Not found get_idcmd_by_strcmd\n");
+                goto exit;
             }
 
             // Get Command Name
             bson_iter_t iter_cmd_name;
             if (!bson_iter_init_find(&iter_cmd_name, bson_cmd, "name")) {
-                fprintf(stderr, "Not found property \"instance\" in command for instance");
-                return;
+                fprintf(stderr, "Not found property \"instance\" in command for instance\n");
+                goto exit;
             }
             if (!BSON_ITER_HOLDS_UTF8(&iter_cmd_name)) {
-                fprintf(stderr, "Property \"name\" in command for instance not UTF8 type");
-                return;
+                fprintf(stderr, "Property \"name\" in command for instance not UTF8 type\n");
+                goto exit;
             }
             const char* cmd_name = bson_iter_utf8(&iter_cmd_name, NULL);
 
@@ -1056,12 +1062,17 @@ void process_commands(module_t *module)
             int id_cmdfunc = (*module->get_idcmd_by_strcmd)(cmd_name);
             if(id_cmdfunc<0)
             {
-                fprintf(stderr, "Error convert command name \"%s\" (for instance\"%s\") to enum value", cmd_name, module->instance_name);
-                return;
+                fprintf(stderr, "Error convert command name \"%s\" (for instance\"%s\") to enum value\n", cmd_name, module->instance_name);
+                goto exit;
             }
 
             // Invoke instance function for process command
             (*module->cmd_func)(id_cmdfunc, NULL);
+
+            // Ответим в виде бейсона, что все прошло хорошо
+            bson_t* response_bson = BCON_NEW("status", BCON_UTF8 ("success"), "instance", BCON_UTF8(module->instance_name));
+            response_block.size = response_bson->len;
+            response_block.data = (char *)bson_get_data(response_bson);
         }
         break;
 
@@ -1070,14 +1081,19 @@ void process_commands(module_t *module)
             fprintf(stderr, "Unknown command \"%i\" for instance: %s\n", request_block.opcode, module->instance_name);
             break;
     }
-    bson_destroy(bson_cmd);
 
+exit:
+    bson_destroy(bson_cmd);
 
     int err = rt_task_reply(flowid, &response_block);
     if(err!=0)
     {
         fprintf(stderr, "Function: process_commands, task_reply_error:");
         print_task_reply_error(err);
+    }
+
+    if(response_bson){
+        bson_destroy(response_bson);
     }
 }
 

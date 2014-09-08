@@ -50,6 +50,23 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
                             reference: 'telemetrySelect'
                         }
                     ]
+                },
+                {
+                    title: 'Commands',
+                    items: [
+                        {
+                            xtype: 'panel',
+                            reference: 'commands2instance',
+                            layout: 'vbox',
+                            items:[
+                                {
+                                    xtype:'button',
+                                    text: 'Send test command',
+                                    handler: 'onSendCommand2Instance'
+                                }
+                            ]
+                        }
+                    ]
                 }
             ],
             buttons: [

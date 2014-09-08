@@ -130,6 +130,14 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
         var file = formPanel.getForm().findField('file').extractFileInput().files[0];
         reader.readAsText(file);
         formPanel.close();
+    },
+
+    onSendCommand2Instance: function(){
+        var model = this.getView().getViewModel();
+        var svgpanelmodel = model.children["rtconfigurator-view-configurator-svgpanel-svgpanelmodel-1"];
+        var svgpanelcontroller = svgpanelmodel.getView().controller;
+
+        svgpanelcontroller.SendCommand2Instance();
     }
 
 
