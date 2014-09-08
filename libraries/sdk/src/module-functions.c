@@ -1070,9 +1070,9 @@ fprintf(stderr, "Not found get_idcmd_by_strcmd\n");
             (*module->cmd_func)(id_cmdfunc, NULL);
 
             // Ответим в виде бейсона, что все прошло хорошо
-            bson_t* response_bson = BCON_NEW("status", BCON_UTF8 ("success"), "instance", BCON_UTF8(module->instance_name));
-            response_block.size = response_bson->len;
-            response_block.data = (char *)bson_get_data(response_bson);
+            //bson_t* response_bson = BCON_NEW("status", BCON_UTF8 ("success"), "instance", BCON_UTF8(module->instance_name));
+            response_block.size = 0;//response_bson->len;
+            response_block.data = NULL;//(char *)bson_get_data(response_bson);
         }
         break;
 
