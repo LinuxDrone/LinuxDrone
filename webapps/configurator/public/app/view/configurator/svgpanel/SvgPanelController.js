@@ -93,6 +93,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                 // Deserialize
                 var obj = controller.BSON.deserialize(new Uint8Array(msg.data));
 
+                console.log(obj);
+
                 model.set('blockChangeSchema', true);
                 $.each(obj, function (port, value) {
                     if (port != "_from" && (obj["_from"] in PreparedLinks) && (port in PreparedLinks[obj["_from"]])) {

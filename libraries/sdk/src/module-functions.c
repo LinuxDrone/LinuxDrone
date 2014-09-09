@@ -1002,7 +1002,7 @@ void process_commands(module_t *module)
         // Нормальная ситуация. Означает, что нет потоков решивших отправить мессагу данному потоку.
         return;
     }
-fprintf(stderr, "Function: process_commands, BEGIN\n");
+//fprintf(stderr, "Function: process_commands, BEGIN\n");
     if(flowid<0)
     {
         fprintf(stderr, "Function: process_commands, task_receive_error:");
@@ -1016,14 +1016,14 @@ fprintf(stderr, "Function: process_commands, BEGIN\n");
 
     // из первых двух байт считываем блину последующего блока
     unsigned short buflen = *((unsigned short*) request_block.data);
-fprintf(stderr, "buflen process_commands: %i\n", buflen);
+//fprintf(stderr, "buflen process_commands: %i\n", buflen);
     if (buflen == 0) {
         fprintf(stderr, "Error: buflen==0 process_commands");
         goto exit;
     }
     // со смещением в два байта читаем следующий блок данных
     bson_t* bson_cmd = bson_new_from_data (request_block.data + sizeof(unsigned short), buflen);
-debug_print_bson("Function process_commands, received command", bson_cmd);
+//debug_print_bson("Function process_commands, received command", bson_cmd);
 
     switch (request_block.opcode)
     {
@@ -1070,9 +1070,13 @@ fprintf(stderr, "Not found get_idcmd_by_strcmd\n");
             (*module->cmd_func)(id_cmdfunc, NULL);
 
             // Ответим в виде бейсона, что все прошло хорошо
-            //bson_t* response_bson = BCON_NEW("status", BCON_UTF8 ("success"), "instance", BCON_UTF8(module->instance_name));
-            response_block.size = 0;//response_bson->len;
-            response_block.data = NULL;//(char *)bson_get_data(response_bson);
+            response_bson = bson_new();
+            bson_append_utf8(response_bson, "type", -1, "cmd_status", -1);
+            bson_append_utf8(response_bson, "value", -1, "success", -1);
+            bson_append_utf8(response_bson, "instance", -1, module->instance_name, -1);
+
+            response_block.size = response_bson->len;
+            response_block.data = (char *)bson_get_data(response_bson);
         }
         break;
 

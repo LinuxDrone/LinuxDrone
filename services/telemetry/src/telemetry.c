@@ -120,18 +120,19 @@ bson_t* send_command(const char* instance_name, void *cmd_data, size_t cmd_len)
     response_block.data = response_buf;
     response_block.size = MAX_TRANSFER_BLOCK;
 
-fprintf(stderr, "send_command, BEFORE SEND, task instance:\"%s\"\n", task_name);
+//fprintf(stderr, "send_command, BEFORE SEND, task instance:\"%s\"\n", task_name);
     ssize_t received = rt_task_send(&recipient_task, &request_block, &response_block, TM_INFINITE);
-fprintf(stderr, "send_command, AFTER SEND, task instance:\"%s\"\n", task_name);
+//fprintf(stderr, "send_command, AFTER SEND, task instance:\"%s\", received=%i\n", task_name, received);
     rt_task_unbind(&recipient_task);
     if(received<=0)
     {
-        fprintf(stderr, "send_command, ERROR \"%i\" rt_task_send, instance:\"%s\"\n", received, instance_name);
-        return NULL;//BCON_NEW ("status", BCON_UTF8 ("error"), "instance", BCON_UTF8(instance_name), "message", BCON_UTF8("rt_task_send"));
+        bson_t* resp = bson_new();
+        bson_append_utf8(resp, "type", -1, "status", -1);
+        bson_append_utf8(resp, "value", -1, "ERROR in rt_task_send", -1);
+        bson_append_utf8(resp, "instance", -1, instance_name, -1);
+        return resp;
     }
-
-    //return service->response_data_block.opcode;
-
+//fprintf(stderr, "send_command, ERROR \"%i\" rt_task_send, instance:\"%s\"\n", received, instance_name);
     return bson_new_from_data (response_block.data, received);
 }
 
@@ -293,14 +294,14 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
              * }
              */
 
-fprintf(stderr, "callback_telemetry BEFORE send_command\n");
+//fprintf(stderr, "callback_telemetry BEFORE send_command\n");
             bson_t* resp_bson = send_command(module_instance_name, in, len);
-fprintf(stderr, "callback_telemetry AFTER send_command\n");
+//fprintf(stderr, "callback_telemetry AFTER send_command\n");
+//debug_print_bson("resp_bson", resp_bson);
             if(resp_bson)
             {
                 // ответим в вебсокет
-                //libwebsocket_write(wsi, (unsigned char *)bson_get_data(resp_bson), resp_bson->len, LWS_WRITE_BINARY);
-
+                libwebsocket_write(wsi, (unsigned char *)bson_get_data(resp_bson), resp_bson->len, LWS_WRITE_BINARY);
                 bson_destroy(resp_bson);
             }
 
