@@ -45,6 +45,7 @@ function make_structures(properties, outName) {
     r += "{\n";
     var i = 0;
     for (var key in properties) {
+        key = key.replace(/-/g, "_");
         if (i != 0) {
             r += ",\n";
         }
@@ -66,7 +67,8 @@ function make_structures(properties, outName) {
     r += "typedef struct\n";
     r += "{\n";
     for (var key in properties) {
-        r += "\t" + properties[key].type + " " + key + ";\n";
+        var key2 = key.replace(/-/g, "_");
+        r += "\t" + properties[key].type + " " + key2 + ";\n";
     }
     r += "} " + outName + "_t;\n\n";
     return r;
@@ -154,7 +156,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
     r += "    {\n";
     r += "        const char* key = bson_iter_key (&iter);\n\n";
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         r += "        if(!strncmp(key, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
         r += "        {\n";
         switch (properties[key].type) {
@@ -181,7 +183,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
                 r += "            }\n";
                 r += "            else\n";
                 r += "            {\n";
-                r += "                fprintf(stderr, \"Unknown type for Number parameter " + propName + "\t\");\n";
+                r += "                fprintf(stderr, \"Unknown type for Number parameter " + propName + "\\n\");\n";
                 r += "            }\n";
                 break;
 
@@ -219,7 +221,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
         r += "{\n";
     }
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
@@ -390,6 +392,7 @@ function Create_C_file(module) {
         r += "int get_inputmask_by_inputname(char* input_name)\n";
         r += "{\n";
         for (var key in module.inputShema.properties) {
+            key = key.replace(/-/g, "_");
             r += "    if(!strncmp(input_name, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
             r += "        return " + key + ";\n";
         }
@@ -458,7 +461,8 @@ function Create_C_file(module) {
         for (var key in module.inputShema.properties) {
             r += "    if(!strncmp(name_inpin, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
             r += "    {\n";
-            r += "        return (void*)&module->input4module." + key + " - (void*)&module->input4module;\n";
+            var key2 = key.replace(/-/g, "_");
+            r += "        return (void*)&module->input4module." + key2 + " - (void*)&module->input4module;\n";
             r += "    }\n";
         }
         r += "    fprintf(stderr, \"Not found property \\\"%s\\\" among properties in input object\\n\", name_inpin);\n";
