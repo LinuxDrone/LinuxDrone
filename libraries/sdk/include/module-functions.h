@@ -650,6 +650,9 @@ void print_rt_mutex_acquire(int err);
 
 void debug_print_bson(char* where, bson_t* bson);
 
+// макросы из опенпилота
+#define IS_SET(field, mask)     (((field) & (mask)) == (mask))
+
 #ifdef __cplusplus
 }
 #endif

@@ -15,7 +15,7 @@
 
 #include <math.h>
 #include <stdint.h>
-#include "quaternion-functions.h"
+#include "math/quaternion-functions.h"
 
 #define MIN_ALLOWABLE_MAGNITUDE 1e-30f
 

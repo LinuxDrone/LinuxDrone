@@ -16,7 +16,7 @@
 #include <native/timer.h>
 #include "attitude.h"
 #include "attitude.helper.h"
-#include "quaternion-functions.h"
+#include "math/quaternion-functions.h"
 //#include "math/quaternion.h"
 #include "math.h"
 
