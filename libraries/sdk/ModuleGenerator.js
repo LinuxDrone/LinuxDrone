@@ -11,15 +11,7 @@ function make_params_structure(params_definitions, moduleName) {
         if (i != 0) {
             r += ",\n";
         }
-        r += "\t" + paramName + " =\t0b";
-        for (var c = 0; c < 32; c++) {
-            if (i == 31 - c) {
-                r += "1";
-            }
-            else {
-                r += "0";
-            }
-        }
+        r += "\t" + paramName + " =\t1 << " + i;
         i++;
     });
 
@@ -49,15 +41,7 @@ function make_structures(properties, outName) {
         if (i != 0) {
             r += ",\n";
         }
-        r += "\t" + key + " =\t0b";
-        for (var c = 0; c < 32; c++) {
-            if (i == 31 - c) {
-                r += "1";
-            }
-            else {
-                r += "0";
-            }
-        }
+        r += "\t" + key + " =\t1 << " + i;
         i++;
     }
     r += "\n";
