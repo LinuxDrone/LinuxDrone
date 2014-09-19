@@ -75,8 +75,8 @@ int filterAltitudeInitialize(stateFilter *handle)
     handle->init      = &init_filter;
     handle->filter    = &filter;
     handle->localdata = calloc(1, sizeof(data_t));
-    AttitudeStateInitialize();
-    AltitudeFilterSettingsInitialize();
+    ///AttitudeStateInitialize();
+    ///AltitudeFilterSettingsInitialize();
     return STACK_REQUIRED;
 }
 
@@ -113,19 +113,19 @@ static int filter(stateFilter *self, stateEstimation *state)
         if (IS_SET(state->updated, accel_x)) {
             this->lastTime = PIOS_DELAY_GetRaw();
         }
-        if (IS_SET(state->updated, BaroAltitude)) {
+        if (IS_SET(state->updated, baroAltitude)) {
             this->first_run    = 0;
             this->baroLastTime = PIOS_DELAY_GetRaw();
         }
     } else {
         // save existing position and velocity updates so GPS will still work
-        if (IS_SET(state->updated, GpsLatitude)) {
+        if (IS_SET(state->updated, in_pos_north)) {
             this->pos[0]  = state->pos[0];
             this->pos[1]  = state->pos[1];
             this->pos[2]  = state->pos[2];
             state->pos[2] = -this->state[0];
         }
-        if (IS_SET(state->updated, North)) {
+        if (IS_SET(state->updated, in_vel_north)) {
             this->vel[0]  = state->vel[0];
             this->vel[1]  = state->vel[1];
             this->vel[2]  = state->vel[2];
@@ -134,7 +134,7 @@ static int filter(stateFilter *self, stateEstimation *state)
         if (IS_SET(state->updated, accel_x)) {
             // rotate accels into global coordinate frame
             float Rbe[3][3];
-            Quaternion2R(input->q1 , Rbe);
+            Quaternion2R(input->in_q1 , Rbe);
             float current = -(Rbe[0][2] * state->accel[0] + Rbe[1][2] * state->accel[1] + Rbe[2][2] * state->accel[2] + 9.81f);
 
             // low pass filter accelerometers
@@ -166,14 +166,14 @@ static int filter(stateFilter *self, stateEstimation *state)
             state->pos[0]   = this->pos[0];
             state->pos[1]   = this->pos[1];
             state->pos[2]   = -this->state[0];
-            state->updated |= GpsLatitude;
+            state->updated |= in_pos_north;
 
             state->vel[0]   = this->vel[0];
             state->vel[1]   = this->vel[1];
             state->vel[2]   = -this->state[1];
-            state->updated |= North;
+            state->updated |= in_vel_north;
         }
-        if (IS_SET(state->updated, BaroAltitude)) {
+        if (IS_SET(state->updated, baroAltitude)) {
             // correct the altitude state (simple low pass)
             this->state[0] = (1.0f - self->module->params_state_estimation.BaroKp) * this->state[0] + self->module->params_state_estimation.BaroKp * state->baro[0];
 
@@ -195,12 +195,12 @@ static int filter(stateFilter *self, stateEstimation *state)
             state->pos[0]   = this->pos[0];
             state->pos[1]   = this->pos[1];
             state->pos[2]   = -this->state[0];
-            state->updated |= GpsLatitude;
+            state->updated |= in_pos_north;
 
             state->vel[0]   = this->vel[0];
             state->vel[1]   = this->vel[1];
             state->vel[2]   = -this->state[1];
-            state->updated |= North;
+            state->updated |= in_vel_north;
         }
     }
 

@@ -70,7 +70,28 @@
     ],
     "outputs": [
         {
-            "name": "State",
+            "name": "GyroState",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "gyroX": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "gyroY": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "gyroZ": {
+                        "type": "float",
+                        "required": true
+                    }
+                }
+            }
+        },
+        {
+            "name": "AccelState",
             "Schema": {
                 "type": "object",
                 "id": "http://jsonschema.net",
@@ -86,19 +107,16 @@
                     "accelZ": {
                         "type": "float",
                         "required": true
-                    },
-                    "gyroX": {
-                        "type": "float",
-                        "required": true
-                    },
-                    "gyroY": {
-                        "type": "float",
-                        "required": true
-                    },
-                    "gyroZ": {
-                        "type": "float",
-                        "required": true
-                    },
+                    }
+                }
+            }
+        },
+        {
+            "name": "MagState",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
                     "magX": {
                         "type": "float",
                         "required": true
@@ -108,6 +126,102 @@
                         "required": true
                     },
                     "magZ": {
+                        "type": "float",
+                        "required": true
+                    }
+                }
+            }
+        },
+        {
+            "name": "AttitudeState",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "Q1": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "Q2": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "Q3": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "Q4": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "Roll": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "Pitch": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "Yaw": {
+                        "type": "float",
+                        "required": true
+                    }
+                }
+            }
+        },
+        {
+            "name": "PositionState",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "PosNorth": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "PosEast": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "PosDown": {
+                        "type": "float",
+                        "required": true
+                    }
+                }
+            }
+        },
+        {
+            "name": "VelocityState",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "VelNorth": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "VelEast": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "VelDown": {
+                        "type": "float",
+                        "required": true
+                    }
+                }
+            }
+        },
+        {
+            "name": "AirspeedState",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "CalibratedAirspeed": {
+                        "type": "float",
+                        "required": true
+                    },
+                    "TrueAirspeed": {
                         "type": "float",
                         "required": true
                     }
@@ -192,7 +306,7 @@
                     "ru": "mag-z"
                 }
             },
-            "q1": {
+            "in-q1": {
                 "type": "float",
                 "required": true,
                 "description": {
@@ -200,7 +314,7 @@
                     "ru": "q1"
                 }
             },
-            "q2": {
+            "in-q2": {
                 "type": "float",
                 "required": true,
                 "description": {
@@ -208,7 +322,7 @@
                     "ru": "q2"
                 }
             },
-            "q3": {
+            "in-q3": {
                 "type": "float",
                 "required": true,
                 "description": {
@@ -216,7 +330,7 @@
                     "ru": "q3"
                 }
             },
-            "q4": {
+            "in-q4": {
                 "type": "float",
                 "required": true,
                 "description": {
@@ -224,7 +338,7 @@
                     "ru": "q4"
                 }
             },
-            "BaroAltitude": {
+            "baroAltitude": {
                 "type": "float",
                 "required": true,
                 "description": {
@@ -232,7 +346,7 @@
                     "ru": "Высота по барометру"
                 }
             },
-            "North": {
+            "in-vel-north": {
                 "type": "float",
                 "required": true,
                 "description": {
@@ -240,7 +354,7 @@
                     "ru": "North"
                 }
             },
-            "East": {
+            "in-vel-east": {
                 "type": "float",
                 "required": true,
                 "description": {
@@ -248,7 +362,7 @@
                     "ru": "East"
                 }
             },
-            "Down": {
+            "in-vel-down": {
                 "type": "float",
                 "required": true,
                 "description": {
@@ -256,28 +370,36 @@
                     "ru": "Down"
                 }
             },
-            "GpsAltitude": {
+            "in-pos-north": {
                 "type": "float",
                 "required": true,
                 "description": {
-                    "en": "GpsAltitude",
-                    "ru": "Высота по GPS"
+                    "en": "North",
+                    "ru": "North"
                 }
             },
-            "GpsLongitude": {
+            "in-pos-east": {
                 "type": "float",
                 "required": true,
                 "description": {
-                    "en": "GpsLongitude",
-                    "ru": "GpsLongitude GPS"
+                    "en": "East",
+                    "ru": "East"
                 }
             },
-            "GpsLatitude": {
+            "in-pos-down": {
                 "type": "float",
                 "required": true,
                 "description": {
-                    "en": "GpsLatitude",
-                    "ru": "GpsLatitude GPS"
+                    "en": "Down",
+                    "ru": "Down"
+                }
+            },
+            "in-calibratedAirspeed": {
+                "type": "float",
+                "required": true,
+                "description": {
+                    "en": "CalibratedAirspeed",
+                    "ru": "CalibratedAirspeed"
                 }
             }
         }

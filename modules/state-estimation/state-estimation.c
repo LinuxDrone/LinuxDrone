@@ -1,6 +1,48 @@
 #include "state-estimation.helper.h"
 #include "inc/stateestimation.h"
 
+
+#define CHECK_AND_LOAD_TO_STATE_3_DIMENSIONS(shortname, a1, a2, a3) \
+    if (IS_SET(states.updated, a1)) { \
+        if (IS_REAL(input->a1) && IS_REAL(input->a2) && IS_REAL(input->a3)) { \
+            states.shortname[0] = input->a1; \
+            states.shortname[1] = input->a2; \
+            states.shortname[2] = input->a3; \
+        } \
+        else { \
+            UNSET_MASK(states.updated, a1); \
+        } \
+    }
+
+#define CHECK_AND_LOAD_TO_STATE_1_DIMENSION(shortname, a1) \
+    if (IS_SET(states.updated, a1)) { \
+        if (IS_REAL(input->a1)) { \
+            states.shortname[0] = input->a1; \
+        } \
+        else { \
+            UNSET_MASK(states.updated, a1); \
+        } \
+    }
+
+#define EXPORT_STATE_IF_UPDATED_3_DIMENSIONS(statename, shortname, a1, a2, a3) \
+    if (IS_SET(states.updated, a1)) { \
+        statename##_t* obj##statename; \
+        checkout_##statename(module, &obj##statename); \
+        obj##statename->a1 = states.shortname[0]; \
+        obj##statename->a2 = states.shortname[1]; \
+        obj##statename->a3 = states.shortname[2]; \
+        checkin_##statename(module, &obj##statename); \
+    }
+
+#define EXPORT_STATE_IF_UPDATED_2_DIMENSIONS(statename, shortname, a1, a2) \
+    if (IS_SET(states.updated, a1)) { \
+        statename##_t* obj##statename; \
+        checkout_##statename(module, &obj##statename); \
+        obj##statename->a1 = states.shortname[0]; \
+        obj##statename->a2 = states.shortname[1]; \
+        checkin_##statename(module, &obj##statename); \
+    }
+
 struct filterPipelineStruct;
 
 typedef const struct filterPipelineStruct {
@@ -101,6 +143,40 @@ static const filterPipeline *ekf13Queue = &(filterPipeline) {
 
 
 
+int32_t StateEstimationInitialize(void)
+{
+/*
+    RevoSettingsInitialize();
+
+    GyroSensorInitialize();
+    MagSensorInitialize();
+    BaroSensorInitialize();
+    AirspeedSensorInitialize();
+    GPSVelocitySensorInitialize();
+    GPSPositionSensorInitialize();
+
+    GyroStateInitialize();
+    AccelStateInitialize();
+    MagStateInitialize();
+    AirspeedStateInitialize();
+    PositionStateInitialize();
+    VelocityStateInitialize();
+*/
+
+    // Initialize Filters
+    ///filterMagInitialize(&magFilter);
+    filterBaroInitialize(&baroFilter);
+    filterAltitudeInitialize(&altitudeFilter);
+    filterAirInitialize(&airFilter);
+    ///filterStationaryInitialize(&stationaryFilter);
+    ///filterLLAInitialize(&llaFilter);
+    filterCFInitialize(&cfFilter);
+    ///filterCFMInitialize(&cfmFilter);
+    ///filterEKF13iInitialize(&ekf13iFilter);
+    ///filterEKF13Initialize(&ekf13Filter);
+
+    return 0;
+}
 
 
 static int32_t fusionAlgorithm     = -1;
@@ -133,8 +209,6 @@ void state_estimation_run (module_state_estimation_t *module)
 
 
 
-
-
         // check if a new filter chain should be initialized
         if (fusionAlgorithm != module->params_state_estimation.FusionAlgorithm) {
             ///FlightStatusData fs;
@@ -158,6 +232,7 @@ void state_estimation_run (module_state_estimation_t *module)
                 default:
                     newFilterChain = NULL;
                 }
+
                 // initialize filters in chain
                 current = (filterPipeline *)newFilterChain;
                 bool error = 0;
@@ -184,27 +259,12 @@ void state_estimation_run (module_state_estimation_t *module)
         states.updated = module->module_info.updated_input_properties;
 
         // fetch sensors, check values, and load into state struct
-        //FETCH_SENSOR_FROM_UAVOBJECT_CHECK_AND_LOAD_TO_STATE_3_DIMENSIONS(GyroSensor, gyro, x, y, z);
-        states.gyro[0] = input->gyro_x;
-        states.gyro[1] = input->gyro_y;
-        states.gyro[2] = input->gyro_z;
-        //FETCH_SENSOR_FROM_UAVOBJECT_CHECK_AND_LOAD_TO_STATE_3_DIMENSIONS(AccelSensor, accel, x, y, z);
-        states.accel[0] = input->accel_x;
-        states.accel[1] = input->accel_y;
-        states.accel[2] = input->accel_z;
-        //FETCH_SENSOR_FROM_UAVOBJECT_CHECK_AND_LOAD_TO_STATE_3_DIMENSIONS(MagSensor, mag, x, y, z);
-        states.mag[0] = input->mag_x;
-        states.mag[1] = input->mag_y;
-        states.mag[2] = input->mag_z;
-        //FETCH_SENSOR_FROM_UAVOBJECT_CHECK_AND_LOAD_TO_STATE_3_DIMENSIONS(GPSVelocitySensor, vel, North, East, Down);
-        states.vel[0] = input->North;
-        states.vel[1] = input->East;
-        states.vel[2] = input->Down;
-        //FETCH_SENSOR_FROM_UAVOBJECT_CHECK_AND_LOAD_TO_STATE_1_DIMENSION_WITH_CUSTOM_EXTRA_CHECK(BaroSensor, baro, Altitude, true);
-        states.baro[0] = input->BaroAltitude;
-
-
-        //FETCH_SENSOR_FROM_UAVOBJECT_CHECK_AND_LOAD_TO_STATE_1_DIMENSION_WITH_CUSTOM_EXTRA_CHECK(AirspeedSensor, airspeed, CalibratedAirspeed, s.SensorConnected == AIRSPEEDSENSOR_SENSORCONNECTED_TRUE);
+        CHECK_AND_LOAD_TO_STATE_3_DIMENSIONS(gyro, gyro_x, gyro_y, gyro_z);
+        CHECK_AND_LOAD_TO_STATE_3_DIMENSIONS(accel, accel_x, accel_y, accel_z);
+        CHECK_AND_LOAD_TO_STATE_3_DIMENSIONS(mag, mag_x, mag_y, mag_z);
+        CHECK_AND_LOAD_TO_STATE_3_DIMENSIONS(vel, in_vel_north, in_vel_east, in_vel_down);
+        CHECK_AND_LOAD_TO_STATE_1_DIMENSION(baro, baroAltitude);
+        CHECK_AND_LOAD_TO_STATE_1_DIMENSION(airspeed, in_calibratedAirspeed);
         states.airspeed[1] = 0.0f; // sensor does not provide true airspeed, needs to be calculated by filter, set to zero for now
         // GPS position data (LLA) is not fetched here since it does not contain floats. The filter must do all checks itself
 
@@ -212,7 +272,6 @@ void state_estimation_run (module_state_estimation_t *module)
 
         // apply all filters in the current filter chain
         current  = (filterPipeline *)filterChain;
-
 
 
         while (current != NULL) {
@@ -225,76 +284,51 @@ void state_estimation_run (module_state_estimation_t *module)
 
 
         // the final output of filters is saved in state variables
-        ///EXPORT_STATE_TO_UAVOBJECT_IF_UPDATED_3_DIMENSIONS(GyroState, gyro, x, y, z);
-        ///EXPORT_STATE_TO_UAVOBJECT_IF_UPDATED_3_DIMENSIONS(AccelState, accel, x, y, z);
-        ///EXPORT_STATE_TO_UAVOBJECT_IF_UPDATED_3_DIMENSIONS(MagState, mag, x, y, z);
-        //EXPORT_STATE_TO_UAVOBJECT_IF_UPDATED_3_DIMENSIONS(PositionState, pos, North, East, Down);
-        //EXPORT_STATE_TO_UAVOBJECT_IF_UPDATED_3_DIMENSIONS(VelocityState, vel, North, East, Down);
-        //EXPORT_STATE_TO_UAVOBJECT_IF_UPDATED_2_DIMENSIONS(AirspeedState, airspeed, CalibratedAirspeed, TrueAirspeed);
+        EXPORT_STATE_IF_UPDATED_3_DIMENSIONS(GyroState, gyro, gyroX, gyroY, gyroZ);
+        EXPORT_STATE_IF_UPDATED_3_DIMENSIONS(AccelState, accel, accelX, accelY, accelZ);
+        EXPORT_STATE_IF_UPDATED_3_DIMENSIONS(MagState, mag, magX, magY, magZ);
+        EXPORT_STATE_IF_UPDATED_3_DIMENSIONS(PositionState, pos, PosNorth, PosEast, PosDown);
+        EXPORT_STATE_IF_UPDATED_3_DIMENSIONS(VelocityState, vel, VelNorth, VelEast, VelDown);
+        EXPORT_STATE_IF_UPDATED_2_DIMENSIONS(AirspeedState, airspeed, CalibratedAirspeed, TrueAirspeed);
+
         // attitude nees manual conversion from quaternion to euler
-        ///if (IS_SET(states.updated, SENSORUPDATES_attitude)) { \
-           /// AttitudeStateData s;
-            ///AttitudeStateGet(&s);
-            ///s.q1 = states.attitude[0];
-            ///s.q2 = states.attitude[1];
-            ///s.q3 = states.attitude[2];
-            ///s.q4 = states.attitude[3];
-            ///Quaternion2RPY(&s.q1, &s.Roll);
-            ///AttitudeStateSet(&s);
-        ///}
+        if (IS_SET(states.updated, in_q1)) {
+            AttitudeState_t* objAttitudeState;
+            checkout_AttitudeState(module, &objAttitudeState);
+            objAttitudeState->Q1 = states.attitude[0];
+            objAttitudeState->Q2 = states.attitude[1];
+            objAttitudeState->Q3 = states.attitude[2];
+            objAttitudeState->Q4 = states.attitude[3];
+            Quaternion2RPY(&objAttitudeState->Q1, &objAttitudeState->Roll);
+            checkin_AttitudeState(module, &objAttitudeState);
+        }
+
 
         // throttle alarms, raise alarm flags immediately
         // but require system to run for a while before decreasing
         // to prevent alarm flapping
-        if (alarm >= lastAlarm) {
-            lastAlarm    = alarm;
-            alarmcounter = 0;
-        } else {
-            if (alarmcounter < 100) {
-                alarmcounter++;
-            } else {
-                lastAlarm    = alarm;
-                alarmcounter = 0;
-            }
-        }
+        ///if (alarm >= lastAlarm) {
+        ///    lastAlarm    = alarm;
+        ///    alarmcounter = 0;
+        ///} else {
+        ///    if (alarmcounter < 100) {
+        ///        alarmcounter++;
+        ///    } else {
+        ///        lastAlarm    = alarm;
+        ///        alarmcounter = 0;
+        ///    }
+        ///}
 
         // clear alarms if everything is alright, then schedule callback execution after timeout
-        if (lastAlarm == 1) {
+        ///if (lastAlarm == 1) {
             ///AlarmsSet(SYSTEMALARMS_ALARM_ATTITUDE, SYSTEMALARMS_ALARM_WARNING);
-        } else if (lastAlarm == 2) {
+        ///} else if (lastAlarm == 2) {
             ///AlarmsSet(SYSTEMALARMS_ALARM_ATTITUDE, SYSTEMALARMS_ALARM_ERROR);
-        } else if (lastAlarm >= 3) {
+        ///} else if (lastAlarm >= 3) {
             ///AlarmsSet(SYSTEMALARMS_ALARM_ATTITUDE, SYSTEMALARMS_ALARM_CRITICAL);
-        } else {
+        ///} else {
             ///AlarmsClear(SYSTEMALARMS_ALARM_ATTITUDE);
-        }
-
-
-/*
-        Output1_t* objOutput1;
-        checkout_Output1(module, &objOutput1);
-        objOutput1->char_out = input->in1*2+cycle;
-        objOutput1->short_out = input->in1*3+cycle;
-        objOutput1->int_out = input->in1*4+cycle;
-        objOutput1->long_out = input->in1*5+cycle;
-        objOutput1->long_long_out = input->in1*6+cycle;
-        objOutput1->float_out = input->in1*7+cycle;
-        objOutput1->double_out = input->in1*8+cycle;
-        char buffer_string_out [32];
-        snprintf(buffer_string_out, 32, "data: %d", cycle);
-        objOutput1->string_out = buffer_string_out;
-        checkin_Output1(module, &objOutput1);
-
-        Output2_t* objOutput2;
-        checkout_Output2(module, &objOutput2);
-        objOutput2->out3 = input->in1*2+cycle;
-        checkin_Output2(module, &objOutput2);
-
-        // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу
-        module->module_info.refresh_input_mask = in1 | in2;
-*/
-        // Принудительное считывание данных из разделяемой памяти
-        //int res = refresh_input(module);
+        ///}
 
         cycle++;
     }
