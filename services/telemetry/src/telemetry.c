@@ -31,6 +31,19 @@ size_t ar_bufs_len=0;
 RT_TASK task_read_shmem;
 int priority_task_read_shmem = 50;
 
+/**
+ * @brief
+ * \~english input error queue
+ * \~russian Входная очередь сообщений-ошибок(предупреждений) от модулей
+ */
+RT_QUEUE err_queue;
+
+
+/**
+ * @brief \~russian Буфер для приема блока данных из очереди с ошибками
+ */
+char err_buf[MAX_ERR_SIZE];
+
 int pipe_fd;
 
 enum demo_protocols {
@@ -216,6 +229,15 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
                 //lwsl_err("ERROR %d writing to di socket\n", n);
             }
         }
+
+        // Вычитываем мессагу из очереди сообщений с ошибками модулей
+        int res_read = rt_queue_read(&err_queue, err_buf, 256, TM_NONBLOCK);
+        if (res_read > 0)
+        {
+            // и отправляем в веб-сокет
+            libwebsocket_write(wsi, err_buf, res_read, LWS_WRITE_BINARY);
+        }
+
         break;
 
 
@@ -400,8 +422,18 @@ int init_rt_task()
     }
 
     err = rt_task_start(&task_read_shmem, &run_task_read_shmem, NULL);
-    if (err != 0)
+    if (err != 0){
         fprintf(stderr, "Error start main task\n");
+        return err;
+    }
+
+
+    err = rt_queue_create(&err_queue, NAME_ERR_QUEUE, MAX_ERR_SIZE, 10, Q_FIFO);
+    if (err != 0)
+    {
+        fprintf(stdout, "Error create queue \"%s\"\n", NAME_ERR_QUEUE);
+        return err;
+    }
 
     return 0;
 }

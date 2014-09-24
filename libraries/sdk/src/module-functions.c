@@ -1104,7 +1104,7 @@ exit:
 
 
 /**
- * @brief get_input_data Функция получения данных
+ * @brief \~russian Функция получения данных
  * Должна вызываться из бизнес функции модуля. Доставляет данные из входной очереди и из шаред мемори инстансов поставщиков
  * @param p_module
  */
@@ -1182,7 +1182,7 @@ void get_input_data(module_t *module)
 }
 
 /**
- * @brief connect_links Устанавливает исходящие соединения посредством очередей
+ * @brief \~russian Устанавливает исходящие соединения посредством очередей
  * С входными очередями инстансов подписчиков
  * @param p_module
  * @return
@@ -1232,6 +1232,29 @@ int connect_out_links(void *p_module)
     return 0;
 }
 
+
+/**
+ * @brief \~russian Устанавливает исходящее соединение с очередью ошибок (создаваемой сервисом телеметрии)
+ * @param p_module
+ */
+bool connect_err_queue(void *p_module)
+{
+    module_t* module = p_module;
+
+    if(module->f_connected_err_queue) return;
+
+    int res = rt_queue_bind	(&module->err_queue, NAME_ERR_QUEUE, TM_NONBLOCK);
+    if(res!=0)
+    {
+        //fprintf(stderr, "Error:%i rt_queue_bind instance=%s to queue %s\n", res, module->instance_name, name_queue);
+        return false;
+    }
+
+    module->f_connected_err_queue=true;
+    fprintf(stderr, "%sCONNECTED: %s to queue %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, NAME_ERR_QUEUE, ANSI_COLOR_RESET);
+
+    return true;
+}
 
 /**
  * @brief connect_in_links Устанавливает входящие соединения посредством разделяемой памяти

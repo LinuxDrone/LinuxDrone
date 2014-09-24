@@ -16,6 +16,17 @@ extern "C" {
 #define TASK_MODE  0  /* No flags */
 #define TASK_STKSZ 0  /* Stack size (use default one) */
 
+/**
+ * \~russian Максимальный размер блока данных, содержащего описание ошибки
+ */
+#define MAX_ERR_SIZE    256
+
+/**
+ * \~russian Имя очереди (которую создает сервис телеметрии), для приема сообщений об ошибках от инстансов модулей
+ */
+#define NAME_ERR_QUEUE    "err_queue"
+
+
 // Константы, представляющие собой строки, которые будучи выведенные в консоль, меняют цвет печатываемых далее символов
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
@@ -590,10 +601,21 @@ typedef struct {
     p_get_inputmask_by_inputname get_inmask_by_inputname;
 
     /**
-     * @brief \~russian функция Время последней попытки установления связей
+     * @brief \~russian Время последней попытки установления связей
      */
     RTIME time_attempt_link_modules;
 
+    /**
+     * @brief
+     * \~english output queue for errors and warnings
+     * \~russian Исходящая очередь сообщений-ошибок(предупреждений) в которую пишет инстанс модуля
+     */
+    RT_QUEUE err_queue;
+
+    /**
+     * @brief \~russian Флаг показывающий (если true), что соединение с очередью ошибок установлено
+     */
+    bool f_connected_err_queue;
 } module_t;
 
 
@@ -649,6 +671,12 @@ void print_rt_mutex_bind_error(int err);
 void print_rt_mutex_acquire(int err);
 
 void debug_print_bson(char* where, bson_t* bson);
+
+/**
+ * @brief \~russian Устанавливает исходящее соединение с очередью ошибок (создаваемой сервисом телеметрии)
+ * @param p_module
+ */
+bool connect_err_queue(void *p_module);
 
 #ifdef __cplusplus
 }
