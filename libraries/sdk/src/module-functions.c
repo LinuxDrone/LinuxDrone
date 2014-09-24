@@ -990,7 +990,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 
 
 /**
- * @brief \~russian Функцияпроверяет наличие команд переданных потоку посредством механизма ксеномай rt_task_send/rt_task_receive
+ * @brief \~russian Функция проверяет наличие команд переданных потоку посредством механизма ксеномай rt_task_send/rt_task_receive
  * и в случае приема команды, парсит ее (и ее параметры) и вызывает, реализуемую создателем модуля, функцию MODULENAME_command
  * @param module
  */
@@ -1885,6 +1885,42 @@ int refresh_input(void* p_module)
     return 0;
 }
 
+
+/**
+ * @brief \~russian Передает сообщение от инстанса модуля сервису телеметрии (который в свою очередь передает его конфигуратору)
+ * @param module
+ * @param msg_bson
+ * @return
+ */
+bool send_message(module_t* module, bson_t* msg)
+{
+    if(!msg)
+    {
+        fprintf(stderr, "%sInstance \"%s\" msg==NULL%s\n",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
+        return false;
+    }
+
+    if(!module->f_connected_err_queue)
+    {
+        connect_err_queue(module);
+    }
+
+    if(!module->f_connected_err_queue)
+    {
+        fprintf(stderr, "%sInstance \"%s\" not connected to err_queue%s\n",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
+        fprintf(stderr, "%sError \"error1\" occured in the instance \"%s\"%s\n",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
+        return false;
+    }
+
+    int res = rt_queue_write(&module->err_queue, bson_get_data(msg), msg->len, Q_NORMAL);
+    if(res<0)
+    {
+        fprintf(stderr, "send_message, Warning: %i rt_queue_write\n", res);
+        // TODO: если нет коннекта у очереди, то сбросить флаг коннекта очереди.
+        return false;
+    }
+    return true;
+}
 
 
 /**

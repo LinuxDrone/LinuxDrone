@@ -678,6 +678,14 @@ void debug_print_bson(char* where, bson_t* bson);
  */
 bool connect_err_queue(void *p_module);
 
+/**
+ * @brief \~russian Передает сообщение от инстанса модуля сервису телеметрии (который в свою очередь передает его конфигуратору)
+ * @param module
+ * @param msg_bson
+ * @return
+ */
+bool send_message(module_t* module, bson_t* msg);
+
 #ifdef __cplusplus
 }
 #endif
