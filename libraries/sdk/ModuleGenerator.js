@@ -336,10 +336,33 @@ function Create_H_file(module) {
             r += "    cmd_" + cmdName;
             i++;
         });
-        r += "\n} " + module_type + "_command_t;\n";
+        r += "\n} " + module_type + "_command_t;\n\n";
     }
 
-    r += "\n#ifdef __cplusplus\n";
+    if ('messages' in module) {
+        module.messages.forEach(function (msg) {
+            var msgName = msg.name.replace(/-/g, "_");
+            r += "/**\n";
+            r += " * @brief \~russian Функция передачи сообщения \"" + msgName + "\"\n";
+            r += " * @param module\n";
+            if ('params' in msg) {
+                msg.params.forEach(function (param) {
+                    r += " * @param " + param.name + "\n";
+                });
+            }
+            r += " * @return\n";
+            r += " */\n";
+            r += "int message_" + msgName + "(module_t* module";
+            if ('params' in msg) {
+                msg.params.forEach(function (param) {
+                    r += ", " + param.type + " " + param.name;
+                });
+            }
+            r += ");\n\n";
+        });
+    }
+
+            r += "\n#ifdef __cplusplus\n";
     r += "}\n"
     r += "#endif\n";
 
@@ -369,7 +392,6 @@ function Create_C_file(module) {
         r += "extern t_cmd_function " + module_type + "_command;\n";
     }
     r += "\n";
-
 
 
     if ('inputShema' in module) {
@@ -492,9 +514,9 @@ function Create_C_file(module) {
             if (i != 0) {
                 r += "    else\n";
             }
-            r += "    if(!strncmp(cmd_name, \""+cmdName+"\", XNOBJECT_NAME_LEN))\n";
+            r += "    if(!strncmp(cmd_name, \"" + cmdName + "\", XNOBJECT_NAME_LEN))\n";
             r += "    {\n";
-            r += "        return cmd_"+cmdName+";\n";
+            r += "        return cmd_" + cmdName + ";\n";
             r += "    }\n";
             i++;
         });
@@ -558,7 +580,7 @@ function Create_C_file(module) {
         r += "    module->module_info.cmd_func = &" + module_type + "_command;\n\n";
         r += "    // Сохранение ссылки на функцию-преобразования имя команды в идентификатор.\n";
         r += "    module->module_info.get_idcmd_by_strcmd = &get_idcmd_by_strcmd_" + module_type + ";\n";
-    }else{
+    } else {
         r += "    // В определении модуля нет команд, а значит нет и фунциий их обработки.\n";
         r += "    module->module_info.cmd_func = NULL;\n";
         r += "    module->module_info.get_idcmd_by_strcmd = NULL;\n";
@@ -656,6 +678,110 @@ function Create_C_file(module) {
         r += "  return 0;\n";
         r += "}\n\n";
 
+    }
+
+    if ('messages' in module) {
+        module.messages.forEach(function (msg) {
+            var msgName = msg.name.replace(/-/g, "_");
+            r += "/**\n";
+            r += " * @brief \~russian Функция передачи сообщения \"" + msgName + "\"\n";
+            r += " * @param module\n";
+            if ('params' in msg) {
+                msg.params.forEach(function (param) {
+                    r += " * @param " + param.name + "\n";
+                });
+            }
+            r += " * @return\n";
+            r += " */\n";
+            r += "int message_" + msgName + "(module_t* module";
+            if ('params' in msg) {
+                msg.params.forEach(function (param) {
+                    r += ", " + param.type + " " + param.name;
+                });
+            }
+            r += ")\n";
+            r += "{\n";
+            r += "    // Сформируем мессагу\n";
+            r += "    /*\n";
+            r += "     * JSON\n";
+            r += "     * {\n";
+            r += "     *  type: \"" + msg.type + "\",\n";
+            r += "     *  name: \"" + msgName + "\",\n";
+            r += "     *  instance: \"instance_name\",\n";
+            r += "     *  params:[\n";
+            if ('params' in msg) {
+                msg.params.forEach(function (param) {
+                    r += "     *      {\n";
+                    r += "     *          name: \"" + param.name + "\",\n";
+                    r += "     *          value: \"someVal\"\n";
+                    r += "     *      }\n";
+                });
+            }
+            r += "     *  ]\n";
+            r += "     * }\n";
+            r += "     */\n";
+            r += "    bson_t* msg_bson = NULL;\n";
+            r += "    msg_bson = bson_new();\n";
+            r += "    bson_append_utf8(msg_bson, \"type\", -1, \"" + msg.type + "\", -1);\n";
+            r += "    bson_append_utf8(msg_bson, \"name\", -1, \"" + msgName + "\", -1);\n";
+            r += "    bson_append_utf8(msg_bson, \"instance\", -1, module->instance_name, -1);\n\n";
+
+            if ('params' in msg) {
+                r += "    bson_t b_arr;\n";
+                r += "    char buffer [3]; // буфер текстового представления индекса в массиве\n";
+                r += "    bson_append_array_begin (msg_bson, \"params\", -1, &b_arr);\n\n";
+                var i_param = 0;
+                msg.params.forEach(function (param) {
+                    r += "    bson_t* " + param.name + "_bson = bson_new();\n";
+                    switch (param.type) {
+                        case "char":
+                        case "short":
+                        case "int":
+                        case "long":
+                            r += "    bson_append_int32 (" + param.name + "_bson, \"" + param.name + "\", -1, " + param.name + ");\n";
+                            break;
+
+                        case "long long":
+                            r += "    bson_append_int64 (" + param.name + "_bson, \"" + param.name + "\", -1, " + param.name + ");\n";
+                            break;
+
+                        case "float":
+                        case "double":
+                            r += "    bson_append_double (" + param.name + "_bson, \"" + param.name + "\", -1, " + param.name + ");\n";
+                            break;
+
+                        case "const char*":
+                            // TODO: Возможна проблема с тем, что строка не копируется
+                            r += "    bson_append_utf8 (" + param.name + "_bson, \"" + param.name + "\", -1, " + param.name + ", -1);\n";
+                            break;
+
+                        case "bool":
+                            r += "    bson_append_bool(" + param.name + "_bson, \"" + param.name + "\", -1, " + param.name + ");\n";
+                            break;
+
+                        default:
+                            console.log("Unknown type " + param.type + " for error_param_name = " + param.name);
+                            break;
+                    }
+                    r += "    sprintf(buffer,\"%i\", " + i_param + ");\n";
+                    r += "    bson_append_document (&b_arr, buffer, -1, " + param.name + "_bson);\n\n";
+                    i_param++;
+                });
+                r += "    bson_append_array_end (msg_bson, &b_arr);\n\n";
+            }
+
+            r += "    // Передадим объект в очередь для мессаг (ошибок)\n";
+            r += "    send_message(module, msg_bson);\n\n";
+
+            r += "    // Освободим память занятую bson объектами\n";
+            if ('params' in msg) {
+                msg.params.forEach(function (param) {
+                    r += "    bson_destroy(" + param.name + "_bson);\n";
+                });
+            }
+            r += "    bson_destroy(msg_bson);\n";
+            r += "}\n\n\n";
+        });
     }
 
     return r;
