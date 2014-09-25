@@ -365,7 +365,7 @@ typedef t_cycle_function* p_cycle_function;
 /**
  * @brief \~russian Определение типа функции-обработчика команды
  */
-typedef void (t_cmd_function)(int type_command, void* params);
+typedef void (t_cmd_function)(void* module, int type_command, void* params);
 
 
 /**

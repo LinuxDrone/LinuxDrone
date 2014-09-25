@@ -150,7 +150,7 @@ bson_t* send_command(const char* instance_name, void *cmd_data, size_t cmd_len)
 }
 
 
-
+void* buf_err = NULL;
 buf_and_bson_t* ar_bson2send = NULL;
 int len_bson2send = 0;
 
@@ -167,6 +167,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
     const char* module_instance_name;
     const char* module_out_name;
     const char* cmd_name;
+    int res_read;
 
     switch (reason)
     {
@@ -177,6 +178,22 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         break;
 
     case LWS_CALLBACK_SERVER_WRITEABLE:
+
+        // Вычитываем мессагу из очереди сообщений с ошибками модулей
+        res_read = rt_queue_read(&err_queue, err_buf, MAX_ERR_SIZE, TM_NONBLOCK);
+        if (res_read > 0)
+        {
+            buf_err = calloc(1, res_read);
+            memcpy(buf_err, err_buf, res_read);
+
+            // и отправляем в веб-сокет
+            libwebsocket_write(wsi, buf_err, res_read, LWS_WRITE_BINARY);
+            //TODO: Разобраться с этим сраным libwebsocket_write. Сам он освобождает память переданного буфера или нет.
+            // Если нет, то когда его можно освобождать? Ибо передача данных из буфера в вебсокет похоже происходит асинхронно.
+            break;
+        }
+
+
         // Вычистим из памяти ранеее отправленные данные
         for(i=0; i < len_bson2send; i++)
         {
@@ -228,14 +245,6 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
             if (m < buf_and_bson.bson->len) {
                 //lwsl_err("ERROR %d writing to di socket\n", n);
             }
-        }
-
-        // Вычитываем мессагу из очереди сообщений с ошибками модулей
-        int res_read = rt_queue_read(&err_queue, err_buf, 256, TM_NONBLOCK);
-        if (res_read > 0)
-        {
-            // и отправляем в веб-сокет
-            libwebsocket_write(wsi, err_buf, res_read, LWS_WRITE_BINARY);
         }
 
         break;

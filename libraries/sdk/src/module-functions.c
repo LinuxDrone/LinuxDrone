@@ -1067,7 +1067,7 @@ fprintf(stderr, "Not found get_idcmd_by_strcmd\n");
             }
 
             // Invoke instance function for process command
-            (*module->cmd_func)(id_cmdfunc, NULL);
+            (*module->cmd_func)(module, id_cmdfunc, NULL);
 
             // Ответим в виде бейсона, что все прошло хорошо
             response_bson = bson_new();
@@ -1217,7 +1217,7 @@ int connect_out_links(void *p_module)
         else
         {
             info_remote_queue->f_queue_connected=true;
-            fprintf(stderr, "%sCONNECTED: %s to queue %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_queue, ANSI_COLOR_RESET);
+            fprintf(stdout, "%sCONNECTED: %s to queue %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_queue, ANSI_COLOR_RESET);
         }
 
         count_connected++;
@@ -1226,7 +1226,7 @@ int connect_out_links(void *p_module)
     if(count_connected==module->remote_queues_len)
     {
         module->f_connected_out_links=true;
-        fprintf(stderr, "%s%s: ALL QUEUES CONNECTED%s\n", ANSI_COLOR_GREEN, module->instance_name, ANSI_COLOR_RESET);
+        fprintf(stdout, "%s%s: ALL QUEUES CONNECTED%s\n", ANSI_COLOR_GREEN, module->instance_name, ANSI_COLOR_RESET);
     }
 
     return 0;

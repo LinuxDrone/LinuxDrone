@@ -391,7 +391,7 @@ function CreateModuleCFile(obj_def) {
 
 
     // Функция обработки команды
-    r += "void " + module_name + "_command (" + module_name + "_command_t type_command, void* params)\n";
+    r += "void " + module_name + "_command (module_" + module_name + "_t *module, " + module_name + "_command_t type_command, void* params)\n";
     r += "{\n";
     if ('commands' in obj_def) {
         r += "    switch (type_command)\n";
