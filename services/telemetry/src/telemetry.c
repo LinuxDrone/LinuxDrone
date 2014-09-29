@@ -150,7 +150,7 @@ bson_t* send_command(const char* instance_name, void *cmd_data, size_t cmd_len)
 }
 
 
-void* buf_err = NULL;
+unsigned char* buf_err = NULL;
 buf_and_bson_t* ar_bson2send = NULL;
 int len_bson2send = 0;
 
