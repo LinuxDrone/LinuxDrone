@@ -183,13 +183,17 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         res_read = rt_queue_read(&err_queue, err_buf, MAX_ERR_SIZE, TM_NONBLOCK);
         if (res_read > 0)
         {
-            buf_err = calloc(1, res_read);
-            memcpy(buf_err, err_buf, res_read);
+            //buf_err = calloc(1, res_read);
+
+            buf_err = (unsigned char*) malloc(LWS_SEND_BUFFER_PRE_PADDING + res_read + LWS_SEND_BUFFER_POST_PADDING);
+
+            memcpy(&buf_err[LWS_SEND_BUFFER_PRE_PADDING], err_buf, res_read);
 
             // и отправляем в веб-сокет
-            libwebsocket_write(wsi, buf_err, res_read, LWS_WRITE_BINARY);
+            libwebsocket_write(wsi, &buf_err[LWS_SEND_BUFFER_PRE_PADDING], res_read, LWS_WRITE_BINARY);
             //TODO: Разобраться с этим сраным libwebsocket_write. Сам он освобождает память переданного буфера или нет.
             // Если нет, то когда его можно освобождать? Ибо передача данных из буфера в вебсокет похоже происходит асинхронно.
+             free(buf_err);
             break;
         }
 
