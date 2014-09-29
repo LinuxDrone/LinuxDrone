@@ -96,12 +96,6 @@ struct per_session_data__telemetry {
     int number;
 };
 
-typedef struct{
-    bson_t* bson;
-    void* buf;
-} buf_and_bson_t;
-
-
 
 bson_t* send_command(const char* instance_name, void *cmd_data, size_t cmd_len)
 {
@@ -150,18 +144,12 @@ bson_t* send_command(const char* instance_name, void *cmd_data, size_t cmd_len)
 }
 
 
-unsigned char* buf_err = NULL;
-buf_and_bson_t* ar_bson2send = NULL;
-int len_bson2send = 0;
+char shmem_buf[500];
 
 static int callback_telemetry(struct libwebsocket_context *context, struct libwebsocket *wsi, enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
 {
-    int n, m, i, k;
-    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
-    unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+    int k;
     struct per_session_data__telemetry *pss = (struct per_session_data__telemetry *)user;
-
-    ssize_t read_len;
 
     bson_t* bson_request;
     const char* module_instance_name;
@@ -183,49 +171,15 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         res_read = rt_queue_read(&err_queue, err_buf, MAX_ERR_SIZE, TM_NONBLOCK);
         if (res_read > 0)
         {
-            //buf_err = calloc(1, res_read);
-
-            buf_err = (unsigned char*) malloc(LWS_SEND_BUFFER_PRE_PADDING + res_read + LWS_SEND_BUFFER_POST_PADDING);
+            unsigned char* buf_err = (unsigned char*) malloc(LWS_SEND_BUFFER_PRE_PADDING + res_read + LWS_SEND_BUFFER_POST_PADDING);
 
             memcpy(&buf_err[LWS_SEND_BUFFER_PRE_PADDING], err_buf, res_read);
 
             // и отправляем в веб-сокет
             libwebsocket_write(wsi, &buf_err[LWS_SEND_BUFFER_PRE_PADDING], res_read, LWS_WRITE_BINARY);
-            //TODO: Разобраться с этим сраным libwebsocket_write. Сам он освобождает память переданного буфера или нет.
-            // Если нет, то когда его можно освобождать? Ибо передача данных из буфера в вебсокет похоже происходит асинхронно.
-             free(buf_err);
-            break;
+            free(buf_err);
         }
 
-
-        // Вычистим из памяти ранеее отправленные данные
-        for(i=0; i < len_bson2send; i++)
-        {
-            buf_and_bson_t buf_and_bson = ar_bson2send[i];
-            if(buf_and_bson.bson)
-            {
-                bson_destroy(buf_and_bson.bson);
-                buf_and_bson.bson = NULL;
-            }
-            if(buf_and_bson.buf)
-            {
-                free(buf_and_bson.buf);
-                buf_and_bson.buf = NULL;
-            }
-        }
-
-        // Выделим память под массив
-        if(len_bson2send!=remote_shmems.remote_shmems_len)
-        {
-            len_bson2send = remote_shmems.remote_shmems_len;
-            int ar_count_bytes = len_bson2send * sizeof(buf_and_bson_t);
-            if(ar_bson2send){
-                ar_bson2send = realloc(ar_bson2send, ar_count_bytes);
-                memset(ar_bson2send, 0, ar_count_bytes);
-            }
-            else
-                ar_bson2send = calloc(1, ar_count_bytes);
-        }
 
         // Вычитываем данные из разделяемой памяти и напихиваем их в очередь (ведущую в не риалтаймовому потоку)
         for(k=0; k < remote_shmems.remote_shmems_len; k++)
@@ -234,21 +188,23 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
             if(!remote_shmem->f_shmem_connected)
                 continue;
 
-            buf_and_bson_t buf_and_bson = ar_bson2send[k];
-            buf_and_bson.buf = malloc(500);
             unsigned short retlen = 0;
-            read_shmem(remote_shmem, buf_and_bson.buf, &retlen);
+            read_shmem(remote_shmem, shmem_buf, &retlen);
             if (retlen < 1)
                 continue;
 
-            buf_and_bson.bson = bson_new_from_data(buf_and_bson.buf, retlen);
-            bson_append_utf8 (buf_and_bson.bson, "_from", -1, remote_shmem->name_instance, -1);
+            bson_t* bson = bson_new_from_data(shmem_buf, retlen);
+            bson_append_utf8 (bson, "_from", -1, remote_shmem->name_instance, -1);
 
-            unsigned char * bson_data = (unsigned char *)bson_get_data(buf_and_bson.bson);
-            m = libwebsocket_write(wsi, bson_data, buf_and_bson.bson->len, LWS_WRITE_BINARY);
-            if (m < buf_and_bson.bson->len) {
-                //lwsl_err("ERROR %d writing to di socket\n", n);
-            }
+            unsigned char* buf_telemetry = (unsigned char*) malloc(LWS_SEND_BUFFER_PRE_PADDING + bson->len + LWS_SEND_BUFFER_POST_PADDING);
+
+            memcpy(&buf_telemetry[LWS_SEND_BUFFER_PRE_PADDING], bson_get_data(bson), bson->len);
+
+            // и отправляем в веб-сокет
+            libwebsocket_write(wsi, &buf_telemetry[LWS_SEND_BUFFER_PRE_PADDING], bson->len, LWS_WRITE_BINARY);
+
+            bson_destroy(bson);
+            free(buf_telemetry);
         }
 
         break;
