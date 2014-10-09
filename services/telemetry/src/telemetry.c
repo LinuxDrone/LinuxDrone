@@ -181,7 +181,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         }
 
 
-        // Вычитываем данные из разделяемой памяти и напихиваем их в очередь (ведущую в не риалтаймовому потоку)
+        // Вычитываем данные из разделяемой памяти и передаем их в веб-сокет
         for(k=0; k < remote_shmems.remote_shmems_len; k++)
         {
             shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[k];
