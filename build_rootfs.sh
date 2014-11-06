@@ -12,7 +12,16 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-echo "The script is designed to build a system image for LinuxDrone project."
+echo "\nThe script is designed to build a system image for LinuxDrone project.\n"
+
+USAGE="Example usage: `basename $0` -b bbb -d /dev/sdc\n\n
+------------ Options -------------- \n
+help:                            -h \n
+version:                         -v \n
+use menuconfig for buld kernel:  -m \n
+sdcard device name:              -d (dev/sdc)   \n
+board name:                      -b (bbb, rpi)  \n
+"
 
 
 print() {
@@ -205,6 +214,9 @@ sudo chroot ${CHROOT_DIR} /bin/bash -c "cat << EOF | passwd ld
 EOF
 "
 
+print "Choice of the shell for the user ld"
+sudo chroot ${CHROOT_DIR} /bin/bash -c "chsh -s /bin/bash ld"
+
 print "Set root password"
 sudo chroot ${CHROOT_DIR} /bin/bash -c "cat << EOF | passwd
 1
@@ -236,7 +248,7 @@ sudo chroot ${CHROOT_DIR} /bin/bash -c "dpkg-reconfigure locales-all"
 
 sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y upgrade"
 
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install ssh mc wget git screen build-essential cpufrequtils i2c-tools usbutils wpasupplicant wireless-tools gdbserver"
+sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install ssh sudo mc wget git screen build-essential cpufrequtils i2c-tools usbutils wpasupplicant wireless-tools gdbserver"
 sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install libboost-system.dev libboost-filesystem.dev libboost-thread.dev libboost-program-options.dev"
 sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install nodejs npm scons"
 sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install htop"
@@ -272,7 +284,7 @@ qemu_remove_from_roofs
 
 # Download cross-compiler
 download_install_crosscompiler_rpi() {
-if [ ! -f ${CHROOT_DIR}/../cc/bin/arm-linux-gnueabihf-gcc ]; then
+if [ ! -f ${CC_DIR}/bin/arm-linux-gnueabihf-gcc ]; then
   if [ ! -d ${LDDOWNL_DIR} ]; then
       print "Create a directory where all downloads soft"
       mkdir -p ${LDDOWNL_DIR}
@@ -366,8 +378,8 @@ print "libwebsockets installed"
 # Compiled MongoDB for RaspberryPI in system debian wheenzy
 compiled_and_install_mongodb_rpi() {
 print "compiling and installing mongodb for rpi"
-MONGO_INSTALL_DIR=/opt/mongo
-if [ -f ${CHROOT_DIR}/opt/mongo/lib/libmongoclient.a ] && [ -f ${CHROOT_DIR}/etc/init.d/mongod ]; then
+MONGO_INSTALL_DIR=/usr/local/mongo
+if [ -f ${MONGO_INSTALL_DIR}/lib/libmongoclient.a ] && [ -f ${CHROOT_DIR}/etc/init.d/mongod ]; then
   print "mongodb is already installed in rootfs"
   return
 fi
@@ -387,14 +399,14 @@ if [ ! -d ${CHROOT_DIR}/home/ld/code/mongo-nonx86 ]; then
 fi
 
 print "Каталог с исходниками mongodb в наличии"
-if [ ! -f ${CHROOT_DIR}/opt/mongo/lib/libmongoclient.a ]; then
+if [ ! -f ${MONGO_INSTALL_DIR}/lib/libmongoclient.a ]; then
     print "Cобираем и устанавливаем mongodb"
     sudo chroot ${CHROOT_DIR} /bin/bash -c "cd /home/ld/code/mongo-nonx86; scons --prefix=${MONGO_INSTALL_DIR} install -j${CORES}"
 else
     print "mongodb уже установлен"
 fi
 
-if [ ! -f ${CHROOT_DIR}/../mongodb_wheezy.tar.gz ]; then
+if [ ! -f ${BOARD_DIR}/mongodb_wheezy.tar.gz ]; then
     sudo sh -c "cd ${CHROOT_DIR}/home/ld/code; tar -czf ${BOARD_DIR}/mongodb_wheezy.tar.gz ./mongo-nonx86"
     print "mongodb_wheezy.tar.gz created into ${BOARD_DIR}"
 fi
@@ -596,7 +608,7 @@ cd ${MAKE_DIR}/xenomai
 ./configure CFLAGS="-march=${MARCH} -mfpu=${MFPU}" LDFLAGS="-march=${MARCH}" --host=arm-linux-gnueabihf --prefix=/usr/local/xenomai
 make -j${CORES}
 sudo env PATH=$PATH make DESTDIR=${CHROOT_DIR} install -j${CORES}
-sudo sh -c "echo /usr/xenomai/lib/ > ${CHROOT_DIR}/etc/ld.so.conf.d/xenomai.conf"
+sudo sh -c "echo /usr/local/xenomai/lib/ > ${CHROOT_DIR}/etc/ld.so.conf.d/xenomai.conf"
 
 # Run ldconfig in chroot
 run_cmd_chroot "ldconfig -v"
@@ -775,21 +787,99 @@ fi
 return 0
 }
 
+# Build and install software LinuxDrone to rootfs
+build_install_linuxdrone() {
+print "Start build and install software LinuxDrone to rootfs"
+
+INSTALL_DIR=${LDROOT_DIR}/build.Debug/install
+
+# Clear old build LinuxDrone
+if [ -d ${LDROOT_DIR}/build.Debug ]; then
+    rm -R ${LDROOT_DIR}/build.Debug
+fi
+
+# Create project run cmake
+cd ${LDROOT_DIR}
+./configure.sh
+cd ${LDROOT_DIR}/build.Debug
+make -j${CORES}
+make install -j${CORES}
+
+# build Web Configurator
+cd ${LDROOT_DIR}/webapps/configurator/public
+sencha app build
+
+rsync -zvr --delete --exclude="node_modules/*" --exclude="configurator/public/*" \
+        "${LDROOT_DIR}/webapps/" "${INSTALL_DIR}/usr/local/linuxdrone/webapps/"
 
 
+cp -R   ${LDROOT_DIR}/webapps/configurator/public/build/production/RtConfigurator/* \
+        ${INSTALL_DIR}/usr/local/linuxdrone/webapps/configurator/public/
+
+cp -R   ${LDROOT_DIR}/webapps/configurator/public/images \
+        ${INSTALL_DIR}/usr/local/linuxdrone/webapps/configurator/public/
+
+cp -R   ${LDROOT_DIR}/webapps/configurator/public/javascripts \
+        ${INSTALL_DIR}/usr/local/linuxdrone/webapps/configurator/public/
+
+cp -R   ${LDROOT_DIR}/webapps/configurator/public/favicon.ico \
+        ${INSTALL_DIR}/usr/local/linuxdrone/webapps/configurator/public/favicon.ico
+
+cp -R   ${LDROOT_DIR}/webapps/configurator/public/ModulesCommonParams.def.js \
+        ${INSTALL_DIR}/usr/local/linuxdrone/webapps/configurator/public/ModulesCommonParams.def.js
+
+sudo rsync -zvr --delete --exclude="node_modules/*" \
+        "${INSTALL_DIR}/usr/local/linuxdrone/" "${CHROOT_DIR}/usr/local/linuxdrone/"
+
+#run_cmd_chroot "cd /usr/local/linuxdrone/webapps/configurator; npm install"
+
+# Run ldconfig for library LinuxDrone
+sudo touch ${CHROOT_DIR}/etc/ld.so.conf.d/linuxdrone.conf
+echo '# LinuxDrone' | sudo tee ${CHROOT_DIR}/etc/ld.so.conf.d/linuxdrone.conf
+# Search directories with libraries linuxdrone
+dirname `find ${INSTALL_DIR}/usr/local/linuxdrone/ -iname *so` | uniq | sed s:${INSTALL_DIR}::g | \
+        sudo tee -a "${CHROOT_DIR}/etc/ld.so.conf.d/linuxdrone.conf"
+
+run_cmd_chroot "ldconfig -v"
+
+print "End build and install software LinuxDrone to rootfs"
+}
+
+install_software_the_host() {
+
+
+# Installing SenchaCmd
+if  [ ! -d ${CHROOT_DIR}/opt/vc ] || \
+    [ ! -f ${CHROOT_DIR}/boot/bootcode.bin ]; then
+
+    if [ ! -f ${LDDOWNL_DIR}/SenchaCmd.zip ]; then
+        print "Download SenchaCmd"
+        wget -O ${LDDOWNL_DIR}/SenchaCmd.zip http://cdn.sencha.com/cmd/5.0.3.324/SenchaCmd-5.0.3.324-linux-x64.run.zip
+    fi
+
+sencha upgrade --check
+sencha upgrade
+
+    print "Installing firmware rpi"
+    cd ${MAKE_DIR}
+    unzip -n ${LDDOWNL_DIR}/rpi-firmware.zip
+    sudo cp -a -u  ${MAKE_DIR}/firmware-master/hardfp/opt/vc ${CHROOT_DIR}/opt/
+    sudo cp -u ${MAKE_DIR}/firmware-master/boot/*bin ${CHROOT_DIR}/boot/
+    sudo cp -u ${MAKE_DIR}/firmware-master/boot/*dat ${CHROOT_DIR}/boot/
+    sudo cp -u ${MAKE_DIR}/firmware-master/boot/*elf ${CHROOT_DIR}/boot/
+else
+    print "firmware is already installed for rpi"
+fi
+
+
+}
 
 #------------------------------------------------
 #                Start script
 #------------------------------------------------
-USAGE="Usage: `basename $0` [-hvd] [-b board] \n
-"
-#BOARD=bbb
-#DEBOOTSTRAP=NO
-#DISTR=trusty
-#DISTR_MIRROR=http://ports.ubuntu.com/ubuntu-ports/
 
 # Разбор параметров командной строки
-while getopts hvdmb:s:o: OPT; do
+while getopts hvmsb:d: OPT; do
     case "$OPT" in
         h)
             echo $USAGE
@@ -799,17 +889,17 @@ while getopts hvdmb:s:o: OPT; do
             echo "`basename $0` version 0.1"
             exit 0
             ;;
+        m)
+            MENUCONFIG=YES
+            ;;
+        s)
+            START_SHELL=YES
+            ;;
         b)
             BOARD=$OPTARG
             ;;
-        s)
-            DISK_SIZE=$OPTARG
-            ;;
         d)
-            DEBOOTSTRAP=YES
-            ;;
-        m)
-            MENUCONFIG=YES
+            DEV_DISK=$OPTARG
             ;;
         \?)
             # getopts вернул ошибку
@@ -822,6 +912,11 @@ done
 # Удаляем обработанные выше параметры
 shift `expr $OPTIND - 1`
 
+if [ ! ${BOARD} ]; then
+    echo "Not specified board type"
+    echo $USAGE
+    exit 1
+fi
 
 #{CHROOT_DIR}=`pwd`/tools/board/${BOARD}/rootfs
 #{CHROOT_DIR}=$(readlink -f $(readlink -f "$(dirname "${CHROOT_DIR}")")/$(basename "${CHROOT_DIR}"))
@@ -844,7 +939,7 @@ CORES=$(grep "^cpu cores" /proc/cpuinfo | awk -F : '{print $2}' | head -1 | sed 
 CORES=$((${CORES} + 1))
 
 DISK=`pwd`/tools/board/bbb/rootfs.img
-DISK_SIZE=1024
+DISK_SIZE=2048
 
 
 sudo_timestamp_timeout 800
@@ -865,15 +960,12 @@ case "${BOARD}" in
     bbb)
 	MARCH=armv7-a
 	MFPU=vfp3
+        DISTR=trusty
+        #DISTR=saucy
+        DISTR_MIRROR=http://ports.ubuntu.com/ubuntu-ports/
 
 	download_crosscompiler
-
-        if [ ${DEBOOTSTRAP} = YES ];then
-                DISTR=trusty
-                #DISTR=saucy
-                DISTR_MIRROR=http://ports.ubuntu.com/ubuntu-ports/
-                debootstrap_bbb
-        fi
+        debootstrap_bbb
         ;;
 
     rpi)
@@ -883,23 +975,24 @@ case "${BOARD}" in
 	MFLOAT_ABI=hard
 	NAME_LIBWEB=libwebsockets-1.3-chrome37-firefox30.tar.gz
         NAME_MONGOC=0.94.2
-	download_install_crosscompiler_rpi
+        DISTR=wheezy
+        DISTR_MIRROR=http://archive.raspbian.org/raspbian/
+        #DISTR_MIRROR=http://mirrors-ru.go-parts.com/raspbian/
+        #DISTR_MIRROR=http://mirror.netcologne.de/raspbian/raspbian/
+        #DISTR=jessie
+        #DISTR_MIRROR=http://mirrordirector.raspbian.org/raspbian
 
-        if [ ${DEBOOTSTRAP} = YES ];then
-                DISTR=wheezy
-                DISTR_MIRROR=http://archive.raspbian.org/raspbian/
-                #DISTR_MIRROR=http://mirrors-ru.go-parts.com/raspbian/
-                #DISTR_MIRROR=http://mirror.netcologne.de/raspbian/raspbian/
-                #DISTR=jessie
-                #DISTR_MIRROR=http://mirrordirector.raspbian.org/raspbian
-                debootstrap_rpi
+	download_install_crosscompiler_rpi
+        debootstrap_rpi
+
+        if [ ${START_SHELL} = YES ];then
+            start_shell_in_chroot
         fi
 
-        #run_cmd_chroot "ls /home"
-        #start_shell_in_chroot
         compiled_and_install_libwebsockets
         compiled_and_install_mongoc
         build_kernel_xeno2_rpi
+        build_install_linuxdrone
         ;;
 
     *)
