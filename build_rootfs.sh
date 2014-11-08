@@ -856,6 +856,18 @@ if [ -d ${LDROOT_DIR}/build.Debug ]; then
     rm -R ${LDROOT_DIR}/build.Debug
 fi
 
+# Downloads GPL version Ext JS
+if [ ! -d "${LDTOOLS_DIR}/extjs" ]; then
+    if [ ! -f ${LDDOWNL_DIR}/extjs-gpl.zip ]; then
+      print "Download extJS-gpl"
+      wget -c -O ${LDDOWNL_DIR}/extjs-gpl.zip http://cdn.sencha.com/ext/gpl/ext-5.0.1-gpl.zip
+    fi
+    cd ${LDTOOLS_DIR}
+    print "unpacking extjs-gpl.zip intro ${LDTOOLS_DIR}"
+    unzip -n ${LDDOWNL_DIR}/extjs-gpl.zip
+    mv ext-* extjs
+fi
+
 # Create project run cmake
 cd ${LDROOT_DIR}
 ./configure.sh
@@ -865,6 +877,7 @@ make install -j${CORES}
 
 # build Web Configurator
 cd ${LDROOT_DIR}/webapps/configurator/public
+sencha app upgrade  ${LDTOOLS_DIR}/extjs
 sencha app build
 
 rsync -zvr --delete --exclude="node_modules/*" --exclude="configurator/public/*" \
@@ -997,8 +1010,8 @@ echo '' | tee ${LDROOT_DIR}/build_rootfs.log
 print "Start scripts create rootfs"
 
 LDDOWNL_DIR=${LDROOT_DIR}/downloads
-
-BOARD_DIR=${LDROOT_DIR}/tools/board/${BOARD}
+LDTOOLS_DIR=${LDROOT_DIR}/tools
+BOARD_DIR=${LDTOOLS_DIR}/board/${BOARD}
 # Getting the full path if you had used a symbolic link to the folder
 BOARD_DIR=$(readlink -f $(readlink -f "$(dirname "${BOARD_DIR}")")/$(basename "${BOARD_DIR}"))
 CHROOT_DIR=${BOARD_DIR}/rootfs
@@ -1035,7 +1048,7 @@ case "${BOARD}" in
         #DISTR=saucy
         DISTR_MIRROR=http://ports.ubuntu.com/ubuntu-ports/
 
-	download_crosscompiler
+        download_crosscompiler_bbb
         debootstrap_bbb
         ;;
 
