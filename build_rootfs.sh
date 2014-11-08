@@ -26,8 +26,8 @@ board name:                      -b (bbb, rpi)  \n
 
 print() {
 #2>&1
-date +%d-%m-%Y\ %H:%M:%S | tr -d '\012' | tee -a ${LDROOT_DIR}/create_rootfs.log
-echo " --- $1" | tee -a ${LDROOT_DIR}/create_rootfs.log
+date +%d-%m-%Y\ %H:%M:%S | tr -d '\012' | tee -a ${LDROOT_DIR}/build_rootfs.log
+echo " --- $1" | tee -a ${LDROOT_DIR}/build_rootfs.log
 
 #date +%d-%m-%Y\ %H:%M:%S | tr -d '\012'; echo " --- $1";
 }
@@ -98,9 +98,9 @@ SDCARD=$1
 DISK_IMAGE=${BOARD_DIR}/${BOARD}-ld.img
 
 # Only assumed two partitions, best to umount all before running this script
-if [ $(mount | grep -c /dev/mapper/loop0p) -ne 0 ]; then
-  sudo umount /dev/mapper/loop0p*
-  print "umount /dev/mapper/loop0p*"
+if [ $(mount | grep -c /dev/mapper/loop) -ne 0 ]; then
+  sudo umount /dev/mapper/loop*
+  print "umount /dev/mapper/loop*"
 fi
 
 # Удаляем устройства-разделы с помощью kpartx
@@ -109,16 +109,17 @@ if [ -f ${DISK_IMAGE} ]; then
 fi
 
 # Only assumed two partitions, best to umount all before running this script
-if [ $(mount | grep -c /dev/loop0) -eq 1 ]; then
-  sudo umount /dev/loop0
-  print "umount /dev/loop0"
-fi
+#if [ $(mount | grep -c /dev/loop0) -eq 1 ]; then
+#  sudo umount /dev/loop0
+#  print "umount /dev/loop0"
+#fi
 
 # Create a directory to put the image of the root file system board
 sudo mkdir -p /mnt/boot
 sudo mkdir -p /mnt/rootfs
 
-if [ ${DISK_IMAGE_CLEAN} = YES ];then
+if  [ ${DISK_IMAGE_CLEAN} = YES ] || \
+    [ ! -f ${DISK_IMAGE} ];then
     # Delete old image disk
     if [ -f ${DISK_IMAGE} ]; then
         sudo rm ${DISK_IMAGE}
@@ -136,28 +137,30 @@ __EOF__
 
 
     # Подключаем образ диска
-    sudo kpartx -av ${DISK_IMAGE}
+    DEV_LOOP=$(sudo kpartx -av ${DISK_IMAGE} | grep -o 'loop.p' | uniq | grep -o 'loop.')
 
     # Format the card sections
-    sudo mkfs.vfat -F 16 /dev/mapper/loop0p1 -n boot
-    sudo mkfs.ext4 /dev/mapper/loop0p2 -L rootfs
+    sudo mkfs.vfat -F 16 /dev/mapper/${DEV_LOOP}p1 -n boot
+    sudo mkfs.ext4 /dev/mapper/${DEV_LOOP}p2 -L rootfs
     sync
     sudo kpartx -dv ${DISK_IMAGE}
 fi
 
 # Подключаем образ диска
-sudo kpartx -av ${DISK_IMAGE}
+DEV_LOOP=$(sudo kpartx -av ${DISK_IMAGE} | grep -o 'loop.p' | uniq | grep -o 'loop.')
+
 # Монтируем созданные разделы
-sudo mount -t vfat /dev/mapper/loop0p1 /mnt/boot -o rw,shortname=mixed,dmask=0000,utf8=1,showexec,flush
-sudo mount -t ext4 /dev/mapper/loop0p2 /mnt/rootfs -o rw
+sudo mount -t vfat /dev/mapper/${DEV_LOOP}p1 /mnt/boot -o rw,shortname=mixed,dmask=0000,utf8=1,showexec,flush
+sudo mount -t ext4 /dev/mapper/${DEV_LOOP}p2 /mnt/rootfs -o rw
 
 print "Копируем файлы из rootfs в образ диска"
 sudo rsync -a --delete --exclude="/boot/*" ${CHROOT_DIR}/ /mnt/rootfs/
 sudo cp -u ${CHROOT_DIR}/boot/* /mnt/boot/
+sync
 
 # Размонтируем образ диска
-sudo umount /dev/mapper/loop0p1
-sudo umount /dev/mapper/loop0p2
+sudo umount /dev/mapper/${DEV_LOOP}p1
+sudo umount /dev/mapper/${DEV_LOOP}p2
 sudo kpartx -dv ${DISK_IMAGE}
 
 print "create arhive the image sdcard"
@@ -179,7 +182,7 @@ rootfs_common_settings() {
 
 print "Setting hostname"
 sudo sh -c "echo 'linuxdrone' > ${CHROOT_DIR}/etc/hostname"
-sudo sh -c "echo -e '127.0.0.1\tlinuxdrone' >> ${CHROOT_DIR}/etc/hosts"
+sudo sh -c "echo '127.0.0.1\tlinuxdrone' >> ${CHROOT_DIR}/etc/hosts"
 
 print "Edit network interface"
 sudo sh -c "cat> ${CHROOT_DIR}/etc/network/interfaces << EOF
@@ -250,17 +253,14 @@ sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y upgrade"
 
 sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install ssh sudo mc wget git screen build-essential cpufrequtils i2c-tools usbutils wpasupplicant wireless-tools gdbserver"
 sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install libboost-system.dev libboost-filesystem.dev libboost-thread.dev libboost-program-options.dev"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install nodejs npm scons"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install htop"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y remove ntpdate"
+sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install scons htop ntpdate libssl-dev"
 
-print "rootfs_installing_packages"
-if [ ! $DISTR = wheezy ]; then
-    sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install mongodb"
-#    sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install libwebsockets-dev libwebsockets-test-server libwebsockets3 libwebsockets3-dbg"
-else
+if [ $DISTR = wheezy ]; then
     print "compiling and installing packages"
     compiled_and_install_mongodb_rpi
+else
+    sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install mongodb nodejs npm "
+#    sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install libwebsockets-dev libwebsockets-test-server libwebsockets3 libwebsockets3-dbg"
 fi
 
 sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get clean"
@@ -636,6 +636,64 @@ fi
 print "End build_kernel_xeno2_rpi"
 }
 
+compiled_and_install_nodejs_npm_rpi() {
+print "Start compiled_and_install_nodejs for rpi"
+
+if  [ -f ${CHROOT_DIR}/usr/local/include/nodejs/node.h ] || \
+    [ -f ${CHROOT_DIR}/usr/include/nodejs/node.h ]  || \
+    [ -f ${CHROOT_DIR}/usr/local/include/node/node.h ] || \
+    [ -f ${CHROOT_DIR}/usr/include/node/node.h ]; then
+    print "NodeJS is already installed in rootfs"
+    return
+fi
+
+if [ ! -d "${MAKE_DIR}/nodejs" ]; then
+    if [ ! -f ${LDDOWNL_DIR}/${BOARD}-nodejs.zip ]; then
+      print "Download NodeJS src"
+      wget -c -O ${LDDOWNL_DIR}/${BOARD}-nodejs.zip https://github.com/joyent/node/archive/v0.10.32-release.zip
+    fi
+    cd ${MAKE_DIR}
+    print "unpacking ${BOARD}-nodejs.zip intro ${MAKE_DIR}"
+    unzip -n ${LDDOWNL_DIR}/${BOARD}-nodejs.zip
+    mv node* nodejs
+fi
+
+cd ${MAKE_DIR}/nodejs
+
+export HOST="arm-linux-gnueabihf"
+export CPP="${HOST}-gcc -E"
+export STRIP="${HOST}-strip"
+export OBJCOPY="${HOST}-objcopy"
+export AR="${HOST}-ar"
+export RANLIB="${HOST}-ranlib"
+export LD="${HOST}-ld"
+export OBJDUMP="${HOST}-objdump"
+export CC="${HOST}-gcc"
+export CXX="${HOST}-g++"
+export NM="${HOST}-nm"
+export AS="${HOST}-as"
+#export PS1="[${HOST}] \w$ "
+#bash --norc
+
+print "make clean"
+make clean
+./configure --without-snapshot --dest-cpu=arm --dest-os=linux --prefix=/usr/local
+make -j${CORES} PORTABLE=1
+sudo env PATH=$PATH make DESTDIR=${CHROOT_DIR} install -j${CORES} PORTABLE=1
+
+#sudo cp -R ${MAKE_DIR}/nodejs ${CHROOT_DIR}/root/
+#run_cmd_chroot "cd /root/nodejs; ./configure --prefix=/usr/local && make -j${CORES} && sudo make install -j${CORES}"
+
+#npm config set registry http://registry.npmjs.org/
+#npm config set proxy http://my-proxy.com:1080
+#npm config set https-proxy http://my-proxy.com:1080
+#npm config list | grep registry
+#npm config set strict-ssl false
+#npm install -g supervisor
+
+
+print "End  compiled_and_install_nodejs for rpi"
+}
 
 # Create rootfs for BeagleBone Black use debootstrap
 debootstrap_bbb() {
@@ -828,8 +886,13 @@ cp -R   ${LDROOT_DIR}/webapps/configurator/public/favicon.ico \
 cp -R   ${LDROOT_DIR}/webapps/configurator/public/ModulesCommonParams.def.js \
         ${INSTALL_DIR}/usr/local/linuxdrone/webapps/configurator/public/ModulesCommonParams.def.js
 
-sudo rsync -zvr --delete --exclude="node_modules/*" \
-        "${INSTALL_DIR}/usr/local/linuxdrone/" "${CHROOT_DIR}/usr/local/linuxdrone/"
+cd ${INSTALL_DIR}/usr/local/linuxdrone/webapps/configurator/
+npm install
+
+sudo rsync -zvr --delete --exclude="/proc" "${INSTALL_DIR}/usr/local/linuxdrone/" "${CHROOT_DIR}/usr/local/linuxdrone/"
+
+#sudo rsync -zvr --delete --exclude="/proc" --exclude="node_modules/*" \
+#        "${INSTALL_DIR}/usr/local/linuxdrone/" "${CHROOT_DIR}/usr/local/linuxdrone/"
 
 #run_cmd_chroot "cd /usr/local/linuxdrone/webapps/configurator; npm install"
 
@@ -878,8 +941,11 @@ fi
 #                Start script
 #------------------------------------------------
 
+START_SHELL=NO
+DISK_IMAGE_CLEAN=NO
+
 # Разбор параметров командной строки
-while getopts hvmsb:d: OPT; do
+while getopts hvmsb:d:c: OPT; do
     case "$OPT" in
         h)
             echo $USAGE
@@ -901,9 +967,12 @@ while getopts hvmsb:d: OPT; do
         d)
             DEV_DISK=$OPTARG
             ;;
+        c)
+            CLEAN=$OPTARG
+            ;;
         \?)
             # getopts вернул ошибку
-            echo $USAGE
+            echo ${USAGE}
             exit 1
             ;;
     esac
@@ -911,6 +980,8 @@ done
 
 # Удаляем обработанные выше параметры
 shift `expr $OPTIND - 1`
+
+echo ${CLEAN}
 
 if [ ! ${BOARD} ]; then
     echo "Not specified board type"
@@ -922,7 +993,7 @@ fi
 #{CHROOT_DIR}=$(readlink -f $(readlink -f "$(dirname "${CHROOT_DIR}")")/$(basename "${CHROOT_DIR}"))
 LDROOT_DIR=`pwd`
 
-echo '' | tee ${LDROOT_DIR}/create_rootfs.log
+echo '' | tee ${LDROOT_DIR}/build_rootfs.log
 print "Start scripts create rootfs"
 
 LDDOWNL_DIR=${LDROOT_DIR}/downloads
@@ -985,10 +1056,11 @@ case "${BOARD}" in
 	download_install_crosscompiler_rpi
         debootstrap_rpi
 
-        if [ ${START_SHELL} = YES ];then
+        if [ ${START_SHELL} = YES ]; then
             start_shell_in_chroot
         fi
 
+        compiled_and_install_nodejs_npm_rpi
         compiled_and_install_libwebsockets
         compiled_and_install_mongoc
         build_kernel_xeno2_rpi
