@@ -207,6 +207,7 @@ add_subdirectory(${MOD_DIR}/c-bmp180)
 add_subdirectory(${MOD_DIR}/c-generator)
 add_subdirectory(${MOD_DIR}/c-mpu9250)
 add_subdirectory(${MOD_DIR}/attitude)
+add_subdirectory(${MOD_DIR}/ardu)
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
