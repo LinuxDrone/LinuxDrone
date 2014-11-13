@@ -1013,7 +1013,7 @@ LDDOWNL_DIR=${LDROOT_DIR}/downloads
 LDTOOLS_DIR=${LDROOT_DIR}/tools
 BOARD_DIR=${LDTOOLS_DIR}/board/${BOARD}
 # Getting the full path if you had used a symbolic link to the folder
-BOARD_DIR=$(readlink -f $(readlink -f "$(dirname "${BOARD_DIR}")")/$(basename "${BOARD_DIR}"))
+#BOARD_DIR=$(readlink -f $(readlink -f "$(dirname "${BOARD_DIR}")")/$(basename "${BOARD_DIR}"))
 CHROOT_DIR=${BOARD_DIR}/rootfs
 # The path to the cross compiler
 CC_DIR=${BOARD_DIR}/cc
@@ -1021,8 +1021,6 @@ MAKE_DIR=${BOARD_DIR}/make_dir
 LOCALES=${LANG}
 CORES=$(grep "^cpu cores" /proc/cpuinfo | awk -F : '{print $2}' | head -1 | sed 's/^[ ]*//')
 CORES=$((${CORES} + 1))
-
-DISK=`pwd`/tools/board/bbb/rootfs.img
 DISK_SIZE=2048
 
 
