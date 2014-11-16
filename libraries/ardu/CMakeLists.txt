@@ -13,7 +13,12 @@
 set(CONFIG_HAL_BOARD HAL_BOARD_LINUX)
 
 add_definitions(-DCONFIG_HAL_BOARD=HAL_BOARD_LINUX)
-add_definitions(-DCONFIG_HAL_BOARD_SUBTYPE=HAL_BOARD_SUBTYPE_LINUX_NONE)
+add_definitions(-DCONFIG_HAL_BOARD_SUBTYPE=HAL_BOARD_SUBTYPE_LINUX_ERLE)
+
+# -DF_CPU
+#-Wunused-parameter
+#-Wunused-variable
+add_definitions(-DSKETCHNAME="ArduCopter")
 
 #file(GLOB_RECURSE INC "include/*.h")
 #file(GLOB_RECURSE SRC "src/*.c")
@@ -38,6 +43,8 @@ include_directories(
     ardupilot/libraries/DataFlash
     ardupilot/libraries/AP_GPS
     ardupilot/libraries/AP_Vehicle
+    ardupilot/libraries/AP_HAL_Empty
+    ardupilot/libraries/AP_HAL_Linux
     ardupilot/libraries/AP_InertialSensor
     ardupilot/libraries/Filter
     ardupilot/libraries/AP_Baro
@@ -108,10 +115,31 @@ file(GLOB_RECURSE AP_Math_INC "ardupilot/libraries/AP_Math/*.h")
 file(GLOB_RECURSE AP_Math_SRC "ardupilot/libraries/AP_Math/*.cpp")
 add_library(AP_Math ${AP_Math_INC} ${AP_Math_SRC})
 
-
 file(GLOB_RECURSE SITL_INC "ardupilot/libraries/SITL/*.h")
 file(GLOB_RECURSE SITL_SRC "ardupilot/libraries/SITL/*.cpp")
 add_library(SITL ${SITL_INC} ${SITL_SRC})
+
+file(GLOB_RECURSE DataFlash_INC "ardupilot/libraries/DataFlash/*.h")
+file(GLOB_RECURSE DataFlash_SRC "ardupilot/libraries/DataFlash/*.cpp")
+add_library(DataFlash ${DataFlash_INC} ${DataFlash_SRC})
+
+file(GLOB_RECURSE AP_GPS_INC "ardupilot/libraries/AP_GPS/*.h")
+file(GLOB_RECURSE AP_GPS_SRC "ardupilot/libraries/AP_GPS/*.cpp")
+add_library(AP_GPS ${AP_GPS_INC} ${AP_GPS_SRC})
+
+file(GLOB_RECURSE AP_HAL_Empty_INC "ardupilot/libraries/AP_HAL_Empty/*.h")
+file(GLOB_RECURSE AP_HAL_Empty_SRC "ardupilot/libraries/AP_HAL_Empty/*.cpp")
+add_library(AP_HAL_Empty ${AP_HAL_Empty_INC} ${AP_HAL_Empty_SRC})
+
+file(GLOB_RECURSE AP_HAL_Linux_INC "ardupilot/libraries/AP_HAL_Linux/*.h")
+file(GLOB_RECURSE AP_HAL_Linux_SRC "ardupilot/libraries/AP_HAL_Linux/*.cpp")
+add_library(AP_HAL_Linux ${AP_HAL_Linux_INC} ${AP_HAL_Linux_SRC})
+
+file(GLOB_RECURSE AP_InertialSensor_INC "ardupilot/libraries/AP_InertialSensor/*.h")
+file(GLOB_RECURSE AP_InertialSensor_SRC "ardupilot/libraries/AP_InertialSensor/*.cpp")
+add_library(AP_InertialSensor ${AP_InertialSensor_INC} ${AP_InertialSensor_SRC})
+
+
 
 file(GLOB_RECURSE AP_AHRS_INC "ardupilot/libraries/AP_AHRS/*.h")
 file(GLOB_RECURSE AP_AHRS_SRC "ardupilot/libraries/AP_AHRS/*.cpp")
