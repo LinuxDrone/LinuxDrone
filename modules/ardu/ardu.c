@@ -1167,7 +1167,7 @@ static void fast_loop()
     read_AHRS();
 
     // run low level rate controllers that only require IMU data
-    attitude_control.rate_controller_run();
+    //attitude_control.rate_controller_run();
 
 #if FRAME_CONFIG == HELI_FRAME
     update_heli_control_dynamics();

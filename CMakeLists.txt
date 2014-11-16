@@ -175,9 +175,9 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # Project libraries
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 #add_subdirectory(${LIB_DIR}/core)
-#add_subdirectory(${LIB_DIR}/sdk)
 #add_subdirectory(${LIB_DIR}/dotnet-sdk)
 add_subdirectory(${LIB_DIR}/sdk)
+add_subdirectory(${LIB_DIR}/ardu)
 
 # Loadable modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
