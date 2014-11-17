@@ -35,24 +35,19 @@ set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME}
 # Compiler options
 IF(${BOARD_TYPE} STREQUAL "beaglebone")
     add_definitions(-mfpu=neon ${XENOMAI_DEFINITIONS}
-
         -Wno-unused-variable
         -Wno-reorder
-
         -Wno-unused-but-set-parameter
         -Wno-unused-but-set-variable
         -Wno-unused-label
         -Wno-pmf-conversions
 
-
-
 -Wformat -Wall -Wshadow -Wpointer-arith -Wcast-align -Wno-unused-parameter -Wno-missing-field-initializers
 -Wwrite-strings -Wformat=2
 -ffunction-sections -fdata-sections -fno-exceptions -fsigned-char
 -D_GNU_SOURCE
-#-std=c++11
-#-std=c++0x
     ) #-std=c++11
+
 ELSEIF(${BOARD_TYPE} STREQUAL "rpi")
     add_definitions(${XENOMAI_DEFINITIONS})
 ENDIF()

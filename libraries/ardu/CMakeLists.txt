@@ -9,23 +9,9 @@
 # The human-readable summary of (and not a substitute for) the
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
-
-set(CONFIG_HAL_BOARD HAL_BOARD_LINUX)
-
 add_definitions(-DCONFIG_HAL_BOARD=HAL_BOARD_LINUX)
 add_definitions(-DCONFIG_HAL_BOARD_SUBTYPE=HAL_BOARD_SUBTYPE_LINUX_ERLE)
-
-# -DF_CPU
-#-Wunused-parameter
-#-Wunused-variable
 add_definitions(-DSKETCHNAME="ArduCopter")
-
-#file(GLOB_RECURSE INC "include/*.h")
-#file(GLOB_RECURSE SRC "src/*.c")
-
-
-
-#include_directories(${RFS_DIR}/usr/local/include/libbson-1.0 ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 include_directories(
     ardupilot/libraries/AP_Common
@@ -85,19 +71,6 @@ include_directories(
     ardupilot/libraries/AP_EPM
     ardupilot/libraries/AP_Parachute
 )
-
-
-#set(EXTRA_LIBS
-#    ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
-#    ${RFS_DIR}/usr/local/lib/libbson-1.0.so
-#    m
-#)
-
-#ADD_CUSTOM_COMMAND(
- #   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/common-params.c
-  #  COMMAND ${NODEJS} ${LIB_DIR}/sdk/CommonParamsGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/../../webapps/configurator/public/ModulesCommonParams.def.js ${CMAKE_CURRENT_BINARY_DIR}
-   # DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../webapps/configurator/public/ModulesCommonParams.def.js
-#)
 
 
 file(GLOB_RECURSE AP_Common_INC "ardupilot/libraries/AP_Common/*.h")
@@ -187,6 +160,10 @@ add_library(AP_AHRS ${AP_AHRS_INC} ${AP_AHRS_SRC})
 file(GLOB_RECURSE AP_Compass_INC "ardupilot/libraries/AP_Compass/*.h")
 file(GLOB_RECURSE AP_Compass_SRC "ardupilot/libraries/AP_Compass/*.cpp")
 add_library(AP_Compass ${AP_Compass_INC} ${AP_Compass_SRC})
+
+file(GLOB_RECURSE AP_Declination_INC "ardupilot/libraries/AP_Declination/*.h")
+file(GLOB_RECURSE AP_Declination_SRC "ardupilot/libraries/AP_Declination/*.cpp")
+add_library(AP_Declination ${AP_Declination_INC} ${AP_Declination_SRC})
 
 file(GLOB_RECURSE AP_Airspeed_INC "ardupilot/libraries/AP_Airspeed/*.h")
 file(GLOB_RECURSE AP_Airspeed_SRC "ardupilot/libraries/AP_Airspeed/*.cpp")
@@ -292,96 +269,57 @@ file(GLOB_RECURSE AP_Parachute_INC "ardupilot/libraries/AP_Parachute/*.h")
 file(GLOB_RECURSE AP_Parachute_SRC "ardupilot/libraries/AP_Parachute/*.cpp")
 add_library(AP_Parachute ${AP_Parachute_INC} ${AP_Parachute_SRC})
 
-file(GLOB_RECURSE switches_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE switches_SRC "ardupilot/ArduCopter/switches.cpp")
-add_library(switches ${switches_INC} ${switches_SRC})
-
-file(GLOB_RECURSE motors_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE motors_SRC "ardupilot/ArduCopter/motors.cpp")
-add_library(motors ${motors_INC} ${motors_SRC})
-
-file(GLOB_RECURSE navigation_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE navigation_SRC "ardupilot/ArduCopter/navigation.cpp")
-add_library(navigation ${navigation_INC} ${navigation_SRC})
-
-file(GLOB_RECURSE Attitude_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE Attitude_SRC "ardupilot/ArduCopter/Attitude.cpp")
-add_library(Attitude ${Attitude_INC} ${Attitude_SRC})
-
-file(GLOB_RECURSE leds_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE leds_SRC "ardupilot/ArduCopter/leds.cpp")
-add_library(leds ${leds_INC} ${leds_SRC})
-
-file(GLOB_RECURSE ekf_check_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE ekf_check_SRC "ardupilot/ArduCopter/ekf_check.cpp")
-add_library(ekf_check ${ekf_check_INC} ${ekf_check_SRC})
-
-file(GLOB_RECURSE crash_check_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE crash_check_SRC "ardupilot/ArduCopter/crash_check.cpp")
-add_library(crash_check ${crash_check_INC} ${crash_check_SRC})
-
-file(GLOB_RECURSE GCS_Mavlink_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE GCS_Mavlink_SRC "ardupilot/ArduCopter/GCS_Mavlink.cpp")
-add_library(GCS_Mavlink ${GCS_Mavlink_INC} ${GCS_Mavlink_SRC})
-
-file(GLOB_RECURSE sensors_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE sensors_SRC "ardupilot/ArduCopter/sensors.cpp")
-add_library(sensors ${sensors_INC} ${sensors_SRC})
-
-file(GLOB_RECURSE system_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE system_SRC "ardupilot/ArduCopter/system.cpp")
-add_library(system ${system_INC} ${system_SRC})
-
-file(GLOB_RECURSE Log_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE Log_SRC "ardupilot/ArduCopter/Log.cpp")
-add_library(Log ${Log_INC} ${Log_SRC})
-
-file(GLOB_RECURSE perf_info_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE perf_info_SRC "ardupilot/ArduCopter/perf_info.cpp")
-add_library(perf_info ${perf_info_INC} ${perf_info_SRC})
-
-file(GLOB_RECURSE inertia_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE inertia_SRC "ardupilot/ArduCopter/inertia.cpp")
-add_library(inertia ${inertia_INC} ${inertia_SRC})
-
-file(GLOB_RECURSE flight_mode_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE flight_mode_SRC "ardupilot/ArduCopter/flight_mode.cpp")
-add_library(flight_mode ${flight_mode_INC} ${flight_mode_SRC})
-
-file(GLOB_RECURSE radio_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE radio_SRC "ardupilot/ArduCopter/radio.cpp")
-add_library(radio ${radio_INC} ${radio_SRC})
-
-file(GLOB_RECURSE control_land_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE control_land_SRC "ardupilot/ArduCopter/control_land.cpp")
-add_library(control_land ${control_land_INC} ${control_land_SRC})
-
-file(GLOB_RECURSE events_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE events_SRC "ardupilot/ArduCopter/events.cpp")
-add_library(events ${events_INC} ${events_SRC})
-
-file(GLOB_RECURSE fence_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE fence_SRC "ardupilot/ArduCopter/fence.cpp")
-add_library(fence ${fence_INC} ${fence_SRC})
-
-file(GLOB_RECURSE commands_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE commands_SRC "ardupilot/ArduCopter/commands.cpp")
-add_library(commands ${commands_INC} ${commands_SRC})
-
-file(GLOB_RECURSE commands_logic_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE commands_logic_SRC "ardupilot/ArduCopter/commands_logic.cpp")
-add_library(commands_logic ${commands_logic_INC} ${commands_logic_SRC})
-
-file(GLOB_RECURSE failsafe_INC "ardupilot/ArduCopter/*.h")
-file(GLOB_RECURSE failsafe_SRC "ardupilot/ArduCopter/failsafe.cpp")
-add_library(failsafe ${failsafe_INC} ${failsafe_SRC})
-
-
 
 set(ArduCopter_EXTRA_LIBS
-    AP_HAL_Linux
+    AP_Common
+    AP_HAL
+    AP_Progmem
+    AP_Rally
+    AP_ADC
+    AP_ADC_AnalogSource
+    AP_Terrain
+    AP_Mission
+    GCS_MAVLink
+    AP_Menu
     AP_Param
-    #system
+    AP_Math
+    SITL
+    DataFlash
+    AP_GPS
+    AP_HAL_Empty
+    AP_HAL_Linux
+    AP_InertialSensor
+    Filter
+    AP_Baro
+    AP_AHRS
+    AP_Compass
+    AP_Declination
+    AP_Airspeed
+    AP_NavEKF
+    AP_Notify
+    StorageManager
+    AP_Curve
+    AC_PID
+    AP_Motors
+    RC_Channel
+    AP_InertialNav
+    AC_AttitudeControl
+    AP_RangeFinder
+    AP_OpticalFlow
+    AP_Relay
+    AP_ServoRelayEvents
+    AP_Camera
+    AP_Mount
+    AC_WPNav
+    AC_Fence
+    AP_Scheduler
+    AP_RCMapper
+    AP_BattMonitor
+    AP_BoardConfig
+    AP_Frsky_Telem
+    AC_Sprayer
+    AP_EPM
+    AP_Parachute
     #sdk
     #${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
     #${BSON_LIBRARIES}
@@ -396,14 +334,3 @@ file(GLOB_RECURSE ArduCopter_SRC "ardupilot/ArduCopter/ArduCopter.cpp")
 add_executable(ArduCopter ${ArduCopter_INC} ${ArduCopter_SRC})
 target_link_libraries(ArduCopter ${ArduCopter_EXTRA_LIBS})
 
-#target_link_libraries(sdk ${EXTRA_LIBS})
-
-#IF(${DO_POST_BUILD})
- #   add_custom_command(
-  #      TARGET sdk
-   #     POST_BUILD
-    #    COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libsdk.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/lib/libsdk.so
-    #)
-#ENDIF()
-
-#install(TARGETS sdk DESTINATION lib)
