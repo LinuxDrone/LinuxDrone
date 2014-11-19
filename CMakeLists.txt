@@ -35,6 +35,8 @@ set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME}
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
 
+option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
+
 # Path to binary tools
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(SCP ${TLS_DIR}/pscp.exe)
@@ -52,6 +54,9 @@ SET(DO_POST_BUILD NO)
 #SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 #SET(URL_TARGET_SYSTEM root@192.168.1.2)
 #SET(SSH_PORT_TARGET_SYSTEM 22)
+
+# Include cmake module for build Doxygen documentation
+include(BuildDocumentation)
 
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}
@@ -86,52 +91,6 @@ include_directories(${INCLUDE_DIRECTORIES} ${BSON_INCLUDE_DIR})
 # Libraries: ${WebSockets_LIBRARIES}
 find_package(WebSockets REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${WebSockets_INCLUDE_DIR})
-
-option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygenss)" OFF)
-
-IF(BUILD_DOCUMENTATION)
-
-    FIND_PACKAGE(Doxygen)
-    IF(NOT DOXYGEN_FOUND)
-        MESSAGE(FATAL_ERROR "Doxygen is needed to build the documentation.")
-    ENDIF()
-
-    SET( doxyfile_in      ${PROJECT_SOURCE_DIR}/Doxyfile.in)
-    SET( DOXY_INPUT       ${PROJECT_SOURCE_DIR})        # Pasted into Doxyfile
-
-    SET( doxyfile_ru      ${PROJECT_BINARY_DIR}/Doxyfile.ru)
-    SET( doxy_ru_index    ${PROJECT_BINARY_DIR}/ru/html/index.html)
-    SET( DOXY_OUTPUT_DIR  ${PROJECT_BINARY_DIR}/ru)     # Pasted into Doxyfile.ru
-    SET( DOXY_OUT_LANG    Russian)                      # Pasted into Doxyfile.ru
-    CONFIGURE_FILE(${doxyfile_in} ${doxyfile_ru} @ONLY IMMEDIATE)
-    ADD_CUSTOM_COMMAND(
-        OUTPUT ${doxy_ru_index}
-        COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile.ru
-        MAIN_DEPENDENCY ${doxyfile_ru} ${doxyfile_in}
-        DEPENDS sdk ${doxy_extra_files}
-        COMMENT "Generating RU HTML documentation"
-    )
-
-
-    SET( doxyfile_en      ${PROJECT_BINARY_DIR}/Doxyfile.en)
-    SET( doxy_en_index    ${PROJECT_BINARY_DIR}/en/html/index.html)
-    SET( DOXY_OUTPUT_DIR  ${PROJECT_BINARY_DIR}/en)     # Pasted into Doxyfile.en
-    SET( DOXY_OUT_LANG    English)                      # Pasted into Doxyfile.en
-    CONFIGURE_FILE(${doxyfile_in} ${doxyfile_en} @ONLY IMMEDIATE)
-    ADD_CUSTOM_COMMAND(
-        OUTPUT ${doxy_en_index}
-        COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile.en
-        MAIN_DEPENDENCY ${doxyfile_en} ${doxyfile_in}
-        DEPENDS sdk ${doxy_extra_files}
-        COMMENT "Generating EN HTML documentation"
-    )
-
-
-    ADD_CUSTOM_TARGET( doc ALL DEPENDS ${doxy_ru_index} ${doxy_en_index})
-
-    INSTALL( DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION share/doc )
-ENDIF()
-
 
 # Link-only libraries (do not check headers, just link shared objects)
 find_library(ZLIB_LIBRARIES z)
