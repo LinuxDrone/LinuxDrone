@@ -35,18 +35,7 @@ set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME}
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
 
-# Project source directories
-set(LIB_DIR ${PROJECT_SOURCE_DIR}/libraries)
-set(MOD_DIR ${PROJECT_SOURCE_DIR}/modules)
-set(HST_DIR ${PROJECT_SOURCE_DIR}/host-programs)
-set(SVC_DIR ${PROJECT_SOURCE_DIR}/services)
-set(SYS_DIR ${PROJECT_SOURCE_DIR}/system)
-set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
-set(TLS_DIR ${TOOLS_DIR})
-set(WEB_DIR ${PROJECT_SOURCE_DIR}/webapps)
-# variable BRD_DIR points to path directory board
-# variable RFS_DIR points to path directory rootfs
-
+# Path to binary tools
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(SCP ${TLS_DIR}/pscp.exe)
     SET(NODEJS node)
@@ -82,10 +71,8 @@ include_directories(${INCLUDE_DIRECTORIES} ${MongoC_INCLUDE_DIR})
 
 # Xenomai libraries
 # Libraries: ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
-# Compiler options: ${XENOMAI_DEFINITIONS}
 find_package(Xenomai REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
-add_definitions(${XENOMAI_DEFINITIONS})
 
 # Threads
 find_package(Threads)
@@ -100,7 +87,8 @@ include_directories(${INCLUDE_DIRECTORIES} ${BSON_INCLUDE_DIR})
 find_package(WebSockets REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${WebSockets_INCLUDE_DIR})
 
-#option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
+option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygenss)" OFF)
+
 IF(BUILD_DOCUMENTATION)
 
     FIND_PACKAGE(Doxygen)

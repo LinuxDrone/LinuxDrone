@@ -10,13 +10,13 @@ CMAKE="cmake"
 # Use cross compiler for build
 CROSS_COMPILED_USE=YES
 # Compile code for board
-BOARD_TYPE=rpi
+BOARD_NAME=rpi
 
 # Remove cmake cache if found in the source directory
 "$CMAKE" -E remove "$ROOT_DIR/CMakeCache.txt"
 "$CMAKE" -E remove_directory "$ROOT_DIR/CMakeFiles/"
 
-TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/$BOARD_TYPE.cmake
+TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/${BOARD_NAME}.cmake
 BUILD_TYPE=Debug
 #BUILD_TYPE=Release
 
@@ -32,4 +32,7 @@ cd "$BUILD"
 # CONFIGURE_ENV='$CROSS_COMPILED_USE'
 echo ${CONFIGURE_ENV}
 
-"$CMAKE" "$GENERATOR" $TOOLCHAIN -DCMAKE_BUILD_TYPE=$BUILD_TYPE "$ROOT_DIR" $* -DBOARD_TYPE=$BOARD_TYPE -DCROSS_COMPILED_USE=$CROSS_COMPILED_USE
+"$CMAKE"    "$GENERATOR" $TOOLCHAIN \
+            -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+            -DCROSS_COMPILED_USE=$CROSS_COMPILED_USE \
+            "$ROOT_DIR" $*

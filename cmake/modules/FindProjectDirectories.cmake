@@ -42,3 +42,30 @@ else()
     message(STATUS "Automatically set downloads directory: ${DOWNLOADS_DIR}")
 endif()
 
+# Project directories for board
+if(DEFINED ENV{LINUXDRONE_BOARD_DIR})
+    file(TO_CMAKE_PATH "$ENV{LINUXDRONE_ROOTFS_DIR}" BRD_DIR)
+    message(STATUS "User-defined board ${BOARD_NAME} directory: ${BRD_DIR}")
+else()
+    set(BRD_DIR ${TOOLS_DIR}/board/${BOARD_NAME})
+    message(STATUS "Automatically set board ${BOARD_NAME} directory: ${BRD_DIR}")
+endif()
+
+# Project directories for rootfs
+if(DEFINED ENV{LINUXDRONE_ROOTFS_DIR})
+    file(TO_CMAKE_PATH "$ENV{LINUXDRONE_ROOTFS_DIR}" RFS_DIR)
+    message(STATUS "User-defined rootfs ${BOARD_NAME} directory: ${RFS_DIR}")
+else()
+    set(RFS_DIR ${BRD_DIR}/rootfs)
+    message(STATUS "Automatically set rootfs ${BOARD_NAME} directory: ${RFS_DIR}")
+endif()
+
+# Project source directories
+set(LIB_DIR ${PROJECT_SOURCE_DIR}/libraries)
+set(MOD_DIR ${PROJECT_SOURCE_DIR}/modules)
+set(HST_DIR ${PROJECT_SOURCE_DIR}/host-programs)
+set(SVC_DIR ${PROJECT_SOURCE_DIR}/services)
+set(SYS_DIR ${PROJECT_SOURCE_DIR}/system)
+set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
+set(TLS_DIR ${TOOLS_DIR})
+set(WEB_DIR ${PROJECT_SOURCE_DIR}/webapps)

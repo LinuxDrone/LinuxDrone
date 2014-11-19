@@ -27,51 +27,49 @@ set(CMAKE_SYSTEM_VERSION 1)
 # is processed by cmake, but it also uses custom modules)
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
 
+set(BOARD_NAME "rpi")
+
 # Get downloads and tools directories (read the module source for details)
 include(FindProjectDirectories)
 
-# Set variable for path board directory
-if(DEFINED ENV{LINUXDRONE_BOARD_DIR})
-    file(TO_CMAKE_PATH "$ENV{LINUXDRONE_ROOTFS_DIR}" BRD_DIR)
-    message(STATUS "User-defined board Raspberry PI directory: ${BRD_DIR}")
-else()
-    set(BRD_DIR ${TOOLS_DIR}/board/rpi)
-    message(STATUS "Automatically set board Raspberry PI directory: ${BRD_DIR}")
-endif()
-# Set variable for path board rootfs directory
-if(DEFINED ENV{LINUXDRONE_ROOTFS_DIR})
-    file(TO_CMAKE_PATH "$ENV{LINUXDRONE_ROOTFS_DIR}" RFS_DIR)
-    message(STATUS "User-defined rootfs Raspberry PI directory: ${RFS_DIR}")
-else()
-    set(RFS_DIR ${BRD_DIR}/rootfs)
-    message(STATUS "Automatically set rootfs Raspberry PI directory: ${RFS_DIR}")
-endif()
-
 if(CROSS_COMPILED_USE)
-	# Define the cross compiler details (as extracted from distribution)
-	if(CMAKE_HOST_WIN32)
-                set(TOOLCHAIN_SUBDIR "cc")
-		set(CMAKE_HOST_EXECUTABLE_SUFFIX ".exe")
-	elseif(CMAKE_HOST_APPLE)
-                set(TOOLCHAIN_SUBDIR "cc")
-		set(CMAKE_HOST_EXECUTABLE_SUFFIX "")
-	else()
-                set(TOOLCHAIN_SUBDIR "cc")
-		set(CMAKE_HOST_EXECUTABLE_SUFFIX "")
-	endif()
-	set(CROSS_TOOLCHAIN_PREFIX arm-linux-gnueabihf-)
+    # Define the cross compiler details (as extracted from distribution)
+    if(CMAKE_HOST_WIN32)
+            set(TOOLCHAIN_SUBDIR "cc")
+            set(CMAKE_HOST_EXECUTABLE_SUFFIX ".exe")
+    elseif(CMAKE_HOST_APPLE)
+            set(TOOLCHAIN_SUBDIR "cc")
+            set(CMAKE_HOST_EXECUTABLE_SUFFIX "")
+    else()
+            set(TOOLCHAIN_SUBDIR "cc")
+            set(CMAKE_HOST_EXECUTABLE_SUFFIX "")
+    endif()
+    set(CROSS_TOOLCHAIN_PREFIX arm-linux-gnueabihf-)
 
-	# Define compilers
-	set(TOOLCHAIN_PREFIX   ${BRD_DIR}/${TOOLCHAIN_SUBDIR}/bin/${CROSS_TOOLCHAIN_PREFIX})
-	set(CMAKE_C_COMPILER   ${TOOLCHAIN_PREFIX}gcc${CMAKE_HOST_EXECUTABLE_SUFFIX})
-	set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}g++${CMAKE_HOST_EXECUTABLE_SUFFIX})
+    # Define compilers
+    set(TOOLCHAIN_PREFIX   ${BRD_DIR}/${TOOLCHAIN_SUBDIR}/bin/${CROSS_TOOLCHAIN_PREFIX})
+    set(CMAKE_C_COMPILER   ${TOOLCHAIN_PREFIX}gcc${CMAKE_HOST_EXECUTABLE_SUFFIX})
+    set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}g++${CMAKE_HOST_EXECUTABLE_SUFFIX})
 else()
-	# Define compilers
-	set(CMAKE_C_COMPILER   gcc)
-	set(CMAKE_CXX_COMPILER g++)
+    # Define compilers
+    set(CMAKE_C_COMPILER   gcc)
+    set(CMAKE_CXX_COMPILER g++)
 endif()
 
-#add_definitions(-std=c++11)
+# Compiler options
+#add_definitions(-std=c++11 -Wall)
+# Compile/preprocess Xenomai options
+add_definitions(-D_GNU_SOURCE -D_REENTRANT -pipe -D__XENO__)
+
+# Path to additional tools
+if(CMAKE_HOST_WIN32)
+    # Device Tree Compiler
+    #set(DTC ${BRD_DIR}/dtc/dtc)
+elseif(CMAKE_HOST_APPLE)
+    #set(DTC ${BRD_DIR}/dtc/dtc)
+else()
+    #set(DTC ${BRD_DIR}/dtc/dtc)
+endif()
 
 # Where is the target environment
 set(CMAKE_FIND_ROOT_PATH ${RFS_DIR})

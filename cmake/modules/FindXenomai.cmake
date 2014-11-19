@@ -42,9 +42,6 @@ if( UNIX )
     find_library( XENOMAI_LIBRARY_NATIVE  native  ${XENOMAI_DIR}/lib )
     find_library( XENOMAI_LIBRARY_XENOMAI xenomai ${XENOMAI_DIR}/lib )
 
-    # add compile/preprocess options
-    set( XENOMAI_DEFINITIONS "-D_GNU_SOURCE -D_REENTRANT -Wall -pipe -D__XENO__" )
-
     mark_as_advanced(
       XENOMAI_DIR 
       XENOMAI_LIBRARY_NATIVE 

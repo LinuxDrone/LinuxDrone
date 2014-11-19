@@ -10,13 +10,13 @@ rem set CMAKE="cmake"
 # Use cross compiler for build
 set CROSS_COMPILED_USE=YES
 # Compile code for board
-set BOARD_TYPE=beaglebone
+set BOARD_NAME=bbb
 
 rem Remove cmake cache if found in the source directory
 %CMAKE% -E remove "%ROOT_DIR%/CMakeCache.txt"
 %CMAKE% -E remove_directory "%ROOT_DIR%/CMakeFiles/"
 
-set TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/%BOARD_TYPE%.cmake
+set TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=cmake/boards/%BOARD_NAME%.cmake
 set BUILD_TYPE=Debug
 rem set BUILD_TYPE=Release
 
@@ -37,7 +37,7 @@ if "%INCLUDE%" == "" set INCLUDE=*
 if "%LIB%"     == "" set LIB=*
 if "%LIBPATH%" == "" set LIBPATH=*
 
-%CMAKE% %GENERATOR% %TOOLCHAIN% -DCMAKE_BUILD_TYPE=%BUILD_TYPE% "%ROOT_DIR%" %* -DBOARD_TYPE=%BOARD_TYPE% -DCROSS_COMPILED_USE=%CROSS_COMPILED_USE%
+%CMAKE% %GENERATOR% %TOOLCHAIN% -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCROSS_COMPILED_USE=%CROSS_COMPILED_USE% "%ROOT_DIR%" %*
 if not errorlevel 1 goto Done
 echo *** CMAKE ERROR ***
 
