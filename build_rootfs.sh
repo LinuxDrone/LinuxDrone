@@ -60,7 +60,7 @@ fi
 # Umount file systems proc, sysfs, devpts
 umount_proc_sysfs_devpts() {
 if mount | grep -q ${CHROOT_DIR}/proc; then
-  print "Umount file systems proc, sysfs, devpts"
+  #print "Umount file systems proc, sysfs, devpts"
   sudo umount ${CHROOT_DIR}/proc
   sudo umount ${CHROOT_DIR}/sys
   sudo umount ${CHROOT_DIR}/dev/pts
@@ -72,7 +72,7 @@ mount_proc_sysfs_devpts() {
 if mount | grep -q ${CHROOT_DIR}/proc; then
   umount_proc_sysfs_devpts
 fi
-print "Mount file systems proc, sysfs, devpts"
+#print "Mount file systems proc, sysfs, devpts"
 sudo mount proc ${CHROOT_DIR}/proc -t proc
 sudo mount sysfs ${CHROOT_DIR}/sys -t sysfs
 sudo mount devpts ${CHROOT_DIR}/dev/pts -t devpts
@@ -845,6 +845,21 @@ fi
 return 0
 }
 
+copy_truncate_rootfs() {
+print "Start copy truncated rootfs in ${BOARD_DIR}/rootfs"
+# Move rootfs trunc to chroot directory
+if [ -d ${ROOTFS_TRUNC_DIR} ]; then
+    sudo mv ${ROOTFS_TRUNC_DIR} ${CHROOT_DIR}/home/ld/code/rootfs
+fi
+
+run_cmd_chroot "rsync -progress -rL --delete --exclude="/usr/local/xenomai" /usr /home/ld/code/rootfs/"
+run_cmd_chroot "cp -R /usr/local/xenomai /home/ld/code/rootfs/usr/local/"
+sudo chown -R $(whoami):$(whoami) ${CHROOT_DIR}/home/ld/code/rootfs
+mv ${CHROOT_DIR}/home/ld/code/rootfs ${ROOTFS_TRUNC_DIR}
+
+print "End copy truncated rootfs"
+}
+
 # Build and install software LinuxDrone to rootfs
 build_install_linuxdrone() {
 print "Start build and install software LinuxDrone to rootfs"
@@ -870,7 +885,7 @@ fi
 
 # Create project run cmake
 cd ${LDROOT_DIR}
-./configure.sh
+./configure.sh -b ${BOARD}
 cd ${LDROOT_DIR}/build.Debug
 make -j${CORES}
 make install -j${CORES}
@@ -1014,10 +1029,11 @@ LDTOOLS_DIR=${LDROOT_DIR}/tools
 BOARD_DIR=${LDTOOLS_DIR}/board/${BOARD}
 # Getting the full path if you had used a symbolic link to the folder
 #BOARD_DIR=$(readlink -f $(readlink -f "$(dirname "${BOARD_DIR}")")/$(basename "${BOARD_DIR}"))
-CHROOT_DIR=${BOARD_DIR}/rootfs
 # The path to the cross compiler
 CC_DIR=${BOARD_DIR}/cc
 MAKE_DIR=${BOARD_DIR}/make_dir
+CHROOT_DIR=${MAKE_DIR}/rootfs
+ROOTFS_TRUNC_DIR=${BOARD_DIR}/rootfs
 LOCALES=${LANG}
 CORES=$(grep "^cpu cores" /proc/cpuinfo | awk -F : '{print $2}' | head -1 | sed 's/^[ ]*//')
 CORES=$((${CORES} + 1))
@@ -1075,6 +1091,7 @@ case "${BOARD}" in
         compiled_and_install_libwebsockets
         compiled_and_install_mongoc
         build_kernel_xeno2_rpi
+        copy_truncate_rootfs
         build_install_linuxdrone
         ;;
 

@@ -1,7 +1,47 @@
-#!/bin/bash -e
+#!/bin/sh -e
 #
 # THIS FILE IS TEMPORARY, it will be reworked later
 #
+
+USAGE="Example usage: `basename $0` -b bbb -c -o "-DBUILD_DOCUMENTATION=ON"\n
+-- Available options: \n
+help:                            -h \n
+board name:                      -b (bbb, rpi)  \n
+additional cmake options:        -o (\"-DBUILD_DOCUMENTATION=ON, ...\") \n
+clean build project directory:   -c \n
+"
+
+# Parse command line parameters
+while getopts hcb:o: OPT; do
+    case "$OPT" in
+        h)
+            echo $USAGE
+            exit 0
+            ;;
+        b)
+            BOARD_NAME=$OPTARG
+            ;;
+        o)
+            CMAKE_OPTION=$OPTARG
+            ;;
+        c)
+            CLEAN=YES
+            ;;
+        \?)
+            # getopts вернул ошибку
+            echo ${USAGE}
+            exit 1
+            ;;
+    esac
+done
+
+shift `expr $OPTIND - 1`
+
+if  [ ! ${BOARD_NAME} ] || ( [ ${BOARD_NAME} != bbb ] && [ ${BOARD_NAME} != rpi ] ); then
+    echo "Not specified board type"
+    echo $USAGE
+    exit 1
+fi
 
 ROOT_DIR=`pwd`
 #CMAKE="$ROOT_DIR/tools/cmake-2.8.12.2/bin/cmake"
@@ -9,8 +49,6 @@ CMAKE="cmake"
 
 # Use cross compiler for build
 CROSS_COMPILED_USE=YES
-# Compile code for board
-BOARD_NAME=rpi
 
 # Remove cmake cache if found in the source directory
 "$CMAKE" -E remove "$ROOT_DIR/CMakeCache.txt"
@@ -24,6 +62,12 @@ BUILD_TYPE=Debug
 # http://www.cmake.org/Wiki/Eclipse_CDT4_Generator
 # please let us know.
 BUILD="$ROOT_DIR/build.$BUILD_TYPE"
+
+if [ -d ${BUILD} ] && [ ${CLEAN} = "YES" ]; then
+    echo "-- Clean  ${BUILD} directories"
+    rm -R ${BUILD}
+fi
+
 GENERATOR=-G"Eclipse CDT4 - Unix Makefiles"
 #GENERATOR=-G"Unix Makefiles"
 
@@ -35,4 +79,4 @@ echo ${CONFIGURE_ENV}
 "$CMAKE"    "$GENERATOR" $TOOLCHAIN \
             -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
             -DCROSS_COMPILED_USE=$CROSS_COMPILED_USE \
-            "$ROOT_DIR" $*
+            "$ROOT_DIR" ${CMAKE_OPTION}
