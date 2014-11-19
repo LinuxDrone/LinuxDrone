@@ -32,13 +32,6 @@ project(linuxdrone)
 # Install path for relocatable copy (under the build directory)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install/usr/local/${PROJECT_NAME})
 
-# Compiler options
-IF(${BOARD_TYPE} STREQUAL "beaglebone")
-    add_definitions(-mfpu=neon ${XENOMAI_DEFINITIONS}) #-std=c++11
-ELSEIF(${BOARD_TYPE} STREQUAL "rpi")
-    add_definitions(${XENOMAI_DEFINITIONS})
-ENDIF()
-
 # Library options (comment off to build static libraries)
 set(BUILD_SHARED_LIBS TRUE)
 
@@ -49,25 +42,20 @@ set(HST_DIR ${PROJECT_SOURCE_DIR}/host-programs)
 set(SVC_DIR ${PROJECT_SOURCE_DIR}/services)
 set(SYS_DIR ${PROJECT_SOURCE_DIR}/system)
 set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
-set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
+set(TLS_DIR ${TOOLS_DIR})
 set(WEB_DIR ${PROJECT_SOURCE_DIR}/webapps)
-set(RFS_DIR ${TLS_DIR}/rootfs/${BOARD_TYPE})
+# variable BRD_DIR points to path directory board
+# variable RFS_DIR points to path directory rootfs
 
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(SCP ${TLS_DIR}/pscp.exe)
     SET(NODEJS node)
-    SET(PASM ${TLS_DIR}/pasm/pasm.exe)
-    SET(DTC ${TLS_DIR}/dtc/dtc.exe)
 ELSEIF(${CMAKE_HOST_SYSTEM} MATCHES "Linux")
     SET(SCP scp)
-    SET(NODEJS node)
-    SET(PASM ${TLS_DIR}/pasm/pasm)
-    SET(DTC dtc)
+    SET(NODEJS nodejs)
 ELSE()
     SET(SCP scp)
     SET(NODEJS /opt/local/bin/node)
-    SET(PASM ${TLS_DIR}/pasm/pasm)
-    SET(DTC ${TLS_DIR}/dtc/dtc)
 ENDIF()
 
 SET(DO_POST_BUILD NO)
@@ -75,12 +63,6 @@ SET(DO_POST_BUILD NO)
 #SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 #SET(URL_TARGET_SYSTEM root@192.168.1.2)
 #SET(SSH_PORT_TARGET_SYSTEM 22)
-
-#SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
-#SET(SSH_PORT_TARGET_SYSTEM 1234)
-
-SET(URL_TARGET_SYSTEM root@192.168.1.43)
-SET(SSH_PORT_TARGET_SYSTEM 22)
 
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}
@@ -103,6 +85,7 @@ include_directories(${INCLUDE_DIRECTORIES} ${MongoC_INCLUDE_DIR})
 # Compiler options: ${XENOMAI_DEFINITIONS}
 find_package(Xenomai REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
+add_definitions(${XENOMAI_DEFINITIONS})
 
 # Threads
 find_package(Threads)
@@ -162,7 +145,6 @@ IF(BUILD_DOCUMENTATION)
 ENDIF()
 
 
-
 # Link-only libraries (do not check headers, just link shared objects)
 find_library(ZLIB_LIBRARIES z)
 find_library(OPENSSL_LIBRARIES ssl)
@@ -219,4 +201,4 @@ add_subdirectory(${SVC_DIR}/i2c)
 add_subdirectory(${SVC_DIR}/spi)
 
 # Main project target
-#add_subdirectory(${TGT_DIR}/beaglebone) 
+#add_subdirectory(${TGT_DIR}/beaglebone)

@@ -10,7 +10,7 @@ CMAKE="cmake"
 # Use cross compiler for build
 CROSS_COMPILED_USE=YES
 # Compile code for board
-BOARD_TYPE=beaglebone
+BOARD_TYPE=rpi
 
 # Remove cmake cache if found in the source directory
 "$CMAKE" -E remove "$ROOT_DIR/CMakeCache.txt"
