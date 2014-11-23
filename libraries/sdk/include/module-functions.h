@@ -578,6 +578,8 @@ typedef void (*delete_f)(module_t*);
 
 int init(module_t* module, const uint8_t * data, uint32_t length);
 
+int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name);
+
 int start(void* module);
 
 int stop(void* module);

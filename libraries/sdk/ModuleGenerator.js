@@ -223,9 +223,15 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
             case "char":
             case "short":
             case "int":
-            case "long":
-            case "long long":
                 r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
+                break;
+
+            case "long":
+                r += "    printf(\"" + propName + "=%li\\t\", obj->" + propName + ");\n";
+                break;
+
+            case "long long":
+                r += "    printf(\"" + propName + "=%lli\\t\", obj->" + propName + ");\n";
                 break;
 
             case "float":
@@ -238,7 +244,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
                 break;
 
             case "bool":
-                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
+                r += "    printf(\"" + propName + "=%s\\t\", obj->" + propName + " ? \"true\" : \"false\");\n";
                 break;
 
             default:
