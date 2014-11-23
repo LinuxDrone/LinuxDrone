@@ -45,6 +45,7 @@ IF(${BOARD_TYPE} STREQUAL "beaglebone")
 -Wformat -Wall -Wshadow -Wpointer-arith -Wcast-align -Wno-unused-parameter -Wno-missing-field-initializers
 -Wwrite-strings -Wformat=2
 -ffunction-sections -fdata-sections -fno-exceptions -fsigned-char
+-Wno-pointer-arith
 -D_GNU_SOURCE
     ) #-std=c++11
 
@@ -83,7 +84,7 @@ ELSE()
     SET(DTC ${TLS_DIR}/dtc/dtc)
 ENDIF()
 
-SET(DO_POST_BUILD NO)
+SET(DO_POST_BUILD YES)
 
 #SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 #SET(URL_TARGET_SYSTEM root@192.168.1.2)
@@ -92,7 +93,7 @@ SET(DO_POST_BUILD NO)
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
 #SET(SSH_PORT_TARGET_SYSTEM 1234)
 
-SET(URL_TARGET_SYSTEM root@192.168.1.43)
+SET(URL_TARGET_SYSTEM root@192.168.1.20)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
 # MongoDB
@@ -221,6 +222,8 @@ add_subdirectory(${MOD_DIR}/c-generator)
 add_subdirectory(${MOD_DIR}/c-mpu9250)
 add_subdirectory(${MOD_DIR}/attitude)
 add_subdirectory(${MOD_DIR}/ardu)
+add_subdirectory(${MOD_DIR}/ap-motors-quad)
+
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
