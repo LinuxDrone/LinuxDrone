@@ -23,7 +23,7 @@ sdcard device name:              -d (dev/sdc)   \n
 board name:                      -b (bbb, rpi)  \n
 "
 
-
+# Printing and logging message
 print() {
 #2>&1
 date +%d-%m-%Y\ %H:%M:%S | tr -d '\012' | tee -a ${LDROOT_DIR}/build_rootfs.log
@@ -32,6 +32,7 @@ echo " --- $1" | tee -a ${LDROOT_DIR}/build_rootfs.log
 #date +%d-%m-%Y\ %H:%M:%S | tr -d '\012'; echo " --- $1";
 }
 
+# Set timestamp_timeout for sudoers
 sudo_timestamp_timeout() {
 
 FIND_STRING=Defaults:$(whoami)[[:blank:]]*timestamp_timeout=
@@ -86,6 +87,45 @@ sudo chroot ${CHROOT_DIR} /bin/bash -c "$1"
 umount_proc_sysfs_devpts
 qemu_remove_from_roofs
 }
+
+# Launch console chroot
+start_shell_in_chroot() {
+print "Starting chroot bash session, type exit to end"
+qemu_copy_to_roofs
+mount_proc_sysfs_devpts
+sudo chroot ${CHROOT_DIR} /bin/bash
+
+sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get clean"
+sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get autoremove"
+umount_proc_sysfs_devpts
+qemu_remove_from_roofs
+}
+
+# Check and installed packages use apt-get
+check_and_installed_packages() {
+unset PKG_FOR_INST
+unset PKG_FIND
+
+DPKG_LIST=$(dpkg --list)
+
+PKG_LIST=$(echo $1 | tr " " "\n")
+for x in ${PKG_LIST}
+do
+    unset PKG_FIND
+    PKG_FIND=$( echo ${DPKG_LIST} | grep -o " $x " | uniq)
+    if [ ! ${PKG_FIND} ]; then
+        PKG_FOR_INST="${PKG_FOR_INST} ${x}"
+    fi
+done
+
+if [ "${PKG_FOR_INST}" ]; then
+    print "-- Install packages for this host: ${PKG_FOR_INST}"
+    sudo apt-get -y install "${PKG_FOR_INST}"
+fi
+
+unset PKG_FOR_INST
+}
+
 
 # Create image sdcard
 create_image() {
@@ -177,7 +217,8 @@ print "Copy image to sdcard"
 print "End create image sdcard"
 }
 
-# Setting common settings for the rootfs
+
+# Common settings for rootfs
 rootfs_common_settings() {
 
 print "Setting hostname"
@@ -191,6 +232,14 @@ iface lo inet loopback
 
 auto eth0
 iface eth0 inet dhcp
+
+# Ethernet/RNDIS gadget (g_ether)
+# ... or on host side, usbnet and random hwaddr
+iface usb0 inet static
+    address 192.168.7.2
+    netmask 255.255.255.0
+    network 192.168.7.0
+    gateway 192.168.7.1
 EOF
 "
 
@@ -206,22 +255,22 @@ print "Create /etc/resolv.conf"
 sudo cp /etc/resolv.conf ${CHROOT_DIR}/etc
 
 print "Create xenomai group"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "addgroup xenomai"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "addgroup root xenomai"
+run_cmd_chroot "addgroup xenomai"
+run_cmd_chroot "addgroup root xenomai"
 print "Create user linuxdrone"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "useradd -m ld -c LinuxDrone,,,,"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "usermod -a -G xenomai,sudo,staff,kmem,plugdev ld"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "cat << EOF | passwd ld
+run_cmd_chroot "useradd -m ld -c LinuxDrone,,,,"
+run_cmd_chroot "usermod -a -G xenomai,sudo,staff,kmem,plugdev ld"
+run_cmd_chroot "cat << EOF | passwd ld
 1
 1
 EOF
 "
 
 print "Choice of the shell for the user ld"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "chsh -s /bin/bash ld"
+run_cmd_chroot "chsh -s /bin/bash ld"
 
 print "Set root password"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "cat << EOF | passwd
+run_cmd_chroot "cat << EOF | passwd
 1
 1
 EOF
@@ -239,57 +288,183 @@ EOF
 "
 }
 
+# Settings BeagleBone Black for the rootfs
+roofs_settings_bbb() {
+print "Apply settings for ${BOARD_FULL_NAME}"
+print "Adding deb sources to /etc/apt/sources.list"
+sudo sh -c "echo 'deb ${DISTR_MIRROR} ${DISTR} main universe multiverse' >> ${CHROOT_DIR}/etc/apt/sources.list"
+sudo sh -c "echo 'deb-src ${DISTR_MIRROR} ${DISTR} main universe multiverse' >> ${CHROOT_DIR}/etc/apt/sources.list"
+sudo sh -c "echo 'deb ${DISTR_MIRROR} ${DISTR}-updates main universe multiverse' >> ${CHROOT_DIR}/etc/apt/sources.list"
+sudo sh -c "echo 'deb-src ${DISTR_MIRROR} ${DISTR}-updates main universe multiverse' >> ${CHROOT_DIR}/etc/apt/sources.list"
+
+rootfs_common_settings
+
+print "Edit /etc/fstab"
+sudo sh -c "cat> ${CHROOT_DIR}/etc/fstab << EOF
+#/dev/mmcblk0p1  /  auto  errors=remount-ro  0  1
+/dev/mmcblk0p2 /  auto  errors=remount-ro  0  1
+/dev/mmcblk0p1 /boot/uboot  auto  defaults  0  2
+EOF
+"
+
+print "Create 70-persistent-net.rules"
+sudo sh -c "cat >${CHROOT_DIR}/etc/udev/rules.d/70-persistent-net.rules << EOF
+# BeagleBone: net device ()
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"
+EOF
+"
+print "Create /etc/init/serial.conf"
+sudo sh -c "cat >${CHROOT_DIR}/etc/init/serial.conf << EOF
+start on stopped rc RUNLEVEL=[2345]
+stop on runlevel [!2345]
+
+respawn
+exec /sbin/getty 115200 ttyO0
+EOF
+"
+
+print "Create /boot/uEnv.txt"
+sudo sh -c "cat >${CHROOT_DIR}/boot/uEnv.txt << EOF
+##This will work with: Angstrom's 2013.06.20 u-boot.
+unsme_r=3.8.14
+
+loadaddr=0x82000000
+fdtaddr=0x88000000
+rdaddr=0x88080000
+
+initrd_high=0xffffffff
+fdt_high=0xffffffff
+
+# Enable I2C1 bus? disable HDMI/eMMC
+optargs=quiet capemgr.enable_partno=BB-I2C1-400, capemgr.disable_partno=BB-BONELT-HDMI,BB-BONELT-HDMIN
+
+loadximage=load mmc 0:1 ${loadaddr} /boot/vmlinuz-${uname_r}
+loadxfdt=load mmc 0:1 ${fdtaddr} /boot/dtbs/${uname_r}/${fdtfile}
+loadxrd=load mmc 0:1 ${rdaddr} /boot/initrd.img-${uname_r}; setenv rdsize ${filesize}
+loaduEnvtxt=load mmc 0:1 ${loadaddr} /boot/uEnv.txt ; env import -t ${loadaddr} ${filesize};
+loadall=run loaduEnvtxt; run loadximage; run loadxfdt;
+
+mmcargs=setenv bootargs console=tty0 console=${console} ${optargs} ${cape_disable} ${cape_enable} root=${mmcroot} rootfstype=${mmcrootfstype} ${cmdline}
+
+uenvcmd=run loadall; run mmcargs; bootz ${loadaddr} - ${fdtaddr};
+EOF
+"
+}
+
+# Settings Raspberry Pi for the rootfs
+roofs_settings_rpi() {
+print "Apply settings for ${BOARD_FULL_NAME}"
+print "Adding deb sources to /etc/apt/sources.list"
+sudo sh -c "echo 'deb ${DISTR_MIRROR} ${DISTR} main contrib non-free' >> ${CHROOT_DIR}/etc/apt/sources.list"
+sudo sh -c "echo 'deb-src ${DISTR_MIRROR} ${DISTR} main contrib non-free' >> ${CHROOT_DIR}/etc/apt/sources.list"
+
+rootfs_common_settings
+
+print "Edit /etc/fstab"
+sudo sh -c "cat> ${CHROOT_DIR}/etc/fstab << EOF
+proc /proc proc defaults 0 0
+/dev/mmcblk0p1 /boot vfat defaults 0 0
+EOF
+"
+
+print "Create config.txt in rootfs/boot"
+sudo sh -c "cat >${CHROOT_DIR}/boot/config.txt<<EOF
+kernel=kernel.img
+arm_freq=800
+core_freq=250
+sdram_freq=400
+over_voltage=0
+gpu_mem=16
+EOF
+"
+print "Create cmdline.txt in rootfs/boot"
+sudo sh -c "cat >${CHROOT_DIR}/boot/cmdline.txt<<EOF
+dwc_otg.lpm_enable=0 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait
+EOF
+"
+}
+
 # Installing packages in rootfs
 rootfs_installing_packages() {
+print "Updating and upgrade installing packages"
 
-print "Updating apt sources and installing packages"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get update"
+PKG_LIST_COMMON="ssh sudo mc wget git screen build-essential cpufrequtils i2c-tools usbutils \
+wpasupplicant wireless-tools gdbserver \
+libboost-system.dev libboost-filesystem.dev libboost-thread.dev libboost-program-options.dev \
+scons htop ntpdate libssl-dev udhcpd"
 
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install locales locales-all"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "locale-gen ${LOCALES}"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "dpkg-reconfigure locales-all"
+PKG_LIST_LIBWEB="libwebsockets-dev libwebsockets-test-server libwebsockets3 libwebsockets3-dbg"
 
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y upgrade"
-
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install ssh sudo mc wget git screen build-essential cpufrequtils i2c-tools usbutils wpasupplicant wireless-tools gdbserver"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install libboost-system.dev libboost-filesystem.dev libboost-thread.dev libboost-program-options.dev"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install scons htop ntpdate libssl-dev"
-
-if [ $DISTR = wheezy ]; then
-    print "compiling and installing packages"
-    compiled_and_install_mongodb_rpi
-else
-    sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install mongodb nodejs npm "
-#    sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install libwebsockets-dev libwebsockets-test-server libwebsockets3 libwebsockets3-dbg"
+run_cmd_chroot "apt-get update"
+if  [ $DISTR = wheezy ] || \
+    [ $DISTR = jessie ]; then
+    print "Set locales for Debian systems"
+    run_cmd_chroot "apt-get -y install locales locales-all"
+    run_cmd_chroot "locale-gen ${LOCALES}"
+    run_cmd_chroot "dpkg-reconfigure locales-all"
+elif [ $DISTR = saucy ] || \
+    [ $DISTR = trusty ]; then
+    print "Set locales for Ubuntu systems"
+    run_cmd_chroot "apt-get -y install locales"
+    run_cmd_chroot "locale-gen ${LOCALES}"
+    run_cmd_chroot "update-locale LANG=${LOCALES}"
 fi
+run_cmd_chroot "apt-get -y upgrade"
 
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get clean"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get autoremove"
+run_cmd_chroot "apt-get -y install ${PKG_LIST_COMMON} ${PKG_LIST_BOARD}"
+run_cmd_chroot "apt-get clean; apt-get autoremove"
 }
 
 
-# Manual additional installing packages
-start_shell_in_chroot() {
-print "Starting chroot bash session, type exit to end"
-qemu_copy_to_roofs
-mount_proc_sysfs_devpts
-sudo chroot ${CHROOT_DIR} /bin/bash
+# Install common softwares to this host and project LinuxDrone
+install_common_software_the_host() {
+print "Start install softwares to this host"
 
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get clean"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get autoremove"
-umount_proc_sysfs_devpts
-qemu_remove_from_roofs
+PKG_LIST="libc6:i386 libstdc++6:i386 libncurses5:i386 zlib1g:i386 \
+            device-tree-compiler lzma lzop u-boot-tools debootstrap \
+            git qemu-user-static cmake vim ruby nodejs npm pbzip2 pigz"
+
+SENCHA_CMD_VER="5.0.3.324"
+
+check_and_installed_packages "${PKG_LIST}"
+
+# Installing SenchaCmd
+#CHECK_SENCHA=$(sencha | grep -o "Sencha Cmd" | uniq)
+if  [ ! -f "${LDTOOLS_DIR}/Sencha/Cmd/${SENCHA_CMD_VER}/sencha" ]; then
+    if [ ! -f ${LDDOWNL_DIR}/SenchaCmd-${SENCHA_CMD_VER}-linux-x64.run.zip ]; then
+        print "Download SenchaCmd"
+        wget -P ${LDDOWNL_DIR} http://cdn.sencha.com/cmd/${SENCHA_CMD_VER}/SenchaCmd-${SENCHA_CMD_VER}-linux-x64.run.zip
+    fi
+    cd ${LDDOWNL_DIR}
+    print "unpacking SenchaCmd-${SENCHA_CMD_VER}-linux-x64.run.zip intro ${LDDOWNL_DIR}"
+    unzip -n ${LDDOWNL_DIR}/SenchaCmd-${SENCHA_CMD_VER}-linux-x64.run.zip
+    #mv $(ls | grep "SenchaCmd-.*.run") SenchaCmd.run
+    chmod +x ${LDDOWNL_DIR}/SenchaCmd-${SENCHA_CMD_VER}-linux-x64.run
+    ${LDDOWNL_DIR}/SenchaCmd-${SENCHA_CMD_VER}-linux-x64.run --prefix ${LDTOOLS_DIR} --mode unattended
+fi
+
+# Installing GPL version Ext JS
+if [ ! -d "${LDTOOLS_DIR}/extjs" ]; then
+    if [ ! -f ${LDDOWNL_DIR}/extjs-gpl.zip ]; then
+      print "Download extJS-gpl"
+      wget -c -O ${LDDOWNL_DIR}/extjs-gpl.zip http://cdn.sencha.com/ext/gpl/ext-5.0.1-gpl.zip
+    fi
+    cd ${LDTOOLS_DIR}
+    print "unpacking extjs-gpl.zip intro ${LDTOOLS_DIR}"
+    unzip -n ${LDDOWNL_DIR}/extjs-gpl.zip
+    mv ext-* extjs
+
+    cd ${LDROOT_DIR}/webapps/configurator/public
+    ${LDTOOLS_DIR}/Sencha/Cmd/${SENCHA_CMD_VER}/sencha app upgrade  ${LDTOOLS_DIR}/extjs
+fi
+
+print "End install softwares to this host"
 }
 
 
 # Download cross-compiler
 download_install_crosscompiler_rpi() {
 if [ ! -f ${CC_DIR}/bin/arm-linux-gnueabihf-gcc ]; then
-  if [ ! -d ${LDDOWNL_DIR} ]; then
-      print "Create a directory where all downloads soft"
-      mkdir -p ${LDDOWNL_DIR}
-  fi
-
   if [ ! -d ${CC_DIR} ]; then
       print "Create a directory for cross-compiler"
       mkdir -p ${CC_DIR}
@@ -298,18 +473,46 @@ if [ ! -f ${CC_DIR}/bin/arm-linux-gnueabihf-gcc ]; then
       rm -R ${CC_DIR}/*
   fi
 
-  if [ ! -f ${LDDOWNL_DIR}/rpi-cc-master.tar.gz ]; then
+  if [ ! -f ${LDDOWNL_DIR}/${BOARD}/crosscompiler.tar.gz ]; then
     print "Download cross-compiler rpi"
-    wget -O ${LDDOWNL_DIR}/rpi-cc-master.tar.gz https://github.com/raspberrypi/tools/archive/master.tar.gz
+    wget -O ${LDDOWNL_DIR}/${BOARD}/crosscompiler.tar.gz https://github.com/raspberrypi/tools/archive/master.tar.gz
   fi
 
   print "Installing cross-compiler rpi"
   cd ${CC_DIR}
-  tar -xzf ${LDDOWNL_DIR}/rpi-cc-master.tar.gz tools-master/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64
+  tar -xzf ${LDDOWNL_DIR}/${BOARD}/crosscompiler.tar.gz tools-master/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64
   mv ./tools-master/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/* .
   rm -R ./tools-master
 else
   print "Cross-compiler is already installed for rpi"
+fi
+
+export CROSS=${CC_DIR}/bin/arm-linux-gnueabihf-
+export PATH=${CC_DIR}/bin:$PATH
+}
+
+download_install_crosscompiler_bbb() {
+if [ ! -f ${CC_DIR}/bin/arm-linux-gnueabihf-gcc ]; then
+  if [ ! -d ${CC_DIR} ]; then
+      print "Create a directory for cross-compiler"
+      mkdir -p ${CC_DIR}
+  elif [ $(find ${CC_DIR} -type f | wc -l) -ne 0 ]; then
+      print "Clean ${CC_DIR}"
+      rm -R ${CC_DIR}/*
+  fi
+
+  if [ ! -f ${LDDOWNL_DIR}/${BOARD}/crosscompiler.tar.gz ]; then
+    print "Download cross-compiler bbb"
+    wget -O ${LDDOWNL_DIR}/${BOARD}/crosscompiler.tar.gz https://releases.linaro.org/14.09/components/toolchain/binaries/gcc-linaro-arm-linux-gnueabihf-4.9-2014.09_linux.tar.xz
+  fi
+
+  print "Installing cross-compiler bbb"
+  cd ${CC_DIR}
+  tar -xf ${LDDOWNL_DIR}/${BOARD}/crosscompiler.tar.gz
+  mv ./*-arm-linux-gnueabihf*/* .
+  rm -R ./*-arm-linux-gnueabihf*
+else
+  print "Cross-compiler is already installed for bbb"
 fi
 
 export CROSS=${CC_DIR}/bin/arm-linux-gnueabihf-
@@ -351,7 +554,7 @@ if [ ${BOARD} = rpi ]; then
 fi
 
 if [ -d ${MAKE_DIR}/libwebsockets/build ]; then
-    rm -R build
+    rm -Rf ${MAKE_DIR}/libwebsockets/build
 fi
 
 mkdir -p ${MAKE_DIR}/libwebsockets/build
@@ -376,12 +579,13 @@ print "libwebsockets installed"
 
 
 # Compiled MongoDB for RaspberryPI in system debian wheenzy
-compiled_and_install_mongodb_rpi() {
-print "compiling and installing mongodb for rpi"
+compiled_and_install_mongodb_in_chroot_rpi() {
+print "Start compiling and installing mongodb for rpi"
 MONGO_INSTALL_DIR=/usr/local/mongo
-if [ -f ${MONGO_INSTALL_DIR}/lib/libmongoclient.a ] && [ -f ${CHROOT_DIR}/etc/init.d/mongod ]; then
+
+if [ -f ${CHROOT_DIR}/${MONGO_INSTALL_DIR}/lib/libmongoclient.a ] && [ -f ${CHROOT_DIR}/etc/init.d/mongod ]; then
   print "mongodb is already installed in rootfs"
-  return
+  return 0
 fi
 
 if [ ! -d ${CHROOT_DIR}/home/ld/code ]; then
@@ -389,33 +593,29 @@ if [ ! -d ${CHROOT_DIR}/home/ld/code ]; then
 fi
 
 if [ ! -d ${CHROOT_DIR}/home/ld/code/mongo-nonx86 ]; then
-  if [ -f ${CHROOT_DIR}/../mongodb_wheezy.tar.gz ]; then
-    print "Архив с исходниками и собранными бинарниками mongodb уже есть в наличии, распаковываем"
-    sudo tar -xf ${CHROOT_DIR}/../mongodb_wheezy.tar.gz -C ${CHROOT_DIR}/home/ld/code
+  if [ -f ${BOARD_DIR}/mongodb_wheezy.tar.gz ]; then
+    print "Archive of the source available, unpack"
+    sudo tar -xf ${BOARD_DIR}/mongodb_wheezy.tar.gz -C ${CHROOT_DIR}/home/ld/code
   else
-    print "Скачиваем репозиторий с исходниками mongodb, собираем и устанавливаем, создаем архив"
-    sudo chroot ${CHROOT_DIR} /bin/bash -c "cd /home/ld/code/; git clone https://github.com/skrabban/mongo-nonx86"
+    print "Downloads repository mongodb"
+    run_cmd_chroot "cd /home/ld/code/; git clone https://github.com/skrabban/mongo-nonx86"
   fi
 fi
 
-print "Каталог с исходниками mongodb в наличии"
-if [ ! -f ${MONGO_INSTALL_DIR}/lib/libmongoclient.a ]; then
-    print "Cобираем и устанавливаем mongodb"
-    sudo chroot ${CHROOT_DIR} /bin/bash -c "cd /home/ld/code/mongo-nonx86; scons --prefix=${MONGO_INSTALL_DIR} install -j${CORES}"
-else
-    print "mongodb уже установлен"
-fi
+print "Build and installing mongodb"
+run_cmd_chroot "cd /home/ld/code/mongo-nonx86; scons --prefix=${MONGO_INSTALL_DIR} install -j${CORES}"
 
 if [ ! -f ${BOARD_DIR}/mongodb_wheezy.tar.gz ]; then
+    print "Start create arhive mongodb"
     sudo sh -c "cd ${CHROOT_DIR}/home/ld/code; tar -czf ${BOARD_DIR}/mongodb_wheezy.tar.gz ./mongo-nonx86"
-    print "mongodb_wheezy.tar.gz created into ${BOARD_DIR}"
+    print "End create mongodb_wheezy.tar.gz save into ${BOARD_DIR}"
 fi
 
-print "preparatory operations to run mongodb"
+print "Preparatory operations to run mongodb"
 # Delete previous settings
 if grep -q "mongodb:" ${CHROOT_DIR}/etc/passwd; then
-print "deluser"
-    sudo chroot ${CHROOT_DIR} /bin/bash -c "deluser mongodb"
+    print "deluser"
+    run_cmd_chroot "deluser mongodb"
 fi
 if [ -f ${CHROOT_DIR}/etc/mongodb.conf ]; then
     sudo rm ${CHROOT_DIR}/etc/mongodb.conf
@@ -428,32 +628,32 @@ if [ -L ${CHROOT_DIR}/usr/bin/mongod ]; then
 fi
 
 # Permissions for users and groups mongodb
-sudo chroot ${CHROOT_DIR} /bin/bash -c "adduser --firstuid 100 --ingroup nogroup --shell /etc/false --disabled-password --gecos '' --no-create-home mongodb"
+run_cmd_chroot "adduser --firstuid 100 --ingroup nogroup --shell /etc/false --disabled-password --gecos '' --no-create-home mongodb"
 # A folder for log files mongodb
-sudo chroot ${CHROOT_DIR} /bin/bash -c "mkdir -p /var/log/mongodb/"
+run_cmd_chroot "mkdir -p /var/log/mongodb/"
 # Permissions for log file
-sudo chroot ${CHROOT_DIR} /bin/bash -c "chown mongodb:nogroup /var/log/mongodb/"
+run_cmd_chroot "chown mongodb:nogroup /var/log/mongodb/"
 # A folder for state data mongodb
-sudo chroot ${CHROOT_DIR} /bin/bash -c "mkdir -p /var/lib/mongodb"
+run_cmd_chroot "mkdir -p /var/lib/mongodb"
 # Permissions for the folder
-sudo chroot ${CHROOT_DIR} /bin/bash -c "chown mongodb:nogroup /var/lib/mongodb"
+run_cmd_chroot "chown mongodb:nogroup /var/lib/mongodb"
 # Moving init.d script to etc
 sudo cp ${CHROOT_DIR}/home/ld/code/mongo-nonx86/debian/init.d ${CHROOT_DIR}/etc/init.d/mongod
 # Moving our config file to etc
 sudo cp ${CHROOT_DIR}/home/ld/code/mongo-nonx86/debian/mongodb.conf ${CHROOT_DIR}/etc/
 # Linking folders up
-sudo chroot ${CHROOT_DIR} /bin/bash -c "ln -s ${MONGO_INSTALL_DIR}/bin/mongod /usr/bin/mongod"
+run_cmd_chroot "ln -s ${MONGO_INSTALL_DIR}/bin/mongod /usr/bin/mongod"
 print "minimize MongoDB journaling files"
 echo 'smallfiles=true' | sudo tee -a ${CHROOT_DIR}/etc/mongodb.conf
 
-sudo chroot ${CHROOT_DIR} /bin/bash -c "chmod u+x /etc/init.d/mongod"
-sudo chroot ${CHROOT_DIR} /bin/bash -c "update-rc.d mongod defaults"
+run_cmd_chroot "chmod u+x /etc/init.d/mongod"
+run_cmd_chroot "update-rc.d mongod defaults"
 
 
 print "Remove the build directory of the rootfs mongodb"
 sudo sh -c "rm -R ${CHROOT_DIR}/home/ld/code/mongo-nonx86"
+print "End compiling and installing mongodb for rpi"
 }
-
 
 compiled_and_install_mongodb() {
 
@@ -464,6 +664,7 @@ scons --propagate-shell-environment --cc=${CC_DIR}/bin/arm-linux-gnueabihf-gcc -
 
 print "End compiling and installing mongodb"
 }
+
 
 # Download, configure and build mongo-c
 compiled_and_install_mongoc() {
@@ -515,17 +716,17 @@ print "Start compiled_and_install_kernel_rpi"
 # Download kernel
 cd ${MAKE_DIR}
 if [ ! -d "${MAKE_DIR}/kernel" ]; then
-    if [ ! -f ${LDDOWNL_DIR}/${NAME_KERNEL}.tar.gz ]; then
-        #wget -c -P ${LDDOWNL_DIR} https://github.com/raspberrypi/linux/archive/${NAME_KERNEL}.zip
+    if [ ! -f ${LDDOWNL_DIR}/${BOARD}/${NAME_KERNEL}.tar.gz ]; then
+        #wget -c -P ${LDDOWNL_DIR}/${BOARD} https://github.com/raspberrypi/linux/archive/${NAME_KERNEL}.zip
         print "git clone ${NAME_KERNEL}"
         git clone -b ${NAME_KERNEL} --depth 1 git://github.com/raspberrypi/linux.git kernel
         print "end clone ${NAME_KERNEL}"
-        print "create archive ${NAME_KERNEL}.tar.gz intro ${LDDOWNL_DIR}"
-        tar -czf ${LDDOWNL_DIR}/${NAME_KERNEL}.tar.gz ./kernel
+        print "create archive ${NAME_KERNEL}.tar.gz intro ${LDDOWNL_DIR}/${BOARD}"
+        tar -czf ${LDDOWNL_DIR}/${BOARD}/${NAME_KERNEL}.tar.gz ./kernel
         print "end create archive ${NAME_KERNEL}.tar.gz"
     else
         print "unpacking ${NAME_KERNEL}.tar.gz intro ${MAKE_DIR}"
-        tar -xf ${LDDOWNL_DIR}/${NAME_KERNEL}.tar.gz -C ${MAKE_DIR}
+        tar -xf ${LDDOWNL_DIR}/${BOARD}/${NAME_KERNEL}.tar.gz -C ${MAKE_DIR}
     fi
 else
     print "git reset and clean for ${NAME_KERNEL}"
@@ -533,7 +734,7 @@ else
     git reset --hard
     git clean -fdx
     git pull
-    #cd ${MAKE_DIR}; tar -czf ${LDDOWNL_DIR}/${NAME_KERNEL}.tar.gz ./kernel
+    #cd ${MAKE_DIR}; tar -czf ${LDDOWNL_DIR}/${BOARD}/${NAME_KERNEL}.tar.gz ./kernel
 fi
 
 # Download Xenomai
@@ -553,9 +754,9 @@ fi
 
 
 # Download minimal config
-if [ ! -f ${LDDOWNL_DIR}/rpi_xenomai_config ]; then
+if [ ! -f ${LDDOWNL_DIR}/${BOARD}/rpi_xenomai_config ]; then
     print "Download rpi_xenomai_config"
-    wget -c -P ${LDDOWNL_DIR} https://www.dropbox.com/s/dcju74md5sz45at/rpi_xenomai_config
+    wget -c -P ${LDDOWNL_DIR}/${BOARD} https://www.dropbox.com/s/dcju74md5sz45at/rpi_xenomai_config
 fi
 
 #1- Checkout the "rpi-3.8.y" branch in the repository [4], commit d996a1b
@@ -578,7 +779,7 @@ mkdir -p ${KBUILD_DIR}
 cd ${MAKE_DIR}/kernel
 
 # minimal configuration file
-cp ${LDDOWNL_DIR}/rpi_xenomai_config ${KBUILD_DIR}/.config
+cp ${LDDOWNL_DIR}/${BOARD}/rpi_xenomai_config ${KBUILD_DIR}/.config
 
 print "mrproper"
 make mrproper
@@ -617,14 +818,14 @@ run_cmd_chroot "ldconfig -v"
 if  [ ! -d ${CHROOT_DIR}/opt/vc ] || \
     [ ! -f ${CHROOT_DIR}/boot/bootcode.bin ]; then
 
-    if [ ! -f ${LDDOWNL_DIR}/rpi-firmware.zip ]; then
+    if [ ! -f ${LDDOWNL_DIR}/${BOARD}/firmware.zip ]; then
         print "Download firmware for rpi"
-        wget -O ${LDDOWNL_DIR}/rpi-firmware.zip https://github.com/raspberrypi/firmware/archive/master.zip
+        wget -O ${LDDOWNL_DIR}/${BOARD}/firmware.zip https://github.com/raspberrypi/firmware/archive/master.zip
     fi
 
     print "Installing firmware rpi"
     cd ${MAKE_DIR}
-    unzip -n ${LDDOWNL_DIR}/rpi-firmware.zip
+    unzip -n ${LDDOWNL_DIR}/${BOARD}/firmware.zip
     sudo cp -a -u  ${MAKE_DIR}/firmware-master/hardfp/opt/vc ${CHROOT_DIR}/opt/
     sudo cp -u ${MAKE_DIR}/firmware-master/boot/*bin ${CHROOT_DIR}/boot/
     sudo cp -u ${MAKE_DIR}/firmware-master/boot/*dat ${CHROOT_DIR}/boot/
@@ -636,6 +837,8 @@ fi
 print "End build_kernel_xeno2_rpi"
 }
 
+
+# Compiled_and_install_nodejs for rpi
 compiled_and_install_nodejs_npm_rpi() {
 print "Start compiled_and_install_nodejs for rpi"
 
@@ -648,13 +851,13 @@ if  [ -f ${CHROOT_DIR}/usr/local/include/nodejs/node.h ] || \
 fi
 
 if [ ! -d "${MAKE_DIR}/nodejs" ]; then
-    if [ ! -f ${LDDOWNL_DIR}/${BOARD}-nodejs.zip ]; then
+    if [ ! -f ${LDDOWNL_DIR}/${BOARD}/nodejs.zip ]; then
       print "Download NodeJS src"
-      wget -c -O ${LDDOWNL_DIR}/${BOARD}-nodejs.zip https://github.com/joyent/node/archive/v0.10.32-release.zip
+      wget -c -O ${LDDOWNL_DIR}/${BOARD}/nodejs.zip https://github.com/joyent/node/archive/v0.10.32-release.zip
     fi
     cd ${MAKE_DIR}
-    print "unpacking ${BOARD}-nodejs.zip intro ${MAKE_DIR}"
-    unzip -n ${LDDOWNL_DIR}/${BOARD}-nodejs.zip
+    print "unpacking nodejs.zip intro ${MAKE_DIR}"
+    unzip -n ${LDDOWNL_DIR}/${BOARD}/nodejs.zip
     mv node* nodejs
 fi
 
@@ -695,156 +898,59 @@ sudo env PATH=$PATH make DESTDIR=${CHROOT_DIR} install -j${CORES} PORTABLE=1
 print "End  compiled_and_install_nodejs for rpi"
 }
 
-# Create rootfs for BeagleBone Black use debootstrap
-debootstrap_bbb() {
-print "Start debootstrap for BeagleBone Black"
 
-# Create a directory where all the stuff goes
-if [ ! -d ${MAKE_DIR} ]; then
-    mkdir -p ${MAKE_DIR}
+# Create rootfs use debootstrap
+debootstrap() {
+print "Start debootstrap for ${BOARD_FULL_NAME}"
+
+# Test old bad install rootfs and clean rootfs
+if  [ -d ${CHROOT_DIR} ] && \
+    [ ! -f ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}.tar.bz2 ] && \
+    [ $(ls -a ${CHROOT_DIR}/proc |cat -b|grep 3 > /dev/null;echo $?) ]; then
+    print "Clean old bad install rootfs and clean rootfs"
+    umount_proc_sysfs_devpts
+    sudo rm -R ${CHROOT_DIR}
 fi
-
-if [ ! -d ${CHROOT_DIR} ]; then
-    debootstrap --arch=armhf --include=ssh --foreign $DISTR ${CHROOT_DIR} $DISTR_MIRROR
-fi
-
-cp /usr/bin/qemu-arm-static ${CHROOT_DIR}/usr/bin/
-
-if [ -d ${CHROOT_DIR}/debootstrap ]; then
-    chroot ${CHROOT_DIR} /debootstrap/debootstrap --second-stage
-    mount proc ${CHROOT_DIR}/proc -t proc
-    mount sysfs ${CHROOT_DIR}/sys -t sysfs
-    mount devpts ${CHROOT_DIR}/dev/pts -t devpts
-    print "Adding deb sources to /etc/apt/sources.list"
-    chroot ${CHROOT_DIR} /bin/bash -c "echo 'deb $DISTR_MIRROR $DISTR main universe multiverse' >> /etc/apt/sources.list"
-    chroot ${CHROOT_DIR} /bin/bash -c "echo 'deb-src $DISTR_MIRROR $DISTR main universe multiverse' >> /etc/apt/sources.list"
-    chroot ${CHROOT_DIR} /bin/bash -c "echo 'deb $DISTR_MIRROR $DISTR-updates main universe multiverse' >> /etc/apt/sources.list"
-    chroot ${CHROOT_DIR} /bin/bash -c "echo 'deb-src $DISTR_MIRROR $DISTR-updates main universe multiverse' >> /etc/apt/sources.list"
-    print "Setting hostname"
-    chroot ${CHROOT_DIR} /bin/bash -c "echo 'linuxdrone' > /etc/hostname"
-    chroot ${CHROOT_DIR} /bin/bash -c "echo -e '127.0.0.1\tlinuxdrone' >> /etc/hosts"
-    print "Updating apt sources and installing packages"
-    chroot ${CHROOT_DIR} /bin/bash -c "apt-get update"
-    chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install mc wget git screen build-essential cpufrequtils i2c-tools usbutils wpasupplicant wireless-tools linux-firmware gdbserver"
-    chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install mongodb nodejs npm libboost-system.dev libboost-filesystem.dev libboost-thread.dev libboost-program-options.dev"
-    chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install htop"
-    chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y install libwebsockets-dev libwebsockets-test-server libwebsockets3 libwebsockets3-dbg"
-    chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y remove ntpdate"
-    #chroot ${CHROOT_DIR} /bin/bash -c "apt-get -y upgrade"
-    chroot ${CHROOT_DIR} /bin/bash -c "apt-get clean"
-    chroot ${CHROOT_DIR} /bin/bash -c "apt-get autoremove"
-    print "Create uboot folder"
-    chroot ${CHROOT_DIR} /bin/bash -c "mkdir -p /boot/uboot"
-    print "Create user ubuntu"
-    chroot ${CHROOT_DIR} /bin/bash -c "adduser ld"
-    chroot ${CHROOT_DIR} /bin/bash -c "usermod -a -G sudo ld"
-    print "Set root password"
-    chroot ${CHROOT_DIR} /bin/bash -c "passwd"
-
-    chroot ${CHROOT_DIR} /bin/bash -c "locale-gen ${LOCALES}"
-    chroot ${CHROOT_DIR} /bin/bash -c "dpkg-reconfigure locales"
-
-    umount ${CHROOT_DIR}/proc
-    umount ${CHROOT_DIR}/sys
-    umount ${CHROOT_DIR}/dev/pts
-fi
-
-mount proc ${CHROOT_DIR}/proc -t proc
-mount sysfs ${CHROOT_DIR}/sys -t sysfs
-mount devpts ${CHROOT_DIR}/dev/pts -t devpts
-print "Starting chroot bash session, type exit to end"
-chroot ${CHROOT_DIR} /bin/bash
-
-chroot ${CHROOT_DIR} /bin/bash -c "apt-get clean"
-chroot ${CHROOT_DIR} /bin/bash -c "apt-get autoremove"
-
-umount ${CHROOT_DIR}/proc
-umount ${CHROOT_DIR}/sys
-umount ${CHROOT_DIR}/dev/pts
-
-rm ${CHROOT_DIR}/usr/bin/qemu-arm-static
-if [ -f ${MAKE_DIR}/rootfs.tar.gz ]; then
-    rm ${MAKE_DIR}/rootfs.tar.gz
-fi
-cd ${CHROOT_DIR}; tar -czvf ${MAKE_DIR}/rootfs.tar.gz .
-print "rootfs.tar.gz created into ${MAKE_DIR}"
-return 0
-}
-
-# Create rootfs for Raspberry PI use debootstrap
-debootstrap_rpi() {
-print "Start debootstrap for Raspberry Pi"
-
-cd ${BOARD_DIR}
 
 # Checking directory rootfs if it's not done unpacking archives with rootfs
 if [ ! -d ${CHROOT_DIR} ]; then
-    if [ -f ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}-full.tar.gz ]; then
-        print "unpacking rootfs-${BOARD}-${DISTR}-full.tar.gz"
-        sudo tar -xzf ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}-full.tar.gz
-        return 0
-    elif [ -f ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}-mini.tar.gz ]; then
-        print "unpacking rootfs-${BOARD}-${DISTR}-mini.tar.gz"
-        sudo tar -xzf ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}-mini.tar.gz
+    cd ${MAKE_DIR}
+    if  [ -f ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}.tar.bz2 ]; then
+        print "unpacking rootfs-${BOARD}-${DISTR}.tar.bz2"
+        pbzip2 -dc -p${CORES} ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}.tar.bz2 | sudo tar x
         return 0
     fi
 
     # Debootstrap step 1
     print "Debootstrap step 1"
-    sudo debootstrap --arch=armhf --include=ssh --foreign --no-check-gpg --include=ca-certificates $DISTR ${CHROOT_DIR} $DISTR_MIRROR
+    sudo debootstrap --arch=${ARCH} --include=ssh --foreign --no-check-gpg --include=ca-certificates $DISTR ${CHROOT_DIR} $DISTR_MIRROR
 fi
-
-qemu_copy_to_roofs
 
 # Debootstrap step 2
 if [ -d ${CHROOT_DIR}/debootstrap ]; then
     print "Debootstrap step 2"
+    qemu_copy_to_roofs
     sudo chroot ${CHROOT_DIR} /debootstrap/debootstrap --second-stage  --verbose
-    mount_proc_sysfs_devpts
-    print "Adding deb sources to /etc/apt/sources.list"
-    sudo sh -c "echo 'deb $DISTR_MIRROR $DISTR main contrib non-free' >> ${CHROOT_DIR}/etc/apt/sources.list"
-    sudo sh -c "echo 'deb-src $DISTR_MIRROR $DISTR main contrib non-free' >> ${CHROOT_DIR}/etc/apt/sources.list"
+    qemu_remove_from_roofs
 
-    rootfs_common_settings
-
-    print "Edit /etc/fstab"
-    sudo sh -c "cat> ${CHROOT_DIR}/etc/fstab << EOF
-proc /proc proc defaults 0 0
-/dev/mmcblk0p1 /boot vfat defaults 0 0
-EOF
-"
-
-    # Create config.txt in rootfs/boot
-    sudo sh -c "cat >${CHROOT_DIR}/boot/config.txt<<EOF
-kernel=kernel.img
-arm_freq=800
-core_freq=250
-sdram_freq=400
-over_voltage=0
-gpu_mem=16
-EOF
-"
-    # Create cmdline.txt in rootfs/boot
-    sudo sh -c "cat >${CHROOT_DIR}/boot/cmdline.txt<<EOF
-dwc_otg.lpm_enable=0 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait
-EOF
-"
+    roofs_settings_${BOARD}
     rootfs_installing_packages
-    umount_proc_sysfs_devpts
 fi
 
-qemu_remove_from_roofs
+umount_proc_sysfs_devpts
 
-if [ ! -f ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}-mini.tar.gz ]; then
-    cd ${BOARD_DIR}
-    print "Start created archive rootfs-${BOARD}-${DISTR}-mini.tar.gz"
-    sudo tar -czvf ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}-mini.tar.gz ./rootfs
-    print "End created archive rootfs-${BOARD}-${DISTR}-mini.tar.gz into ${BOARD_DIR}"
+if [ ! -f ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}-mini.tar.bz2 ]; then
+    cd ${MAKE_DIR}
+    print "Start created archive rootfs-${BOARD}-${DISTR}-mini.tar.bz2"
+    sudo tar -c ./rootfs/ | pbzip2 -c -5 -p${CORES} > ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}-mini.tar.bz2
+    print "End created archive rootfs-${BOARD}-${DISTR}-mini.tar.bz2 into ${BOARD_DIR}"
 fi
 
 return 0
 }
 
+
+# Copy truncated rootfs
 copy_truncate_rootfs() {
 print "Start copy truncated rootfs in ${BOARD_DIR}/rootfs"
 # Move rootfs trunc to chroot directory
@@ -859,6 +965,7 @@ mv ${CHROOT_DIR}/home/ld/code/rootfs ${ROOTFS_TRUNC_DIR}
 
 print "End copy truncated rootfs"
 }
+
 
 # Build and install software LinuxDrone to rootfs
 build_install_linuxdrone() {
@@ -892,8 +999,7 @@ make install -j${CORES}
 
 # build Web Configurator
 cd ${LDROOT_DIR}/webapps/configurator/public
-sencha app upgrade  ${LDTOOLS_DIR}/extjs
-sencha app build
+${LDTOOLS_DIR}/Sencha/Cmd/${SENCHA_CMD_VER}/sencha app build
 
 rsync -zvr --delete --exclude="node_modules/*" --exclude="configurator/public/*" \
         "${LDROOT_DIR}/webapps/" "${INSTALL_DIR}/usr/local/linuxdrone/webapps/"
@@ -934,35 +1040,6 @@ dirname `find ${INSTALL_DIR}/usr/local/linuxdrone/ -iname *so` | uniq | sed s:${
 run_cmd_chroot "ldconfig -v"
 
 print "End build and install software LinuxDrone to rootfs"
-}
-
-install_software_the_host() {
-
-
-# Installing SenchaCmd
-if  [ ! -d ${CHROOT_DIR}/opt/vc ] || \
-    [ ! -f ${CHROOT_DIR}/boot/bootcode.bin ]; then
-
-    if [ ! -f ${LDDOWNL_DIR}/SenchaCmd.zip ]; then
-        print "Download SenchaCmd"
-        wget -O ${LDDOWNL_DIR}/SenchaCmd.zip http://cdn.sencha.com/cmd/5.0.3.324/SenchaCmd-5.0.3.324-linux-x64.run.zip
-    fi
-
-sencha upgrade --check
-sencha upgrade
-
-    print "Installing firmware rpi"
-    cd ${MAKE_DIR}
-    unzip -n ${LDDOWNL_DIR}/rpi-firmware.zip
-    sudo cp -a -u  ${MAKE_DIR}/firmware-master/hardfp/opt/vc ${CHROOT_DIR}/opt/
-    sudo cp -u ${MAKE_DIR}/firmware-master/boot/*bin ${CHROOT_DIR}/boot/
-    sudo cp -u ${MAKE_DIR}/firmware-master/boot/*dat ${CHROOT_DIR}/boot/
-    sudo cp -u ${MAKE_DIR}/firmware-master/boot/*elf ${CHROOT_DIR}/boot/
-else
-    print "firmware is already installed for rpi"
-fi
-
-
 }
 
 #------------------------------------------------
@@ -1039,12 +1116,9 @@ CORES=$(grep "^cpu cores" /proc/cpuinfo | awk -F : '{print $2}' | head -1 | sed 
 CORES=$((${CORES} + 1))
 DISK_SIZE=2048
 
-
-sudo_timestamp_timeout 800
-
-if [ ! -d ${LDDOWNL_DIR} ]; then
+if [ ! -d ${LDDOWNL_DIR}/${BOARD} ]; then
     print "Create a directory where all downloads soft"
-    mkdir -p ${LDDOWNL_DIR}
+    mkdir -p ${LDDOWNL_DIR}/${BOARD}
 fi
 
 if [ ! -d ${MAKE_DIR} ]; then
@@ -1052,41 +1126,52 @@ if [ ! -d ${MAKE_DIR} ]; then
     mkdir -p ${MAKE_DIR}
 fi
 
-
+sudo_timestamp_timeout 800
+install_common_software_the_host
 
 case "${BOARD}" in
     bbb)
-	MARCH=armv7-a
-	MFPU=vfp3
+        BOARD_FULL_NAME="BeagleBone Black"
+        ARCH=armhf
+        MARCH=armv7-a
+        MFPU=vfp3
         DISTR=trusty
         #DISTR=saucy
         DISTR_MIRROR=http://ports.ubuntu.com/ubuntu-ports/
+        PKG_LIST_BOARD="mongodb nodejs npm"
 
-        download_crosscompiler_bbb
-        debootstrap_bbb
+        download_install_crosscompiler_bbb
+        debootstrap
+        #rootfs_installing_packages
+        if [ ${START_SHELL} = YES ]; then
+            start_shell_in_chroot
+        fi
         ;;
 
     rpi)
+        BOARD_FULL_NAME="Raspberry PI"
+        ARCH=armhf
         MARCH=armv6 #j
-	MFPU=vfp
-	MCPU=arm1176jzf-s
-	MFLOAT_ABI=hard
-	NAME_LIBWEB=libwebsockets-1.3-chrome37-firefox30.tar.gz
+        MFPU=vfp
+        MCPU=arm1176jzf-s
+        MFLOAT_ABI=hard
+        NAME_LIBWEB=libwebsockets-1.3-chrome37-firefox30.tar.gz
         NAME_MONGOC=0.94.2
         DISTR=wheezy
         DISTR_MIRROR=http://archive.raspbian.org/raspbian/
+        PKG_LIST_BOARD=""
         #DISTR_MIRROR=http://mirrors-ru.go-parts.com/raspbian/
         #DISTR_MIRROR=http://mirror.netcologne.de/raspbian/raspbian/
         #DISTR=jessie
         #DISTR_MIRROR=http://mirrordirector.raspbian.org/raspbian
 
-	download_install_crosscompiler_rpi
-        debootstrap_rpi
-
+        download_install_crosscompiler_rpi
+        debootstrap
+        rootfs_installing_packages
         if [ ${START_SHELL} = YES ]; then
             start_shell_in_chroot
         fi
-
+        compiled_and_install_mongodb_in_chroot_rpi
         compiled_and_install_nodejs_npm_rpi
         compiled_and_install_libwebsockets
         compiled_and_install_mongoc
