@@ -428,6 +428,16 @@ SENCHA_CMD_VER="5.0.3.324"
 
 check_and_installed_packages "${PKG_LIST}"
 
+# Downloads and build and install Device Tree Compiler
+DTC_VER_TEST=$(dtc -v | grep "DTC 1.4.0-gf345d9e4" || true)
+if [ "x${DTC_VER_TEST}" = "x" ]; then
+    cd ${LDDOWNL_DIR}
+    print "Downloads and build and install Device Tree Compiler"
+    wget -cN https://raw.github.com/RobertCNelson/tools/master/pkgs/dtc.sh
+    chmod +x dtc.sh
+    ./dtc.sh
+fi
+
 # Installing SenchaCmd
 #CHECK_SENCHA=$(sencha | grep -o "Sencha Cmd" | uniq)
 if  [ ! -f "${LDTOOLS_DIR}/Sencha/Cmd/${SENCHA_CMD_VER}/sencha" ]; then
@@ -487,7 +497,7 @@ else
   print "Cross-compiler is already installed for rpi"
 fi
 
-export CROSS=${CC_DIR}/bin/arm-linux-gnueabihf-
+export CC=${CC_DIR}/bin/arm-linux-gnueabihf-
 export PATH=${CC_DIR}/bin:$PATH
 }
 
@@ -515,8 +525,62 @@ else
   print "Cross-compiler is already installed for bbb"
 fi
 
-export CROSS=${CC_DIR}/bin/arm-linux-gnueabihf-
+export CC=${CC_DIR}/bin/arm-linux-gnueabihf-
 export PATH=${CC_DIR}/bin:$PATH
+}
+
+
+# Download, patch, configure and build u-boot
+compiled_and_install_uboot_bbb() {
+UBOOT_BRANCH="v2014.10"
+UBOOT_PATCH_NAME="0001-am335x_evm-uEnv.txt-bootz-n-fixes.patch"
+UBOOT_PATCH_URL=https://raw.githubusercontent.com/eewiki/u-boot-patches/master/v2014.10/${UBOOT_PATCH_NAME}
+
+if  [ -f ${CHROOT_DIR}/boot/MLO ] && \
+    [ -f ${CHROOT_DIR}/boot/u-boot.img ]; then
+    print "u-boot is already installed"
+    return 0
+fi
+
+cd ${MAKE_DIR}
+
+if [ -d "$MAKE_DIR/u-boot" ]; then
+    rm -Rf ${MAKE_DIR}/u-boot
+fi
+
+if [ -f ${LDDOWNL_DIR}/${BOARD}/u-boot.tar.bz2 ]; then
+    print "unpacking u-boot.tar.bz2"
+    pbzip2 -dc -p${CORES} ${LDDOWNL_DIR}/${BOARD}/u-boot.tar.bz2 | sudo tar x
+else
+    print "Git clone u-boot repository"
+    git clone git://git.denx.de/u-boot.git
+
+    print "Start created archive for u-boot repository"
+    sudo tar -c ./u-boot/ | pbzip2 -c -5 -p${CORES} > ${LDDOWNL_DIR}/${BOARD}/u-boot.tar.bz2
+    print "End created archive u-boot repository into ${LDDOWNL_DIR}/${BOARD}"
+fi
+
+cd $MAKE_DIR/u-boot/
+git checkout ${UBOOT_BRANCH} -b tmp
+
+if [ ! -f ${LDDOWNL_DIR}/${BOARD}/${UBOOT_PATCH_NAME} ]; then
+    print "Downloads patch u-boot for ${BOARD_FULL_NAME}"
+    wget -cN -P ${LDDOWNL_DIR}/${BOARD}/ ${UBOOT_PATCH_URL}
+fi
+
+cp ${LDDOWNL_DIR}/${BOARD}/${UBOOT_PATCH_NAME} ${MAKE_DIR}/u-boot
+print "Apply patch for u-boot"
+patch -p1 < ./${UBOOT_PATCH_NAME}
+print "Start build u-boot"
+make ARCH=arm CROSS_COMPILE=${CC} distclean -j${CORES}
+make ARCH=arm CROSS_COMPILE=${CC} am335x_evm_config -j${CORES}
+make ARCH=arm CROSS_COMPILE=${CC} -j${CORES}
+print "End build u-boot"
+
+
+print "Копируем в /boot раздел карты бутлоадер"
+sudo cp -v ${MAKE_DIR}/u-boot/MLO ${CHROOT_DIR}/boot/
+sudo cp -v ${MAKE_DIR}/u-boot/u-boot.img ${CHROOT_DIR}/boot/
 }
 
 
@@ -660,7 +724,7 @@ compiled_and_install_mongodb() {
 print "compiling and installing mongodb"
 
 cd ${MAKE_DIR}/mongodb
-scons --propagate-shell-environment --cc=${CC_DIR}/bin/arm-linux-gnueabihf-gcc --cxx=${CC_DIR}/bin/arm-linux-gnueabihf-g++ --full install --prefix=${MAKE_DIR} -j${CORES}
+scons --propagate-shell-environment --cc=${CC}gcc --cxx=${CC}g++ --full install --prefix=${MAKE_DIR} -j${CORES}
 
 print "End compiling and installing mongodb"
 }
@@ -791,7 +855,7 @@ else
 fi
 
 print "Compile kernel"
-make ARCH=arm O=${KBUILD_DIR} CROSS_COMPILE=${CC_DIR}/bin/arm-linux-gnueabihf- -j${CORES}
+make ARCH=arm O=${KBUILD_DIR} CROSS_COMPILE=${CC} -j${CORES}
 # Install modules
 make ARCH=arm O=${KBUILD_DIR} INSTALL_MOD_PATH=dist modules_install -j${CORES}
 # Install headers
@@ -1146,6 +1210,7 @@ case "${BOARD}" in
         if [ ${START_SHELL} = YES ]; then
             start_shell_in_chroot
         fi
+        compiled_and_install_uboot_bbb
         ;;
 
     rpi)
