@@ -139,14 +139,17 @@ DISK_IMAGE=${BOARD_DIR}/${BOARD}-ld.img
 
 # Only assumed two partitions, best to umount all before running this script
 if [ $(mount | grep -c /dev/mapper/loop) -ne 0 ]; then
+  print "Umount partitions /dev/mapper/loop*"
   sudo umount /dev/mapper/loop*
   print "umount /dev/mapper/loop*"
 fi
 
 # Удаляем устройства-разделы с помощью kpartx
-if [ -f ${DISK_IMAGE} ]; then
-    sudo kpartx -dv ${DISK_IMAGE}
-fi
+for x in $(losetup -a | awk '{print $3}' | tr -d \(\))
+do
+    print "Remove device-partitions kpartx in file: ${x}"
+    sudo kpartx -dv ${x}
+done
 
 # Only assumed two partitions, best to umount all before running this script
 #if [ $(mount | grep -c /dev/loop0) -eq 1 ]; then
@@ -203,14 +206,17 @@ sudo umount /dev/mapper/${DEV_LOOP}p1
 sudo umount /dev/mapper/${DEV_LOOP}p2
 sudo kpartx -dv ${DISK_IMAGE}
 
-print "create arhive the image sdcard"
+print "create arhive the image sdcard ${DISK_IMAGE}.bz2"
 cd ${BOARD_DIR}
 if [ -f ${DISK_IMAGE}.bz2 ]; then
     sudo rm ${DISK_IMAGE}.bz2
 fi
-#bzip2 -9 ${DISK_IMAGE}
+pbzip2 -k -9 -p${CORES} ${DISK_IMAGE}
 
-print "Copy image to sdcard"
+lsblk
+print "To copy a disk image on a flash card, enter one of these commands, edit /dev/sdX"
+print "sudo  sh -c \"bzcat ${DISK_IMAGE}.bz2 > /dev/sdX\""
+print "sudo dd if=${DISK_IMAGE} of=/dev/sdx bs=1M"
 #sudo sh -c "bzcat ${DISK_IMAGE}.bz2 > /dev/${SDCARD}"
 #sudo dd if=${DISK_IMAGE} of=/dev/${SDCARD} bs=1M
 
@@ -279,11 +285,11 @@ EOF
 print "Configure udev rules"
 sudo sh -c "cat >${CHROOT_DIR}/etc/udev/rules.d/xenomai.rules<<EOF
 # allow RW access to /dev/mem
-KERNEL=="mem", MODE="0660", GROUP="kmem"
+KERNEL==\"mem\", MODE=\"0660\", GROUP=\"kmem\"
 # real-time heap device (Xenomai:rtheap)
-KERNEL=="rtheap", MODE="0660", GROUP="xenomai"
+KERNEL==\"rtheap\", MODE=\"0660\", GROUP=\"xenomai\"
 # real-time pipe devices (Xenomai:rtpipe)
-KERNEL=="rtp[0-9]*", MODE="0660", GROUP="xenomai"
+KERNEL==\"rtp[0-9]*\", MODE=\"0660\", GROUP=\"xenomai\"
 EOF
 "
 }
@@ -309,8 +315,8 @@ EOF
 
 print "Create 70-persistent-net.rules"
 sudo sh -c "cat >${CHROOT_DIR}/etc/udev/rules.d/70-persistent-net.rules << EOF
-# BeagleBone: net device ()
-SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"
+'# BeagleBone: net device ()
+SUBSYSTEM==\"net\", ACTION==\"add\", DRIVERS==\"?*\", ATTR{dev_id}==\"0x0\", ATTR{type}==\"1\", KERNEL==\"eth*\", NAME=\"eth0\"
 EOF
 "
 print "Create /etc/init/serial.conf"
@@ -338,15 +344,15 @@ fdt_high=0xffffffff
 # Enable I2C1 bus? disable HDMI/eMMC
 optargs=quiet capemgr.enable_partno=BB-I2C1-400, capemgr.disable_partno=BB-BONELT-HDMI,BB-BONELT-HDMIN
 
-loadximage=load mmc 0:1 ${loadaddr} /boot/vmlinuz-${uname_r}
-loadxfdt=load mmc 0:1 ${fdtaddr} /boot/dtbs/${uname_r}/${fdtfile}
-loadxrd=load mmc 0:1 ${rdaddr} /boot/initrd.img-${uname_r}; setenv rdsize ${filesize}
-loaduEnvtxt=load mmc 0:1 ${loadaddr} /boot/uEnv.txt ; env import -t ${loadaddr} ${filesize};
+loadximage=load mmc 0:1 \${loadaddr} /boot/vmlinuz-\${uname_r}
+loadxfdt=load mmc 0:1 \${fdtaddr} /boot/dtbs/\${uname_r}/\${fdtfile}
+loadxrd=load mmc 0:1 \${rdaddr} /boot/initrd.img-\${uname_r}; setenv rdsize \${filesize}
+loaduEnvtxt=load mmc 0:1 \${loadaddr} /boot/uEnv.txt ; env import -t \${loadaddr} \${filesize};
 loadall=run loaduEnvtxt; run loadximage; run loadxfdt;
 
-mmcargs=setenv bootargs console=tty0 console=${console} ${optargs} ${cape_disable} ${cape_enable} root=${mmcroot} rootfstype=${mmcrootfstype} ${cmdline}
+mmcargs=setenv bootargs console=tty0 console=\${console} \${optargs} \${cape_disable} \${cape_enable} root=\${mmcroot} rootfstype=\${mmcrootfstype} \${cmdline}
 
-uenvcmd=run loadall; run mmcargs; bootz ${loadaddr} - ${fdtaddr};
+uenvcmd=run loadall; run mmcargs; bootz \${loadaddr} - \${fdtaddr};
 EOF
 "
 }
@@ -429,8 +435,8 @@ SENCHA_CMD_VER="5.0.3.324"
 check_and_installed_packages "${PKG_LIST}"
 
 # Downloads and build and install Device Tree Compiler
-DTC_VER_TEST=$(dtc -v | grep "DTC 1.4.0-gf345d9e4" || true)
-if [ "x${DTC_VER_TEST}" = "x" ]; then
+DTC_VER=$(dtc -v | grep "DTC 1.4.0-gf345d9e4" || true)
+if [ "x${DTC_VER}" = "x" ]; then
     cd ${LDDOWNL_DIR}
     print "Downloads and build and install Device Tree Compiler"
     wget -cN https://raw.github.com/RobertCNelson/tools/master/pkgs/dtc.sh
