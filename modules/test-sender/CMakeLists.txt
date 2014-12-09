@@ -27,7 +27,7 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-sender.def.json
 )
 
-add_library(test-sender MODULE ${INC} ${SRC} test-sender.helper.c)
+add_executable(test-sender ${INC} ${SRC} test-sender.helper.c)
 
 target_link_libraries(test-sender ${EXTRA_LIBS})
 
@@ -35,7 +35,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET test-sender
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libtest-sender.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender/libtest-sender.so
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} test-sender ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender/test-sender
         COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/test-sender/test-sender.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender/test-sender.def.json
     )
 ENDIF()
