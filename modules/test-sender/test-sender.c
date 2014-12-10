@@ -4,25 +4,14 @@
 
 int main (int argc, char *argv[]){
 
-    const char* short_options = "n:r::m::t::iop";
+    const char* short_options = "h";
 
     const struct option long_options[] = {
         {"help",no_argument,NULL,'h'},
-        {"name",required_argument,NULL,'n'},
-        {"priority",optional_argument,NULL,'r'},
-        {"main-task-period",optional_argument,NULL,'m'},
-        {"transfer-task-period",optional_argument,NULL,'t'},
-        {"in-link",required_argument,NULL,'i'},
-        {"out-link",required_argument,NULL,'o'},
-        {"param",required_argument,NULL,'p'},
         {NULL,0,NULL,0}
     };
 
     char* instance_name = NULL;
-    int priority = 80;
-    int main_task_period = 20000;
-    int transfer_task_period = 20000;
-
 
     int res;
     int option_index;
@@ -33,45 +22,67 @@ int main (int argc, char *argv[]){
                 usage(argv);
             break;
 
-            case 'n':
-                if (optarg!=NULL) instance_name = optarg;
+            case '?': default:
+                printf("Found unknown option\n");
             break;
+        }
+    }
 
-            case 'r':
-                if (optarg!=NULL)
-                {
-                    priority = atoi(optarg);
-                    if(priority < 1 || priority > 99)
+
+    //printf("instance name: '%s'\n", instance_name);
+    //printf("priority: %i\n", priority);
+    //printf("main-task-period: %i\n", main_task_period);
+    //printf("transfer-task-period: %i\n", transfer_task_period);
+
+    return 0;
+}
+
+// Convert bson to structure params_test_sender
+int argv2params_test_sender(module_t* module, int argc, char *argv[])
+{
+    if(!module)
+    {
+        printf("Error: func bson2params_test_sender, NULL parameter\n");
+        return -1;
+    }
+
+    const char* short_options = "p:";
+    const struct option long_options[] = {
+        {"param",required_argument,NULL,'p'},
+        {NULL,0,NULL,0}
+    };
+
+    int res;
+    int option_index;
+    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){
+
+        switch(res){
+            case 'p':
+                if (optarg!=NULL){
+                    char param_name[32];
+                    char param_value[32];
+                    sscanf(optarg, "%s:%s", param_name, param_value);
+
+                    params_test_sender_t* obj = (params_test_sender_t*)module->specific_params;
+                    if(!strncmp(param_name, "I2C Device", XNOBJECT_NAME_LEN))
                     {
-                        printf("argument 'priority' valid values in the range 1-99\n\n");
-                        usage(argv);
+                        uint32_t len;
+                        //obj->I2C_Device = bson_iter_utf8(&iter, &len);
+                        break;
+                    }
+                    if(!strncmp(param_name, "Test Number Param", XNOBJECT_NAME_LEN))
+                    {
+                        obj->Test_Number_Param = atoi(param_value);
+                        break;
+                    }
+                    if(!strncmp(param_name, "Test Boolean Param", XNOBJECT_NAME_LEN))
+                    {
+                        //obj->Test_Boolean_Param = bson_iter_bool(&iter);
+                        break;
                     }
                 }
             break;
 
-            case 'm':
-                if (optarg!=NULL)
-                {
-                    main_task_period = atoi(optarg);
-                    if(main_task_period < 0)
-                    {
-                        printf("argument 'main-task-period' valid values >-1\n\n");
-                        usage(argv);
-                    }
-                }
-            break;
-
-            case 't':
-                if (optarg!=NULL)
-                {
-                    transfer_task_period = atoi(optarg);
-                    if(transfer_task_period < 0)
-                    {
-                        printf("argument 'transfer-task-period' valid values >-1\n\n");
-                        usage(argv);
-                    }
-                }
-            break;
 
             case '?': default:
                 printf("Found unknown option\n");
@@ -79,53 +90,9 @@ int main (int argc, char *argv[]){
         }
     }
 
-    if(instance_name==NULL){
-        printf("required argument --name\n\n");
-        usage(argv);
-    }
-
-    printf("instance name: '%s'\n", instance_name);
-    printf("priority: %i\n", priority);
-    printf("main-task-period: %i\n", main_task_period);
-    printf("transfer-task-period: %i\n", transfer_task_period);
-
     return 0;
 }
 
-usage(char *argv[])
-{
-    fprintf(stderr, "usage: %s \n", argv[0]);
-
-    fprintf(stderr, "-n, --name=NAME\n");
-    fprintf(stderr, "\trequired argument\n");
-    fprintf(stderr, "\tInstance name\n\n");
-
-    fprintf(stderr, "-r, --priority=PRIORITY\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tMain realtime thread priority (1-99, default: 80)\n\n");
-
-    fprintf(stderr, "-m, --main-task-period=PERIOD\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tBusiness function execution period in microseconds (default: 20000)\n\n");
-
-    fprintf(stderr, "-t, --transfer-task-period=PERIOD\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tOutput data to shared memory copy period in microseconds (default: 20000)\n\n");
-
-    fprintf(stderr, "-i, --in-link=INSTANCE2.OUT1->IN1\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tInput link (provides data from another instance to this one through shared memory)\n\n");
-
-    fprintf(stderr, "-o, --out-link=OUT1->INSTANCE3.IN1\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tOutput link (provides data from this instance to another one through pipe)\n\n");
-
-    fprintf(stderr, "-p, --param=PARAM:VALUE\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tSetting a parameter\n\n");
-
-    exit(EXIT_FAILURE);
-}
 
 void test_sender_run (module_test_sender_t *module)
 {

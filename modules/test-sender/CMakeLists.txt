@@ -19,6 +19,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 
 set(EXTRA_LIBS
     sdk
+    pthread
+    rt
 )
 
 ADD_CUSTOM_COMMAND(
