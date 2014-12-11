@@ -145,7 +145,7 @@ int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name
         print_heap_create_error(err);
         return err;
     }
-//fprintf(stderr, "shmem name=%s\n", name_shmem);
+    //fprintf(stderr, "shmem name=%s\n", name_shmem);
 
     // Alloc shared memory block
     err = rt_heap_alloc(&shmem->h_shmem, 0, TM_INFINITE, &shmem->shmem);
@@ -326,9 +326,9 @@ int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* na
             remove_element(ar_remote_shmems->remote_shmems, i, ar_remote_shmems->remote_shmems_len);  /* First shift the elements, then reallocate */
             shmem_in_set_t** tmp = realloc(ar_remote_shmems->remote_shmems, (ar_remote_shmems->remote_shmems_len - 1) * sizeof(shmem_in_set_t*) );
             if (tmp == NULL && ar_remote_shmems->remote_shmems_len > 1) {
-               /* No memory available */
-               fprintf(stderr, "Function \"unregister_remote_shmem\" No memory available\n");
-               exit(EXIT_FAILURE);
+                /* No memory available */
+                fprintf(stderr, "Function \"unregister_remote_shmem\" No memory available\n");
+                exit(EXIT_FAILURE);
             }
             ar_remote_shmems->remote_shmems_len--;
             ar_remote_shmems->remote_shmems = tmp;
@@ -392,7 +392,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
     bson_t bson;
     bson_init_static(&bson, data, length);
 
-//debug_print_bson("Function \"init\" module-functions.c", &bson);
+    //debug_print_bson("Function \"init\" module-functions.c", &bson);
 
     // Вытаскиваем из конфигурации значения обязательных настроечных параметров
     /**
@@ -488,7 +488,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             bson_iter_document(&iter_links, &link_buf_len, &link_buf);
             bson_init_static(&bson_out_link, link_buf, link_buf_len);
 
-//debug_print_bson("Function \"init\" module-functions.c inside while", &bson_out_link);
+            //debug_print_bson("Function \"init\" module-functions.c inside while", &bson_out_link);
 
             // Получим имя инстанса модуля подписчика
             bson_iter_t iter_subscriber_instance_name;
@@ -608,7 +608,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
             bson_iter_document(&iter_links, &link_buf_len, &link_buf);
             bson_init_static(&bson_in_link, link_buf, link_buf_len);
 
-//debug_print_bson("Function \"init\" module-functions.c inside while", &bson_in_link);
+            //debug_print_bson("Function \"init\" module-functions.c inside while", &bson_in_link);
 
             // Получим имя инстанса модуля поставщика
             bson_iter_t iter_publisher_instance_name;
@@ -722,40 +722,92 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
  */
 int init_argv(module_t* module, int argc, char *argv[])
 {
-    const char* short_options = "n:";
+    const char* short_options = "n:o:i:";
     const struct option long_options[] = {
-        {"name",required_argument,NULL,'n'},
-        {NULL,0,NULL,0}
-    };
+    {"name",required_argument,NULL,'n'},
+    {"out-link",required_argument,NULL,'o'},
+    {"in-link",required_argument,NULL,'i'},
+    {NULL,0,NULL,0}
+};
 
     int res;
     int option_index;
     while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){
 
         switch(res){
-            // Имя инстанса
-            case 'n':
-                if (optarg!=NULL){
-                    module->instance_name = optarg;
-                    // Проверяем, не превышает ли длина имени инстанса значения 32-5=27
-                    // Т.к. максимальная длина имен объектов ксеномая равна 32 а 5 символов могут быть использованы на суфикс,
-                    // при формировании имен тасков, очередй и пр., необходимых для объетов ксеномая используемых инстансом в работе
-                    if(strlen(module->instance_name) > XNOBJECT_NAME_LEN-5)
-                    {
-                        fprintf(stderr, "Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", module->instance_name, strlen(module->instance_name), XNOBJECT_NAME_LEN-5);
-                        return -1;
-                    }
-                    //fprintf(stdout, "instance name=%s\n\n", module->instance_name);
+        // Имя инстанса
+        case 'n':
+            if (optarg!=NULL){
+                module->instance_name = optarg;
+                // Проверяем, не превышает ли длина имени инстанса значения 32-5=27
+                // Т.к. максимальная длина имен объектов ксеномая равна 32 а 5 символов могут быть использованы на суфикс,
+                // при формировании имен тасков, очередй и пр., необходимых для объетов ксеномая используемых инстансом в работе
+                if(strlen(module->instance_name) > XNOBJECT_NAME_LEN-5)
+                {
+                    fprintf(stderr, "Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", module->instance_name, strlen(module->instance_name), XNOBJECT_NAME_LEN-5);
+                    return -1;
+                }
+                //fprintf(stdout, "instance name=%s\n\n", module->instance_name);
+            }
+            else
+            {
+                printf("required argument --name\n\n");
+                usage(argv);
+            }
+            break;
+
+            // Исходящие связи
+            // `OUT1->INSTANCE3.IN1`
+        case 'o':
+            if (optarg!=NULL){
+                // Выделяем память под структуры, представляющие связи с модулями подписчиками
+                // Связи через очередь (данный модуль поставщик, другие потребители данных)
+                char name_out_pin[32]; // название выходного пина данного модуля
+                char name_remote_instance[32]; // имя инстанса модуля подписчика
+                char name_remote_pin[32]; // название входного пина модуля получателя
+
+                sscanf(optarg, "%s->%s.%s", name_out_pin, name_remote_instance, name_remote_pin);
+
+                if(strlen(name_remote_instance) > XNOBJECT_NAME_LEN-5)
+                {
+                    fprintf(stderr, "Remote Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", name_remote_instance, strlen(name_remote_instance), XNOBJECT_NAME_LEN-5);
+                    return -1;
+                }
+
+                // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
+                remote_queue_t* remote_queue = register_remote_queue(module, name_remote_instance);
+
+                // Получим название типа данных связи
+                char portType_name[32];
+                get_porttype_by_portname(name_out_pin, portType_name);
+                TypeFieldObj port_type = convert_port_type_str2type(portType_name);
+                if(port_type==-1)
+                {
+                    fprintf(stderr, "Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", name_out_pin, portType_name, module->instance_name);
+                    return -1;
+                }
+
+                unsigned short offset_field;
+                unsigned short index_port;
+                out_object_t* out_object = (*module->get_outobj_by_outpin)(module, name_out_pin, &offset_field, &index_port);
+                if(out_object)
+                {
+                    register_out_link(out_object, name_remote_instance, offset_field, port_type, name_remote_pin, remote_queue);
                 }
                 else
                 {
-                    printf("required argument --name\n\n");
-                    usage(argv);
+                    fprintf(stderr, "Not found OUT PIN \"%s\" in instance \"%s\"\n", name_out_pin, module->instance_name);
                 }
+            }
+            else
+            {
+                printf("require value for argument --out-link\n\n");
+                usage(argv);
+            }
             break;
 
-            case '?': default:
-                printf("Found unknown option\n");
+        case '?': default:
+            printf("Found unknown option\n");
             break;
         }
     }
@@ -764,7 +816,7 @@ int init_argv(module_t* module, int argc, char *argv[])
     bson_t bson;
     //bson_init_static(&bson, data, length);
 
-//debug_print_bson("Function \"init\" module-functions.c", &bson);
+    //debug_print_bson("Function \"init\" module-functions.c", &bson);
 
     // Вытаскиваем из конфигурации значения обязательных настроечных параметров
 
@@ -778,7 +830,7 @@ int init_argv(module_t* module, int argc, char *argv[])
     //print_common_params(&module->common_params);
 
 
-bson_iter_t iter;
+    bson_iter_t iter;
     // Поиск узла специфичных параметров модуля
     if (!bson_iter_init_find(&iter, &bson, "params")) {
         fprintf(stderr, "Not found property \"params\"");
@@ -796,130 +848,12 @@ bson_iter_t iter;
     //debug_print_bson("Function \"init\" module-functions.c", &bson_params);
 
     // Чтение в структуру специфичных параметров модуля
-//(*module->argv2params)(module, &bson_params);
+    //(*module->argv2params)(module, &bson_params);
     (*module->bson2params)(module, &bson_params);
     //(*module->print_params)(module->specific_params);
 
 
 
-    // Выделяем память под структуры, представляющие связи с модулями подписчиками
-    // Связи через очередь (данный модуль поставщик, другие потребители данных)
-    // Список исходящих связей, должен быть в массиве "out_links" в объекте конфигурации
-    // но его может не быть, если модуль не имеет выходов
-    if (bson_iter_init_find(&iter, &bson, "out_links"))
-    {
-        if (!BSON_ITER_HOLDS_ARRAY(&iter)) {
-            fprintf(stderr, "Property \"out_links\" not ARRAY type");
-            return -1;
-        }
-
-        const uint8_t *array_buf = NULL;
-        uint32_t array_buf_len = 0;
-        bson_t bson_queue_links;
-        bson_iter_array(&iter, &array_buf_len, &array_buf);
-        bson_init_static(&bson_queue_links, array_buf, array_buf_len);
-
-        uint32_t count_links = bson_count_keys (&bson_queue_links);
-        //fprintf(stderr, "count_links=%i\n", count_links);
-
-        bson_iter_t iter_links;
-        if(!bson_iter_init (&iter_links, &bson_queue_links))
-        {
-            fprintf(stderr, "Error: error create iterator for queue links\n");
-            return -1;
-        }
-
-        bson_t bson_out_link;
-        while(bson_iter_next(&iter_links))
-        {
-            if(!BSON_ITER_HOLDS_DOCUMENT(&iter_links))
-            {
-                fprintf(stderr, "Function: init, Error: iter_links not a out link document\n");
-                continue;
-            }
-            bson_iter_document(&iter_links, &link_buf_len, &link_buf);
-            bson_init_static(&bson_out_link, link_buf, link_buf_len);
-
-//debug_print_bson("Function \"init\" module-functions.c inside while", &bson_out_link);
-
-            // Получим имя инстанса модуля подписчика
-            bson_iter_t iter_subscriber_instance_name;
-            if (!bson_iter_init_find(&iter_subscriber_instance_name, &bson_out_link, "inInst")) {
-                fprintf(stderr, "Not found property \"inInst\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_subscriber_instance_name)) {
-                fprintf(stderr, "Property \"inInst\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* subscriber_instance_name = bson_iter_utf8(&iter_subscriber_instance_name, NULL);
-
-            // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-            remote_queue_t* remote_queue = register_remote_queue(module, subscriber_instance_name);
-
-            // Получим название выходного пина данного модуля
-            bson_iter_t iter_outpin_name;
-            if (!bson_iter_init_find(&iter_outpin_name, &bson_out_link, "outPin")) {
-                fprintf(stderr, "Not found property \"outPin\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_outpin_name)) {
-                fprintf(stderr, "Property \"outPin\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* outpin_name = bson_iter_utf8(&iter_outpin_name, NULL);
-
-
-            // Получим название входного пина модуля получателя
-            bson_iter_t iter_remote_inpin_name;
-            if (!bson_iter_init_find(&iter_remote_inpin_name, &bson_out_link, "inPin")) {
-                fprintf(stderr, "Not found property \"inPin\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_remote_inpin_name)) {
-                fprintf(stderr, "Property \"inPin\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* remote_inpin_name = bson_iter_utf8(&iter_remote_inpin_name, NULL);
-
-
-            // Получим название типа данных связи
-            bson_iter_t iter_portType_name;
-            if (!bson_iter_init_find(&iter_portType_name, &bson_out_link, "portType")) {
-                fprintf(stderr, "Not found property \"portType\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_portType_name)) {
-                fprintf(stderr, "Property \"portType\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* portType_name = bson_iter_utf8(&iter_portType_name, NULL);
-            TypeFieldObj port_type = convert_port_type_str2type(portType_name);
-            if(port_type==-1)
-            {
-                fprintf(stderr, "Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", outpin_name, portType_name, module->instance_name);
-                return -1;
-            }
-
-
-            unsigned short offset_field;
-            unsigned short index_port;
-            out_object_t* out_object = (*module->get_outobj_by_outpin)(module, outpin_name, &offset_field, &index_port);
-            if(out_object)
-            {
-                register_out_link(out_object, subscriber_instance_name, offset_field, port_type, remote_inpin_name, remote_queue);
-            }
-            else
-            {
-                fprintf(stderr, "Not found OUT PIN \"%s\" in instance \"%s\"\n", outpin_name, module->instance_name);
-            }
-        }
-    }
-    else
-    {
-        //fprintf(stderr, "Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
-        //debug_print_bson("Function \"init\" module-functions.c on error", &bson);
-    }
 
 
     // Выделяем память под структуры, представляющие связи с модулями поставщиками
@@ -960,7 +894,7 @@ bson_iter_t iter;
             bson_iter_document(&iter_links, &link_buf_len, &link_buf);
             bson_init_static(&bson_in_link, link_buf, link_buf_len);
 
-//debug_print_bson("Function \"init\" module-functions.c inside while", &bson_in_link);
+            //debug_print_bson("Function \"init\" module-functions.c inside while", &bson_in_link);
 
             // Получим имя инстанса модуля поставщика
             bson_iter_t iter_publisher_instance_name;
@@ -1064,6 +998,18 @@ bson_iter_t iter;
     return 0;
 }
 
+
+/**
+ * @brief Возвращает название типа данных для порта, по имени порта
+ * @param port_name
+ * @return Имя типа данных порта
+ */
+int get_porttype_by_portname(const char* port_name, char* port_type)
+{
+
+}
+
+
 // Convert argv to structure common_params_t
 int argv2common_params(void* in_module, int argc, char *argv[])
 {
@@ -1078,11 +1024,11 @@ int argv2common_params(void* in_module, int argc, char *argv[])
     }
 
     const struct option long_options[] = {
-        {"priority",optional_argument,NULL,'r'},
-        {"main-task-period",optional_argument,NULL,'m'},
-        {"transfer-task-period",optional_argument,NULL,'t'},
-        {NULL,0,NULL,0}
-    };
+    {"priority",optional_argument,NULL,'r'},
+    {"main-task-period",optional_argument,NULL,'m'},
+    {"transfer-task-period",optional_argument,NULL,'t'},
+    {NULL,0,NULL,0}
+};
 
     int priority = 80;
     int main_task_period = 20000;
@@ -1093,47 +1039,47 @@ int argv2common_params(void* in_module, int argc, char *argv[])
     while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){
 
         switch(res){
-            case 'r':
-                if (optarg!=NULL)
+        case 'r':
+            if (optarg!=NULL)
+            {
+                priority = atoi(optarg);
+                if(priority < 1 || priority > 99)
                 {
-                    priority = atoi(optarg);
-                    if(priority < 1 || priority > 99)
-                    {
-                        printf("argument 'priority' valid values in the range 1-99\n\n");
-                        usage(argv);
-                    }
-                    module->common_params.Task_Priority = priority;
+                    printf("argument 'priority' valid values in the range 1-99\n\n");
+                    usage(argv);
                 }
+                module->common_params.Task_Priority = priority;
+            }
             break;
 
-            case 'm':
-                if (optarg!=NULL)
+        case 'm':
+            if (optarg!=NULL)
+            {
+                main_task_period = atoi(optarg);
+                if(main_task_period < 0)
                 {
-                    main_task_period = atoi(optarg);
-                    if(main_task_period < 0)
-                    {
-                        printf("argument 'main-task-period' valid values >-1\n\n");
-                        usage(argv);
-                    }
-                    module->common_params.Task_Period = main_task_period;
+                    printf("argument 'main-task-period' valid values >-1\n\n");
+                    usage(argv);
                 }
+                module->common_params.Task_Period = main_task_period;
+            }
             break;
 
-            case 't':
-                if (optarg!=NULL)
+        case 't':
+            if (optarg!=NULL)
+            {
+                transfer_task_period = atoi(optarg);
+                if(transfer_task_period < 0)
                 {
-                    transfer_task_period = atoi(optarg);
-                    if(transfer_task_period < 0)
-                    {
-                        printf("argument 'transfer-task-period' valid values >-1\n\n");
-                        usage(argv);
-                    }
-                    module->common_params.Transfer_task_period = transfer_task_period;
+                    printf("argument 'transfer-task-period' valid values >-1\n\n");
+                    usage(argv);
                 }
+                module->common_params.Transfer_task_period = transfer_task_period;
+            }
             break;
 
-            case '?': default:
-                printf("Found unknown option\n");
+        case '?': default:
+            printf("Found unknown option\n");
             break;
         }
     }
@@ -1212,12 +1158,12 @@ void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datale
     RT_HEAP_INFO info;
     rt_heap_inquire	(&shmem->h_shmem, &info);
 
-//fprintf(stderr, "write to shmem=%s\n", info.name);
+    //fprintf(stderr, "write to shmem=%s\n", info.name);
 
     // в буфер (со смещением в два байта) копируем блок данных
     memcpy(shmem->shmem + sizeof(unsigned short), data, datalen);
 
-//fprintf(stderr, "datalen write_shmem: %i\n", datalen);
+    //fprintf(stderr, "datalen write_shmem: %i\n", datalen);
 
     res = rt_event_signal(&shmem->eflags, ~SHMEM_WRITER_MASK);
     if (res != 0)
@@ -1369,45 +1315,45 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 
             switch (remote_obj_field->type_field_obj)
             {
-                case field_char:
-                    bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, -1, *((char*)pval));
+            case field_char:
+                bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, -1, *((char*)pval));
                 break;
 
-                case field_short:
-                    bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, -1, *((short*)pval));
+            case field_short:
+                bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, -1, *((short*)pval));
                 break;
 
-                case field_int:
-                    bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, -1, *((int*)pval));
+            case field_int:
+                bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, -1, *((int*)pval));
                 break;
 
-                case field_long:
-                    bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, -1, *((long*)pval));
+            case field_long:
+                bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, -1, *((long*)pval));
                 break;
 
-                case field_long_long:
-                    bson_append_int64 (bson_obj, remote_obj_field->remote_field_name, -1, *((long long*)pval));
+            case field_long_long:
+                bson_append_int64 (bson_obj, remote_obj_field->remote_field_name, -1, *((long long*)pval));
                 break;
 
-                case field_float:
-                    bson_append_double  (bson_obj, remote_obj_field->remote_field_name, -1, *((float*)pval));
+            case field_float:
+                bson_append_double  (bson_obj, remote_obj_field->remote_field_name, -1, *((float*)pval));
                 break;
 
-                case field_double:
-                    bson_append_double  (bson_obj, remote_obj_field->remote_field_name, -1, *((double*)pval));
+            case field_double:
+                bson_append_double  (bson_obj, remote_obj_field->remote_field_name, -1, *((double*)pval));
                 break;
 
-                case field_const_char:
-                    bson_append_utf8  (bson_obj, remote_obj_field->remote_field_name, -1, (const char*)pval, -1);
+            case field_const_char:
+                bson_append_utf8  (bson_obj, remote_obj_field->remote_field_name, -1, (const char*)pval, -1);
                 break;
 
-                case field_bool:
-                    bson_append_bool   (bson_obj, remote_obj_field->remote_field_name, -1, *((bool*)pval));
+            case field_bool:
+                bson_append_bool   (bson_obj, remote_obj_field->remote_field_name, -1, *((bool*)pval));
                 break;
 
-                default:
-                    fprintf(stderr, "Function \"send2queues\" Unknown type remote field: %i\n", remote_obj_field->type_field_obj);
-                    break;
+            default:
+                fprintf(stderr, "Function \"send2queues\" Unknown type remote field: %i\n", remote_obj_field->type_field_obj);
+                break;
             }
         }
 
@@ -1457,15 +1403,15 @@ void get_input_data(module_t *module)
     {
         bson_t bson;
         bson_init_static(&bson, buf, res_read);
-//debug_print_bson("get_input_data", &bson);
+        //debug_print_bson("get_input_data", &bson);
         if ((*module->input_bson2obj)(module, &bson) != 0)
         {
             fprintf(stderr, "Error: func get_input_data, input_bson2obj\n");
         }
         else
         {
-//fprintf(stderr, "%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
-//(*module->print_input)(module->input_data);
+            //fprintf(stderr, "%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
+            //(*module->print_input)(module->input_data);
         }
         bson_destroy(&bson);
     }
@@ -1606,7 +1552,7 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
                     print_rt_event_bind_error(res);
                 continue;
             }
-fprintf(stderr, "%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_event, ANSI_COLOR_RESET);
+            fprintf(stderr, "%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_event, ANSI_COLOR_RESET);
             remote_shmem->f_event_connected = true;
         }
 
@@ -1624,7 +1570,7 @@ fprintf(stderr, "%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, in
                     print_rt_mutex_bind_error(res);
                 continue;
             }
-fprintf(stderr, "%sCONNECTED: %s to mutex service %s%s\n\n", ANSI_COLOR_YELLOW, instance_name, name_mutex, ANSI_COLOR_RESET);
+            fprintf(stderr, "%sCONNECTED: %s to mutex service %s%s\n\n", ANSI_COLOR_YELLOW, instance_name, name_mutex, ANSI_COLOR_RESET);
             remote_shmem->f_mutex_connected = true;
         }
 
@@ -1634,7 +1580,7 @@ fprintf(stderr, "%sCONNECTED: %s to mutex service %s%s\n\n", ANSI_COLOR_YELLOW, 
     if(ar_remote_shmems->remote_shmems_len>0 && count_connected==ar_remote_shmems->remote_shmems_len)
     {
         ar_remote_shmems->f_connected_in_links=true;
-fprintf(stderr, "%s%s: ALL SHMEMS CONNECTED%s\n", ANSI_COLOR_GREEN, instance_name, ANSI_COLOR_RESET);
+        fprintf(stderr, "%s%s: ALL SHMEMS CONNECTED%s\n", ANSI_COLOR_GREEN, instance_name, ANSI_COLOR_RESET);
     }
 
     return 0;
@@ -1708,8 +1654,8 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
             if(obj!=NULL)
             {
                 send2queues(out_object, obj, &bson_tr);
-//fprintf(stderr, "send2queues\t");
-//(*out_object->print_obj)(obj);
+                //fprintf(stderr, "send2queues\t");
+                //(*out_object->print_obj)(obj);
                 checkin4transmiter(module, out_object, &obj, true);
             }
         }
@@ -1791,7 +1737,7 @@ void task_transmit(void *p_module)
             // Если не все связи модуля установлены, то будем пытаться их установить
             if(rt_timer_read() - time_attempt_link_modules > 100000000)
             {
-//fprintf(stderr, "попытка out связи\n");
+                //fprintf(stderr, "попытка out связи\n");
 
                 connect_out_links(module);
 
@@ -2070,7 +2016,7 @@ int refresh_input(void* p_module)
             bson_t bson;
             if (retlen > 0) {
                 bson_init_static(&bson, buf, retlen);
-//debug_print_bson("Receive from shared memory", &bson);
+                //debug_print_bson("Receive from shared memory", &bson);
 
                 int f;
                 for(f=0;f<remote_shmem->len_remote_in_obj_fields;f++)
@@ -2089,88 +2035,88 @@ int refresh_input(void* p_module)
                     uint32_t length;
                     switch (remote_in_obj_field->type_field_obj)
                     {
-                        case field_char:
-                            if (!BSON_ITER_HOLDS_INT32(&iter)) {
-                                fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
-                                return -1;
-                            }
-                            *((char*)pval) = bson_iter_int32(&iter);
-                            break;
+                    case field_char:
+                        if (!BSON_ITER_HOLDS_INT32(&iter)) {
+                            fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                            return -1;
+                        }
+                        *((char*)pval) = bson_iter_int32(&iter);
+                        break;
 
-                        case field_short:
-                            if (!BSON_ITER_HOLDS_INT32(&iter)) {
-                                fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
-                                return -1;
-                            }
-                            *((short*)pval) = bson_iter_int32(&iter);
-                            break;
-
-
-                        case field_int:
-                            if (!BSON_ITER_HOLDS_INT32(&iter)) {
-                                fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
-                                return -1;
-                            }
-                            *((int*)pval) = bson_iter_int32(&iter);
-                            break;
-
-                        case field_long:
-                            if (!BSON_ITER_HOLDS_INT32(&iter)) {
-                                fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
-                                return -1;
-                            }
-                            *((long*)pval) = bson_iter_int32(&iter);
-                            break;
+                    case field_short:
+                        if (!BSON_ITER_HOLDS_INT32(&iter)) {
+                            fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                            return -1;
+                        }
+                        *((short*)pval) = bson_iter_int32(&iter);
+                        break;
 
 
-                        case field_long_long:
-                            if (!BSON_ITER_HOLDS_INT64(&iter)) {
-                                fprintf(stderr, "Property \"%s\" not INT64 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
-                                return -1;
-                            }
-                            *((long long*)pval) = bson_iter_int64(&iter);
-                            break;
+                    case field_int:
+                        if (!BSON_ITER_HOLDS_INT32(&iter)) {
+                            fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                            return -1;
+                        }
+                        *((int*)pval) = bson_iter_int32(&iter);
+                        break;
 
-                        case field_float:
-                            if (!BSON_ITER_HOLDS_DOUBLE(&iter)) {
-                                fprintf(stderr, "Property \"%s\" not DOUBLE type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
-                                return -1;
-                            }
-                            *((float*)pval) = bson_iter_double(&iter);
-                            break;
+                    case field_long:
+                        if (!BSON_ITER_HOLDS_INT32(&iter)) {
+                            fprintf(stderr, "Property \"%s\" not INT32 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                            return -1;
+                        }
+                        *((long*)pval) = bson_iter_int32(&iter);
+                        break;
 
-                        case field_double:
-                            if (!BSON_ITER_HOLDS_DOUBLE(&iter)) {
-                                fprintf(stderr, "Property \"%s\" not DOUBLE type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
-                                return -1;
-                            }
-                            *((double*)pval) = bson_iter_double(&iter);
-                            break;
 
-                        case field_const_char:
-                            if (!BSON_ITER_HOLDS_UTF8(&iter)) {
-                                fprintf(stderr, "Property \"%s\" not UTF8 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
-                                return -1;
-                            }
-                            //pval = bson_iter_utf8(&iter, &length);
-                            //TODO: malloc for string
-                            break;
+                    case field_long_long:
+                        if (!BSON_ITER_HOLDS_INT64(&iter)) {
+                            fprintf(stderr, "Property \"%s\" not INT64 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                            return -1;
+                        }
+                        *((long long*)pval) = bson_iter_int64(&iter);
+                        break;
 
-                        case field_bool:
-                            if (!BSON_ITER_HOLDS_BOOL(&iter)) {
-                                fprintf(stderr, "Property \"%s\" not BOOL type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
-                                return -1;
-                            }
-                            *((bool*)pval) = bson_iter_bool(&iter);
-                            break;
+                    case field_float:
+                        if (!BSON_ITER_HOLDS_DOUBLE(&iter)) {
+                            fprintf(stderr, "Property \"%s\" not DOUBLE type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                            return -1;
+                        }
+                        *((float*)pval) = bson_iter_double(&iter);
+                        break;
 
-                        default:
-                            fprintf(stderr, "Function \"refresh_input\" Unknown type remote field\n");
-                            break;
+                    case field_double:
+                        if (!BSON_ITER_HOLDS_DOUBLE(&iter)) {
+                            fprintf(stderr, "Property \"%s\" not DOUBLE type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                            return -1;
+                        }
+                        *((double*)pval) = bson_iter_double(&iter);
+                        break;
+
+                    case field_const_char:
+                        if (!BSON_ITER_HOLDS_UTF8(&iter)) {
+                            fprintf(stderr, "Property \"%s\" not UTF8 type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                            return -1;
+                        }
+                        //pval = bson_iter_utf8(&iter, &length);
+                        //TODO: malloc for string
+                        break;
+
+                    case field_bool:
+                        if (!BSON_ITER_HOLDS_BOOL(&iter)) {
+                            fprintf(stderr, "Property \"%s\" not BOOL type in input bson readed from shared memory \"%s\" for instance %s\n", remote_in_obj_field->remote_field_name, remote_shmem->name_instance, module->instance_name);
+                            return -1;
+                        }
+                        *((bool*)pval) = bson_iter_bool(&iter);
+                        break;
+
+                    default:
+                        fprintf(stderr, "Function \"refresh_input\" Unknown type remote field\n");
+                        break;
                     }
                 }
-//fprintf(stderr, "%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
-//(*module->print_input)(module->input_data);
+                //fprintf(stderr, "%s%s:%s ", ANSI_COLOR_BLUE, module->instance_name, ANSI_COLOR_RESET);
+                //(*module->print_input)(module->input_data);
                 bson_destroy(&bson);
             }
         }

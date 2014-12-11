@@ -66,8 +66,7 @@ int argv2params_test_sender(module_t* module, int argc, char *argv[])
                     params_test_sender_t* obj = (params_test_sender_t*)module->specific_params;
                     if(!strncmp(param_name, "I2C Device", XNOBJECT_NAME_LEN))
                     {
-                        uint32_t len;
-                        //obj->I2C_Device = bson_iter_utf8(&iter, &len);
+                        strcpy((char*)obj->I2C_Device, (const char *)param_value);
                         break;
                     }
                     if(!strncmp(param_name, "Test Number Param", XNOBJECT_NAME_LEN))
@@ -77,7 +76,7 @@ int argv2params_test_sender(module_t* module, int argc, char *argv[])
                     }
                     if(!strncmp(param_name, "Test Boolean Param", XNOBJECT_NAME_LEN))
                     {
-                        //obj->Test_Boolean_Param = bson_iter_bool(&iter);
+                        obj->Test_Boolean_Param = atoi(param_value);
                         break;
                     }
                 }
