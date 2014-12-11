@@ -297,10 +297,16 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
             case "char":
             case "short":
             case "int":
-            case "long":
-            case "long long":
             case "bool":
                 r += "                        obj->" + propName + " = atoi(param_value);\n";
+                break;
+
+            case "long":
+                r += "                        obj->" + propName + " = atol(param_value);\n";
+                break;
+
+            case "long long":
+                r += "                        obj->" + propName + " = atoll(param_value);\n";
                 break;
 
             case "const char*":

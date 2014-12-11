@@ -38,7 +38,7 @@
         "en": "en description",
         "ru": "русское описание"
       },
-      "type": "int",
+      "type": "long",
       "defaultValue": 123,
       "validValues": [
         56,
