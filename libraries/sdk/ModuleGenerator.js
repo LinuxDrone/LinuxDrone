@@ -7,7 +7,7 @@ function make_params_structure(params_definitions, moduleName) {
     r += "{\n";
     var i = 0;
     params_definitions.forEach(function (param) {
-        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "");
+        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "").replace(/-/g, "_");
         if (i != 0) {
             r += ",\n";
         }
@@ -30,7 +30,7 @@ function make_params_structure(params_definitions, moduleName) {
     r += "typedef struct\n";
     r += "{\n";
     params_definitions.forEach(function (param) {
-        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "");
+        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "").replace(/-/g, "_");
         r += "\t" + param.type + " " + paramName + ";\n";
     });
     r += "} params_" + moduleName + "_t;\n\n";
@@ -78,7 +78,7 @@ function make_Structure2Bson(properties, outName) {
     r += "int " + outName + "2bson(" + outName + "_t* obj, bson_t* bson)\n";
     r += "{\n";
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
@@ -154,7 +154,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
     r += "    {\n";
     r += "        const char* key = bson_iter_key (&iter);\n\n";
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         r += "        if(!strncmp(key, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
         r += "        {\n";
         switch (properties[key].type) {
@@ -218,7 +218,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
         r += "{\n";
     }
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
@@ -286,7 +286,7 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
         r += "                    " + outName + "_t* obj = (" + outName + "_t*)module->specific_params;\n";
     }
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         r += "                    if(!strncmp(param_name, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
         r += "                    {\n";
         switch (properties[key].type) {
@@ -332,15 +332,15 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
 
     r += "// Helper function. Print structure " + outName + "\n";
     if (outName == "input") {
-        r += "void printARGV_TEST_" + module_type + "(void* obj1)\n";
+        r += "void print_" + module_type + "(void* obj1)\n";
         r += "{\n";
         r += "    " + outName + "_t* obj=obj1;\n";
     } else {
-        r += "void printsdsdsd_" + outName + "(" + outName + "_t* obj)\n";
+        r += "void print_" + outName + "(" + outName + "_t* obj)\n";
         r += "{\n";
     }
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
@@ -607,7 +607,7 @@ function Create_C_file(module) {
 
     if ('paramsDefinitions' in module) {
         r += make_Structure2Bson(params, "params_" + module_type);
-        r += make_Bson2Structure(params, "params_" + module_type, "", false);
+        //r += make_Bson2Structure(params, "params_" + module_type, "", false);
         r += make_argv2Structure(params, "params_" + module_type, "", false);
     }
 
@@ -620,7 +620,7 @@ function Create_C_file(module) {
         r += "    // Настроечные параметры\n";
         r += "    module->module_info.specific_params = &module->params_" + module_type + ";\n";
         r += "    module->module_info.params2bson = (p_obj2bson)&params_" + module_type + "2bson;\n";
-        r += "    module->module_info.bson2params = (p_bson2obj)&bson2params_" + module_type + ";\n";
+        r += "    module->module_info.argv2params = (p_argv2obj)&argv2params_" + module_type + ";\n";
         r += "    module->module_info.print_params = (p_print_obj)&print_params_" + module_type + ";\n\n";
     }
 

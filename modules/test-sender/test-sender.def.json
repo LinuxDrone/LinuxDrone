@@ -11,7 +11,7 @@
   },
   "paramsDefinitions": [
     {
-      "name": "I2C Device",
+      "name": "i2c-device",
       "displayName": {
         "en": "param 1",
         "ru": "параметр 1"
@@ -29,7 +29,7 @@
       "unitMeasured": ""
     },
     {
-      "name": "Test Number Param",
+      "name": "test-number-param",
       "displayName": {
         "en": "param 2",
         "ru": "параметр 2"
@@ -47,7 +47,7 @@
       "unitMeasured": "Ms"
     },
     {
-      "name": "Test Boolean Param",
+      "name": "test-boolean-param",
       "displayName": {
         "en": "param 3",
         "ru": "параметр 3"
