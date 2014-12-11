@@ -42,7 +42,7 @@ int argv2params_test_sender(module_t* module, int argc, char *argv[])
 {
     if(!module)
     {
-        printf("Error: func bson2params_test_sender, NULL parameter\n");
+        printf("Error: func argv2params_test_sender, NULL parameter\n");
         return -1;
     }
 
