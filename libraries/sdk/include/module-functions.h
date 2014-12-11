@@ -570,6 +570,11 @@ typedef struct {
      */
     RTIME time_attempt_link_modules;
 
+    /**
+     * @brief \~russian Строка в формате JSON содержащая определение модуля
+     */
+    const char* json_module_definition;
+
 } module_t;
 
 

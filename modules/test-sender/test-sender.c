@@ -1,6 +1,7 @@
 #include "test-sender.helper.h"
 #include <getopt.h>
 
+module_test_sender_t* m_module;
 
 int main (int argc, char *argv[]){
 
@@ -15,6 +16,7 @@ int main (int argc, char *argv[]){
 
     int res;
     int option_index;
+    opterr=0;
     while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){
 
         switch(res){
@@ -23,76 +25,26 @@ int main (int argc, char *argv[]){
             break;
 
             case '?': default:
-                printf("Found unknown option\n");
+                printf("Found unknown option test-sender main\n");
             break;
         }
     }
 
+    m_module = test_sender_create(NULL);
+
+    test_sender_init(m_module, argc, argv);
 
     //printf("instance name: '%s'\n", instance_name);
     //printf("priority: %i\n", priority);
     //printf("main-task-period: %i\n", main_task_period);
     //printf("transfer-task-period: %i\n", transfer_task_period);
 
-    return 0;
-}
-
-/*
-// Convert bson to structure params_test_sender
-int argv2params_test_sender(module_t* module, int argc, char *argv[])
-{
-    if(!module)
-    {
-        printf("Error: func argv2params_test_sender, NULL parameter\n");
-        return -1;
-    }
-
-    const char* short_options = "p:";
-    const struct option long_options[] = {
-        {"param",required_argument,NULL,'p'},
-        {NULL,0,NULL,0}
-    };
-
-    int res;
-    int option_index;
-    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){
-
-        switch(res){
-            case 'p':
-                if (optarg!=NULL){
-                    char param_name[32];
-                    char param_value[32];
-                    sscanf(optarg, "%s:%s", param_name, param_value);
-
-                    params_test_sender_t* obj = (params_test_sender_t*)module->specific_params;
-                    if(!strncmp(param_name, "I2C Device", XNOBJECT_NAME_LEN))
-                    {
-                        strcpy((char*)obj->I2C_Device, (const char *)param_value);
-                        break;
-                    }
-                    if(!strncmp(param_name, "Test Number Param", XNOBJECT_NAME_LEN))
-                    {
-                        obj->Test_Number_Param = atoi(param_value);
-                        break;
-                    }
-                    if(!strncmp(param_name, "Test Boolean Param", XNOBJECT_NAME_LEN))
-                    {
-                        obj->Test_Boolean_Param = atoi(param_value);
-                        break;
-                    }
-                }
-            break;
-
-
-            case '?': default:
-                printf("Found unknown option\n");
-            break;
-        }
-    }
+    params_test_sender_t* obj = (params_test_sender_t*)m_module->module_info.specific_params;
+    print_params_test_sender(obj);
 
     return 0;
 }
-*/
+
 
 void test_sender_run (module_test_sender_t *module)
 {
@@ -138,3 +90,4 @@ void test_sender_run (module_test_sender_t *module)
         cycle++;
     }
 }
+

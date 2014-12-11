@@ -271,6 +271,8 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
 
     r += "    int res;\n";
     r += "    int option_index;\n";
+    r += "    opterr=0;\n";
+    r += "    optind=0;\n";
     r += "    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){\n";
 
     r += "        switch(res){\n";
@@ -328,7 +330,7 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
     r += "            break;\n\n";
 
     r += "            case '?': default:\n";
-    r += "                printf(\"Found unknown option\");\n";
+    r += "                printf(\"Found unknown option\\n\");\n";
     r += "            break;\n";
     r += "        }\n";
     r += "    }\n";
@@ -493,6 +495,9 @@ function Create_C_file(module) {
 
     r += "#include \"" + module_type + ".helper.h\"\n";
     r += "#include <getopt.h>\n\n";
+
+    r += "// Определение модуля в JSON\n";
+    r += "const char* m_definition = \"" + JSON.stringify(module).replace(/"/g, "\\\"") + "\";\n\n";
 
     module_type = module_type.replace(/-/g, "_");
 
@@ -660,6 +665,8 @@ function Create_C_file(module) {
     }
     r += "\n";
 
+    r += "    module->module_info.json_module_definition = m_definition;\n\n";
+
     r += "    // Сохранение ссылки на бизнес-функцию.\n";
     r += "    module->module_info.func = &" + module_type + "_run;\n";
 
@@ -763,7 +770,7 @@ function Create_C_file(module) {
         r += "      return res;\n";
         r += "  }\n";
         r += "  return 0;\n";
-        r += "}\n";
+        r += "}\n\n";
 
     }
 

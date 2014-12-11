@@ -18,8 +18,6 @@
 #define SHMEM_HEAP_SIZE		300
 #define SHMEM_BLOCK1_SIZE	200
 
-
-
 /**
  * @brief
  * \~russian    Заполняет указатель адресом на структуру,
@@ -424,7 +422,7 @@ int init_old(module_t* module, const uint8_t * data, uint32_t length)
     // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна примать на вход наносекунды
     module->common_params.Transfer_task_period = rt_timer_ns2ticks(module->common_params.Transfer_task_period * 1000);
     module->common_params.Task_Period = rt_timer_ns2ticks(module->common_params.Task_Period * 1000);
-    //print_common_params(&module->common_params);
+print_common_params(&module->common_params);
 
 
 
@@ -724,17 +722,20 @@ int init(module_t* module, int argc, char *argv[])
 {
     const char* short_options = "n:o:i:";
     const struct option long_options[] = {
-    {"name",required_argument,NULL,'n'},
-    {"out-link",required_argument,NULL,'o'},
-    {"in-link",required_argument,NULL,'i'},
-    {NULL,0,NULL,0}
-};
+        {"name",required_argument,NULL,'n'},
+        {"out-link",required_argument,NULL,'o'},
+        {"in-link",required_argument,NULL,'i'},
+        {NULL,0,NULL,0}
+    };
 
     int res;
     int option_index;
-    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){
-
-        switch(res){
+    opterr=0;
+    optind=0;
+    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1)
+    {
+        switch(res)
+        {
         // Имя инстанса
         case 'n':
             if (optarg!=NULL){
@@ -832,13 +833,10 @@ int init(module_t* module, int argc, char *argv[])
 
 
                 // Получим название типа данных связи
-                char portType_name[32];
-                get_porttype_by_in_portname(input_pin_name, portType_name);
-
-                TypeFieldObj port_type = convert_port_type_str2type(portType_name);
+                int port_type = get_porttype_by_in_portname(module->json_module_definition, input_pin_name);
                 if(port_type==-1)
                 {
-                    fprintf(stderr, "Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", remote_out_pin_name, portType_name, module->instance_name);
+                    fprintf(stderr, "Error convert data type of port \"%s\" from string for instance \"%s\"\n", remote_out_pin_name, module->instance_name);
                     return -1;
                 }
 
@@ -863,7 +861,7 @@ int init(module_t* module, int argc, char *argv[])
             break;
 
         case '?': default:
-            printf("Found unknown option\n");
+            printf("Found unknown option. module-functions init\n");
             break;
         }
     }
@@ -879,9 +877,9 @@ int init(module_t* module, int argc, char *argv[])
     // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна принимать на вход наносекунды (а использоваться будут тики)
     module->common_params.Transfer_task_period = rt_timer_ns2ticks(module->common_params.Transfer_task_period * 1000);
     module->common_params.Task_Period = rt_timer_ns2ticks(module->common_params.Task_Period * 1000);
-    //print_common_params(&module->common_params);
+print_common_params(&module->common_params);
 
-
+/*
     bson_iter_t iter;
     // Поиск узла специфичных параметров модуля
     if (!bson_iter_init_find(&iter, &bson, "params")) {
@@ -898,11 +896,10 @@ int init(module_t* module, int argc, char *argv[])
     bson_iter_document(&iter, &link_buf_len, &link_buf);
     bson_init_static(&bson_params, link_buf, link_buf_len);
     //debug_print_bson("Function \"init\" module-functions.c", &bson_params);
-
+*/
     // Чтение в структуру специфичных параметров модуля
     (*module->argv2params)(module, argc, argv);
     //(*module->print_params)(module->specific_params);
-
 
     return 0;
 }
@@ -919,13 +916,23 @@ int get_porttype_by_out_portname(const char* port_name, char* port_type)
 }
 
 /**
- * @brief Возвращает название типа данных для входного порта, по имени порта
+ * @brief Возвращает тип данных для входного порта, по имени порта
+ * @param m_definition
  * @param port_name
  * @return Имя типа данных порта
  */
-int get_porttype_by_in_portname(const char* port_name, char* port_type)
-{
+int get_porttype_by_in_portname(const char* m_definition, const char* port_name)
+{   
+    char m_format[64] = "\"name\":\"";
+    strcat(m_format, port_name);
+    strcat(m_format, "\"%s\"type\":\"%s\"");
 
+    char trash[strlen(m_definition)];
+    char str_port_type[32];
+
+    sscanf(m_definition, m_format, trash, str_port_type);
+printf("Error: func get_porttype_by_in_portname, str_port_type=%s\n", str_port_type);
+    return convert_port_type_str2type(str_port_type);
 }
 
 // Convert argv to structure common_params_t
@@ -942,63 +949,65 @@ int argv2common_params(void* in_module, int argc, char *argv[])
     }
 
     const struct option long_options[] = {
-    {"priority",optional_argument,NULL,'r'},
-    {"main-task-period",optional_argument,NULL,'m'},
-    {"transfer-task-period",optional_argument,NULL,'t'},
-    {NULL,0,NULL,0}
-};
+        {"priority",optional_argument,NULL,'r'},
+        {"main-task-period",optional_argument,NULL,'m'},
+        {"transfer-task-period",optional_argument,NULL,'t'},
+        {NULL,0,NULL,0}
+    };
 
-    int priority = 80;
-    int main_task_period = 20000;
-    int transfer_task_period = 20000;
+    module->common_params.Task_Priority = 80;
+    module->common_params.Task_Period = 20000;
+    module->common_params.Transfer_task_period = 20000;
 
     int res;
     int option_index;
-    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){
-
-        switch(res){
-        case 'r':
-            if (optarg!=NULL)
-            {
-                priority = atoi(optarg);
-                if(priority < 1 || priority > 99)
+    opterr=0;
+    optind=0;
+//printf("argc=%i %s %s %s %s %s\n", argc, argv[0], argv[1], argv[2], argv[3], argv[4]);
+    while ((res = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1)
+    {
+//printf("optarg=%s\n", optarg);
+        switch(res)
+        {
+            case 'r':
+                if (optarg!=NULL)
                 {
-                    printf("argument 'priority' valid values in the range 1-99\n\n");
-                    usage(argv);
+                    module->common_params.Task_Priority = atoi(optarg);
+                    if(module->common_params.Task_Priority < 1 || module->common_params.Task_Priority > 99)
+                    {
+                        printf("argument 'priority' valid values in the range 1-99\n\n");
+                        usage(argv);
+                    }
                 }
-                module->common_params.Task_Priority = priority;
-            }
-            break;
+                break;
 
-        case 'm':
-            if (optarg!=NULL)
-            {
-                main_task_period = atoi(optarg);
-                if(main_task_period < 0)
+            case 'm':
+                if (optarg!=NULL)
                 {
-                    printf("argument 'main-task-period' valid values >-1\n\n");
-                    usage(argv);
+                    module->common_params.Task_Period = atoll(optarg);
+                    if(module->common_params.Task_Period < 0)
+                    {
+                        printf("argument 'main-task-period' valid values >-1\n\n");
+                        usage(argv);
+                    }
                 }
-                module->common_params.Task_Period = main_task_period;
-            }
-            break;
+                break;
 
-        case 't':
-            if (optarg!=NULL)
-            {
-                transfer_task_period = atoi(optarg);
-                if(transfer_task_period < 0)
+            case 't':
+                if (optarg!=NULL)
                 {
-                    printf("argument 'transfer-task-period' valid values >-1\n\n");
-                    usage(argv);
+                    module->common_params.Transfer_task_period = atoll(optarg);
+                    if(module->common_params.Transfer_task_period < 0)
+                    {
+                        printf("argument 'transfer-task-period' valid values >-1\n\n");
+                        usage(argv);
+                    }
                 }
-                module->common_params.Transfer_task_period = transfer_task_period;
-            }
-            break;
+                break;
 
-        case '?': default:
-            printf("Found unknown option\n");
-            break;
+            case '?': default:
+                printf("Found unknown option. module-functions argv2common_params\n");
+                break;
         }
     }
 
