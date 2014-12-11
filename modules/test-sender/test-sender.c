@@ -37,6 +37,7 @@ int main (int argc, char *argv[]){
     return 0;
 }
 
+/*
 // Convert bson to structure params_test_sender
 int argv2params_test_sender(module_t* module, int argc, char *argv[])
 {
@@ -91,7 +92,7 @@ int argv2params_test_sender(module_t* module, int argc, char *argv[])
 
     return 0;
 }
-
+*/
 
 void test_sender_run (module_test_sender_t *module)
 {

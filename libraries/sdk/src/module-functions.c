@@ -387,7 +387,7 @@ remote_queue_t* register_remote_queue(module_t* module, const char* name_remote_
  * @param length Длина блока данных, содержащего контент bson объекта
  * @return
  */
-int init(module_t* module, const uint8_t * data, uint32_t length)
+int init_old(module_t* module, const uint8_t * data, uint32_t length)
 {
     bson_t bson;
     bson_init_static(&bson, data, length);
@@ -720,7 +720,7 @@ int init(module_t* module, const uint8_t * data, uint32_t length)
  * @param length Длина блока данных, содержащего контент bson объекта
  * @return
  */
-int init_argv(module_t* module, int argc, char *argv[])
+int init(module_t* module, int argc, char *argv[])
 {
     const char* short_options = "n:o:i:";
     const struct option long_options[] = {

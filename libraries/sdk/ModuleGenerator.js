@@ -252,6 +252,128 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
     return r;
 }
 
+function make_argv2Structure(properties, outName, module_type, set_update_fact) {
+    var r = "";
+    r += "// Convert argv to structure " + outName + "\n";
+    r += "int argv2" + outName + "(module_t* module, int argc, char *argv[])\n";
+    r += "{\n";
+    r += "    if(!module)\n";
+    r += "    {\n";
+    r += "        printf(\"Error: func argv2" + outName + ", NULL parameter\\n\");\n";
+    r += "        return -1;\n";
+    r += "    }\n\n";
+
+    r += "    const char* short_options = \"p:\";\n";
+    r += "    const struct option long_options[] = {\n";
+    r += "        {\"param\",required_argument,NULL,'p'},\n";
+    r += "        {NULL,0,NULL,0}\n";
+    r += "    };\n\n";
+
+    r += "    int res;\n";
+    r += "    int option_index;\n";
+    r += "    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){\n";
+
+    r += "        switch(res){\n";
+    r += "            case 'p':\n";
+    r += "                if (optarg!=NULL){\n";
+    r += "                    char param_name[32];\n";
+    r += "                    char param_value[32];\n\n";
+    r += "                    sscanf(optarg, \"%s:%s\", param_name, param_value);\n\n";
+
+    if (set_update_fact) {
+        r += "                    " + outName + "_t* obj = (" + outName + "_t*)module->input_data;\n";
+    } else {
+        r += "                    " + outName + "_t* obj = (" + outName + "_t*)module->specific_params;\n";
+    }
+    for (var key in properties) {
+        var propName = key.replace(/\ /g, "_");
+        r += "                    if(!strncmp(param_name, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
+        r += "                    {\n";
+        switch (properties[key].type) {
+            case "float":
+            case "double":
+                r += "                        obj->" + propName + " = atof(param_value);\n";
+
+            case "char":
+            case "short":
+            case "int":
+            case "long":
+            case "long long":
+            case "bool":
+                r += "                        obj->" + propName + " = atoi(param_value);\n";
+                break;
+
+            case "const char*":
+                // TODO: Возможна проблема с тем, что строку надо освобождать
+                r += "                        strcpy((char*)obj->" + propName + ", (const char *)param_value);\n";
+                break;
+
+            default:
+                console.log("Unknown type " + properties[key].type + " for port " + propName);
+                break;
+        }
+        if (set_update_fact) {
+            r += "            module->updated_input_properties |= " + propName + ";\n";
+        }
+        r += "                        break;\n";
+        r += "                    }\n";
+    }
+    r += "                }\n";
+    r += "            break;\n\n";
+
+    r += "            case '?': default:\n";
+    r += "                printf(\"Found unknown option\");\n";
+    r += "            break;\n";
+    r += "        }\n";
+    r += "    }\n";
+    r += "    return 0;\n";
+    r += "}\n\n";
+
+
+    r += "// Helper function. Print structure " + outName + "\n";
+    if (outName == "input") {
+        r += "void printARGV_TEST_" + module_type + "(void* obj1)\n";
+        r += "{\n";
+        r += "    " + outName + "_t* obj=obj1;\n";
+    } else {
+        r += "void printsdsdsd_" + outName + "(" + outName + "_t* obj)\n";
+        r += "{\n";
+    }
+    for (var key in properties) {
+        var propName = key.replace(/\ /g, "_");
+        switch (properties[key].type) {
+            case "char":
+            case "short":
+            case "int":
+            case "long":
+            case "long long":
+                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
+                break;
+
+            case "float":
+            case "double":
+                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
+                break;
+
+            case "const char*":
+                r += "    printf(\"" + propName + "=%s\\t\", obj->" + propName + ");\n";
+                break;
+
+            case "bool":
+                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
+                break;
+
+            default:
+                console.log("Unknown type " + properties[key].type + " for port " + propName);
+                break;
+        }
+    }
+    r += "    printf(\"\\n\");\n";
+    r += "}\n\n";
+
+    return r;
+}
+
 function Create_H_file(module) {
     var module_type = module.name.replace(/-/g, "_");
     var r = "";
@@ -307,7 +429,7 @@ function Create_H_file(module) {
     // Формирование объявлений функций
     r += "\n// Helper functions\n";
     r += "module_" + module_type + "_t* " + module_type + "_create(void *handle);\n";
-    r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len);\n";
+    r += "int " + module_type + "_init(module_" + module_type + "_t* module, int argc, char *argv[]);\n";
     r += "int " + module_type + "_start(module_" + module_type + "_t* module);\n";
     r += "void " + module_type + "_delete(module_" + module_type + "_t* module);\n\n";
 
@@ -363,7 +485,8 @@ function Create_C_file(module) {
     var module_type = module.name;
     var r = "";
 
-    r += "#include \"" + module_type + ".helper.h\"\n\n";
+    r += "#include \"" + module_type + ".helper.h\"\n";
+    r += "#include <getopt.h>\n\n";
 
     module_type = module_type.replace(/-/g, "_");
 
@@ -485,11 +608,12 @@ function Create_C_file(module) {
     if ('paramsDefinitions' in module) {
         r += make_Structure2Bson(params, "params_" + module_type);
         r += make_Bson2Structure(params, "params_" + module_type, "", false);
+        r += make_argv2Structure(params, "params_" + module_type, "", false);
     }
 
 
     r += "// Init module.\n";
-    r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len)\n";
+    r += "int " + module_type + "_init(module_" + module_type + "_t* module, int argc, char *argv[])\n";
     r += "{\n";
 
     if ('paramsDefinitions' in module) {
@@ -548,7 +672,7 @@ function Create_C_file(module) {
     if ('inputShema' in module) {
         r += "    module->module_info.print_input = &print_" + module_type + ";\n\n";
     }
-    r += "    int res = init(&module->module_info, bson_data, bson_len);\n\n";
+    r += "    int res = init(&module->module_info, argc, argv);\n\n";
     if (module.outputs) {
         r += "    // для каждого типа порождаемого объекта инициализируется соответсвующая структура\n";
         r += "    // и указываются буферы (для обмена данными между основным и передающим потоком)\n";

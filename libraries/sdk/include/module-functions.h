@@ -579,7 +579,7 @@ typedef struct {
 typedef module_t* (*create_f)(void *);
 
 // Тип функции инициализации модуля
-typedef int (*init_f)(module_t*, const uint8_t*, uint32_t);
+typedef int (*init_f)(module_t*, int argc, char *argv[]);
 
 // Тип функции старта модуля
 typedef int (*start_f)(module_t*);
@@ -587,7 +587,7 @@ typedef int (*start_f)(module_t*);
 // Тип функции удаления модуля
 typedef void (*delete_f)(module_t*);
 
-int init(module_t* module, const uint8_t * data, uint32_t length);
+int init(module_t* module, int argc, char *argv[]);
 
 int start(void* module);
 
