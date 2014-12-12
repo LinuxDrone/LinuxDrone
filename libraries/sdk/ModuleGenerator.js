@@ -238,7 +238,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
                 break;
 
             case "bool":
-                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
+                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
                 break;
 
             default:
@@ -280,8 +280,10 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
     r += "                if (optarg!=NULL){\n";
     r += "                    char param_name[32];\n";
     r += "                    char param_value[32];\n\n";
-    r += "                    sscanf(optarg, \"%s:%s\", param_name, param_value);\n\n";
-
+    r += "                    // %[^:] - читает все что до символа \":\" в первую переменнную\n";
+    r += "                    // %*c - пропускает один символ\n";
+    r += "                    // %s - читает остаток строки во вторую переменную\n";
+    r += "                    sscanf(optarg, \"%[^:]%*c%s\", param_name, param_value);\n\n";
     if (set_update_fact) {
         r += "                    " + outName + "_t* obj = (" + outName + "_t*)module->input_data;\n";
     } else {
@@ -313,7 +315,8 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
 
             case "const char*":
                 // TODO: Возможна проблема с тем, что строку надо освобождать
-                r += "                        strcpy((char*)obj->" + propName + ", (const char *)param_value);\n";
+                r += "                        obj->" + propName + " = malloc(strlen(param_value)+1);\n";
+                r += "                        strcpy((char*)obj->" + propName + ", param_value);\n";
                 break;
 
             default:
@@ -368,7 +371,7 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
                 break;
 
             case "bool":
-                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
+                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
                 break;
 
             default:

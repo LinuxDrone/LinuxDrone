@@ -12,8 +12,6 @@ int main (int argc, char *argv[]){
         {NULL,0,NULL,0}
     };
 
-    char* instance_name = NULL;
-
     int res;
     int option_index;
     opterr=0;
