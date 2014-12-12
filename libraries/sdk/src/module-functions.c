@@ -12,6 +12,9 @@
 #include <native/event.h>
 #include <native/timer.h>
 #include "../include/module-functions.h"
+#include <regex.h>
+
+//#include <conio.h>
 
 #define SHMEM_WRITER_MASK	0x7FFFFFFF
 
@@ -732,7 +735,8 @@ int init(module_t* module, int argc, char *argv[])
     int option_index;
     opterr=0;
     optind=0;
-    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1)
+printf("1111111111111111\n");
+    while ((res = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1)
     {
         switch(res)
         {
@@ -762,11 +766,26 @@ int init(module_t* module, int argc, char *argv[])
             if (optarg!=NULL){
                 // Выделяем память под структуры, представляющие связи с модулями подписчиками
                 // Связи через очередь (данный модуль поставщик, другие потребители данных)
-                char name_out_pin[32]; // название выходного пина данного модуля
-                char name_remote_instance[32]; // имя инстанса модуля подписчика
-                char name_remote_pin[32]; // название входного пина модуля получателя
+                //char name_out_pin[32]; // название выходного пина данного модуля
+                //char name_remote_instance[32]; // имя инстанса модуля подписчика
+                //char name_remote_pin[32]; // название входного пина модуля получателя
+printf("optarg\n");
+                char* param_val = malloc(strlen(optarg)+1);
+                strcpy(param_val, optarg);
 
-                sscanf(optarg, "%s->%s.%s", name_out_pin, name_remote_instance, name_remote_pin);
+
+                char* name_out_pin = strtok(param_val, ">");
+                name_out_pin[strlen(name_out_pin)-1] = 0;
+                printf("name_out_pin=%s\n", name_out_pin);
+
+                char* name_remote_instance = strtok('\0', ".");
+                printf("name_remote_instance=%s\n", name_remote_instance);
+
+                char* name_remote_pin = strtok('\0', ".");
+                printf("name_remote_pin=%s\n", name_remote_pin);
+
+
+                //sscanf(optarg, "%s->%s.%s", name_out_pin, name_remote_instance, name_remote_pin);
 
                 if(strlen(name_remote_instance) > XNOBJECT_NAME_LEN-5)
                 {
@@ -779,7 +798,7 @@ int init(module_t* module, int argc, char *argv[])
 
                 // Получим название типа данных связи
                 char portType_name[32];
-                get_porttype_by_out_portname(name_out_pin, portType_name);
+                get_porttype_by_out_portname(module, name_out_pin, portType_name);
                 TypeFieldObj port_type = convert_port_type_str2type(portType_name);
                 if(port_type==-1)
                 {
@@ -798,6 +817,7 @@ int init(module_t* module, int argc, char *argv[])
                 {
                     fprintf(stderr, "Not found OUT PIN \"%s\" in instance \"%s\"\n", name_out_pin, module->instance_name);
                 }
+                free(param_val);
             }
             else
             {
@@ -867,37 +887,15 @@ int init(module_t* module, int argc, char *argv[])
     }
 
 
-    bson_t bson;
-
-
-
-
     // Запись в структуру общих параметров модуля (информация вынимается из параметров командной строки модуля)
     argv2common_params(module, argc, argv);
+
     // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна принимать на вход наносекунды (а использоваться будут тики)
     module->common_params.Transfer_task_period = rt_timer_ns2ticks(module->common_params.Transfer_task_period * 1000);
     module->common_params.Task_Period = rt_timer_ns2ticks(module->common_params.Task_Period * 1000);
 print_common_params(&module->common_params);
 
-/*
-    bson_iter_t iter;
-    // Поиск узла специфичных параметров модуля
-    if (!bson_iter_init_find(&iter, &bson, "params")) {
-        fprintf(stderr, "Not found property \"params\"");
-        return -1;
-    }
-    if (!BSON_ITER_HOLDS_DOCUMENT(&iter)) {
-        fprintf(stderr, "Property \"params\" not Document type");
-        return -1;
-    }
-    bson_t bson_params;
-    const uint8_t *link_buf = NULL;
-    uint32_t link_buf_len = 0;
-    bson_iter_document(&iter, &link_buf_len, &link_buf);
-    bson_init_static(&bson_params, link_buf, link_buf_len);
-    //debug_print_bson("Function \"init\" module-functions.c", &bson_params);
-*/
-    // Чтение в структуру специфичных параметров модуля
+    // Запись в структуру специфичных параметров модуля
     (*module->argv2params)(module, argc, argv);
     //(*module->print_params)(module->specific_params);
 
@@ -910,8 +908,64 @@ print_common_params(&module->common_params);
  * @param port_name
  * @return Имя типа данных порта
  */
-int get_porttype_by_out_portname(const char* port_name, char* port_type)
+int get_porttype_by_out_portname(module_t* module, const char* port_name, char* port_type)
 {
+        //"int_out\":{\"type\":\"
+
+    char m_format[64] = "\"";
+    strcat(m_format, port_name);
+    strcat(m_format, "\":{");
+    //strcat(m_format, "\"%s\"type\":\"%s\"");
+
+
+    int a;
+        regex_t re;
+        regmatch_t pm;
+
+        a = regcomp(&re, m_format, 0);
+        if(a!=0)
+        {
+            puts("Invalid Regex");
+            getch();
+            return 0;
+        }
+
+        a = regexec(&re, module->json_module_definition, 1, &pm, REG_EXTENDED);
+        //printf("\n first match at %d\n",pm.rm_eo);
+
+        printf("FIND: %s in: %s\n", m_format, module->json_module_definition + pm.rm_eo);
+
+
+
+        regex_t re2;
+        regmatch_t pm2;
+        char* m_format2 = "\"type\":\"";
+        a = regcomp(&re2, m_format2, 0);
+        if(a!=0)
+        {
+            puts("Invalid Regex");
+            getch();
+            return 0;
+        }
+        printf("pm.rm_eo=%i\n", pm.rm_eo);
+        a = regexec(&re2, module->json_module_definition + pm.rm_eo, 1, &pm2, REG_EXTENDED);
+
+        printf("\na=%i, pm.rm_eo=%i, FINDTYPE: %s in: %s\n", a, pm2.rm_eo, m_format2, module->json_module_definition + pm2.rm_eo);
+        //
+
+        /*
+        int cnt = 0;
+
+        while(a==0)
+        {
+            a = regexec(&re, module->json_module_definition + pm.rm_eo, 1, &pm, 0);
+
+            printf("\n next match %d",pm.rm_eo);
+
+            cnt++;
+            if(cnt>6)break;
+        }
+        */
 
 }
 
@@ -930,10 +984,42 @@ int get_porttype_by_in_portname(const char* m_definition, const char* port_name)
     char trash[strlen(m_definition)];
     char str_port_type[32];
 
-    sscanf(m_definition, m_format, trash, str_port_type);
-printf("Error: func get_porttype_by_in_portname, str_port_type=%s\n", str_port_type);
+
+    int a;
+        regex_t re;
+        char str[128] = "onces sam lived with samle to win samile hehe sam hoho sam\0";
+        regmatch_t pm;
+
+        a = regcomp(&re,"sam", 0);
+        if(a!=0)
+        {
+            puts("Invalid Regex");
+            getch();
+            return 0;
+        }
+
+        a = regexec(&re, &str[0], 1, &pm, REG_EXTENDED);
+        printf("\n first match at %d",pm.rm_eo);
+
+        int cnt = 0;
+
+        while(a==0)
+        {
+            a = regexec(&re, &str[0] + pm.rm_eo, 1, &pm, 0);
+
+            printf("\n next match %d",pm.rm_eo);
+
+            cnt++;
+            if(cnt>6)break;
+        }
+
+
+
+    //sscanf(m_definition, m_format, trash, str_port_type);
+//printf("Error: func get_porttype_by_in_portname, str_port_type=%s\n", str_port_type);
     return convert_port_type_str2type(str_port_type);
 }
+
 
 // Convert argv to structure common_params_t
 int argv2common_params(void* in_module, int argc, char *argv[])

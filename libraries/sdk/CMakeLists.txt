@@ -19,6 +19,10 @@ set(EXTRA_LIBS
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
     ${RFS_DIR}/usr/local/lib/libbson-1.0.so
     m
+
+    ncurses
+    dl
+    tinfo
 )
 
 ADD_CUSTOM_COMMAND(

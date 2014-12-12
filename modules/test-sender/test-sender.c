@@ -3,8 +3,8 @@
 
 module_test_sender_t* m_module;
 
-int main (int argc, char *argv[]){
-
+int main (int argc, char *argv[])
+{
     const char* short_options = "h";
 
     const struct option long_options[] = {
