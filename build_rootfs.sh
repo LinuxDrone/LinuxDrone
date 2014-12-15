@@ -14,13 +14,15 @@
 
 echo "\nThe script is designed to build a system image for LinuxDrone project.\n"
 
-USAGE="Example usage: `basename $0` -b bbb -d /dev/sdc\n\n
+USAGE="Example usage: `basename $0` -b bbb -x xeno2 -d /dev/sdc\n\n
 ------------ Options -------------- \n
 help:                            -h \n
 version:                         -v \n
 use menuconfig for buld kernel:  -m \n
 sdcard device name:              -d (dev/sdc)   \n
 board name:                      -b (bbb, rpi)  \n
+xenomai type                     -x (xeno2, cobalt, mercury) \n
+clean directory                  -c (rootfs xenomai kernel cc mongoc libweb) \n
 "
 
 # Printing and logging message
@@ -99,6 +101,15 @@ sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get clean"
 sudo chroot ${CHROOT_DIR} /bin/bash -c "apt-get autoremove"
 umount_proc_sysfs_devpts
 qemu_remove_from_roofs
+}
+
+# Clean directory if set in variable ${CLEAN}
+clean_directory() {
+if [ $(echo ${CLEAN} | grep -o $1) ] && \
+   [ -d "$2" ]; then
+    print "Clean directory $2"
+    sudo rm -Rf "$2"
+fi
 }
 
 # Check and installed packages use apt-get
@@ -198,7 +209,15 @@ sudo mount -t ext4 /dev/mapper/${DEV_LOOP}p2 /mnt/rootfs -o rw
 
 print "Копируем файлы из rootfs в образ диска"
 sudo rsync -a --delete --exclude="/boot/*" ${CHROOT_DIR}/ /mnt/rootfs/
-sudo cp -u ${CHROOT_DIR}/boot/* /mnt/boot/
+
+if [ ${UBOOT_USE} ]; then
+# Копируем в fat раздел карты бутлоадер
+    sudo rm -R /mnt/boot/* || true
+    sudo cp -v ${CHROOT_DIR}/boot/MLO /mnt/boot/
+    sudo cp -v ${CHROOT_DIR}/boot/u-boot.img /mnt/boot/
+    sudo cp -v ${CHROOT_DIR}/boot/uEnv.txt /mnt/boot/
+fi
+sudo cp -R -u ${CHROOT_DIR}/boot/* /mnt/boot/
 sync
 
 # Размонтируем образ диска
@@ -215,10 +234,10 @@ pbzip2 -k -9 -p${CORES} ${DISK_IMAGE}
 
 lsblk
 print "To copy a disk image on a flash card, enter one of these commands, edit /dev/sdX"
-print "sudo  sh -c \"bzcat ${DISK_IMAGE}.bz2 > /dev/sdX\""
-print "sudo dd if=${DISK_IMAGE} of=/dev/sdx bs=1M"
-#sudo sh -c "bzcat ${DISK_IMAGE}.bz2 > /dev/${SDCARD}"
-#sudo dd if=${DISK_IMAGE} of=/dev/${SDCARD} bs=1M
+print "sudo  sh -c \"bzcat ${DISK_IMAGE}.bz2 > ${DEV_DISK}\""
+print "sudo dd if=${DISK_IMAGE} of=${DEV_DISK} bs=1M"
+#sudo sh -c "bzcat ${DISK_IMAGE}.bz2 > ${DEV_DISK}"
+#sudo dd if=${DISK_IMAGE} of=${DEV_DISK} bs=1M
 
 print "End create image sdcard"
 }
@@ -292,6 +311,14 @@ KERNEL==\"rtheap\", MODE=\"0660\", GROUP=\"xenomai\"
 KERNEL==\"rtp[0-9]*\", MODE=\"0660\", GROUP=\"xenomai\"
 EOF
 "
+
+print "Downloads scripts for expand rootfs, copy to /home/ld"
+if [ ! -f ${LDDOWNL_DIR}/expand_rootfs.sh ]; then
+    print "Download linuxdrone-dtbo.tar.gz"
+    wget -c -P ${LDDOWNL_DIR} http://wiki.linuxdrone.org/download/attachments/5275816/expand_rootfs.sh
+    chmod +x ${LDDOWNL_DIR}/expand_rootfs.sh
+fi
+sudo cp ${LDDOWNL_DIR}/expand_rootfs.sh ${CHROOT_DIR}/home/ld
 }
 
 # Settings BeagleBone Black for the rootfs
@@ -309,7 +336,7 @@ print "Edit /etc/fstab"
 sudo sh -c "cat> ${CHROOT_DIR}/etc/fstab << EOF
 #/dev/mmcblk0p1  /  auto  errors=remount-ro  0  1
 /dev/mmcblk0p2 /  auto  errors=remount-ro  0  1
-/dev/mmcblk0p1 /boot/uboot  auto  defaults  0  2
+/dev/mmcblk0p1 /boot  auto  defaults  0  2
 EOF
 "
 
@@ -330,9 +357,9 @@ EOF
 "
 
 print "Create /boot/uEnv.txt"
-sudo sh -c "cat >${CHROOT_DIR}/boot/uEnv.txt << EOF
-##This will work with: Angstrom's 2013.06.20 u-boot.
-unsme_r=3.8.14
+UENV='EOF
+##This will work with: Angstrom 2013.06.20 u-boot.
+uname_r=3.8.13
 
 loadaddr=0x82000000
 fdtaddr=0x88000000
@@ -341,20 +368,25 @@ rdaddr=0x88080000
 initrd_high=0xffffffff
 fdt_high=0xffffffff
 
+console=ttyO0,115200n8
+mmcroot=/dev/mmcblk0p2 ro
+mmcrootfstype=ext4 rootwait fixrtc
+
 # Enable I2C1 bus? disable HDMI/eMMC
 optargs=quiet capemgr.enable_partno=BB-I2C1-400, capemgr.disable_partno=BB-BONELT-HDMI,BB-BONELT-HDMIN
 
-loadximage=load mmc 0:1 \${loadaddr} /boot/vmlinuz-\${uname_r}
-loadxfdt=load mmc 0:1 \${fdtaddr} /boot/dtbs/\${uname_r}/\${fdtfile}
-loadxrd=load mmc 0:1 \${rdaddr} /boot/initrd.img-\${uname_r}; setenv rdsize \${filesize}
-loaduEnvtxt=load mmc 0:1 \${loadaddr} /boot/uEnv.txt ; env import -t \${loadaddr} \${filesize};
+loadximage=load mmc 0:1 \${loadaddr} /vmlinuz-\${uname_r}
+loadxfdt=load mmc 0:1 \${fdtaddr} /dtbs/\${uname_r}/\${fdtfile}
+loadxrd=load mmc 0:1 \${rdaddr} /initrd.img-\${uname_r}; setenv rdsize \${filesize}
+loaduEnvtxt=load mmc 0:1 \${loadaddr} /uEnv.txt ; env import -t \${loadaddr} \${filesize};
 loadall=run loaduEnvtxt; run loadximage; run loadxfdt;
 
 mmcargs=setenv bootargs console=tty0 console=\${console} \${optargs} \${cape_disable} \${cape_enable} root=\${mmcroot} rootfstype=\${mmcrootfstype} \${cmdline}
 
 uenvcmd=run loadall; run mmcargs; bootz \${loadaddr} - \${fdtaddr};
 EOF
-"
+'
+sudo sh -c "cat >${CHROOT_DIR}/boot/uEnv.txt << ${UENV}"
 }
 
 # Settings Raspberry Pi for the rootfs
@@ -397,7 +429,7 @@ print "Updating and upgrade installing packages"
 PKG_LIST_COMMON="ssh sudo mc wget git screen build-essential cpufrequtils i2c-tools usbutils \
 wpasupplicant wireless-tools gdbserver \
 libboost-system.dev libboost-filesystem.dev libboost-thread.dev libboost-program-options.dev \
-scons htop ntpdate libssl-dev udhcpd"
+scons htop ntpdate libssl-dev udhcpd vim"
 
 PKG_LIST_LIBWEB="libwebsockets-dev libwebsockets-test-server libwebsockets3 libwebsockets3-dbg"
 
@@ -432,6 +464,9 @@ PKG_LIST="libc6:i386 libstdc++6:i386 libncurses5:i386 zlib1g:i386 \
 
 SENCHA_CMD_VER="5.0.3.324"
 
+#GIT_LINUX_KERNEL_SRC="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+GIT_LINUX_KERNEL_SRC="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
+
 check_and_installed_packages "${PKG_LIST}"
 
 # Downloads and build and install Device Tree Compiler
@@ -442,6 +477,25 @@ if [ "x${DTC_VER}" = "x" ]; then
     wget -cN https://raw.github.com/RobertCNelson/tools/master/pkgs/dtc.sh
     chmod +x dtc.sh
     ./dtc.sh
+fi
+
+# Git clone kernel source
+if [ ! -f "${LINUX_KERNEL_SRC_DIR}/.git/config" ]; then
+    cd ${LDTOOLS_DIR}
+    if [ -d "${LINUX_KERNEL_SRC_DIR}" ]; then
+        rm -rf "${LINUX_KERNEL_SRC_DIR}"
+    fi
+    if [ -f ${LDDOWNL_DIR}/linux-src.tar.bz2 ]; then
+        print "unpacking linux-src.tar.bz2"
+        pbzip2 -dc -p${CORES} ${LDDOWNL_DIR}/linux-src.tar.bz2 | sudo tar x
+    else
+        print "Start cloning ${GIT_LINUX_KERNEL_SRC} into default location: ${LINUX_KERNEL_SRC_DIR}"
+        git clone ${GIT_LINUX_KERNEL_SRC} ${LINUX_KERNEL_SRC_DIR}
+
+        print "Start create archive for ${LINUX_KERNEL_SRC_DIR}"
+        sudo tar -c ./linux-src/ | pbzip2 -c -5 -p${CORES} > ${LDDOWNL_DIR}/linux-src.tar.bz2
+        print "End created archive linux-src repository into ${LDDOWNL_DIR}"
+    fi
 fi
 
 # Installing SenchaCmd
@@ -480,6 +534,9 @@ print "End install softwares to this host"
 
 # Download cross-compiler
 download_install_crosscompiler_rpi() {
+
+clean_directory " cc " "${CC_DIR}"
+
 if [ ! -f ${CC_DIR}/bin/arm-linux-gnueabihf-gcc ]; then
   if [ ! -d ${CC_DIR} ]; then
       print "Create a directory for cross-compiler"
@@ -508,6 +565,9 @@ export PATH=${CC_DIR}/bin:$PATH
 }
 
 download_install_crosscompiler_bbb() {
+
+clean_directory " cc " "${CC_DIR}"
+
 if [ ! -f ${CC_DIR}/bin/arm-linux-gnueabihf-gcc ]; then
   if [ ! -d ${CC_DIR} ]; then
       print "Create a directory for cross-compiler"
@@ -535,13 +595,43 @@ export CC=${CC_DIR}/bin/arm-linux-gnueabihf-
 export PATH=${CC_DIR}/bin:$PATH
 }
 
+download_install_pasm() {
+print "Download, configure and build pasm"
+
+AM335x_PRU_PACKAGE_DIR=${MAKE_DIR}/am335x_pru_package-master
+
+clean_directory " pasm " "${PASM_DIR}"
+clean_directory " pasm " "${AM335x_PRU_PACKAGE_DIR}"
+
+if [ -f ${PASM_DIR}/pasm ]; then
+    print "PASM already installed"
+    return 0
+fi
+
+if [ ! -d ${AM335x_PRU_PACKAGE_DIR} ]; then
+    if [ ! -f ${LDDOWNL_DIR}/${BOARD}/am335x_pru_package.zip ]; then
+        print "Download AM335x PRU PACKAGE"
+        wget -O ${LDDOWNL_DIR}/${BOARD}/am335x_pru_package.zip https://github.com/beagleboard/am335x_pru_package/archive/master.zip
+    fi
+    print "unpacking am335x_pru_package.zip intro ${MAKE_DIR}"
+    cd ${MAKE_DIR}
+    unzip -n ${LDDOWNL_DIR}/${BOARD}/am335x_pru_package.zip
+fi
+
+print "Build PASM for linux"
+cd ${AM335x_PRU_PACKAGE_DIR}/pru_sw/utils/pasm_source
+./linuxbuild
+mkdir -p ${PASM_DIR} || true
+cp -uv ${AM335x_PRU_PACKAGE_DIR}/pru_sw/utils/pasm ${PASM_DIR}/
+}
+
 
 # Download, patch, configure and build u-boot
 compiled_and_install_uboot_bbb() {
 UBOOT_BRANCH="v2014.10"
 UBOOT_PATCH_NAME="0001-am335x_evm-uEnv.txt-bootz-n-fixes.patch"
 UBOOT_PATCH_URL=https://raw.githubusercontent.com/eewiki/u-boot-patches/master/v2014.10/${UBOOT_PATCH_NAME}
-
+UBOOT_USE=1
 if  [ -f ${CHROOT_DIR}/boot/MLO ] && \
     [ -f ${CHROOT_DIR}/boot/u-boot.img ]; then
     print "u-boot is already installed"
@@ -593,11 +683,16 @@ sudo cp -v ${MAKE_DIR}/u-boot/u-boot.img ${CHROOT_DIR}/boot/
 # Download, configure and build libwebsockets
 compiled_and_install_libwebsockets() {
 print "Start compiled_and_install_libwebsockets"
+LWS_IPV6=ON
+
+clean_directory " libweb " "${MAKE_DIR}/libwebsockets"
 
 if [ -f ${CHROOT_DIR}/usr/local/include/libwebsockets.h ]; then
     print "libwebsockets is already installed"
     return
 fi
+
+copy_truncate_rootfs
 
 if [ ! -d "${MAKE_DIR}/libwebsockets" ]; then
     if [ ! -f ${LDDOWNL_DIR}/${NAME_LIBWEB} ]; then
@@ -612,14 +707,38 @@ if [ ! -d "${MAKE_DIR}/libwebsockets" ]; then
 fi
 
 cd ${MAKE_DIR}/libwebsockets
-sed -i "s:/opt/gcc-linaro-arm-linux-gnueabihf-4.7-2013.02-01-20130221_linux:${CC_DIR}:"\
-      ${MAKE_DIR}/libwebsockets/cross-arm-linux-gnueabihf.cmake
 
-LWS_IPV6=ON
+print "Create CMake Toolchain file for crosscompiling on ${BOARD_FULL_NAME}"
+cat >${MAKE_DIR}/libwebsockets/${BOARD}.cmake << EOF
+# CMake Toolchain file for crosscompiling on ${BOARD_FULL_NAME}.
+set(RFS_DIR ${ROOTFS_TRUNC_DIR})
+
+set(CROSS "${CC}")
+
+set(CMAKE_SYSTEM_NAME Linux)
+
+set(CMAKE_C_COMPILER "\${CROSS}gcc")
+set(CMAKE_CXX_COMPILER "\${CROSS}g++")
+
+set(CMAKE_FIND_ROOT_PATH "\${RFS_DIR}")
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+find_path(OPENSSL_DIR
+    NAMES openssl/opensslconf.h
+    PATHS /usr/include /usr/include/arm-linux-gnueabihf )
+
+if( OPENSSL_DIR )
+    mark_as_advanced(OPENSSL_DIR)
+    include_directories(\${INCLUDE_DIRECTORIES} \${OPENSSL_DIR})
+else( OPENSSL_DIR )
+    MESSAGE(STATUS "openssl/opensslconf.h NOT found.")
+endif( OPENSSL_DIR )
+EOF
+
 if [ ${BOARD} = rpi ]; then
-    #   sed -i 's/LWS_IPV6 "Compile with support for ipv6" ON/\
-    #	      LWS_IPV6 "Compile with support for ipv6" OFF/'\
-    #	    ${MAKE_DIR}/libwebsockets/CMakeLists.txt
     LWS_IPV6=OFF
 fi
 
@@ -631,15 +750,8 @@ mkdir -p ${MAKE_DIR}/libwebsockets/build
 cd ${MAKE_DIR}/libwebsockets/build
 
 cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${CHROOT_DIR}/usr/local \
-       -DCMAKE_TOOLCHAIN_FILE=${MAKE_DIR}/libwebsockets/cross-arm-linux-gnueabihf.cmake \
-       -DLWS_WITHOUT_EXTENSIONS=OFF -DLWS_WITH_SSL=ON \
-       -DZLIB_INCLUDE_DIR=${CHROOT_DIR}/usr/include \
-       -DZLIB_LIBRARY=${CHROOT_DIR}/lib/arm-linux-gnueabihf/libz.so.1 \
-       -DOPENSSL_ROOT_DIR=${CHROOT_DIR}/usr \
-       -DOPENSSL_INCLUDE_DIR=${CHROOT_DIR}/usr/include \
-       -DOPENSSL_SSL_LIBRARY=${CHROOT_DIR}/usr/lib/arm-linux-gnueabihf/libssl.so \
-       -DOPENSSL_CRYPTO_LIBRARY=${CHROOT_DIR}/usr/lib/arm-linux-gnueabihf/libcrypto.so \
-       -DLWS_IPV6=$LWS_IPV6
+        -DCMAKE_TOOLCHAIN_FILE=${MAKE_DIR}/libwebsockets/${BOARD}.cmake \
+        -DLWS_IPV6=${LWS_IPV6}
 
 make -j${CORES}
 sudo make install -j${CORES}
@@ -740,6 +852,8 @@ print "End compiling and installing mongodb"
 compiled_and_install_mongoc() {
 print "Start compiled_and_install_mongoc"
 
+clean_directory " mongoc " "${MAKE_DIR}/mongo-c-driver"
+
 if [ -f ${CHROOT_DIR}/usr/local/include/libmongoc-1.0/mongoc.h ]; then
     print "mongo-c-driver-$NAME_MONGOC is already installed in rootfs"
     return
@@ -759,106 +873,224 @@ fi
 cd ${MAKE_DIR}/mongo-c-driver
 
 #sudo env PATH=$PATH make clean
+
+env \
+CPP="${CC}gcc -E" \
+STRIP="${CC}strip" \
+OBJCOPY="${CC}objcopy" \
+AR="${CC}ar" \
+RANLIB="${CC}ranlib" \
+LD="${CC}ld" \
+OBJDUMP="${CC}objdump" \
+CC="${CC}gcc" \
+CXX="${CC}g++" \
+NM="${CC}nm" \
+AS="${CC}as" \
 ./configure CFLAGS="-march=${MARCH} -mfpu=${MFPU}" --host=arm-linux-gnueabihf --prefix=/usr/local
+
 make -j${CORES}
 sudo env PATH=$PATH make DESTDIR=${CHROOT_DIR} install -j${CORES}
+
 print "mongo-c-driver-$NAME_MONGOC installed"
 }
 
 
-# Download, configure and build  kernel for Raspberry PI
-build_kernel_xeno2_rpi() {
+# Xenomai patch kernel and build library
+xeno_apply() {
 
-NAME_KERNEL=rpi-3.8.y
-NAME_XENO=xenomai-2.6.4
-KBUILD_DIR=${MAKE_DIR}/kernel/build
-#NAME_XENO=xenomai-3.0-rc1
+XENO_INSTALL_DIR="/usr/local/xenomai"
+
+# Variable ${XENO}=[xeno2, cobalt, mercury]
+if [ "x${XENO}" = "xxeno2" ]; then
+    XENO_NAME="xenomai-2.6.4"
+    XENO_URL=http://download.gna.org/xenomai/stable/${XENO_NAME}.tar.bz2
+    XENO_PATCH_DIR="${MAKE_DIR}/xenomai/ksrc/arch/arm/patches"
+elif [ "x${XENO}" = "xcobalt" ] || \
+     [ "x${XENO}" = "xmercury" ]; then
+    XENO_NAME="xenomai-3.0-rc2"
+    XENO_URL=http://download.gna.org/xenomai/testing/${XENO_NAME}.tar.bz2
+    XENO_PATCH_DIR="${MAKE_DIR}/xenomai/kernel/cobalt/arch/arm/patches"
+else
+    print "Wrong option is specified parameter -x, available options [xeno2, cobalt, mercury]"
+    exit 1
+fi
+
+clean_directory "xenomai" "${MAKE_DIR}/xenomai"
+
+# Download Xenomai
+if [ ! -d "${MAKE_DIR}/xenomai" ]; then
+    cd ${MAKE_DIR}
+    if [ ! -f ${LDDOWNL_DIR}/${XENO_NAME}.tar.bz2 ]; then
+      print "Download ${XENO_NAME}.tar.gz"
+      wget -c -P ${LDDOWNL_DIR} ${XENO_URL}
+    fi
+    print "unpacking ${XENO_NAME}.tar.bz2 intro ${MAKE_DIR}"
+    tar -xjf ${LDDOWNL_DIR}/${XENO_NAME}.tar.bz2
+    mv ${XENO_NAME}* xenomai
+fi
+
+# Check availability of a patch for the specified version of the kernel.
+XENO_TEST_VER=$(ls ${XENO_PATCH_DIR} | grep -o "${KERNEL_VER}" || true)
+if [ "x${XENO_TEST_VER}" = "x" ]; then
+    print "No patch xenomai for the specified version ${KERNEL_VER} of the kernel."
+    exit 1
+fi
+
+unset XENO_BOARD_NAME
+case "${BOARD}" in
+    bbb)
+        XENO_BOARD_NAME=beaglebone
+        ;;
+    rpi)
+        XENO_BOARD_NAME=raspberry
+        ;;
+esac
+
+XENO_PATCH_PRE="$(find ${XENO_PATCH_DIR} -iname ipipe-core-${KERNEL_VER}-${XENO_BOARD_NAME}-pre*.patch)"
+XENO_PATCH_POST="$(find ${XENO_PATCH_DIR} -iname ipipe-core-${KERNEL_VER}-${XENO_BOARD_NAME}-post*.patch)"
+XENO_PATCH="$(find ${XENO_PATCH_DIR} -iname ipipe-core-${KERNEL_VER}-arm*.patch)"
+
+
+print "Apply Xenomai ipipe core patch for ${BOARD}-${KERNEL_VER}-${XENO}"
+case "${BOARD}-${KERNEL_VER}-${XENO}" in
+    bbb-3.8.13-xeno2)
+        sed -i "/echo \"patch.sh ran successfully\"/q" ${KERNEL_PATCH_DIR}/patch.sh
+        cat >>${KERNEL_PATCH_DIR}/patch.sh << EOF
+
+        echo "Apply Xenomai ipipe core patch"
+        cd ${KERNEL_DIR}
+        patch -Np1 < ${XENO_PATCH_PRE}
+        ${MAKE_DIR}/xenomai/scripts/prepare-kernel.sh --arch=arm --linux=${KERNEL_DIR} --adeos=${XENO_PATCH}
+        patch -Np1 < ${XENO_PATCH_POST}
+EOF
+        ;;
+    bbb-*-cobalt)
+        sed -i "/echo \"patch.sh ran successfully\"/q" ${KERNEL_PATCH_DIR}/patch.sh
+        cat >>${KERNEL_PATCH_DIR}/patch.sh << EOF
+
+        echo "Apply Xenomai ipipe core patch"
+        cd ${KERNEL_DIR}
+        ${MAKE_DIR}/xenomai/scripts/prepare-kernel.sh --arch=arm --ipipe=${XENO_PATCH}
+EOF
+        ;;
+    rpi-3.8.13-xeno2)
+        cd ${KERNEL_DIR}
+        patch -Np1 < ${XENO_PATCH_PRE}
+        ${MAKE_DIR}/xenomai/scripts/prepare-kernel.sh --arch=arm --linux=${KERNEL_DIR} --adeos=${XENO_PATCH}
+        patch -Np1 < ${XENO_PATCH_POST}
+        ;;
+    *-*-cobalt)
+        cd ${KERNEL_DIR}
+        ${MAKE_DIR}/xenomai/scripts/prepare-kernel.sh --arch=arm --ipipe=${XENO_PATCH}
+        ;;
+    \?)
+        print "Xenomai working in mercury mode, not patches kernel"
+        ;;
+esac
+
+print "Compile and install library, headers Xenomai to rootfs"
+cd ${MAKE_DIR}/xenomai
+if [ ${XENO} = "xeno2" ]; then
+    ./configure CFLAGS="-march=${MARCH} -mfpu=${MFPU}" LDFLAGS="-march=${MARCH}" \
+                --host=arm-linux-gnueabihf --with-cc=${CC}gcc --prefix=${XENO_INSTALL_DIR}
+else
+    ./configure CFLAGS="-march=${MARCH} -mfpu=${MFPU}" LDFLAGS="-march=${MARCH}" \
+                --host=arm-linux-gnueabihf --with-cc=${CC}gcc --prefix=${XENO_INSTALL_DIR} \
+                --with-core=${XENO} --enable-smp
+fi
+
+make -j${CORES}
+sudo env PATH=$PATH make DESTDIR=${CHROOT_DIR} install -j${CORES}
+sudo sh -c "echo /usr/local/xenomai/lib/ > ${CHROOT_DIR}/etc/ld.so.conf.d/xenomai.conf"
+
+# Run ldconfig in chroot
+run_cmd_chroot "ldconfig -v"
+}
+
+# Download, configure and build  kernel for Raspberry PI
+build_kernel_xenomai_rpi() {
+
+KERNEL_URL="git://github.com/raspberrypi/linux.git"
+KERNEL_DIR="${MAKE_DIR}/kernel"
+KBUILD_DIR="${KERNEL_DIR}/build"
+
+unset XENO_BOARD_NAME
+if [ "x${KERNEL_VER}" = "x3.14.17" ]; then
+    KERNEL_BRANCH_CHA=946de0e6b6ed49eacb03e3cddfcb1d774d6378ed
+fi
+
+clean_directory " kernel " "${KERNEL_DIR}"
 
 if  [ -f ${CHROOT_DIR}/boot/kernel.img ] && \
     [ -f ${CHROOT_DIR}/boot/bootcode.bin ] && \
     [ -f ${CHROOT_DIR}/usr/local/xenomai/include/xeno_config.h ] && \
     [ -d ${CHROOT_DIR}/opt/vc ]; then
-    print "kernel and xenomai 2 for rpi is already installed in rootfs"
+    print "kernel and xenomai for rpi is already installed in rootfs"
     return 0
 fi
 print "Start compiled_and_install_kernel_rpi"
 
 # Download kernel
 cd ${MAKE_DIR}
-if [ ! -d "${MAKE_DIR}/kernel" ]; then
-    if [ ! -f ${LDDOWNL_DIR}/${BOARD}/${NAME_KERNEL}.tar.gz ]; then
-        #wget -c -P ${LDDOWNL_DIR}/${BOARD} https://github.com/raspberrypi/linux/archive/${NAME_KERNEL}.zip
-        print "git clone ${NAME_KERNEL}"
-        git clone -b ${NAME_KERNEL} --depth 1 git://github.com/raspberrypi/linux.git kernel
-        print "end clone ${NAME_KERNEL}"
-        print "create archive ${NAME_KERNEL}.tar.gz intro ${LDDOWNL_DIR}/${BOARD}"
-        tar -czf ${LDDOWNL_DIR}/${BOARD}/${NAME_KERNEL}.tar.gz ./kernel
-        print "end create archive ${NAME_KERNEL}.tar.gz"
+if [  ! -f "${KERNEL_DIR}/.git/config" ]; then
+    if [ ! -f ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.gz ]; then
+        print "git clone ${KERNEL_BRANCH}"
+        if [ ${KERNEL_BRANCH_CHA} ]; then
+            git clone -b ${KERNEL_BRANCH} ${KERNEL_URL} kernel
+            git reset --hard ${KERNEL_BRANCH_CHA}
+        else
+            git clone -b ${KERNEL_BRANCH} --depth 1 ${KERNEL_URL} kernel
+        fi
+        print "end clone ${KERNEL_BRANCH}"
+        print "create archive ${KERNEL_BRANCH}.tar.gz intro ${LDDOWNL_DIR}/${BOARD}"
+        tar -czf ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.gz ./kernel
+        #tar -c ./kernel/ | pbzip2 -c -5 -p${CORES} > ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.bz2
+        print "end create archive ${KERNEL_BRANCH}.tar.gz"
     else
-        print "unpacking ${NAME_KERNEL}.tar.gz intro ${MAKE_DIR}"
-        tar -xf ${LDDOWNL_DIR}/${BOARD}/${NAME_KERNEL}.tar.gz -C ${MAKE_DIR}
+        print "unpacking ${KERNEL_BRANCH}.tar.gz intro ${MAKE_DIR}"
+        tar -xf ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.gz -C ${MAKE_DIR}
     fi
 else
-    print "git reset and clean for ${NAME_KERNEL}"
-    cd ${MAKE_DIR}/kernel
-    git reset --hard
+    print "git reset and clean for ${KERNEL_BRANCH}"
+    cd ${KERNEL_DIR}
+    git reset --hard ${KERNEL_BRANCH_CHA}
     git clean -fdx
-    git pull
-    #cd ${MAKE_DIR}; tar -czf ${LDDOWNL_DIR}/${BOARD}/${NAME_KERNEL}.tar.gz ./kernel
+    #git pull
+    #cd ${MAKE_DIR}; tar -czf ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.gz ./kernel
 fi
 
-# Download Xenomai
-if [ ! -d "${MAKE_DIR}/xenomai" ]; then
-    cd ${MAKE_DIR}
-    if [ ! -f ${LDDOWNL_DIR}/${NAME_XENO}.tar.gz ]; then
-      print "Download ${NAME_XENO}.tar.gz"
-      #git clone git://git.xenomai.org/xenomai-head.git xenomai-head
-      wget -c -P ${LDDOWNL_DIR} http://download.gna.org/xenomai/stable/latest/${NAME_XENO}.tar.bz2
-      #http://download.gna.org/xenomai/testing/latest/xenomai-3.0-rc1.tar.bz2
-    fi
-    cd ${MAKE_DIR}
-    print "unpacking ${NAME_XENO}.tar.bz2 intro ${MAKE_DIR}"
-    tar -xjf ${LDDOWNL_DIR}/${NAME_XENO}.tar.bz2
-    mv ${NAME_XENO}* xenomai
-fi
+# Xenomai patch kernel and build library
+xeno_apply
 
+mkdir -p ${KBUILD_DIR} || true
+cd ${KERNEL_DIR}
 
 # Download minimal config
-if [ ! -f ${LDDOWNL_DIR}/${BOARD}/rpi_xenomai_config ]; then
-    print "Download rpi_xenomai_config"
-    wget -c -P ${LDDOWNL_DIR}/${BOARD} https://www.dropbox.com/s/dcju74md5sz45at/rpi_xenomai_config
+if [ ! -f ${LDDOWNL_DIR}/${BOARD}/${BOARD}-${KERNEL_VER}-${XENO}-config ]; then
+    print "Download ${BOARD}-${KERNEL_VER}-${XENO}-config"
+    wget -c -P ${LDDOWNL_DIR}/${BOARD} https://cloud.mail.ru/public/95fd0247c068/kernel_config/${BOARD}-${KERNEL_VER}-${XENO}-config
 fi
 
-#1- Checkout the "rpi-3.8.y" branch in the repository [4], commit d996a1b
-#2- Apply raspberry/ipipe-core-3.8.13-raspberry-pre-2.patch
-#3- Apply ipipe-core-3.8.13-arm patch
-#2- apply raspberry/ipipe-core-3.8.13-raspberry-post-2.patch
-#3- you can resume to generic installation instructions.
+TEST_CONFIG=$(grep "# Linux/arm ${KERNEL_VER} Kernel Configuration" ${LDDOWNL_DIR}/${BOARD}/${BOARD}-${KERNEL_VER}-${XENO}-config || true)
+if [ "x${TEST_CONFIG}" = "x" ]; then
+    print "Not downloads config kernel: ${BOARD}-${KERNEL_VER}-${XENO}-config"
+    rm ${LDDOWNL_DIR}/${BOARD}/${BOARD}-${KERNEL_VER}-${XENO}-config || true
+    make ARCH=arm O=build bcm2835_defconfig
+else
+    print "Copy configuration file to KERNEL_DIR"
+    cp ${LDDOWNL_DIR}/${BOARD}/${BOARD}-${KERNEL_VER}-${XENO}-config ${KBUILD_DIR}/.config
+fi
 
-print "Apply ipipe core pre-patch"
-cd ${MAKE_DIR}/kernel
-patch -Np1 < ${MAKE_DIR}/xenomai/ksrc/arch/arm/patches/raspberry/ipipe-core-3.8.13-raspberry-pre-2.patch
-print "Apply Xenomai ipipe core patch"
-${MAKE_DIR}/xenomai/scripts/prepare-kernel.sh --arch=arm --linux=${MAKE_DIR}/kernel --adeos=${MAKE_DIR}/xenomai/ksrc/arch/arm/patches/ipipe-core-3.8.13-arm-4.patch
-print "Apply ipipe core post-patch"
-cd ${MAKE_DIR}/kernel
-patch -Np1 < ${MAKE_DIR}/xenomai/ksrc/arch/arm/patches/raspberry/ipipe-core-3.8.13-raspberry-post-2.patch
-
-# Create build directory
-mkdir -p ${KBUILD_DIR}
-cd ${MAKE_DIR}/kernel
-
-# minimal configuration file
-cp ${LDDOWNL_DIR}/${BOARD}/rpi_xenomai_config ${KBUILD_DIR}/.config
-
-print "mrproper"
-make mrproper
-
-if [ $MENUCONFIG = YES ];then
+# Enabled used menuconfig for config kernel
+if [ "x${MENUCONFIG}" = "xYES" ];then
     make ARCH=arm O=build menuconfig
 else
     make ARCH=arm O=build oldconfig
 fi
+
+print "Apply mrproper for kernel"
+make mrproper
+cat ${KBUILD_DIR}/.config
 
 print "Compile kernel"
 make ARCH=arm O=${KBUILD_DIR} CROSS_COMPILE=${CC} -j${CORES}
@@ -871,18 +1103,8 @@ find ${KBUILD_DIR}/dist/include \( -name .install -o -name ..install.cmd \) -del
 print "Copy Xenomai kernel modules and headers to rootfs"
 sudo cp -a ${KBUILD_DIR}/dist/lib/modules ${CHROOT_DIR}/lib/
 sudo cp -a ${KBUILD_DIR}/dist/include/* ${CHROOT_DIR}/usr/include
-sudo cp ${KBUILD_DIR}/.config ${CHROOT_DIR}/boot/config-${NAME_KERNEL}-xenomai+
+sudo cp ${KBUILD_DIR}/.config ${CHROOT_DIR}/boot/config-${KERNEL_BRANCH}-xenomai+
 sudo cp ${KBUILD_DIR}/arch/arm/boot/Image ${CHROOT_DIR}/boot/kernel.img
-
-print "Compile and install library, headers Xenomai to rootfs"
-cd ${MAKE_DIR}/xenomai
-./configure CFLAGS="-march=${MARCH} -mfpu=${MFPU}" LDFLAGS="-march=${MARCH}" --host=arm-linux-gnueabihf --prefix=/usr/local/xenomai
-make -j${CORES}
-sudo env PATH=$PATH make DESTDIR=${CHROOT_DIR} install -j${CORES}
-sudo sh -c "echo /usr/local/xenomai/lib/ > ${CHROOT_DIR}/etc/ld.so.conf.d/xenomai.conf"
-
-# Run ldconfig in chroot
-run_cmd_chroot "ldconfig -v"
 
 # Installing firmware rpi
 if  [ ! -d ${CHROOT_DIR}/opt/vc ] || \
@@ -905,6 +1127,136 @@ else
 fi
 
 print "End build_kernel_xeno2_rpi"
+}
+
+
+# Download, configure and build  kernel for BeagleBone Black
+build_kernel_xenomai_bbb() {
+
+KERNEL_URL="https://github.com/RobertCNelson/bb-kernel.git"
+KERNEL_PATCH_DIR="${MAKE_DIR}/kernel"
+KERNEL_DIR="${KERNEL_PATCH_DIR}/KERNEL"
+KBUILD_DIR="${KERNEL_PATCH_DIR}/deploy"
+FULL_REBUILD_KERNEL=YES
+
+clean_directory " kernel " "${KERNEL_PATCH_DIR}"
+
+if  [ -f ${CHROOT_DIR}/boot/vmlinuz-*-bone*1 ] && \
+    [ -f ${CHROOT_DIR}/usr/local/xenomai/include/xeno_config.h ]; then
+    print "kernel and xenomai is already installed in rootfs"
+    return 0
+fi
+print "Start compiled and install kernel for ${BOARD_FULL_NAME}"
+
+# Download kernel
+cd ${MAKE_DIR}
+if [ ! -f "${KERNEL_PATCH_DIR}/.git/config" ]; then
+    if [ ! -f ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.gz ]; then
+        print "git clone ${KERNEL_BRANCH}"
+        git clone -b ${KERNEL_BRANCH} --depth 1 ${KERNEL_URL} kernel
+        if [ ! -f ${KERNEL_PATCH_DIR}/system.sh ] ; then
+                cp -v ${KERNEL_PATCH_DIR}/system.sh.sample ${KERNEL_PATCH_DIR}/system.sh
+        fi
+        sed -i "s:#CC=<enter full path>/bin/arm-none-eabi-:CC=${CC}:" ${KERNEL_PATCH_DIR}/system.sh
+        print "set dir source kernel"
+        sed -i "s:#LINUX_GIT=/home/user/linux-stable/:LINUX_GIT=${LINUX_KERNEL_SRC_DIR}:" ${KERNEL_PATCH_DIR}/system.sh
+        #cd ${KERNEL_PATCH_DIR}
+        #/bin/sh -e "${MAKE_DIR}/kernel/scripts/git.sh" || { exit 1 ; }
+        #cd ${MAKE_DIR}
+        print "create archive ${KERNEL_BRANCH}.tar.gz intro ${LDDOWNL_DIR}/${BOARD}"
+        tar -czf ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.gz ./kernel
+    else
+        print "unpacking ${KERNEL_BRANCH}.tar.gz intro ${MAKE_DIR}"
+        tar -xf ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.gz -C ${MAKE_DIR}
+    fi
+fi
+
+# Xenomai patch kernel and build library
+xeno_apply
+
+mkdir -p ${KBUILD_DIR} || true
+
+# Download minimal config
+if [ ! -f ${LDDOWNL_DIR}/${BOARD}/${BOARD}-${KERNEL_VER}-${XENO}-config ]; then
+    print "Download ${BOARD}-${KERNEL_VER}-${XENO}-config"
+    wget -c -P ${LDDOWNL_DIR}/${BOARD} https://cloud.mail.ru/public/95fd0247c068/kernel_config/${BOARD}-${KERNEL_VER}-${XENO}-config
+fi
+
+TEST_CONFIG=$(grep "# Linux/arm ${KERNEL_VER} Kernel Configuration" ${LDDOWNL_DIR}/${BOARD}/${BOARD}-${KERNEL_VER}-${XENO}-config || true)
+if [ "x${TEST_CONFIG}" = "x" ]; then
+    print "Not downloads config kernel: ${BOARD}-${KERNEL_VER}-${XENO}-config"
+    rm ${LDDOWNL_DIR}/${BOARD}/${BOARD}-${KERNEL_VER}-${XENO}-config
+else
+    print "Copy configuration file to KERNEL_DIR"
+    cp ${LDDOWNL_DIR}/${BOARD}/${BOARD}-${KERNEL_VER}-${XENO}-config ${KBUILD_DIR}/.config
+    sed -i "s:\${DIR}/patches/defconfig:${LDDOWNL_DIR}/${BOARD}/${BOARD}-${KERNEL_VER}-${XENO}-config:" ${KERNEL_PATCH_DIR}/build_kernel.sh
+fi
+
+# Enabled used menuconfig for config kernel
+if [ "x${MENUCONFIG}" = "xYES" ];then
+    sed -i "s:^AUTO_BUILD=1:#AUTO_BUILD=1:" ${KERNEL_PATCH_DIR}/system.sh
+else
+    sed -i "s:^#AUTO_BUILD=1:AUTO_BUILD=1:" ${KERNEL_PATCH_DIR}/system.sh
+    #FIND_STR="^if.*!.*AUTO_BUILD.*; then"
+    FIND_STR="^\s*make_menuconfig$"
+    INSERT_STR="else cd ${KERNEL_DIR}; make ARCH=arm oldconfig"
+    sed -i "/${FIND_STR}/a${INSERT_STR}" ${KERNEL_PATCH_DIR}/build_kernel.sh
+fi
+
+# Enabled full rebuild kernel
+if [ ${FULL_REBUILD_KERNEL} = YES ];then
+    sed -i "s:^unset FULL_REBUILD:FULL_REBUILD=1:" ${KERNEL_PATCH_DIR}/build_kernel.sh
+else
+    sed -i "s:^FULL_REBUILD=1:unset FULL_REBUILD:" ${KERNEL_PATCH_DIR}/build_kernel.sh
+fi
+
+print "Start build kernel"
+sed -i "/# Export kernel_version/q" ${KERNEL_PATCH_DIR}/build_kernel.sh
+cat >>${KERNEL_PATCH_DIR}/build_kernel.sh << EOF
+# Export kernel_version
+echo "export kernel_version=\${KERNEL_UTS}" > \${DIR}/.kernel_version
+EOF
+
+cd ${KERNEL_PATCH_DIR};
+./build_kernel.sh
+. ${KERNEL_PATCH_DIR}/.kernel_version
+print "End build kernel"
+
+# As a result of execution of the script build_kernel.sh, the variable ${kernel_version} contains the kernel version.
+print "Edit kernel_version in /boot/uEnv.txt to ${kernel_version}"
+sudo sed -i "s/\(^uname_r=\).*/\1${kernel_version}/"  ${CHROOT_DIR}/boot/uEnv.txt
+
+
+print "Installing ${kernel_version}-modules.tar.gz to rootfs"
+if [ -d "${CHROOT_DIR}/lib/modules/${kernel_version}" ] ; then
+        sudo rm -rf "${CHROOT_DIR}/lib/modules/${kernel_version}" || true
+fi
+sudo tar xfv ${KBUILD_DIR}/${kernel_version}-modules.tar.gz -C ${CHROOT_DIR}/
+
+if [ -f "${KBUILD_DIR}/config-${kernel_version}" ] ; then
+        if [ -f "${CHROOT_DIR}/boot/config-${kernel_version}" ] ; then
+                sudo rm -f "${CHROOT_DIR}/boot/config-${kernel_version}" || true
+        fi
+        sudo cp -v "${KBUILD_DIR}/config-${kernel_version}" "${CHROOT_DIR}/boot/config-${kernel_version}"
+fi
+
+print "Copy kernel device tree binaries to rootfs"
+sudo mkdir -p ${CHROOT_DIR}/boot/dtbs/${kernel_version}/
+sudo tar xfv ${MAKE_DIR}/kernel/deploy/${kernel_version}-dtbs.tar.gz -C ${CHROOT_DIR}/boot/dtbs/${kernel_version}/
+
+print "Copy firmware to rootfs"
+sudo tar xfv ${MAKE_DIR}/kernel/deploy/${kernel_version}-firmware.tar.gz -C ${CHROOT_DIR}/lib/firmware/
+if [ ! -f ${LDDOWNL_DIR}/${BOARD}/linuxdrone-dtbo.tar.gz ]; then
+    print "Download linuxdrone-dtbo.tar.gz"
+    wget -c -P ${LDDOWNL_DIR}/${BOARD} http://wiki.linuxdrone.org/download/attachments/5275816/linuxdrone-dtbo.tar.gz
+fi
+sudo tar xfv ${LDDOWNL_DIR}/${BOARD}/linuxdrone-dtbo.tar.gz -C ${CHROOT_DIR}/lib/firmware/
+
+print "Copy kernel Image to rootfs"
+sudo cp -v ${MAKE_DIR}/kernel/deploy/${kernel_version}.zImage ${CHROOT_DIR}/boot/vmlinuz-${kernel_version}
+sudo cp -v ${MAKE_DIR}/kernel/deploy/config-${kernel_version} ${CHROOT_DIR}/boot/config-${kernel_version} 
+
+print "End build_kernel_xeno2_bbb"
 }
 
 
@@ -933,24 +1285,22 @@ fi
 
 cd ${MAKE_DIR}/nodejs
 
-export HOST="arm-linux-gnueabihf"
-export CPP="${HOST}-gcc -E"
-export STRIP="${HOST}-strip"
-export OBJCOPY="${HOST}-objcopy"
-export AR="${HOST}-ar"
-export RANLIB="${HOST}-ranlib"
-export LD="${HOST}-ld"
-export OBJDUMP="${HOST}-objdump"
-export CC="${HOST}-gcc"
-export CXX="${HOST}-g++"
-export NM="${HOST}-nm"
-export AS="${HOST}-as"
-#export PS1="[${HOST}] \w$ "
-#bash --norc
-
-print "make clean"
 make clean
+
+env \
+CPP="${CC}gcc -E" \
+STRIP="${CC}strip" \
+OBJCOPY="${CC}objcopy" \
+AR="${CC}ar" \
+RANLIB="${CC}ranlib" \
+LD="${CC}ld" \
+OBJDUMP="${CC}objdump" \
+CC="${CC}gcc" \
+CXX="${CC}g++" \
+NM="${CC}nm" \
+AS="${CC}as" \
 ./configure --without-snapshot --dest-cpu=arm --dest-os=linux --prefix=/usr/local
+
 make -j${CORES} PORTABLE=1
 sudo env PATH=$PATH make DESTDIR=${CHROOT_DIR} install -j${CORES} PORTABLE=1
 
@@ -964,7 +1314,6 @@ sudo env PATH=$PATH make DESTDIR=${CHROOT_DIR} install -j${CORES} PORTABLE=1
 #npm config set strict-ssl false
 #npm install -g supervisor
 
-
 print "End  compiled_and_install_nodejs for rpi"
 }
 
@@ -972,6 +1321,8 @@ print "End  compiled_and_install_nodejs for rpi"
 # Create rootfs use debootstrap
 debootstrap() {
 print "Start debootstrap for ${BOARD_FULL_NAME}"
+
+clean_directory " rootfs " "${CHROOT_DIR}"
 
 # Test old bad install rootfs and clean rootfs
 if  [ -d ${CHROOT_DIR} ] && \
@@ -1009,11 +1360,11 @@ fi
 
 umount_proc_sysfs_devpts
 
-if [ ! -f ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}-mini.tar.bz2 ]; then
+if [ ! -f ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}.tar.bz2 ]; then
     cd ${MAKE_DIR}
-    print "Start created archive rootfs-${BOARD}-${DISTR}-mini.tar.bz2"
-    sudo tar -c ./rootfs/ | pbzip2 -c -5 -p${CORES} > ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}-mini.tar.bz2
-    print "End created archive rootfs-${BOARD}-${DISTR}-mini.tar.bz2 into ${BOARD_DIR}"
+    print "Start created archive rootfs-${BOARD}-${DISTR}.tar.bz2"
+    sudo tar -c ./rootfs/ | pbzip2 -c -5 -p${CORES} > ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}.tar.bz2
+    print "End created archive rootfs-${BOARD}-${DISTR}.tar.bz2 into ${BOARD_DIR}"
 fi
 
 return 0
@@ -1022,15 +1373,18 @@ return 0
 
 # Copy truncated rootfs
 copy_truncate_rootfs() {
-print "Start copy truncated rootfs in ${BOARD_DIR}/rootfs"
+print "Start copy truncated rootfs in ${ROOTFS_TRUNC_DIR}"
+
+run_cmd_chroot "mkdir -p /home/ld/code/rootfs || true"
+
 # Move rootfs trunc to chroot directory
 if [ -d ${ROOTFS_TRUNC_DIR} ]; then
-    sudo mv ${ROOTFS_TRUNC_DIR} ${CHROOT_DIR}/home/ld/code/rootfs
+    sudo mv ${ROOTFS_TRUNC_DIR} ${CHROOT_DIR}/home/ld/code
 fi
 
-run_cmd_chroot "rsync -progress -rL --delete --exclude="/usr/local/xenomai" /usr /home/ld/code/rootfs/"
+run_cmd_chroot "rsync -rL --delete --ignore-errors --exclude="/usr/local/xenomai" /usr /home/ld/code/rootfs/ || true"
 run_cmd_chroot "cp -R /usr/local/xenomai /home/ld/code/rootfs/usr/local/"
-sudo chown -R $(whoami):$(whoami) ${CHROOT_DIR}/home/ld/code/rootfs
+sudo chown -R $(whoami):$(whoami) ${CHROOT_DIR}/home/ld/code
 mv ${CHROOT_DIR}/home/ld/code/rootfs ${ROOTFS_TRUNC_DIR}
 
 print "End copy truncated rootfs"
@@ -1117,10 +1471,13 @@ print "End build and install software LinuxDrone to rootfs"
 #------------------------------------------------
 
 START_SHELL=NO
+DEV_DISK="/dev/sdX"
 DISK_IMAGE_CLEAN=NO
+XENO=xeno2
+unset UBOOT_USE
 
 # Разбор параметров командной строки
-while getopts hvmsb:d:c: OPT; do
+while getopts hvmsb:d:c:x:r: OPT; do
     case "$OPT" in
         h)
             echo $USAGE
@@ -1143,7 +1500,13 @@ while getopts hvmsb:d:c: OPT; do
             DEV_DISK=$OPTARG
             ;;
         c)
-            CLEAN=$OPTARG
+            CLEAN="$OPTARG"
+            ;;
+        r)
+            REBUILD="$OPTARG"
+            ;;
+        x)
+            XENO=$OPTARG
             ;;
         \?)
             # getopts вернул ошибку
@@ -1156,16 +1519,12 @@ done
 # Удаляем обработанные выше параметры
 shift `expr $OPTIND - 1`
 
-echo ${CLEAN}
-
 if [ ! ${BOARD} ]; then
     echo "Not specified board type"
     echo $USAGE
     exit 1
 fi
 
-#{CHROOT_DIR}=`pwd`/tools/board/${BOARD}/rootfs
-#{CHROOT_DIR}=$(readlink -f $(readlink -f "$(dirname "${CHROOT_DIR}")")/$(basename "${CHROOT_DIR}"))
 LDROOT_DIR=`pwd`
 
 echo '' | tee ${LDROOT_DIR}/build_rootfs.log
@@ -1178,6 +1537,7 @@ BOARD_DIR=${LDTOOLS_DIR}/board/${BOARD}
 #BOARD_DIR=$(readlink -f $(readlink -f "$(dirname "${BOARD_DIR}")")/$(basename "${BOARD_DIR}"))
 # The path to the cross compiler
 CC_DIR=${BOARD_DIR}/cc
+PASM_DIR=${BOARD_DIR}/pasm
 MAKE_DIR=${BOARD_DIR}/make_dir
 CHROOT_DIR=${MAKE_DIR}/rootfs
 ROOTFS_TRUNC_DIR=${BOARD_DIR}/rootfs
@@ -1185,6 +1545,7 @@ LOCALES=${LANG}
 CORES=$(grep "^cpu cores" /proc/cpuinfo | awk -F : '{print $2}' | head -1 | sed 's/^[ ]*//')
 CORES=$((${CORES} + 1))
 DISK_SIZE=2048
+LINUX_KERNEL_SRC_DIR=${LDTOOLS_DIR}/linux-src
 
 if [ ! -d ${LDDOWNL_DIR}/${BOARD} ]; then
     print "Create a directory where all downloads soft"
@@ -1196,12 +1557,17 @@ if [ ! -d ${MAKE_DIR} ]; then
     mkdir -p ${MAKE_DIR}
 fi
 
+umount_proc_sysfs_devpts
 sudo_timestamp_timeout 800
 install_common_software_the_host
 
 case "${BOARD}" in
     bbb)
         BOARD_FULL_NAME="BeagleBone Black"
+        KERNEL_BRANCH="am33x-v3.8"
+        KERNEL_VER="3.8.13"
+        #KERNEL_BRANCH="am33x-v3.14"
+        #KERNEL_VER="3.14.17"
         ARCH=armhf
         MARCH=armv7-a
         MFPU=vfp3
@@ -1209,18 +1575,30 @@ case "${BOARD}" in
         #DISTR=saucy
         DISTR_MIRROR=http://ports.ubuntu.com/ubuntu-ports/
         PKG_LIST_BOARD="mongodb nodejs npm"
+        NAME_LIBWEB=libwebsockets-1.3-chrome37-firefox30.tar.gz
+        NAME_MONGOC=0.94.2
 
         download_install_crosscompiler_bbb
+        download_install_pasm
         debootstrap
         #rootfs_installing_packages
         if [ ${START_SHELL} = YES ]; then
             start_shell_in_chroot
         fi
         compiled_and_install_uboot_bbb
+        build_kernel_xenomai_bbb
+        compiled_and_install_libwebsockets
+        compiled_and_install_mongoc
+        copy_truncate_rootfs
+        #build_install_linuxdrone
         ;;
 
     rpi)
         BOARD_FULL_NAME="Raspberry PI"
+        KERNEL_BRANCH="rpi-3.8.y"
+        KERNEL_VER="3.8.13"
+        #KERNEL_BRANCH="rpi-3.14.y"
+        #KERNEL_VER="3.14.17"
         ARCH=armhf
         MARCH=armv6 #j
         MFPU=vfp
@@ -1230,23 +1608,23 @@ case "${BOARD}" in
         NAME_MONGOC=0.94.2
         DISTR=wheezy
         DISTR_MIRROR=http://archive.raspbian.org/raspbian/
-        PKG_LIST_BOARD=""
         #DISTR_MIRROR=http://mirrors-ru.go-parts.com/raspbian/
         #DISTR_MIRROR=http://mirror.netcologne.de/raspbian/raspbian/
         #DISTR=jessie
         #DISTR_MIRROR=http://mirrordirector.raspbian.org/raspbian
+        PKG_LIST_BOARD=""
 
         download_install_crosscompiler_rpi
         debootstrap
-        rootfs_installing_packages
+        #rootfs_installing_packages
         if [ ${START_SHELL} = YES ]; then
             start_shell_in_chroot
         fi
+        build_kernel_xenomai_rpi
         compiled_and_install_mongodb_in_chroot_rpi
         compiled_and_install_nodejs_npm_rpi
         compiled_and_install_libwebsockets
         compiled_and_install_mongoc
-        build_kernel_xeno2_rpi
         copy_truncate_rootfs
         build_install_linuxdrone
         ;;
