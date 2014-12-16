@@ -735,7 +735,7 @@ int init(module_t* module, int argc, char *argv[])
     int option_index;
     opterr=0;
     optind=0;
-printf("1111111111111111\n");
+printf("11111111111111112\n");
     while ((res = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1)
     {
         switch(res)
@@ -910,48 +910,49 @@ print_common_params(&module->common_params);
  */
 int get_porttype_by_out_portname(module_t* module, const char* port_name, char* port_type)
 {
-        //"int_out\":{\"type\":\"
+        //пример строки с результирцующим регулярным выражением - "int_out\":{\"type\":\"
+char m_format[64] = "\"int_out\":{.\\{0,\\}\\?\"type\":\"\\(.\\{0,\\}\\?\\)\"";
+    //char m_format[64] = "\"";
+    //strcat(m_format, port_name);
+    //strcat(m_format, "\":{.*?\"type\":\"(.*?)\"");
 
-    char m_format[64] = "\"";
-    strcat(m_format, port_name);
-    strcat(m_format, "\":{");
-    //strcat(m_format, "\"%s\"type\":\"%s\"");
 
 
     int a;
         regex_t re;
-        regmatch_t pm;
+        regmatch_t pm[10];
 
-        a = regcomp(&re, m_format, 0);
+        a = regcomp(&re, m_format, REG_ICASE);
         if(a!=0)
         {
-            puts("Invalid Regex");
-            getch();
-            return 0;
+            printf("Invalid Regex m_format=%s\n", m_format);
+            return -1;
         }
 
-        a = regexec(&re, module->json_module_definition, 1, &pm, REG_EXTENDED);
+        a = regexec(&re, module->json_module_definition, 10, pm, REG_EXTENDED);
+
+        if(a==0)
+        {
+            int i=0;
+            while(pm[i].rm_so!=-1)
+            {
+                printf("rm_so=%i, rm_eo=%i\n", pm[i].rm_so, pm[i].rm_eo);
+
+                printf("len=%i, strlen=%i, str=%s\n", pm[i].rm_eo - pm[i].rm_so, strlen(module->json_module_definition), module->json_module_definition+pm[i].rm_so);
+                i++;
+            }
+        }
+        else
+        {
+            printf("Not fount regex for %s\n", m_format);
+        }
+
         //printf("\n first match at %d\n",pm.rm_eo);
 
-        printf("FIND: %s in: %s\n", m_format, module->json_module_definition + pm.rm_eo);
+        //printf("FIND: %s in: %s\n", m_format, module->json_module_definition + pm -rm_eo);
 
 
 
-        regex_t re2;
-        regmatch_t pm2;
-        char* m_format2 = "\"type\":\"";
-        a = regcomp(&re2, m_format2, 0);
-        if(a!=0)
-        {
-            puts("Invalid Regex");
-            getch();
-            return 0;
-        }
-        printf("pm.rm_eo=%i\n", pm.rm_eo);
-        a = regexec(&re2, module->json_module_definition + pm.rm_eo, 1, &pm2, REG_EXTENDED);
-
-        printf("\na=%i, pm.rm_eo=%i, FINDTYPE: %s in: %s\n", a, pm2.rm_eo, m_format2, module->json_module_definition + pm2.rm_eo);
-        //
 
         /*
         int cnt = 0;
