@@ -911,62 +911,41 @@ print_common_params(&module->common_params);
 int get_porttype_by_out_portname(module_t* module, const char* port_name, char* port_type)
 {
         //пример строки с результирцующим регулярным выражением - "int_out\":{\"type\":\"
-char m_format[64] = "\"int_out\":{.\\{0,\\}\\?\"type\":\"\\(.\\{0,\\}\\?\\)\"";
-    //char m_format[64] = "\"";
-    //strcat(m_format, port_name);
-    //strcat(m_format, "\":{.*?\"type\":\"(.*?)\"");
+    char m_format[64] = "\"";
+    strcat(m_format, port_name);
+    strcat(m_format, "\":{");
+
+    char* f = strstr(module->json_module_definition, m_format);
+    if(f==NULL)
+    {
+        fprintf(stderr, "Function: get_porttype_by_out_portname. Not found substring: \"%s\" in string: %s\n", m_format, module->json_module_definition);
+    }
+
+    char* t_find = "\"type\":\"";
+    char* s = strstr(f, t_find);
+    if(f==NULL)
+    {
+        fprintf(stderr, "Function: get_porttype_by_out_portname. Not found substring: \"%s\" in string: %s\n", t_find, f);
+    }
+
+    char* s_begin = s + strlen(t_find);
+    printf("s_begin:=%s\n", s_begin);
 
 
+    char* q_find = "\"";
+    char* s_end = strstr(s_begin, q_find);
+    if(f==NULL)
+    {
+        fprintf(stderr, "Function: get_porttype_by_out_portname. Not found substring: \"%s\" in string: %s\n", q_find, s_begin);
+    }
 
-    int a;
-        regex_t re;
-        regmatch_t pm[10];
-
-        a = regcomp(&re, m_format, REG_ICASE);
-        if(a!=0)
-        {
-            printf("Invalid Regex m_format=%s\n", m_format);
-            return -1;
-        }
-
-        a = regexec(&re, module->json_module_definition, 10, pm, REG_EXTENDED);
-
-        if(a==0)
-        {
-            int i=0;
-            while(pm[i].rm_so!=-1)
-            {
-                printf("rm_so=%i, rm_eo=%i\n", pm[i].rm_so, pm[i].rm_eo);
-
-                printf("len=%i, strlen=%i, str=%s\n", pm[i].rm_eo - pm[i].rm_so, strlen(module->json_module_definition), module->json_module_definition+pm[i].rm_so);
-                i++;
-            }
-        }
-        else
-        {
-            printf("Not fount regex for %s\n", m_format);
-        }
-
-        //printf("\n first match at %d\n",pm.rm_eo);
-
-        //printf("FIND: %s in: %s\n", m_format, module->json_module_definition + pm -rm_eo);
+    int str_type_len = s_end - s_begin;
 
 
+    printf("str_type_len:=%i\n", str_type_len);
 
+    return -1;
 
-        /*
-        int cnt = 0;
-
-        while(a==0)
-        {
-            a = regexec(&re, module->json_module_definition + pm.rm_eo, 1, &pm, 0);
-
-            printf("\n next match %d",pm.rm_eo);
-
-            cnt++;
-            if(cnt>6)break;
-        }
-        */
 
 }
 
