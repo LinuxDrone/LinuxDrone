@@ -906,9 +906,9 @@ print_common_params(&module->common_params);
 /**
  * @brief Возвращает название типа данных для выходного порта, по имени порта
  * @param port_name
- * @return Имя типа данных порта
+ * @return Имя типа данных порта (Требует освобождение возвращаемой строки)
  */
-int get_porttype_by_out_portname(module_t* module, const char* port_name, char* port_type)
+int get_porttype_by_out_portname(module_t* module, const char* port_name, char* port_type_name)
 {
         //пример строки с результирцующим регулярным выражением - "int_out\":{\"type\":\"
     char m_format[64] = "\"";
@@ -944,9 +944,16 @@ int get_porttype_by_out_portname(module_t* module, const char* port_name, char* 
 
     printf("str_type_len:=%i\n", str_type_len);
 
-    return -1;
+    //char *str_port_type = calloc(str_type_len+1,1);
 
+    memcpy(port_type_name, s_begin, str_type_len);
+    port_type_name[str_type_len]=0;
 
+    printf("str_port_type:=%s\n", port_type_name);
+
+    return 0;
+
+    //return convert_port_type_str2type(str_port_type);
 }
 
 /**
