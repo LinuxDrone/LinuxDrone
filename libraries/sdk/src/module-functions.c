@@ -12,9 +12,7 @@
 #include <native/event.h>
 #include <native/timer.h>
 #include "../include/module-functions.h"
-#include <regex.h>
 
-//#include <conio.h>
 
 #define SHMEM_WRITER_MASK	0x7FFFFFFF
 
@@ -735,7 +733,6 @@ int init(module_t* module, int argc, char *argv[])
     int option_index;
     opterr=0;
     optind=0;
-printf("11111111111111112\n");
     while ((res = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1)
     {
         switch(res)
@@ -766,30 +763,23 @@ printf("11111111111111112\n");
             if (optarg!=NULL){
                 // Выделяем память под структуры, представляющие связи с модулями подписчиками
                 // Связи через очередь (данный модуль поставщик, другие потребители данных)
-                //char name_out_pin[32]; // название выходного пина данного модуля
-                //char name_remote_instance[32]; // имя инстанса модуля подписчика
-                //char name_remote_pin[32]; // название входного пина модуля получателя
-printf("optarg\n");
                 char* param_val = malloc(strlen(optarg)+1);
                 strcpy(param_val, optarg);
 
-
                 char* name_out_pin = strtok(param_val, ">");
                 name_out_pin[strlen(name_out_pin)-1] = 0;
-                printf("name_out_pin=%s\n", name_out_pin);
+                //printf("name_out_pin=%s\n", name_out_pin);
 
                 char* name_remote_instance = strtok('\0', ".");
-                printf("name_remote_instance=%s\n", name_remote_instance);
+                //printf("name_remote_instance=%s\n", name_remote_instance);
 
                 char* name_remote_pin = strtok('\0', ".");
-                printf("name_remote_pin=%s\n", name_remote_pin);
-
-
-                //sscanf(optarg, "%s->%s.%s", name_out_pin, name_remote_instance, name_remote_pin);
+                //printf("name_remote_pin=%s\n", name_remote_pin);
 
                 if(strlen(name_remote_instance) > XNOBJECT_NAME_LEN-5)
                 {
                     fprintf(stderr, "Remote Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", name_remote_instance, strlen(name_remote_instance), XNOBJECT_NAME_LEN-5);
+                    free(param_val);
                     return -1;
                 }
 
@@ -798,11 +788,12 @@ printf("optarg\n");
 
                 // Получим название типа данных связи
                 char portType_name[32];
-                get_porttype_by_out_portname(module, name_out_pin, portType_name);
+                get_porttype_by_portname(module, name_out_pin, portType_name);
                 TypeFieldObj port_type = convert_port_type_str2type(portType_name);
                 if(port_type==-1)
                 {
                     fprintf(stderr, "Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", name_out_pin, portType_name, module->instance_name);
+                    free(param_val);
                     return -1;
                 }
 
@@ -834,16 +825,31 @@ printf("optarg\n");
             // но его может не быть, если модуль не имеет входа
             if (optarg!=NULL)
             {
-                char publisher_instance_name[32]; // имя инстанса модуля поставщика
-                char publisher_nameOutGroup[32]; // имя группы пинов инстанса поставщика
-                char remote_out_pin_name[32]; // название выходного пина инстанса поставщика
-                char input_pin_name[32]; // название входного пина данного модуля
+                char* param_val = malloc(strlen(optarg)+1);
+                strcpy(param_val, optarg);
 
-                sscanf(optarg, "%s.%s.$s->%s", publisher_instance_name, publisher_nameOutGroup, remote_out_pin_name, input_pin_name);
+                // имя инстанса модуля поставщика
+                char* publisher_instance_name = strtok(param_val, ".");
+
+                // имя группы пинов инстанса поставщика
+                char* publisher_nameOutGroup = strtok('\0', ".");
+
+                // название выходного пина инстанса поставщика
+                char* remote_out_pin_name = strtok('\0', ">");
+                remote_out_pin_name[strlen(remote_out_pin_name)-1] = 0;
+
+                // название входного пина данного модуля
+                char* input_pin_name = strtok('\0', ".");
+
+                //printf("publisher_instance_name=%s\n", publisher_instance_name);
+                //printf("publisher_nameOutGroup=%s\n", publisher_nameOutGroup);
+                //printf("remote_out_pin_name=%s\n", remote_out_pin_name);
+                //printf("input_pin_name=%s\n", input_pin_name);
 
                 if(strlen(publisher_instance_name) > XNOBJECT_NAME_LEN-5)
                 {
                     fprintf(stderr, "Remote Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", publisher_instance_name, strlen(publisher_instance_name), XNOBJECT_NAME_LEN-5);
+                    free(param_val);
                     return -1;
                 }
 
@@ -852,11 +858,17 @@ printf("optarg\n");
                 shmem_in_set_t* remote_shmem = register_remote_shmem(&module->ar_remote_shmems, publisher_instance_name, publisher_nameOutGroup);
 
 
-                // Получим название типа данных связи
-                int port_type = get_porttype_by_in_portname(module->json_module_definition, input_pin_name);
+                // Получим название типа данных входной связи
+                char portType_name[32];
+                get_porttype_by_portname(module, input_pin_name, portType_name);
+                //printf("portType_name=%s\n", portType_name);
+                TypeFieldObj port_type = convert_port_type_str2type(portType_name);
+
+                //int port_type = get_porttype_by_in_portname(module->json_module_definition, input_pin_name);
                 if(port_type==-1)
                 {
                     fprintf(stderr, "Error convert data type of port \"%s\" from string for instance \"%s\"\n", remote_out_pin_name, module->instance_name);
+                    free(param_val);
                     return -1;
                 }
 
@@ -872,6 +884,7 @@ printf("optarg\n");
                 {
                     fprintf(stderr, "Not found INPUT PIN \"%s\" in instance \"%s\"\n", input_pin_name, module->instance_name);
                 }
+                free(param_val);
             }
             else
             {
@@ -881,7 +894,7 @@ printf("optarg\n");
             break;
 
         case '?': default:
-            printf("Found unknown option. module-functions init\n");
+            //printf("Found unknown option. module-functions init\n");
             break;
         }
     }
@@ -893,7 +906,7 @@ printf("optarg\n");
     // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна принимать на вход наносекунды (а использоваться будут тики)
     module->common_params.Transfer_task_period = rt_timer_ns2ticks(module->common_params.Transfer_task_period * 1000);
     module->common_params.Task_Period = rt_timer_ns2ticks(module->common_params.Task_Period * 1000);
-print_common_params(&module->common_params);
+//print_common_params(&module->common_params);
 
     // Запись в структуру специфичных параметров модуля
     (*module->argv2params)(module, argc, argv);
@@ -904,13 +917,12 @@ print_common_params(&module->common_params);
 
 
 /**
- * @brief Возвращает название типа данных для выходного порта, по имени порта
+ * @brief Возвращает название типа данных порта (входного или выходного), по имени порта
  * @param port_name
- * @return Имя типа данных порта (Требует освобождение возвращаемой строки)
+ * @return 0 в случае успеха
  */
-int get_porttype_by_out_portname(module_t* module, const char* port_name, char* port_type_name)
+int get_porttype_by_portname(module_t* module, const char* port_name, char* port_type_name)
 {
-        //пример строки с результирцующим регулярным выражением - "int_out\":{\"type\":\"
     char m_format[64] = "\"";
     strcat(m_format, port_name);
     strcat(m_format, "\":{");
@@ -929,7 +941,7 @@ int get_porttype_by_out_portname(module_t* module, const char* port_name, char* 
     }
 
     char* s_begin = s + strlen(t_find);
-    printf("s_begin:=%s\n", s_begin);
+    //printf("s_begin:=%s\n", s_begin);
 
 
     char* q_find = "\"";
@@ -941,70 +953,12 @@ int get_porttype_by_out_portname(module_t* module, const char* port_name, char* 
 
     int str_type_len = s_end - s_begin;
 
-
-    printf("str_type_len:=%i\n", str_type_len);
-
-    //char *str_port_type = calloc(str_type_len+1,1);
-
     memcpy(port_type_name, s_begin, str_type_len);
     port_type_name[str_type_len]=0;
 
-    printf("str_port_type:=%s\n", port_type_name);
+    //printf("str_port_type=%s\n", port_type_name);
 
     return 0;
-
-    //return convert_port_type_str2type(str_port_type);
-}
-
-/**
- * @brief Возвращает тип данных для входного порта, по имени порта
- * @param m_definition
- * @param port_name
- * @return Имя типа данных порта
- */
-int get_porttype_by_in_portname(const char* m_definition, const char* port_name)
-{   
-    char m_format[64] = "\"name\":\"";
-    strcat(m_format, port_name);
-    strcat(m_format, "\"%s\"type\":\"%s\"");
-
-    char trash[strlen(m_definition)];
-    char str_port_type[32];
-
-
-    int a;
-        regex_t re;
-        char str[128] = "onces sam lived with samle to win samile hehe sam hoho sam\0";
-        regmatch_t pm;
-
-        a = regcomp(&re,"sam", 0);
-        if(a!=0)
-        {
-            puts("Invalid Regex");
-            getch();
-            return 0;
-        }
-
-        a = regexec(&re, &str[0], 1, &pm, REG_EXTENDED);
-        printf("\n first match at %d",pm.rm_eo);
-
-        int cnt = 0;
-
-        while(a==0)
-        {
-            a = regexec(&re, &str[0] + pm.rm_eo, 1, &pm, 0);
-
-            printf("\n next match %d",pm.rm_eo);
-
-            cnt++;
-            if(cnt>6)break;
-        }
-
-
-
-    //sscanf(m_definition, m_format, trash, str_port_type);
-//printf("Error: func get_porttype_by_in_portname, str_port_type=%s\n", str_port_type);
-    return convert_port_type_str2type(str_port_type);
 }
 
 
@@ -1079,7 +1033,7 @@ int argv2common_params(void* in_module, int argc, char *argv[])
                 break;
 
             case '?': default:
-                printf("Found unknown option. module-functions argv2common_params\n");
+                //printf("Found unknown option. module-functions argv2common_params\n");
                 break;
         }
     }
@@ -1357,12 +1311,12 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
             }
         }
 
-        //debug_print_bson("send2queues", bson_obj);
+//debug_print_bson("send2queues", bson_obj);
 
         int res = rt_queue_write(&out_queue_set->out_queue->remote_queue, bson_get_data(bson_obj), bson_obj->len, Q_NORMAL);
         if(res<0)
         {
-            fprintf(stderr, "Warning: %i rt_queue_write\n", res);
+            //fprintf(stderr, "Warning: %i rt_queue_write\n", res);
             // TODO: если нет коннекта у очереди, то сбросить флаг коннекта всех очередей.
         }
 

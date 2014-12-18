@@ -20,9 +20,9 @@ set(EXTRA_LIBS
     ${RFS_DIR}/usr/local/lib/libbson-1.0.so
     m
 
-    ncurses
-    dl
-    tinfo
+    #ncurses
+    #dl
+    #tinfo
 )
 
 ADD_CUSTOM_COMMAND(

@@ -333,7 +333,7 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
     r += "            break;\n\n";
 
     r += "            case '?': default:\n";
-    r += "                printf(\"Found unknown option\\n\");\n";
+    r += "                //printf(\"Found unknown option\\n\");\n";
     r += "            break;\n";
     r += "        }\n";
     r += "    }\n";

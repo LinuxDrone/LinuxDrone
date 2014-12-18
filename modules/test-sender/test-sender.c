@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include "test-sender.helper.h"
 #include <getopt.h>
 
@@ -5,8 +6,11 @@ module_test_sender_t* m_module;
 
 int main (int argc, char *argv[])
 {
-    const char* short_options = "h";
+    mlockall(MCL_CURRENT|MCL_FUTURE);
 
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    const char* short_options = "h";
     const struct option long_options[] = {
         {"help",no_argument,NULL,'h'},
         {NULL,0,NULL,0}
@@ -23,7 +27,7 @@ int main (int argc, char *argv[])
             break;
 
             case '?': default:
-                printf("Found unknown option test-sender main\n");
+                //printf("Found unknown option test-sender main\n");
             break;
         }
     }
@@ -32,13 +36,13 @@ int main (int argc, char *argv[])
 
     test_sender_init(m_module, argc, argv);
 
-    //printf("instance name: '%s'\n", instance_name);
-    //printf("priority: %i\n", priority);
-    //printf("main-task-period: %i\n", main_task_period);
-    //printf("transfer-task-period: %i\n", transfer_task_period);
-
     params_test_sender_t* obj = (params_test_sender_t*)m_module->module_info.specific_params;
-    print_params_test_sender(obj);
+    //print_params_test_sender(obj);
+
+    test_sender_start(m_module);
+
+    printf("\nPress ENTER for exit\n\n");
+    getchar();
 
     return 0;
 }
@@ -46,8 +50,8 @@ int main (int argc, char *argv[])
 
 void test_sender_run (module_test_sender_t *module)
 {
-    printf("params for test_sender\n");
-    print_params_test_sender(&module->params_test_sender);
+    //printf("params for test_sender\n");
+    //print_params_test_sender(&module->params_test_sender);
 
     int cycle=0;
     while(1) {
@@ -73,7 +77,7 @@ void test_sender_run (module_test_sender_t *module)
         objOutput1->float_out = cycle * 0.11;
         objOutput1->double_out = cycle * 0.23;
         char buffer_string_out [32];
-        snprintf(buffer_string_out, 32, "data: %d", cycle);
+        snprintf(buffer_string_out, 32, "data: %i", cycle);
         objOutput1->string_out = buffer_string_out;
 //print_Output1(objOutput1);
         checkin_Output1(module, &objOutput1);
