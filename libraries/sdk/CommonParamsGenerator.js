@@ -139,6 +139,7 @@ function make_Bson2Structure(properties) {
 
     r += "void print_common_params(common_params_t* obj)\n";
     r += "{\n";
+    r += "    fprintf(stdout, \"\\nCommon params:\\n\");\n";
 
     for (var key in properties) {
         var propName = key.replace(/\ /g, "_");
@@ -146,28 +147,28 @@ function make_Bson2Structure(properties) {
             case "char":
             case "short":
             case "int":
-                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + propName + "=%i\\n\", obj->" + propName + ");\n";
                 break;
 
             case "long":
-                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + propName + "=%i\\n\", obj->" + propName + ");\n";
                 break;
 
             case "long long":
-                r += "    printf(\"" + propName + "=%llu\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t"+ propName + "=%llu\\n\", obj->" + propName + ");\n";
                 break;
 
             case "float":
             case "double":
-                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + propName + "=%lf\\n\", obj->" + propName + ");\n";
                 break;
 
             case "const char*":
-                r += "    printf(\"" + propName + "=%s\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + propName + "=%s\\n\", obj->" + propName + ");\n";
                 break;
 
             case "bool":
-                r += "    printf(\"" + propName + "=%s\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + propName + "=%s\\n\", obj->" + propName + ");\n";
                 break;
 
             default:
@@ -175,7 +176,7 @@ function make_Bson2Structure(properties) {
                 break;
         }
     }
-    r += "    printf(\"\\n\");\n";
+    r += "    fprintf(stdout, \"\\n\");\n";
     r += "}\n\n";
 
     return r;

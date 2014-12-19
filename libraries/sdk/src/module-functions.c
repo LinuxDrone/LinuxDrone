@@ -657,7 +657,7 @@ int argv2common_params(void* in_module, int argc, char *argv[])
     }
 
     const struct option long_options[] = {
-        {"priority",optional_argument,NULL,'r'},
+        {"rt-priority",optional_argument,NULL,'r'},
         {"main-task-period",optional_argument,NULL,'m'},
         {"transfer-task-period",optional_argument,NULL,'t'},
         {NULL,0,NULL,0}
