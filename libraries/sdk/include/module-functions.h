@@ -91,6 +91,9 @@ typedef int (*p_argv2obj)(void* p_module, int argc, char *argv[]);
 // Тип функции выводящей на печать (в консоль) данные структуры
 typedef void (*p_print_obj)(void* obj);
 
+// Тип функции выводящей на печать help
+typedef void (*p_print_help)();
+
 // Тип функции возвращающей маску входного порта, по его имени
 typedef t_mask (*p_get_inputmask_by_inputname)(const char* input_name);
 
@@ -520,6 +523,14 @@ typedef struct {
      * @brief \~russian Функция печати в консоль входного объекта
      */
     p_print_obj print_input;
+
+
+    /**
+     * @brief \~russian Функция в автогенеренной части модуля,
+     * выводящая в консоль help по настроечным параметрам модуля
+     */
+    p_print_help print_help;
+
 
     /**
      * @brief \~russian Функция преобразования принятого из очереди bson объекта

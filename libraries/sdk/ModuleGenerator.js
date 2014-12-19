@@ -248,7 +248,45 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
     }
     r += "    printf(\"\\n\");\n";
     r += "}\n\n";
+    return r;
+}
 
+function make_print_help(params){
+    var r = "// Print help\n";
+    r += "void print_help()\n";
+    r += "{\n";
+    for (var key in params) {
+        var paramName = key.replace(/\ /g, "_");
+        var param = params[key];
+
+        r += "    fprintf(stderr, \"--"+paramName+"="+param.type.toUpperCase()+" VALUE\\n\");\n";
+        if('defaultValue' in param){
+            r += "    fprintf(stderr, \"\\toptional\\n\");\n";
+        }else{
+            r += "    fprintf(stderr, \"\\trequired\\n\");\n";
+        }
+
+        if('description' in param){
+            if('en' in param.description){
+                r += "    fprintf(stderr, \"\\t"+param.description.en;
+                if('validValues' in param || 'defaultValue' in param){
+                    r += " (";
+                    if('validValues' in param){
+                        r += param.validValues;
+                        if('defaultValue' in param){
+                            r += " ";
+                        }
+                    }
+                    if('defaultValue' in param){
+                        r += "default: " + param.defaultValue;
+                    }
+                    r += ")";
+                }
+                r += "\\n\\n\");\n\n";
+            }
+        }
+    }
+    r += "}\n\n";
     return r;
 }
 
@@ -263,9 +301,14 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
     r += "        return -1;\n";
     r += "    }\n\n";
 
-    r += "    const char* short_options = \"p:\";\n";
+    r += "    const char* short_options = \"\";\n";
     r += "    const struct option long_options[] = {\n";
-    r += "        {\"param\",required_argument,NULL,'p'},\n";
+    var ip=100;
+    for (var key in properties) {
+        var propName = key.replace(/\ /g, "_");
+        r += "        {\""+propName+"\",required_argument,NULL,"+ip+"},\n";
+        ip++;
+    }
     r += "        {NULL,0,NULL,0}\n";
     r += "    };\n\n";
 
@@ -275,48 +318,43 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
     r += "    optind=0;\n";
     r += "    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){\n";
 
-    r += "        switch(res){\n";
-    r += "            case 'p':\n";
-    r += "                if (optarg!=NULL){\n";
-    r += "                    char param_name[32];\n";
-    r += "                    char param_value[32];\n\n";
-    r += "                    // %[^:] - читает все что до символа \":\" в первую переменнную\n";
-    r += "                    // %*c - пропускает один символ\n";
-    r += "                    // %s - читает остаток строки во вторую переменную\n";
-    r += "                    sscanf(optarg, \"%[^:]%*c%s\", param_name, param_value);\n\n";
     if (set_update_fact) {
         r += "                    " + outName + "_t* obj = (" + outName + "_t*)module->input_data;\n";
     } else {
         r += "                    " + outName + "_t* obj = (" + outName + "_t*)module->specific_params;\n";
     }
+
+    r += "        if (optarg!=NULL){\n";
+    r += "            switch(res){\n";
+    ip=100;
     for (var key in properties) {
+
+        r += "                case "+ip+":\n";
         var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
-        r += "                    if(!strncmp(param_name, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
-        r += "                    {\n";
         switch (properties[key].type) {
             case "float":
             case "double":
-                r += "                        obj->" + propName + " = atof(param_value);\n";
+                r += "                    obj->" + propName + " = atof(optarg);\n";
 
             case "char":
             case "short":
             case "int":
             case "bool":
-                r += "                        obj->" + propName + " = atoi(param_value);\n";
+                r += "                    obj->" + propName + " = atoi(optarg);\n";
                 break;
 
             case "long":
-                r += "                        obj->" + propName + " = atol(param_value);\n";
+                r += "                    obj->" + propName + " = atol(optarg);\n";
                 break;
 
             case "long long":
-                r += "                        obj->" + propName + " = atoll(param_value);\n";
+                r += "                    obj->" + propName + " = atoll(optarg);\n";
                 break;
 
             case "const char*":
                 // TODO: Возможна проблема с тем, что строку надо освобождать
-                r += "                        obj->" + propName + " = malloc(strlen(param_value)+1);\n";
-                r += "                        strcpy((char*)obj->" + propName + ", param_value);\n";
+                r += "                    obj->" + propName + " = malloc(strlen(optarg)+1);\n";
+                r += "                    strcpy((char*)obj->" + propName + ", optarg);\n";
                 break;
 
             default:
@@ -326,15 +364,10 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
         if (set_update_fact) {
             r += "            module->updated_input_properties |= " + propName + ";\n";
         }
-        r += "                        break;\n";
-        r += "                    }\n";
+        r += "                break;\n\n";
+        ip++;
     }
-    r += "                }\n";
-    r += "            break;\n\n";
-
-    r += "            case '?': default:\n";
-    r += "                //printf(\"Found unknown option\\n\");\n";
-    r += "            break;\n";
+    r += "            }\n";
     r += "        }\n";
     r += "    }\n";
     r += "    return 0;\n";
@@ -623,6 +656,7 @@ function Create_C_file(module) {
         r += make_Structure2Bson(params, "params_" + module_type);
         //r += make_Bson2Structure(params, "params_" + module_type, "", false);
         r += make_argv2Structure(params, "params_" + module_type, "", false);
+        r += make_print_help(params);
     }
 
 
@@ -668,7 +702,11 @@ function Create_C_file(module) {
     }
     r += "\n";
 
+    r += "    // Строка с JSON определением модуля.\n";
     r += "    module->module_info.json_module_definition = m_definition;\n\n";
+
+    r += "    // ССылка на функцию выводящую в консоль справку по параметрам запсука модуля.\n";
+    r += "    module->module_info.print_help = (p_print_help)&print_help;\n\n";
 
     r += "    // Сохранение ссылки на бизнес-функцию.\n";
     r += "    module->module_info.func = &" + module_type + "_run;\n";

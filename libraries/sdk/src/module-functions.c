@@ -380,349 +380,18 @@ remote_queue_t* register_remote_queue(module_t* module, const char* name_remote_
 
 /**
  * @brief init Инициализация инстанса модуля
- * Принимает на вход bson объект, контент которого является конфигураций инстанса
+ * Принимает на вход массив параметров командной строки argv
  * @param module
- * @param data Указатель на блок данных, содержащий контент bson объекта
- * @param length Длина блока данных, содержащего контент bson объекта
- * @return
- */
-int init_old(module_t* module, const uint8_t * data, uint32_t length)
-{
-    bson_t bson;
-    bson_init_static(&bson, data, length);
-
-    //debug_print_bson("Function \"init\" module-functions.c", &bson);
-
-    // Вытаскиваем из конфигурации значения обязательных настроечных параметров
-    /**
-     * Instance name
-     */
-    bson_iter_t iter;
-    if (!bson_iter_init_find(&iter, &bson, "instance")) {
-        fprintf(stderr, "Not found property \"instance\"");
-        return -1;
-    }
-    if (!BSON_ITER_HOLDS_UTF8(&iter)) {
-        fprintf(stderr, "Property \"instance\" not UTF8 type");
-        return -1;
-    }
-    module->instance_name = bson_iter_utf8(&iter, NULL);
-    // Проверяем, не превышает ли длина имени инстанса значения 32-5=27
-    // Т.к. максимальная длина имен объектов ксеномая равна 32 а 5 символов могут быть использованы на суфикс,
-    // при формировании имен тасков, очередй и пр., необходимых для объетов ксеномая используемых инстансом в работе
-    if(strlen(module->instance_name) > XNOBJECT_NAME_LEN-5)
-    {
-        fprintf(stdout, "Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", module->instance_name, strlen(module->instance_name), XNOBJECT_NAME_LEN-5);
-        return -1;
-    }
-    //fprintf(stdout, "instance name=%s\n\n", module->instance_name);
-
-
-    // Чтение в структуру общих параметров модуля
-    bson2common_params(module, &bson);
-    // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна примать на вход наносекунды
-    module->common_params.Transfer_task_period = rt_timer_ns2ticks(module->common_params.Transfer_task_period * 1000);
-    module->common_params.Task_Period = rt_timer_ns2ticks(module->common_params.Task_Period * 1000);
-print_common_params(&module->common_params);
-
-
-
-    // Поиск узла специфичных параметров модуля
-    if (!bson_iter_init_find(&iter, &bson, "params")) {
-        fprintf(stderr, "Not found property \"params\"");
-        return -1;
-    }
-    if (!BSON_ITER_HOLDS_DOCUMENT(&iter)) {
-        fprintf(stderr, "Property \"params\" not Document type");
-        return -1;
-    }
-    bson_t bson_params;
-    const uint8_t *link_buf = NULL;
-    uint32_t link_buf_len = 0;
-    bson_iter_document(&iter, &link_buf_len, &link_buf);
-    bson_init_static(&bson_params, link_buf, link_buf_len);
-    //debug_print_bson("Function \"init\" module-functions.c", &bson_params);
-
-    // Чтение в структуру специфичных параметров модуля
-    (*module->bson2params)(module, &bson_params);
-    //(*module->print_params)(module->specific_params);
-
-
-
-    // Выделяем память под структуры, представляющие связи с модулями подписчиками
-    // Связи через очередь (данный модуль поставщик, другие потребители данных)
-    // Список исходящих связей, должен быть в массиве "out_links" в объекте конфигурации
-    // но его может не быть, если модуль не имеет выходов
-    if (bson_iter_init_find(&iter, &bson, "out_links"))
-    {
-        if (!BSON_ITER_HOLDS_ARRAY(&iter)) {
-            fprintf(stderr, "Property \"out_links\" not ARRAY type");
-            return -1;
-        }
-
-        const uint8_t *array_buf = NULL;
-        uint32_t array_buf_len = 0;
-        bson_t bson_queue_links;
-        bson_iter_array(&iter, &array_buf_len, &array_buf);
-        bson_init_static(&bson_queue_links, array_buf, array_buf_len);
-
-        uint32_t count_links = bson_count_keys (&bson_queue_links);
-        //fprintf(stderr, "count_links=%i\n", count_links);
-
-        bson_iter_t iter_links;
-        if(!bson_iter_init (&iter_links, &bson_queue_links))
-        {
-            fprintf(stderr, "Error: error create iterator for queue links\n");
-            return -1;
-        }
-
-        bson_t bson_out_link;
-        while(bson_iter_next(&iter_links))
-        {
-            if(!BSON_ITER_HOLDS_DOCUMENT(&iter_links))
-            {
-                fprintf(stderr, "Function: init, Error: iter_links not a out link document\n");
-                continue;
-            }
-            bson_iter_document(&iter_links, &link_buf_len, &link_buf);
-            bson_init_static(&bson_out_link, link_buf, link_buf_len);
-
-            //debug_print_bson("Function \"init\" module-functions.c inside while", &bson_out_link);
-
-            // Получим имя инстанса модуля подписчика
-            bson_iter_t iter_subscriber_instance_name;
-            if (!bson_iter_init_find(&iter_subscriber_instance_name, &bson_out_link, "inInst")) {
-                fprintf(stderr, "Not found property \"inInst\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_subscriber_instance_name)) {
-                fprintf(stderr, "Property \"inInst\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* subscriber_instance_name = bson_iter_utf8(&iter_subscriber_instance_name, NULL);
-
-            // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-            remote_queue_t* remote_queue = register_remote_queue(module, subscriber_instance_name);
-
-            // Получим название выходного пина данного модуля
-            bson_iter_t iter_outpin_name;
-            if (!bson_iter_init_find(&iter_outpin_name, &bson_out_link, "outPin")) {
-                fprintf(stderr, "Not found property \"outPin\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_outpin_name)) {
-                fprintf(stderr, "Property \"outPin\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* outpin_name = bson_iter_utf8(&iter_outpin_name, NULL);
-
-
-            // Получим название входного пина модуля получателя
-            bson_iter_t iter_remote_inpin_name;
-            if (!bson_iter_init_find(&iter_remote_inpin_name, &bson_out_link, "inPin")) {
-                fprintf(stderr, "Not found property \"inPin\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_remote_inpin_name)) {
-                fprintf(stderr, "Property \"inPin\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* remote_inpin_name = bson_iter_utf8(&iter_remote_inpin_name, NULL);
-
-
-            // Получим название типа данных связи
-            bson_iter_t iter_portType_name;
-            if (!bson_iter_init_find(&iter_portType_name, &bson_out_link, "portType")) {
-                fprintf(stderr, "Not found property \"portType\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_portType_name)) {
-                fprintf(stderr, "Property \"portType\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* portType_name = bson_iter_utf8(&iter_portType_name, NULL);
-            TypeFieldObj port_type = convert_port_type_str2type(portType_name);
-            if(port_type==-1)
-            {
-                fprintf(stderr, "Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", outpin_name, portType_name, module->instance_name);
-                return -1;
-            }
-
-
-            unsigned short offset_field;
-            unsigned short index_port;
-            out_object_t* out_object = (*module->get_outobj_by_outpin)(module, outpin_name, &offset_field, &index_port);
-            if(out_object)
-            {
-                register_out_link(out_object, subscriber_instance_name, offset_field, port_type, remote_inpin_name, remote_queue);
-            }
-            else
-            {
-                fprintf(stderr, "Not found OUT PIN \"%s\" in instance \"%s\"\n", outpin_name, module->instance_name);
-            }
-        }
-    }
-    else
-    {
-        //fprintf(stderr, "Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
-        //debug_print_bson("Function \"init\" module-functions.c on error", &bson);
-    }
-
-
-    // Выделяем память под структуры, представляющие связи с модулями поставщиками
-    // Связи через разделяемую память (данный модуль потребитель, другие поставщики данных)
-    // Список входящих связей, должен быть в массиве "in_links" в объекте конфигурации
-    // но его может не быть, если модуль не имеет входа
-    if (bson_iter_init_find(&iter, &bson, "in_links"))
-    {
-        if (!BSON_ITER_HOLDS_ARRAY(&iter)) {
-            fprintf(stderr, "Property \"in_links\" not ARRAY type");
-            return -1;
-        }
-
-        const uint8_t *array_buf = NULL;
-        uint32_t array_buf_len = 0;
-        bson_t bson_queue_links;
-        bson_iter_array(&iter, &array_buf_len, &array_buf);
-        bson_init_static(&bson_queue_links, array_buf, array_buf_len);
-
-        //uint32_t count_links = bson_count_keys (&bson_queue_links);
-        //fprintf(stderr, "count_links=%i\n", count_links);
-
-        bson_iter_t iter_links;
-        if(!bson_iter_init (&iter_links, &bson_queue_links))
-        {
-            fprintf(stderr, "Error: error create iterator for queue links\n");
-            return -1;
-        }
-
-        bson_t bson_in_link;
-        while(bson_iter_next(&iter_links))
-        {
-            if(!BSON_ITER_HOLDS_DOCUMENT(&iter_links))
-            {
-                fprintf(stderr, "Function: init, Error: iter_links not a out link document\n");
-                continue;
-            }
-            bson_iter_document(&iter_links, &link_buf_len, &link_buf);
-            bson_init_static(&bson_in_link, link_buf, link_buf_len);
-
-            //debug_print_bson("Function \"init\" module-functions.c inside while", &bson_in_link);
-
-            // Получим имя инстанса модуля поставщика
-            bson_iter_t iter_publisher_instance_name;
-            if (!bson_iter_init_find(&iter_publisher_instance_name, &bson_in_link, "outInst")) {
-                fprintf(stderr, "Not found property \"outInst\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_publisher_instance_name)) {
-                fprintf(stderr, "Property \"outInst\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* publisher_instance_name = bson_iter_utf8(&iter_publisher_instance_name, NULL);
-
-
-            // Получим имя группы пинов инстанса поставщика
-            bson_iter_t iter_publisher_nameOutGroup;
-            if (!bson_iter_init_find(&iter_publisher_nameOutGroup, &bson_in_link, "nameOutGroup")) {
-                fprintf(stderr, "Not found property \"nameOutGroup\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_publisher_nameOutGroup)) {
-                fprintf(stderr, "Property \"nameOutGroup\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* publisher_nameOutGroup = bson_iter_utf8(&iter_publisher_nameOutGroup, NULL);
-
-
-            // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-            shmem_in_set_t* remote_shmem = register_remote_shmem(&module->ar_remote_shmems, publisher_instance_name, publisher_nameOutGroup);
-
-
-            // Получим название выходного пина инстанса поставщика
-            bson_iter_t iter_outpin_name;
-            if (!bson_iter_init_find(&iter_outpin_name, &bson_in_link, "outPin")) {
-                fprintf(stderr, "Not found property \"outPin\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_outpin_name)) {
-                fprintf(stderr, "Property \"outPin\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* remote_out_pin_name = bson_iter_utf8(&iter_outpin_name, NULL);
-
-
-
-            // Получим название типа данных связи
-            bson_iter_t iter_portType_name;
-            if (!bson_iter_init_find(&iter_portType_name, &bson_in_link, "portType")) {
-                fprintf(stderr, "Not found property \"portType\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_portType_name)) {
-                fprintf(stderr, "Property \"portType\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* portType_name = bson_iter_utf8(&iter_portType_name, NULL);
-            TypeFieldObj port_type = convert_port_type_str2type(portType_name);
-            if(port_type==-1)
-            {
-                fprintf(stderr, "Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", remote_out_pin_name, portType_name, module->instance_name);
-                return -1;
-            }
-
-
-
-            // Получим название входного пина данного модуля
-            bson_iter_t iter_remote_inpin_name;
-            if (!bson_iter_init_find(&iter_remote_inpin_name, &bson_in_link, "inPin")) {
-                fprintf(stderr, "Not found property \"inPin\" in bson_out_link");
-                return -1;
-            }
-            if (!BSON_ITER_HOLDS_UTF8(&iter_remote_inpin_name)) {
-                fprintf(stderr, "Property \"inPin\" in bson_out_link not UTF8 type");
-                return -1;
-            }
-            const char* input_pin_name = bson_iter_utf8(&iter_remote_inpin_name, NULL);
-
-
-
-            t_mask input_port_mask = (*module->get_inmask_by_inputname)(input_pin_name);
-            if(input_port_mask)
-            {
-                remote_shmem->assigned_input_ports_mask |= input_port_mask;
-                int offset_field = (*module->get_offset_in_input_by_inpinname)(module, input_pin_name);
-
-                register_in_link(remote_shmem, port_type, remote_out_pin_name, offset_field);
-            }
-            else
-            {
-                fprintf(stderr, "Not found INPUT PIN \"%s\" in instance \"%s\"\n", input_pin_name, module->instance_name);
-            }
-        }
-    }
-    else
-    {
-        //fprintf(stderr, "Not found property \"out_links\" in configuration of instance \"%s\" which have outputs\n", module->instance_name);
-        //debug_print_bson("Function \"init\" module-functions.c on error", &bson);
-    }
-
-
-    return 0;
-}
-
-/**
- * @brief init Инициализация инстанса модуля
- * Принимает на вход bson объект, контент которого является конфигураций инстанса
- * @param module
- * @param data Указатель на блок данных, содержащий контент bson объекта
- * @param length Длина блока данных, содержащего контент bson объекта
+ * @param argc
+ * @param argv
  * @return
  */
 int init(module_t* module, int argc, char *argv[])
 {
-    const char* short_options = "n:o:i:";
+    const char* short_options = "hn:o:i:d";
     const struct option long_options[] = {
+        {"help",no_argument,NULL,'h'},
+        {"module-definition",optional_argument,NULL,'d'},
         {"name",required_argument,NULL,'n'},
         {"out-link",required_argument,NULL,'o'},
         {"in-link",required_argument,NULL,'i'},
@@ -737,30 +406,34 @@ int init(module_t* module, int argc, char *argv[])
     {
         switch(res)
         {
+            case 'h': //default:
+                usage(module, argv);
+            break;
+
         // Имя инстанса
-        case 'n':
-            if (optarg!=NULL){
-                module->instance_name = optarg;
+            case 'n':
+                if (optarg!=NULL){
                 // Проверяем, не превышает ли длина имени инстанса значения 32-5=27
                 // Т.к. максимальная длина имен объектов ксеномая равна 32 а 5 символов могут быть использованы на суфикс,
                 // при формировании имен тасков, очередй и пр., необходимых для объетов ксеномая используемых инстансом в работе
-                if(strlen(module->instance_name) > XNOBJECT_NAME_LEN-5)
-                {
-                    fprintf(stderr, "Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", module->instance_name, strlen(module->instance_name), XNOBJECT_NAME_LEN-5);
-                    return -1;
+                    if(strlen(optarg) > XNOBJECT_NAME_LEN-5)
+                    {
+                        fprintf(stderr, "Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", module->instance_name, strlen(module->instance_name), XNOBJECT_NAME_LEN-5);
+                        return -1;
+                    }
+                    module->instance_name = optarg;
+                    //fprintf(stdout, "instance name=%s\n\n", module->instance_name);
                 }
-                //fprintf(stdout, "instance name=%s\n\n", module->instance_name);
-            }
-            else
-            {
-                printf("required argument --name\n\n");
-                usage(argv);
-            }
+                else
+                {
+                    printf("required value for argument --name\n\n");
+                    usage(module, argv);
+                }
             break;
 
 
-        case 'o': // Исходящие связи (`OUT_NAME->INSTANCE_RECEIVER.IN_NAME`)
-            if (optarg!=NULL){
+            case 'o': // Исходящие связи (`OUT_NAME->INSTANCE_RECEIVER.IN_NAME`)
+                if (optarg!=NULL){
                 // Выделяем память под структуры, представляющие связи с модулями подписчиками
                 // Связи через очередь (данный модуль поставщик, другие потребители данных)
                 char* param_val = malloc(strlen(optarg)+1);
@@ -810,20 +483,20 @@ int init(module_t* module, int argc, char *argv[])
                 }
                 free(param_val);
             }
-            else
-            {
-                printf("require value for argument --out-link\n\n");
-                usage(argv);
-            }
+                else
+                {
+                    printf("require value for argument --out-link\n\n");
+                    usage(module, argv);
+                }
             break;
 
 
-        case 'i': // Входящие связи (`INSTANCE_TRANSMITTER.OBJ_NAME.OUT_NAME->IN_NAME`)
+            case 'i': // Входящие связи (`INSTANCE_TRANSMITTER.OBJ_NAME.OUT_NAME->IN_NAME`)
             // Выделяем память под структуры, представляющие связи с модулями поставщиками
             // Связи через разделяемую память (данный модуль потребитель, другие поставщики данных)
             // Список входящих связей, должен быть в массиве "in_links" в объекте конфигурации
             // но его может не быть, если модуль не имеет входа
-            if (optarg!=NULL)
+                if (optarg!=NULL)
             {
                 char* param_val = malloc(strlen(optarg)+1);
                 strcpy(param_val, optarg);
@@ -886,17 +559,25 @@ int init(module_t* module, int argc, char *argv[])
                 }
                 free(param_val);
             }
-            else
-            {
-                printf("require value for argument --in-link\n\n");
-                usage(argv);
-            }
+                else
+                {
+                    printf("require value for argument --in-link\n\n");
+                    usage(module, argv);
+                }
             break;
 
-        case '?': default:
-            //printf("Found unknown option. module-functions init\n");
+            case 'd':
+                fprintf(stdout, "%s\n", module->json_module_definition);
+                exit(EXIT_SUCCESS);
             break;
         }
+    }
+
+    if(module->instance_name==NULL)
+    {
+        printf("required argument --name\n\n");
+        usage(module, argv);
+        exit(EXIT_FAILURE);
     }
 
 
@@ -990,10 +671,8 @@ int argv2common_params(void* in_module, int argc, char *argv[])
     int option_index;
     opterr=0;
     optind=0;
-//printf("argc=%i %s %s %s %s %s\n", argc, argv[0], argv[1], argv[2], argv[3], argv[4]);
     while ((res = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1)
     {
-//printf("optarg=%s\n", optarg);
         switch(res)
         {
             case 'r':
@@ -1031,10 +710,6 @@ int argv2common_params(void* in_module, int argc, char *argv[])
                     }
                 }
                 break;
-
-            case '?': default:
-                //printf("Found unknown option. module-functions argv2common_params\n");
-                break;
         }
     }
 
@@ -1042,39 +717,41 @@ int argv2common_params(void* in_module, int argc, char *argv[])
 }
 
 
-usage(char *argv[])
+usage(module_t* module, char *argv[])
 {
-    fprintf(stderr, "usage: %s \n", argv[0]);
+    fprintf(stderr, "\nusage: %s [OPTION]...\n\n", argv[0]);
 
-    fprintf(stderr, "-n, --name=NAME\n");
+    fprintf(stderr, "--help\tdisplay this help and exit\n\n");
+
+    fprintf(stderr, "--module-definition\tprint JSON module definition\n\n");
+
+    fprintf(stderr, "--name=NAME\n");
     fprintf(stderr, "\trequired argument\n");
     fprintf(stderr, "\tInstance name\n\n");
 
-    fprintf(stderr, "-r, --priority=PRIORITY\n");
+    fprintf(stderr, "--priority=PRIORITY\n");
     fprintf(stderr, "\toptional\n");
     fprintf(stderr, "\tMain realtime thread priority (1-99, default: 80)\n\n");
 
-    fprintf(stderr, "-m, --main-task-period=PERIOD\n");
+    fprintf(stderr, "--main-task-period=PERIOD\n");
     fprintf(stderr, "\toptional\n");
     fprintf(stderr, "\tBusiness function execution period in microseconds (default: 20000)\n\n");
 
-    fprintf(stderr, "-t, --transfer-task-period=PERIOD\n");
+    fprintf(stderr, "--transfer-task-period=PERIOD\n");
     fprintf(stderr, "\toptional\n");
     fprintf(stderr, "\tOutput data to shared memory copy period in microseconds (default: 20000)\n\n");
 
-    fprintf(stderr, "-i, --in-link=INSTANCE2.OUT1->IN1\n");
+    fprintf(stderr, "--in-link=INSTANCE_TRANSMITTER.OBJ_NAME.OUT_NAME->IN_NAME\n");
     fprintf(stderr, "\toptional\n");
     fprintf(stderr, "\tInput link (provides data from another instance to this one through shared memory)\n\n");
 
-    fprintf(stderr, "-o, --out-link=OUT1->INSTANCE3.IN1\n");
+    fprintf(stderr, "--out-link=OUT_NAME->INSTANCE_RECEIVER.IN_NAME\n");
     fprintf(stderr, "\toptional\n");
     fprintf(stderr, "\tOutput link (provides data from this instance to another one through pipe)\n\n");
 
-    fprintf(stderr, "-p, --param=PARAM:VALUE\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tSetting a parameter\n\n");
+    module->print_help();
 
-    exit(EXIT_FAILURE);
+    exit(EXIT_SUCCESS);
 }
 
 

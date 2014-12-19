@@ -7,37 +7,16 @@ module_test_sender_t* m_module;
 int main (int argc, char *argv[])
 {
     mlockall(MCL_CURRENT|MCL_FUTURE);
-
     setvbuf(stdout, NULL, _IONBF, 0);
 
-    const char* short_options = "h";
-    const struct option long_options[] = {
-        {"help",no_argument,NULL,'h'},
-        {NULL,0,NULL,0}
-    };
-
-    int res;
-    int option_index;
-    opterr=0;
-    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){
-
-        switch(res){
-            case 'h':
-                usage(argv);
-            break;
-
-            case '?': default:
-                //printf("Found unknown option test-sender main\n");
-            break;
-        }
-    }
 
     m_module = test_sender_create(NULL);
 
     test_sender_init(m_module, argc, argv);
 
     params_test_sender_t* obj = (params_test_sender_t*)m_module->module_info.specific_params;
-    //print_params_test_sender(obj);
+    print_params_test_sender(obj);
+    print_common_params(&m_module->module_info.common_params);
 
     test_sender_start(m_module);
 

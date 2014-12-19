@@ -17,14 +17,14 @@
         "ru": "параметр 1"
       },
       "description": {
-        "en": "en description",
+        "en": "path to i2c device",
         "ru": "русское описание"
       },
       "type": "const char*",
-      "defaultValue": "default value",
+      "defaultValue": "/dev/i2c1",
       "validValues": [
-        "str1",
-        "str2"
+        "/dev/i2c1",
+        "/dev/i2c2"
       ],
       "unitMeasured": ""
     },
@@ -57,7 +57,6 @@
         "ru": "русское описание"
       },
       "type": "bool",
-      "defaultValue": false,
       "unitMeasured": "bool"
     }
   ],
