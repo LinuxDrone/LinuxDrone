@@ -19,9 +19,10 @@ include_directories(${LIB_DIR}/sdk/include)
 set(EXTRA_LIBS
 	sdk
 	core
+    pthread
+    rt
 )
 
-add_library(bmp180 MODULE ${INC} ${SRC})
+add_executable(bmp180 ${INC} ${SRC})
 
-install(TARGETS bmp180 DESTINATION modules/bmp180)
-install(FILES bmp180.def.json DESTINATION modules/bmp180)
+install(TARGETS bmp180 DESTINATION bin)

@@ -21,6 +21,8 @@ set(EXTRA_LIBS
     sdk
     i2c_client
     m
+    pthread
+    rt
 )
 
 ADD_CUSTOM_COMMAND(
@@ -29,7 +31,7 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-bmp180.def.json
 )
 
-add_library(c-bmp180 MODULE ${INC} ${SRC} c-bmp180.helper.c)
+add_executable(c-bmp180 ${INC} ${SRC} c-bmp180.helper.c)
 
 target_link_libraries(c-bmp180 ${EXTRA_LIBS})
 
@@ -37,10 +39,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-bmp180
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-bmp180.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-bmp180/libc-bmp180.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-bmp180/c-bmp180.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-bmp180/c-bmp180.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-bmp180 ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-bmp180
     )
 ENDIF()
 
-install(TARGETS c-bmp180 DESTINATION modules/c-bmp180)
-install(FILES c-bmp180.def.json DESTINATION modules/c-bmp180)
+install(TARGETS c-bmp180 DESTINATION bin)

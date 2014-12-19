@@ -37,10 +37,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET test-sender-receiver
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} test-sender-receiver ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender-receiver/test-sender-receiver
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/test-sender-receiver/test-sender-receiver.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender-receiver/test-sender-receiver.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} test-sender-receiver ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/test-sender-receiver
     )
 ENDIF()
 
-install(TARGETS test-sender-receiver DESTINATION modules/test-sender-receiver)
-install(FILES test-sender-receiver.def.json DESTINATION modules/test-sender-receiver)
+install(TARGETS test-sender-receiver DESTINATION bin)

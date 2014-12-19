@@ -2,9 +2,9 @@
     "type": "module_def",
     "name": "c-gy87",
     "version": 1,
-    "Task Priority": 80,
-    "Task Period": 200,
-    "Transfer task period": 200000,
+    "rt-priority": 80,
+    "main-task-period": 200,
+    "transfer-task-period": 200000,
     "description": {
         "en": "GY-87 sensors set",
         "ru": "Набор датчиков на плате GY-87"

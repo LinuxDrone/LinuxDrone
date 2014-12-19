@@ -19,9 +19,10 @@ include_directories(${LIB_DIR}/sdk/include)
 set(EXTRA_LIBS
 	sdk
 	core
+    pthread
+    rt
 )
 
-add_library(gy87 MODULE ${INC} ${SRC})
+add_executable(gy87 ${INC} ${SRC})
 
-install(TARGETS gy87 DESTINATION modules/gy87)
-install(FILES gy87.def.json DESTINATION modules/gy87)
+install(TARGETS gy87 DESTINATION bin)

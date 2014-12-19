@@ -2,9 +2,9 @@
     "type": "module_def",
     "name": "c-sum-scale",
     "version": 2,
-    "Task Priority": 80,
-    "Task Period": 20000,
-    "Transfer task period": 200000,
+    "rt-priority": 80,
+    "main-task-period": 20000,
+    "transfer-task-period": 200000,
     "description": {
         "en": "Scale signal range module 3x",
         "ru": "Трехканальный масштабирующий сумматор"

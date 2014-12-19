@@ -20,6 +20,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 set(EXTRA_LIBS
     sdk
     m
+    pthread
+    rt
 )
 
 ADD_CUSTOM_COMMAND(
@@ -28,7 +30,7 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/attitude.def.json
 )
 
-add_library(attitude MODULE ${INC} ${SRC} attitude.helper.c)
+add_executable(attitude ${INC} ${SRC} attitude.helper.c)
 
 target_link_libraries(attitude ${EXTRA_LIBS})
 
@@ -36,10 +38,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET attitude
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libattitude.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/attitude/libattitude.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/attitude/attitude.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/attitude/attitude.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} attitude ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/attitude
     )
 ENDIF()
 
-install(TARGETS attitude DESTINATION modules/attitude)
-install(FILES attitude.def.json DESTINATION modules/attitude)
+install(TARGETS attitude DESTINATION bin)

@@ -2,8 +2,8 @@
     "type": "module_def",
     "name": "SimpleTransform",
     "version": 4,
-    "Task Priority": 80,
-    "Task Period": 200,
+    "rt-priority": 80,
+    "main-task-period": 200,
     "inputShema": {
         "type": "object",
         "id": "http://jsonschema.net",

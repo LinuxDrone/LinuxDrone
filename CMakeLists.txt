@@ -70,7 +70,7 @@ ELSE()
     SET(DTC ${TLS_DIR}/dtc/dtc)
 ENDIF()
 
-SET(DO_POST_BUILD NO)
+SET(DO_POST_BUILD YES)
 
 #SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 #SET(URL_TARGET_SYSTEM root@192.168.1.2)
@@ -79,7 +79,7 @@ SET(DO_POST_BUILD NO)
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
 #SET(SSH_PORT_TARGET_SYSTEM 1234)
 
-SET(URL_TARGET_SYSTEM root@192.168.1.43)
+SET(URL_TARGET_SYSTEM root@192.168.1.20)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
 # MongoDB
@@ -210,13 +210,7 @@ add_subdirectory(${MOD_DIR}/attitude)
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
-# Host programms
-add_subdirectory(${HST_DIR}/c-host)
-
 # Services
 add_subdirectory(${SVC_DIR}/telemetry)
 add_subdirectory(${SVC_DIR}/i2c)
 add_subdirectory(${SVC_DIR}/spi)
-
-# Main project target
-#add_subdirectory(${TGT_DIR}/beaglebone) 

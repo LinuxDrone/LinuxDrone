@@ -2,8 +2,8 @@
     "type": "module_def",
     "name": "Hmc5883",  
     "version": 2,
-    "Task Priority": 45,
-    "Task Period": 220,
+    "rt-priority": 45,
+    "main-task-period": 220,
     "paramsDefinitions": [
         {
             "name": "I2C Device",

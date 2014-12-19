@@ -20,6 +20,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 set(EXTRA_LIBS
     sdk
     m
+    pthread
+    rt
 )
 
 ADD_CUSTOM_COMMAND(
@@ -28,7 +30,7 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-pid.def.json
 )
 
-add_library(c-pid MODULE ${INC} ${SRC} c-pid.helper.c)
+add_executable(c-pid ${INC} ${SRC} c-pid.helper.c)
 
 target_link_libraries(c-pid ${EXTRA_LIBS})
 
@@ -36,10 +38,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-pid
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-pid.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pid/libc-pid.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-pid/c-pid.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pid/c-pid.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-pid ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-pid
     )
 ENDIF()
 
-install(TARGETS c-pid DESTINATION modules/c-pid)
-install(FILES c-pid.def.json DESTINATION modules/c-pid)
+install(TARGETS c-pid DESTINATION bin)

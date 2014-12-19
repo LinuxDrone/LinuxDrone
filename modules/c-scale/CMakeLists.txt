@@ -20,6 +20,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 set(EXTRA_LIBS
     sdk
     m
+    pthread
+    rt
 )
 
 ADD_CUSTOM_COMMAND(
@@ -28,7 +30,7 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-scale.def.json
 )
 
-add_library(c-scale MODULE ${INC} ${SRC} c-scale.helper.c)
+add_executable(c-scale ${INC} ${SRC} c-scale.helper.c)
 
 target_link_libraries(c-scale ${EXTRA_LIBS})
 
@@ -36,10 +38,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-scale
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-scale.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-scale/libc-scale.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-scale/c-scale.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-scale/c-scale.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-scale ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-scale
     )
 ENDIF()
 
-install(TARGETS c-scale DESTINATION modules/c-scale)
-install(FILES c-scale.def.json DESTINATION modules/c-scale)
+install(TARGETS c-scale DESTINATION bin)

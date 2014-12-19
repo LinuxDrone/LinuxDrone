@@ -19,9 +19,10 @@ include_directories(${LIB_DIR}/sdk/include)
 set(EXTRA_LIBS
 	sdk
 	core
+    pthread
+    rt
 )
 
-add_library(pwmoutput MODULE ${INC} ${SRC})
+add_executable(pwmoutput ${INC} ${SRC})
 
-install(TARGETS pwmoutput DESTINATION modules/pwmoutput)
-install(FILES pwmoutput.def.json DESTINATION modules/pwmoutput)
+install(TARGETS pwmoutput DESTINATION bin)

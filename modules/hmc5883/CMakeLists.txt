@@ -19,9 +19,10 @@ include_directories(${LIB_DIR}/sdk/include)
 set(EXTRA_LIBS
 	sdk
 	core
+    pthread
+    rt
 )
 
-add_library(hmc5883 MODULE ${INC} ${SRC})
+add_executable(hmc5883 ${INC} ${SRC})
 
-install(TARGETS hmc5883 DESTINATION modules/hmc5883)
-install(FILES hmc5883.def.json DESTINATION modules/hmc5883)
+install(TARGETS hmc5883 DESTINATION bin)

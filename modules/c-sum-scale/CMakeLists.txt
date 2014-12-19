@@ -20,6 +20,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 set(EXTRA_LIBS
     sdk
     m
+    pthread
+    rt
 )
 
 ADD_CUSTOM_COMMAND(
@@ -28,7 +30,7 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-sum-scale.def.json
 )
 
-add_library(c-sum-scale MODULE ${INC} ${SRC} c-sum-scale.helper.c)
+add_executable(c-sum-scale ${INC} ${SRC} c-sum-scale.helper.c)
 
 target_link_libraries(c-sum-scale ${EXTRA_LIBS})
 
@@ -36,10 +38,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-sum-scale
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-sum-scale.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-sum-scale/libc-sum-scale.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-sum-scale/c-sum-scale.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-sum-scale/c-sum-scale.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-sum-scale ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-sum-scale
     )
 ENDIF()
 
-install(TARGETS c-sum-scale DESTINATION modules/c-sum-scale)
-install(FILES c-sum-scale.def.json DESTINATION modules/c-sum-scale)
+install(TARGETS c-sum-scale DESTINATION bin)
