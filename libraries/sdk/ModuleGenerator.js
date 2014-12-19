@@ -381,20 +381,20 @@ function make_argv2Structure(properties, module_type) {
             case "int":
             case "long":
             case "long long":
-                r += "    fprintf(stdout, \"\\t" + propName + ": %i\\n\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %i\\n\", obj->" + propName + ");\n";
                 break;
 
             case "float":
             case "double":
-                r += "    fprintf(stdout, \"\\t" + propName + ": %lf\\n\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %lf\\n\", obj->" + propName + ");\n";
                 break;
 
             case "const char*":
-                r += "    fprintf(stdout, \"\\t" + propName + ": %s\\n\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %s\\n\", obj->" + propName + ");\n";
                 break;
 
             case "bool":
-                r += "    fprintf(stdout, \"\\t" + propName + ": %i\\n\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %i\\n\", obj->" + propName + ");\n";
                 break;
 
             default:

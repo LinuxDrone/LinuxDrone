@@ -585,8 +585,8 @@ int init(module_t* module, int argc, char *argv[])
     argv2common_params(module, argc, argv);
 
     // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна принимать на вход наносекунды (а использоваться будут тики)
-    module->common_params.Transfer_task_period = rt_timer_ns2ticks(module->common_params.Transfer_task_period * 1000);
-    module->common_params.Task_Period = rt_timer_ns2ticks(module->common_params.Task_Period * 1000);
+    module->common_params.transfer_task_period = rt_timer_ns2ticks(module->common_params.transfer_task_period * 1000);
+    module->common_params.main_task_period = rt_timer_ns2ticks(module->common_params.main_task_period * 1000);
 //print_common_params(&module->common_params);
 
     // Запись в структуру специфичных параметров модуля
@@ -663,9 +663,9 @@ int argv2common_params(void* in_module, int argc, char *argv[])
         {NULL,0,NULL,0}
     };
 
-    module->common_params.Task_Priority = 80;
-    module->common_params.Task_Period = 20000;
-    module->common_params.Transfer_task_period = 20000;
+    module->common_params.rt_priority = 80;
+    module->common_params.main_task_period = 20000;
+    module->common_params.transfer_task_period = 20000;
 
     int res;
     int option_index;
@@ -678,8 +678,8 @@ int argv2common_params(void* in_module, int argc, char *argv[])
             case 'r':
                 if (optarg!=NULL)
                 {
-                    module->common_params.Task_Priority = atoi(optarg);
-                    if(module->common_params.Task_Priority < 1 || module->common_params.Task_Priority > 99)
+                    module->common_params.rt_priority = atoi(optarg);
+                    if(module->common_params.rt_priority < 1 || module->common_params.rt_priority > 99)
                     {
                         printf("argument 'priority' valid values in the range 1-99\n\n");
                         usage(argv);
@@ -690,8 +690,8 @@ int argv2common_params(void* in_module, int argc, char *argv[])
             case 'm':
                 if (optarg!=NULL)
                 {
-                    module->common_params.Task_Period = atoll(optarg);
-                    if(module->common_params.Task_Period < 0)
+                    module->common_params.main_task_period = atoll(optarg);
+                    if(module->common_params.main_task_period < 0)
                     {
                         printf("argument 'main-task-period' valid values >-1\n\n");
                         usage(argv);
@@ -702,8 +702,8 @@ int argv2common_params(void* in_module, int argc, char *argv[])
             case 't':
                 if (optarg!=NULL)
                 {
-                    module->common_params.Transfer_task_period = atoll(optarg);
-                    if(module->common_params.Transfer_task_period < 0)
+                    module->common_params.transfer_task_period = atoll(optarg);
+                    if(module->common_params.transfer_task_period < 0)
                     {
                         printf("argument 'transfer-task-period' valid values >-1\n\n");
                         usage(argv);
@@ -729,7 +729,7 @@ usage(module_t* module, char *argv[])
     fprintf(stderr, "\trequired argument\n");
     fprintf(stderr, "\tInstance name\n\n");
 
-    fprintf(stderr, "--priority=PRIORITY\n");
+    fprintf(stderr, "--rt-priority=PRIORITY\n");
     fprintf(stderr, "\toptional\n");
     fprintf(stderr, "\tMain realtime thread priority (1-99, default: 80)\n\n");
 
@@ -1017,7 +1017,7 @@ void get_input_data(module_t *module)
     if(module->input_data==NULL)
     {
         //здесь просто поспать потоку
-        rt_task_sleep(module->common_params.Task_Period);
+        rt_task_sleep(module->common_params.main_task_period);
 
         //fprintf(stderr, "Module don't have input\n");
         return;
@@ -1029,7 +1029,7 @@ void get_input_data(module_t *module)
 
     module->updated_input_properties = 0;
 
-    int res_read = rt_queue_read(&module->in_queue, buf, 256, module->common_params.Task_Period);
+    int res_read = rt_queue_read(&module->in_queue, buf, 256, module->common_params.main_task_period);
     if (res_read > 0)
     {
         bson_t bson;
@@ -1270,7 +1270,7 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
 
     int i=0;
     out_object_t* out_object = module->out_objects[i];
-    bool time2publish2shmem = (rt_timer_read() - *time_last_publish_shmem) > module->common_params.Transfer_task_period;
+    bool time2publish2shmem = (rt_timer_read() - *time_last_publish_shmem) > module->common_params.transfer_task_period;
     while(out_object)
     {
         if(!time2publish2shmem && !to_queue)
@@ -1337,7 +1337,7 @@ void task_transmit(void *p_module)
             return;
         }
         // Если нет заполненных объектов, то поспим пока они не появятся
-        res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, module->common_params.Transfer_task_period);
+        res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, module->common_params.transfer_task_period);
 
 
         int res1 = rt_mutex_release(&module->mutex_obj_exchange);
@@ -1464,7 +1464,7 @@ int create_xenomai_services(module_t* module)
     char name_task_main[XNOBJECT_NAME_LEN] = "";
     strcat(name_task_main, module->instance_name);
     strcat(name_task_main, SUFFIX_TASK);
-    int err = rt_task_create(&module->task_main, name_task_main, TASK_STKSZ, module->common_params.Task_Priority, TASK_MODE);
+    int err = rt_task_create(&module->task_main, name_task_main, TASK_STKSZ, module->common_params.rt_priority, TASK_MODE);
     if (err != 0)
     {
         fprintf(stdout, "Error create work task \"%s\"\n", name_task_main);

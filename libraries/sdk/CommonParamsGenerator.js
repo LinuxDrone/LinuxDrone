@@ -5,7 +5,7 @@ function make_params_structure(params_definitions) {
     r += "typedef struct\n";
     r += "{\n";
     params_definitions.forEach(function (param) {
-        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "");
+        var paramName = param.name.replace(/\ /g, "_").replace(/-/g, "_").replace(/\+/g, "");
         r += "\t" + param.type + " " + paramName + ";\n";
     });
     r += "} common_params_t;\n\n";
@@ -18,7 +18,7 @@ function make_Structure2Bson(properties) {
     r += "int common_params2bson(common_params_t* obj, bson_t* bson)\n";
     r += "{\n";
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
@@ -84,7 +84,7 @@ function make_Bson2Structure(properties) {
     r += "    {\n";
     r += "        const char* key = bson_iter_key (&iter);\n\n";
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         r += "        if(!strncmp(key, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
         r += "        {\n";
         switch (properties[key].type) {
@@ -142,37 +142,37 @@ function make_Bson2Structure(properties) {
     r += "    fprintf(stdout, \"\\nCommon params:\\n\");\n";
 
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
             case "int":
-                r += "    fprintf(stdout, \"\\t" + propName + "=%i\\n\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %i\\n\", obj->" + propName + ");\n";
                 break;
 
             case "long":
-                r += "    fprintf(stdout, \"\\t" + propName + "=%i\\n\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %i\\n\", obj->" + propName + ");\n";
                 break;
 
             case "long long":
-                r += "    fprintf(stdout, \"\\t"+ propName + "=%llu\\n\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t"+ key + ": %llu\\n\", obj->" + propName + ");\n";
                 break;
 
             case "float":
             case "double":
-                r += "    fprintf(stdout, \"\\t" + propName + "=%lf\\n\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %lf\\n\", obj->" + propName + ");\n";
                 break;
 
             case "const char*":
-                r += "    fprintf(stdout, \"\\t" + propName + "=%s\\n\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %s\\n\", obj->" + propName + ");\n";
                 break;
 
             case "bool":
-                r += "    fprintf(stdout, \"\\t" + propName + "=%s\\n\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %s\\n\", obj->" + propName + ");\n";
                 break;
 
             default:
-                console.log("Unknown type " + properties[key].type + " for port " + propName);
+                console.log("Unknown type " + properties[key].type + " for port " + key);
                 break;
         }
     }

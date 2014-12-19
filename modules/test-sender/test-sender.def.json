@@ -2,9 +2,9 @@
   "type": "module_def",
   "name": "test-sender",
   "version": 2,
-  "Task Priority": 80,
-  "Task Period": 200000,
-  "Transfer task period": 200000,
+  "rt-priority": 80,
+  "main-task-period": 200000,
+  "transfer-task-period": 200000,
   "description": {
     "en": "en description",
     "ru": "русское описание"

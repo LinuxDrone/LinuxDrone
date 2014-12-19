@@ -2,7 +2,7 @@
 
     exports.commonModuleParamsDefinition = [
         {
-            name: "Task Priority",
+            name: "rt-priority",
             "displayName": {
                 "en": "Task Priority",
                 "ru": "Task Priority"
@@ -14,7 +14,7 @@
             defaultValue: 80
         },
         {
-            name: "Task Period",
+            name: "main-task-period",
             "displayName": {
                 "en": "Task Period",
                 "ru": "Task Period"
@@ -26,7 +26,7 @@
             defaultValue: 20
         },
         {
-            name: "Transfer task period",
+            name: "transfer-task-period",
             "displayName": {
                 "en": "Transfer task period",
                 "ru": "Transfer task period"
