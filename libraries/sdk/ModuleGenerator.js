@@ -290,14 +290,15 @@ function make_print_help(params){
     return r;
 }
 
-function make_argv2Structure(properties, outName, module_type, set_update_fact) {
+function make_argv2Structure(properties, module_type) {
+    var structureName = "params_" + module_type;
     var r = "";
-    r += "// Convert argv to structure " + outName + "\n";
-    r += "int argv2" + outName + "(module_t* module, int argc, char *argv[])\n";
+    r += "// Convert argv to structure " + structureName + "\n";
+    r += "int argv2" + structureName + "(module_t* module, int argc, char *argv[])\n";
     r += "{\n";
     r += "    if(!module)\n";
     r += "    {\n";
-    r += "        printf(\"Error: func argv2" + outName + ", NULL parameter\\n\");\n";
+    r += "        printf(\"Error: func argv2" + structureName + ", NULL parameter\\n\");\n";
     r += "        return -1;\n";
     r += "    }\n\n";
 
@@ -317,12 +318,7 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
     r += "    opterr=0;\n";
     r += "    optind=0;\n";
     r += "    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){\n";
-
-    if (set_update_fact) {
-        r += "                    " + outName + "_t* obj = (" + outName + "_t*)module->input_data;\n";
-    } else {
-        r += "                    " + outName + "_t* obj = (" + outName + "_t*)module->specific_params;\n";
-    }
+    r += "                    " + structureName + "_t* obj = (" + structureName + "_t*)module->specific_params;\n";
 
     r += "        if (optarg!=NULL){\n";
     r += "            switch(res){\n";
@@ -361,9 +357,6 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
                 console.log("Unknown type " + properties[key].type + " for port " + propName);
                 break;
         }
-        if (set_update_fact) {
-            r += "            module->updated_input_properties |= " + propName + ";\n";
-        }
         r += "                break;\n\n";
         ip++;
     }
@@ -374,15 +367,12 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
     r += "}\n\n";
 
 
-    r += "// Helper function. Print structure " + outName + "\n";
-    if (outName == "input") {
-        r += "void print_" + module_type + "(void* obj1)\n";
-        r += "{\n";
-        r += "    " + outName + "_t* obj=obj1;\n";
-    } else {
-        r += "void print_" + outName + "(" + outName + "_t* obj)\n";
-        r += "{\n";
-    }
+    r += "// Helper function. Print structure " + structureName + "\n";
+
+    r += "void print_" + structureName + "(" + structureName + "_t* obj)\n";
+    r += "{\n";
+    r += "    fprintf(stdout, \"\\nSpecific params:\\n\");\n";
+
     for (var key in properties) {
         var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         switch (properties[key].type) {
@@ -391,20 +381,20 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
             case "int":
             case "long":
             case "long long":
-                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + propName + ": %i\\n\", obj->" + propName + ");\n";
                 break;
 
             case "float":
             case "double":
-                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + propName + ": %lf\\n\", obj->" + propName + ");\n";
                 break;
 
             case "const char*":
-                r += "    printf(\"" + propName + "=%s\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + propName + ": %s\\n\", obj->" + propName + ");\n";
                 break;
 
             case "bool":
-                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + propName + ": %i\\n\", obj->" + propName + ");\n";
                 break;
 
             default:
@@ -412,7 +402,7 @@ function make_argv2Structure(properties, outName, module_type, set_update_fact) 
                 break;
         }
     }
-    r += "    printf(\"\\n\");\n";
+    r += "    fprintf(stdout, \"\\n\");\n";
     r += "}\n\n";
 
     return r;
@@ -655,7 +645,7 @@ function Create_C_file(module) {
     if ('paramsDefinitions' in module) {
         r += make_Structure2Bson(params, "params_" + module_type);
         //r += make_Bson2Structure(params, "params_" + module_type, "", false);
-        r += make_argv2Structure(params, "params_" + module_type, "", false);
+        r += make_argv2Structure(params, module_type);
         r += make_print_help(params);
     }
 
