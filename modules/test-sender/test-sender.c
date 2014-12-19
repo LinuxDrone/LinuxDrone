@@ -14,9 +14,9 @@ int main (int argc, char *argv[])
 
     test_sender_init(m_module, argc, argv);
 
-    params_test_sender_t* obj = (params_test_sender_t*)m_module->module_info.specific_params;
-    print_params_test_sender(obj);
-    print_common_params(&m_module->module_info.common_params);
+    //params_test_sender_t* obj = (params_test_sender_t*)m_module->module_info.specific_params;
+    //print_params_test_sender(obj);
+    //print_common_params(&m_module->module_info.common_params);
 
     test_sender_start(m_module);
 

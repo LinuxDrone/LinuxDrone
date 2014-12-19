@@ -388,10 +388,11 @@ remote_queue_t* register_remote_queue(module_t* module, const char* name_remote_
  */
 int init(module_t* module, int argc, char *argv[])
 {
-    const char* short_options = "hn:o:i:d";
+    const char* short_options = "hdsn:o:i:d";
     const struct option long_options[] = {
         {"help",no_argument,NULL,'h'},
         {"module-definition",optional_argument,NULL,'d'},
+        {"print-params",optional_argument,NULL,'s'},
         {"name",required_argument,NULL,'n'},
         {"out-link",required_argument,NULL,'o'},
         {"in-link",required_argument,NULL,'i'},
@@ -402,13 +403,19 @@ int init(module_t* module, int argc, char *argv[])
     int option_index;
     opterr=0;
     optind=0;
+    bool print_params = false;
     while ((res = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1)
     {
         switch(res)
         {
-            case 'h': //default:
+            case 'h':
                 usage(module, argv);
             break;
+
+            case 's':
+                print_params = true;
+            break;
+
 
         // Имя инстанса
             case 'n':
@@ -587,11 +594,15 @@ int init(module_t* module, int argc, char *argv[])
     // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна принимать на вход наносекунды (а использоваться будут тики)
     module->common_params.transfer_task_period = rt_timer_ns2ticks(module->common_params.transfer_task_period * 1000);
     module->common_params.main_task_period = rt_timer_ns2ticks(module->common_params.main_task_period * 1000);
-//print_common_params(&module->common_params);
 
     // Запись в структуру специфичных параметров модуля
-    (*module->argv2params)(module, argc, argv);
-    //(*module->print_params)(module->specific_params);
+    (*module->argv2params)(module, argc, argv);    
+
+    if(print_params)
+    {
+        print_common_params(&module->common_params);
+        (*module->print_params)(module->specific_params);
+    }
 
     return 0;
 }
@@ -721,9 +732,11 @@ usage(module_t* module, char *argv[])
 {
     fprintf(stderr, "\nusage: %s [OPTION]...\n\n", argv[0]);
 
-    fprintf(stderr, "--help\tdisplay this help and exit\n\n");
+    fprintf(stderr, "--help\n\tdisplay this help and exit\n\n");
 
-    fprintf(stderr, "--module-definition\tprint JSON module definition\n\n");
+    fprintf(stderr, "--module-definition\n\tprint JSON module definition\n\n");
+
+    fprintf(stderr, "--print-params\n\tprint params for module instance\n\n");
 
     fprintf(stderr, "--name=NAME\n");
     fprintf(stderr, "\trequired argument\n");
