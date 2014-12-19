@@ -1,30 +1,5 @@
 #include <sys/mman.h>
 #include "test-sender.helper.h"
-#include <getopt.h>
-
-module_test_sender_t* m_module;
-
-int main (int argc, char *argv[])
-{
-    mlockall(MCL_CURRENT|MCL_FUTURE);
-    setvbuf(stdout, NULL, _IONBF, 0);
-
-
-    m_module = test_sender_create(NULL);
-
-    test_sender_init(m_module, argc, argv);
-
-    //params_test_sender_t* obj = (params_test_sender_t*)m_module->module_info.specific_params;
-    //print_params_test_sender(obj);
-    //print_common_params(&m_module->module_info.common_params);
-
-    test_sender_start(m_module);
-
-    printf("\nPress ENTER for exit\n\n");
-    getchar();
-
-    return 0;
-}
 
 
 void test_sender_run (module_test_sender_t *module)

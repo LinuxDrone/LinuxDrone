@@ -519,6 +519,7 @@ function Create_C_file(module) {
     var module_type = module.name;
     var r = "";
 
+    r += "#include <sys/mman.h>\n";
     r += "#include \"" + module_type + ".helper.h\"\n";
     r += "#include <getopt.h>\n\n";
 
@@ -526,6 +527,8 @@ function Create_C_file(module) {
     r += "const char* m_definition = \"" + JSON.stringify(module).replace(/"/g, "\\\"") + "\";\n\n";
 
     module_type = module_type.replace(/-/g, "_");
+
+    r += "module_" + module_type + "_t* m_module;\n";
 
     r += "int checkout4writer(module_t* module, out_object_t* set, void** obj);\n";
     r += "int checkin4writer(module_t* module, out_object_t* set, void** obj);\n\n";
@@ -802,8 +805,22 @@ function Create_C_file(module) {
         r += "  }\n";
         r += "  return 0;\n";
         r += "}\n\n";
-
     }
+
+
+    // Функция main
+    r += "int main (int argc, char *argv[])\n";
+    r += "{\n";
+    r += "    mlockall(MCL_CURRENT|MCL_FUTURE);\n";
+    r += "    setvbuf(stdout, NULL, _IONBF, 0);\n\n\n";
+    r += "    m_module = " + module_type + "_create(NULL);\n\n";
+    r += "    " + module_type + "_init(m_module, argc, argv);\n\n";
+    r += "    " + module_type + "_start(m_module);\n\n";
+    r += "    printf(\"\\nPress ENTER for exit\\n\\n\");\n";
+    r += "    getchar();\n\n";
+    r += "    return 0;\n";
+    r += "}\n";
+
 
     return r;
 }
