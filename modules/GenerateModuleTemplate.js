@@ -21,6 +21,8 @@ function CreateCMakeLists(module_name) {
 
     r += "set(EXTRA_LIBS\n";
     r += "    sdk\n";
+    r += "    pthread\n";
+    r += "    rt\n";
     r += ")\n\n";
 
     r += "ADD_CUSTOM_COMMAND(\n";
@@ -29,7 +31,7 @@ function CreateCMakeLists(module_name) {
     r += "    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/" + module_name + ".def.json\n";
     r += ")\n\n";
 
-    r += "add_library(" + module_name + " MODULE ${INC} ${SRC} " + module_name + ".helper.c)\n\n";
+    r += "add_executable(" + module_name + " ${INC} ${SRC} " + module_name + ".helper.c)\n\n";
 
     r += "target_link_libraries(" + module_name + " ${EXTRA_LIBS})\n\n";
 
@@ -37,13 +39,11 @@ function CreateCMakeLists(module_name) {
     r += "    add_custom_command(\n";
     r += "        TARGET " + module_name + "\n";
     r += "        POST_BUILD\n";
-    r += "        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} lib" + module_name + ".so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/" + module_name + "/lib" + module_name + ".so\n";
-    r += "        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/" + module_name + "/" + module_name + ".def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/" + module_name + "/" + module_name + ".def.json\n";
+    r += "        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} " + module_name + " ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/" + module_name + "\n";
     r += "    )\n";
     r += "ENDIF()\n\n";
 
-    r += "install(TARGETS " + module_name + " DESTINATION modules/" + module_name + ")\n";
-    r += "install(FILES " + module_name + ".def.json DESTINATION modules/" + module_name + ")\n";
+    r += "install(TARGETS " + module_name + " DESTINATION bin)\n";
 
     return r;
 }
@@ -52,11 +52,10 @@ function CreateModuleDefinition(module_name) {
     var obj_def = {
         "type": "module_def",
         "name": module_name,
-        "version": 2,
-        "Task Priority": 80,
-        "Task Period": 200000,
-        "Transfer task period": 200000,
-        "Notify on change": false,
+        "version": 1,
+        "rt-priority": 80,
+        "main-task-period": 200000,
+        "transfer-task-period": 200000,
         "description": {
             "en": "en description",
             "ru": "русское описание"
@@ -367,6 +366,7 @@ function CreateModuleCFile(obj_def) {
                     }
                 }
             }
+            r += "//print_" + outName + "(obj" + outName + ");\n";
             r += "        checkin_" + outName + "(module, &obj" + outName + ");\n\n";
         });
     }
