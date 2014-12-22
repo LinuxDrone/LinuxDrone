@@ -38,7 +38,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-gy87
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-gy87 ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-gy87
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-gy87 ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-gy87.mod
     )
 ENDIF()
 

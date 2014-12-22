@@ -38,7 +38,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET attitude
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} attitude ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/attitude
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} attitude ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/attitude.mod
     )
 ENDIF()
 

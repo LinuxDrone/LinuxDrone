@@ -38,7 +38,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-generator
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-generator ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-generator
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-generator ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-generator.mod
     )
 ENDIF()
 

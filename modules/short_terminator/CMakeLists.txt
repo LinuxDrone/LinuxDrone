@@ -37,7 +37,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET short_terminator
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} short_terminator ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/short_terminator
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} short_terminator ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/short_terminator.mod
     )
 ENDIF()
 

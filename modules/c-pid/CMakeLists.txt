@@ -38,7 +38,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-pid
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-pid ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-pid
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-pid ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-pid.mod
     )
 ENDIF()
 

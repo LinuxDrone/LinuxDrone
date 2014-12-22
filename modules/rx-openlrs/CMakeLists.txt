@@ -38,7 +38,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET rx-openlrs
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} rx-openlrs ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/rx-openlrs
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} rx-openlrs ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/rx-openlrs.mod
     )
 ENDIF()
 

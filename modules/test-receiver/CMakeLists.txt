@@ -38,7 +38,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET test-receiver
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} test-receiver ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/test-receiver
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} test-receiver ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/test-receiver.mod
     )
 ENDIF()
 

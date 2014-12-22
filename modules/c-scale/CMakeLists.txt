@@ -38,7 +38,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-scale
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-scale ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-scale
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-scale ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-scale.mod
     )
 ENDIF()
 

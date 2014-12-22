@@ -39,7 +39,7 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-bmp180
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-bmp180 ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-bmp180
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-bmp180 ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-bmp180.mod
     )
 ENDIF()
 

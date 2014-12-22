@@ -45,7 +45,7 @@ IF(${DO_POST_BUILD})
         POST_BUILD
         COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} BB-BONE-PRU-LD-00A0.dtbo ${URL_TARGET_SYSTEM}:/lib/firmware/BB-BONE-PRU-LD-00A0.dtbo
         COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} pru-pwmout.bin ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/pru-pwmout.bin
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-pru-pwmout ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-pru-pwmout
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-pru-pwmout ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-pru-pwmout.mod
     )
 ENDIF()
 
