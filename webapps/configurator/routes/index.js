@@ -16,7 +16,8 @@ exports.droneconfig = function (req, res) {
 exports.metamodules = function (db) {
     return function (req, res) {
         db.get('modules_defs').find({}, {}, function (e, metaModules) {
-            res.json(metaModules);
+            //res.json(metaModules);
+            res.send(req.query.callback + '(' + JSON.stringify(metaModules) + ')');
         });
     };
 };
