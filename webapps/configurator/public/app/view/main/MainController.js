@@ -9,7 +9,7 @@ Ext.define('RtConfigurator.view.main.MainController', {
     extend: 'Ext.app.ViewController',
 
     requires: [
-        'Ext.MessageBox'
+        'Ext.window.MessageBox'
     ],
 
     alias: 'controller.main',
