@@ -1,28 +1,27 @@
 var _ = require('underscore');
 var spawn = require('child_process').spawn;
-var commonModuleParams = require('../public/ModulesCommonParams.def.js');
+var commonModuleParams = require('../client/ModulesCommonParams.def.js');
 
-/*
- * GET home page.
- */
-exports.index = function (req, res) {
-    //res.render('index', { title: 'Express' });
-};
+var mongo = require('mongodb');
+var monk = require('monk');
+var db = monk('localhost:27017/test');
+
 
 exports.droneconfig = function (req, res) {
     res.render('droneconfig', { title: 'Linuxdrone Configurator' });
 };
 
-exports.metamodules = function (db) {
-    return function (req, res) {
+exports.metamodules = function (req, res) {
         db.get('modules_defs').find({}, {}, function (e, metaModules) {
-            if(req.query.callback){
-                res.send(req.query.callback + '(' + JSON.stringify(metaModules) + ')');
+            if(req.body.callback){
+              res.writeHead(200, {"Content-Type": "application/javascript"});
+              res.write(req.body.callback + '(' + JSON.stringify(metaModules) + ')');
             }else{
-                res.json(metaModules);
+              res.writeHead(200, {"Content-Type": "application/json"});
+              res.write(JSON.stringify(metaModules));
             }
+            res.end();
         });
-    };
 };
 
 exports.newconfig = function (db) {
@@ -128,13 +127,18 @@ exports.delconfig = function (db) {
     };
 };
 
-exports.getconfigs = function (db) {
-    return function (req, res) {
+exports.getconfigs = function (req, res) {
         var collection = db.get('visual_configuration');
         collection.find({}, {}, function (e, docs) {
-            res.json(docs);
+          if(req.body.callback){
+            res.writeHead(200, {"Content-Type": "application/javascript"});
+            res.write(req.body.callback + '(' + JSON.stringify(docs) + ')');
+          }else{
+            res.writeHead(200, {"Content-Type": "application/json"});
+            res.write(JSON.stringify(docs));
+          }
+          res.end();
         });
-    };
 };
 
 exports.getconfig = function (db) {
@@ -419,4 +423,3 @@ function GetInstanceName(graph, id) {
     });
     return res;
 }
-

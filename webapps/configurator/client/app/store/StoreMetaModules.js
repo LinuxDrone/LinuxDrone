@@ -7,7 +7,7 @@ Ext.define('RtConfigurator.store.StoreMetaModules', {
 
     proxy: {
         type: 'jsonp',
-        url: 'http://vrubel.linuxdrone.org:4000/metamodules',
+        url: location.protocol + '//' + location.hostname + ':4000/metamodules',
         listeners : {
             exception : function(proxy, response, operation) {
                 alert(operation.getError().statusText);
@@ -15,4 +15,3 @@ Ext.define('RtConfigurator.store.StoreMetaModules', {
         }
     }
 });
-

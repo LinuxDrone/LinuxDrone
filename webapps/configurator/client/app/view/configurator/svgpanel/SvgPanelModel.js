@@ -15,17 +15,17 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
             autoLoad: true,
             model: 'RtConfigurator.model.Schema',
             proxy: {
-                type: 'rest',
+                type: 'jsonp',
                 reader: {
                     rootProperty: 'data',
                     successProperty: 'success',
                     messageProperty: 'message'
                 },
                 api: {
-                    read: 'getconfigs',
-                    update: 'saveconfig',
-                    create: 'newconfig',
-                    destroy: 'delconfig'
+                    read: location.protocol + '//' + location.hostname + ':4000/getconfigs',
+                    update: location.protocol + '//' + location.hostname + ':4000/saveconfig',
+                    create: location.protocol + '//' + location.hostname + ':4000/newconfig',
+                    destroy: location.protocol + '//' + location.hostname + ':4000/delconfig'
                 },
                 listeners: {
                     exception: function (proxy, response, operation) {
