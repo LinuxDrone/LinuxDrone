@@ -11,6 +11,8 @@
     "mongodb": "*",
     "monk": "*",
     "underscore":"*",
-    "ws":"*"
+    "ws":"*",
+    "node-simple-router": "*",
+    "director":"*"
   }
 }
