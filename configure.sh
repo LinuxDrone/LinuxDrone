@@ -37,7 +37,10 @@ done
 
 shift `expr $OPTIND - 1`
 
-if  [ ! ${BOARD_NAME} ] || ( [ ${BOARD_NAME} != bbb ] && [ ${BOARD_NAME} != rpi ] ); then
+if  [ ! ${BOARD_NAME} ] || ( \
+    [ ${BOARD_NAME} != bbb ] && \
+    [ ${BOARD_NAME} != rpi ] && \
+    [ ${BOARD_NAME} != g25 ] ); then
     echo "Not specified board type"
     echo $USAGE
     exit 1

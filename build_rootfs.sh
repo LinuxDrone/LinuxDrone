@@ -149,16 +149,17 @@ SDCARD=$1
 DISK_IMAGE=${BOARD_DIR}/${BOARD}-ld.img
 
 # Only assumed two partitions, best to umount all before running this script
-if [ $(mount | grep -c /dev/mapper/loop) -ne 0 ]; then
-  print "Umount partitions /dev/mapper/loop*"
-  sudo umount /dev/mapper/loop*
-  print "umount /dev/mapper/loop*"
-fi
+for x in $(mount | grep /dev/mapper/loop | awk '{print $1}')
+do
+    print "Umount partitions: ${x}"
+    sudo umount ${x}
+done
 
 # Удаляем устройства-разделы с помощью kpartx
-for x in $(losetup -a | awk '{print $3}' | tr -d \(\))
+for x in $(losetup -a | awk '{print $1}' | tr -d \:)
 do
-    print "Remove device-partitions kpartx in file: ${x}"
+    print "Remove device-partitions ${x}"
+    sudo losetup -d ${x}
     sudo kpartx -dv ${x}
 done
 
@@ -210,11 +211,16 @@ sudo mount -t ext4 /dev/mapper/${DEV_LOOP}p2 /mnt/rootfs -o rw
 print "Копируем файлы из rootfs в образ диска"
 sudo rsync -a --delete --exclude="/boot/*" ${CHROOT_DIR}/ /mnt/rootfs/
 
+# Copy to /boot
+sudo rm -R /mnt/boot/* || true
+if [ ${AT91BS_USE} ]; then
+    sudo cp -v ${CHROOT_DIR}/boot/boot.bin /mnt/boot/
+fi
+
 if [ ${UBOOT_USE} ]; then
-# Копируем в fat раздел карты бутлоадер
-    sudo rm -R /mnt/boot/* || true
-    sudo cp -v ${CHROOT_DIR}/boot/MLO /mnt/boot/
-    sudo cp -v ${CHROOT_DIR}/boot/u-boot.img /mnt/boot/
+    for ITEM in ${UBOOT_FILES}; do
+      sudo cp -v ${CHROOT_DIR}/boot/${ITEM} /mnt/boot/
+    done
     sudo cp -v ${CHROOT_DIR}/boot/uEnv.txt /mnt/boot/
 fi
 sudo cp -R -u ${CHROOT_DIR}/boot/* /mnt/boot/
@@ -223,7 +229,8 @@ sync
 # Размонтируем образ диска
 sudo umount /dev/mapper/${DEV_LOOP}p1
 sudo umount /dev/mapper/${DEV_LOOP}p2
-sudo kpartx -dv ${DISK_IMAGE}
+sudo losetup -d /dev/${DEV_LOOP}
+sudo kpartx -dv /dev/${DEV_LOOP}
 
 print "create arhive the image sdcard ${DISK_IMAGE}.bz2"
 cd ${BOARD_DIR}
@@ -260,6 +267,8 @@ iface eth0 inet dhcp
 
 # Ethernet/RNDIS gadget (g_ether)
 # ... or on host side, usbnet and random hwaddr
+pre-up modprobe g_ether
+auto usb0
 iface usb0 inet static
     address 192.168.7.2
     netmask 255.255.255.0
@@ -314,7 +323,7 @@ EOF
 
 print "Downloads scripts for expand rootfs, copy to /home/ld"
 if [ ! -f ${LDDOWNL_DIR}/expand_rootfs.sh ]; then
-    print "Download linuxdrone-dtbo.tar.gz"
+    print "Download expand_rootfs.sh"
     wget -c -P ${LDDOWNL_DIR} http://wiki.linuxdrone.org/download/attachments/5275816/expand_rootfs.sh
     chmod +x ${LDDOWNL_DIR}/expand_rootfs.sh
 fi
@@ -421,6 +430,68 @@ dwc_otg.lpm_enable=0 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait
 EOF
 "
 }
+
+# Settings Arietta G25 for the rootfs
+roofs_settings_g25() {
+print "Apply settings for ${BOARD_FULL_NAME}"
+print "Adding deb sources to /etc/apt/sources.list"
+sudo sh -c "echo 'deb ${DISTR_MIRROR} ${DISTR} main contrib non-free' >> ${CHROOT_DIR}/etc/apt/sources.list"
+sudo sh -c "echo 'deb-src ${DISTR_MIRROR} ${DISTR} main contrib non-free' >> ${CHROOT_DIR}/etc/apt/sources.list"
+
+rootfs_common_settings
+
+# Remove eth0 in /etc/network/interfaces
+sed -i "s/auto eth0//g" ${CHROOT_DIR}/etc/network/interfaces
+sed -i "s/iface eth0 inet dhcp//g" ${CHROOT_DIR}/etc/network/interfaces
+
+print "Edit /etc/fstab"
+sudo sh -c "cat> ${CHROOT_DIR}/etc/fstab << EOF
+/dev/mmcblk0p2  /  auto  errors=remount-ro  0  1
+/dev/mmcblk0p1  /boot  auto  defaults  0  2
+EOF
+"
+
+print "Create 70-persistent-net.rules"
+sudo sh -c "cat >${CHROOT_DIR}/etc/udev/rules.d/70-persistent-net.rules << EOF
+'# Arietta G25: net device ()
+SUBSYSTEM==\"net\", ACTION==\"add\", DRIVERS==\"?*\", ATTR{dev_id}==\"0x0\", ATTR{type}==\"1\", KERNEL==\"wlan*\", NAME=\"wlan0\"
+EOF
+"
+
+print "Set debug port ttyS0 115200"
+sudo sh -c "cat >>${CHROOT_DIR}/etc/inittab << EOF
+T0:2345:respawn:/sbin/getty -L ttyS0 115200 vt100
+EOF
+"
+
+print "Create /boot/uEnv.txt"
+UENV='EOF
+##This will work with: Angstrom 2013.06.20 u-boot.
+uname_r=3.14.17-xeno2.zImage
+
+loadzimage=load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${uname_r}
+
+#SAM9G25-EK
+fdtfile=/dtbs/at91sam9g25ek.dtb
+
+#Default u-boot settings:
+#console=ttyS0,115200
+#optargs=console=tty0
+
+##Un-comment to enable systemd in Debian Wheezy
+#optargs=quiet init=/lib/systemd/systemd
+
+mmcroot=/dev/mmcblk0p2 ro
+mmcrootfstype=ext4 rootwait fixrtc
+
+#Run custom u-boot commands early:
+#uenvcmd=
+
+EOF
+'
+sudo sh -c "cat >${CHROOT_DIR}/boot/uEnv.txt << ${UENV}"
+}
+
 
 # Installing packages in rootfs
 rootfs_installing_packages() {
@@ -535,9 +606,11 @@ print "End install softwares to this host"
 # Download cross-compiler
 download_install_crosscompiler_rpi() {
 
+CC_PREFIX=arm-linux-gnueabihf
+
 clean_directory " cc " "${CC_DIR}"
 
-if [ ! -f ${CC_DIR}/bin/arm-linux-gnueabihf-gcc ]; then
+if [ ! -f ${CC_DIR}/bin/${CC_PREFIX}-gcc ]; then
   if [ ! -d ${CC_DIR} ]; then
       print "Create a directory for cross-compiler"
       mkdir -p ${CC_DIR}
@@ -560,11 +633,13 @@ else
   print "Cross-compiler is already installed for rpi"
 fi
 
-export CC=${CC_DIR}/bin/arm-linux-gnueabihf-
+export CC=${CC_DIR}/bin/${CC_PREFIX}-
 export PATH=${CC_DIR}/bin:$PATH
 }
 
 download_install_crosscompiler_bbb() {
+
+CC_PREFIX=arm-linux-gnueabihf
 
 clean_directory " cc " "${CC_DIR}"
 
@@ -585,13 +660,48 @@ if [ ! -f ${CC_DIR}/bin/arm-linux-gnueabihf-gcc ]; then
   print "Installing cross-compiler bbb"
   cd ${CC_DIR}
   tar -xf ${LDDOWNL_DIR}/${BOARD}/crosscompiler.tar.gz
-  mv ./*-arm-linux-gnueabihf*/* .
-  rm -R ./*-arm-linux-gnueabihf*
+  mv ./*-${CC_PREFIX}*/* .
+  rm -R ./*-${CC_PREFIX}*
 else
   print "Cross-compiler is already installed for bbb"
 fi
 
-export CC=${CC_DIR}/bin/arm-linux-gnueabihf-
+export CC=${CC_DIR}/bin/${CC_PREFIX}-
+export PATH=${CC_DIR}/bin:$PATH
+}
+
+download_install_crosscompiler_g25() {
+
+clean_directory " cc " "${CC_DIR}"
+
+#CC_PREFIX=arm-none-eabi
+CC_PREFIX=arm-linux-gnueabi
+
+if [ ! -f ${CC_DIR}/bin/${CC_PREFIX}-gcc ]; then
+  if [ ! -d ${CC_DIR} ]; then
+      print "Create a directory for cross-compiler"
+      mkdir -p ${CC_DIR}
+  elif [ $(find ${CC_DIR} -type f | wc -l) -ne 0 ]; then
+      print "Clean ${CC_DIR}"
+      rm -R ${CC_DIR}/*
+  fi
+
+  if [ ! -f ${LDDOWNL_DIR}/${BOARD}/crosscompiler.tar.bz2 ]; then
+    print "Download cross-compiler bbb"
+    #wget -O ${LDDOWNL_DIR}/${BOARD}/crosscompiler.tar.gz https://releases.linaro.org/14.09/components/toolchain/binaries/gcc-linaro-arm-none-eabi-4.9-2014.09_linux.tar.xz
+    wget -O ${LDDOWNL_DIR}/${BOARD}/crosscompiler.tar.bz2 https://releases.linaro.org/12.04/components/toolchain/binaries/gcc-linaro-arm-linux-gnueabi-2012.04-20120426_linux.tar.bz2
+  fi
+
+  print "Installing cross-compiler bbb"
+  cd ${CC_DIR}
+  tar -xjf ${LDDOWNL_DIR}/${BOARD}/crosscompiler.tar.bz2
+  mv ./gcc-linaro-${CC_PREFIX}*/* .
+  rm -R ./gcc-linaro-${CC_PREFIX}*
+else
+  print "Cross-compiler is already installed for bbb"
+fi
+
+export CC=${CC_DIR}/bin/${CC_PREFIX}-
 export PATH=${CC_DIR}/bin:$PATH
 }
 
@@ -627,13 +737,21 @@ cp -uv ${AM335x_PRU_PACKAGE_DIR}/pru_sw/utils/pasm ${PASM_DIR}/
 
 
 # Download, patch, configure and build u-boot
-compiled_and_install_uboot_bbb() {
-UBOOT_BRANCH="v2014.10"
-UBOOT_PATCH_NAME="0001-am335x_evm-uEnv.txt-bootz-n-fixes.patch"
-UBOOT_PATCH_URL=https://raw.githubusercontent.com/eewiki/u-boot-patches/master/v2014.10/${UBOOT_PATCH_NAME}
+compiled_and_install_uboot() {
+
 UBOOT_USE=1
-if  [ -f ${CHROOT_DIR}/boot/MLO ] && \
-    [ -f ${CHROOT_DIR}/boot/u-boot.img ]; then
+
+clean_directory " u-boot " "${MAKE_DIR}/u-boot"
+
+# Test installed uboot files to rootfs
+for ITEM in ${UBOOT_FILES}; do
+    if  [ ! -f ${CHROOT_DIR}/boot/${ITEM} ]; then
+        UBOOT_INST=YES
+        break
+    fi
+done
+
+if  [ "x${UBOOT_INST}" = "x" ]; then
     print "u-boot is already installed"
     return 0
 fi
@@ -669,14 +787,68 @@ print "Apply patch for u-boot"
 patch -p1 < ./${UBOOT_PATCH_NAME}
 print "Start build u-boot"
 make ARCH=arm CROSS_COMPILE=${CC} distclean -j${CORES}
-make ARCH=arm CROSS_COMPILE=${CC} am335x_evm_config -j${CORES}
+make ARCH=arm CROSS_COMPILE=${CC} ${UBOOT_DEFCONFIG} -j${CORES}
 make ARCH=arm CROSS_COMPILE=${CC} -j${CORES}
 print "End build u-boot"
 
+print "Copy to  /boot u-boot files"
+for ITEM in ${UBOOT_FILES}; do
+  sudo cp -v ${MAKE_DIR}/u-boot/${ITEM} ${CHROOT_DIR}/boot/
+done
+}
 
-print "Копируем в /boot раздел карты бутлоадер"
-sudo cp -v ${MAKE_DIR}/u-boot/MLO ${CHROOT_DIR}/boot/
-sudo cp -v ${MAKE_DIR}/u-boot/u-boot.img ${CHROOT_DIR}/boot/
+# Download, patch, configure and build AT91Bootstrap
+compiled_and_install_at91bootstrap() {
+
+AT91BS_USE=1
+AT91BS_DIR="${MAKE_DIR}/at91bootstrap"
+
+clean_directory " at91bootstrap " "${AT91BS_DIR}"
+
+# Test installed AT91Bootstrap files to rootfs
+if  [ -f ${CHROOT_DIR}/boot/boot.bin ]; then
+    print "AT91Bootstrap is already installed"
+    return 0
+fi
+
+cd ${MAKE_DIR}
+
+if [ -d "${AT91BS_DIR}" ]; then
+    rm -Rf ${AT91BS_DIR}
+fi
+
+if [ -f ${LDDOWNL_DIR}/${BOARD}/at91bootstrap.tar.bz2 ]; then
+    print "unpacking at91bootstrap.tar.bz2"
+    pbzip2 -dc -p${CORES} ${LDDOWNL_DIR}/${BOARD}/at91bootstrap.tar.bz2 | sudo tar x
+else
+    print "Git clone at91bootstrap repository"
+    git clone ${AT91BS_GIT}
+
+    print "Start created archive for at91bootstrap repository"
+    sudo tar -c ./at91bootstrap/ | pbzip2 -c -5 -p${CORES} > ${LDDOWNL_DIR}/${BOARD}/at91bootstrap.tar.bz2
+    print "End created archive at91bootstrap repository into ${LDDOWNL_DIR}/${BOARD}"
+fi
+
+cd ${AT91BS_DIR}
+git checkout ${AT91BS_BRANCH} -b tmp
+
+if [ ! -f ${LDDOWNL_DIR}/${BOARD}/${UBOOT_PATCH_NAME} ]; then
+    print "Downloads patch at91bootstrap for ${BOARD_FULL_NAME}"
+    wget -cN -P ${LDDOWNL_DIR}/${BOARD}/ ${UBOOT_PATCH_URL}
+fi
+
+print "Start build at91bootstrap"
+make ARCH=arm CROSS_COMPILE=${CC} distclean -j${CORES}
+make ARCH=arm CROSS_COMPILE=${CC} ${AT91BS_DEFCONFIG} -j${CORES}
+make ARCH=arm CROSS_COMPILE=${CC} -j${CORES}
+print "End build at91bootstrap"
+
+print "Copy boot files to to /boot partitions"
+sudo cp -v ${AT91BS_DIR}/binaries/${AT91BS_FILES} ${CHROOT_DIR}/boot/boot.bin
+
+#for ITEM in ${AT91BS_FILES}; do
+#  sudo cp -v ${AT91BS_DIR}/${AT91BS_DIR}/binaries/${ITEM} ${CHROOT_DIR}/boot/
+#done
 }
 
 
@@ -761,7 +933,7 @@ print "libwebsockets installed"
 
 
 # Compiled MongoDB for RaspberryPI in system debian wheenzy
-compiled_and_install_mongodb_in_chroot_rpi() {
+compiled_and_install_mongodb_in_chroot() {
 print "Start compiling and installing mongodb for rpi"
 MONGO_INSTALL_DIR=/usr/local/mongo
 
@@ -874,6 +1046,13 @@ cd ${MAKE_DIR}/mongo-c-driver
 
 #sudo env PATH=$PATH make clean
 
+# Set fot mfpu or msoft in CFLAGS depending on the target platform
+if [ ${MFPU} ]; then
+    MFPU_MSOFT="mfpu=${MFPU}"
+else
+    MFPU_MSOFT=msoft-float
+fi
+
 env \
 CPP="${CC}gcc -E" \
 STRIP="${CC}strip" \
@@ -886,8 +1065,7 @@ CC="${CC}gcc" \
 CXX="${CC}g++" \
 NM="${CC}nm" \
 AS="${CC}as" \
-./configure CFLAGS="-march=${MARCH} -mfpu=${MFPU}" --host=arm-linux-gnueabihf --prefix=/usr/local
-
+./configure CFLAGS="-march=${MARCH} -${MFPU_MSOFT}" --host=${CC_PREFIX} --prefix=/usr/local
 make -j${CORES}
 sudo env PATH=$PATH make DESTDIR=${CHROOT_DIR} install -j${CORES}
 
@@ -979,24 +1157,40 @@ EOF
         ${MAKE_DIR}/xenomai/scripts/prepare-kernel.sh --arch=arm --linux=${KERNEL_DIR} --adeos=${XENO_PATCH}
         patch -Np1 < ${XENO_PATCH_POST}
         ;;
+    *-*-xeno2)
+        cd ${KERNEL_DIR}
+        ${MAKE_DIR}/xenomai/scripts/prepare-kernel.sh --arch=arm --linux=${KERNEL_DIR} --adeos=${XENO_PATCH}
+        ;;
     *-*-cobalt)
         cd ${KERNEL_DIR}
         ${MAKE_DIR}/xenomai/scripts/prepare-kernel.sh --arch=arm --ipipe=${XENO_PATCH}
         ;;
-    \?)
+    *)
         print "Xenomai working in mercury mode, not patches kernel"
         ;;
 esac
 
 print "Compile and install library, headers Xenomai to rootfs"
 cd ${MAKE_DIR}/xenomai
-if [ ${XENO} = "xeno2" ]; then
-    ./configure CFLAGS="-march=${MARCH} -mfpu=${MFPU}" LDFLAGS="-march=${MARCH}" \
-                --host=arm-linux-gnueabihf --with-cc=${CC}gcc --prefix=${XENO_INSTALL_DIR}
+
+# Set fot mfpu or msoft in CFLAGS depending on the target platform
+if [ ${MFPU} ]; then
+    MFPU_MSOFT="mfpu=${MFPU}"
 else
-    ./configure CFLAGS="-march=${MARCH} -mfpu=${MFPU}" LDFLAGS="-march=${MARCH}" \
-                --host=arm-linux-gnueabihf --with-cc=${CC}gcc --prefix=${XENO_INSTALL_DIR} \
-                --with-core=${XENO} --enable-smp
+    MFPU_MSOFT=msoft-float
+fi
+
+if [ "x${MARCH}" != "xarmv5" ]; then
+    XENO_SMP="--enable-smp"
+fi
+
+if [ ${XENO} = "xeno2" ]; then
+    ./configure CFLAGS="-march=${MARCH} -${MFPU_MSOFT}" LDFLAGS="-march=${MARCH}" \
+                --host="${CC_PREFIX}" --with-cc=${CC}gcc --prefix=${XENO_INSTALL_DIR}
+else
+    ./configure CFLAGS="-march=${MARCH} -${MFPU_MSOFT} -marm" LDFLAGS="-march=${MARCH}" \
+                --host="${CC_PREFIX}" --with-cc=${CC}gcc --prefix=${XENO_INSTALL_DIR} \
+                --with-core=${XENO} "${XENO_SMP}"
 fi
 
 make -j${CORES}
@@ -1037,7 +1231,9 @@ if [  ! -f "${KERNEL_DIR}/.git/config" ]; then
         print "git clone ${KERNEL_BRANCH}"
         if [ ${KERNEL_BRANCH_CHA} ]; then
             git clone -b ${KERNEL_BRANCH} ${KERNEL_URL} kernel
+            cd ${KERNEL_DIR}
             git reset --hard ${KERNEL_BRANCH_CHA}
+            cd ${MAKE_DIR}
         else
             git clone -b ${KERNEL_BRANCH} --depth 1 ${KERNEL_URL} kernel
         fi
@@ -1260,8 +1456,191 @@ print "End build_kernel_xeno2_bbb"
 }
 
 
+# Download, configure and build  kernel for Arietta G25
+build_kernel_xenomai_g25() {
+
+KERNEL_DIR="${MAKE_DIR}/kernel"
+KBUILD_DIR="${KERNEL_DIR}/build"
+KERNEL_CONF="${BOARD}-${KERNEL_VER}-${XENO}-config"
+image="zImage"
+BUILD="${XENO}"
+
+unset XENO_BOARD_NAME
+
+clean_directory " kernel " "${KERNEL_DIR}"
+clean_directory " kernel-patch " "${KERNEL_PATCH_DIR}"
+
+if  [ -f "${CHROOT_DIR}/boot/${KERNEL_VER}-${XENO}.${image}" ] && \
+    [ -d "${CHROOT_DIR}/boot/dtbs" ] && \
+    [ -f "${CHROOT_DIR}/usr/local/xenomai/include/xeno_config.h" ]; then
+    print "kernel and xenomai for Arietta G25 is already installed in rootfs"
+    return 0
+fi
+print "Start compiled_and_install_kernel_g25"
+
+# Download kernel
+cd ${MAKE_DIR}
+if  [  ! -f "${KERNEL_DIR}/.git/config" ] || \
+    [ -f "${KERNEL_DIR}/.git/index.lock" ]; then
+
+    rm -rf ${KERNEL_DIR}/ || true
+    if [ ! -f ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.gz ]; then
+        print "git clone ${KERNEL_BRANCH}"
+        git clone --shared ${LINUX_KERNEL_SRC_DIR} ${KERNEL_DIR}
+        cd ${KERNEL_DIR}
+        git reset --hard HEAD
+        git checkout master -f
+        git pull || true
+        git tag | grep v${KERNEL_VER} | grep -v rc >/dev/null 2>&1 || print "Not found kernel version v${KERNEL_VER} in repository"
+        print "git checkout and create ${KERNEL_BRANCH}"
+        if [ ${KERNEL_SHA} ] ; then
+            git checkout "v${KERNEL_SHA}" -b ${KERNEL_BRANCH}
+        else
+            git checkout "v${KERNEL_VER}" -b ${KERNEL_BRANCH}
+        fi
+        git describe
+        print "end clone ${KERNEL_BRANCH}"
+
+        print "create archive ${KERNEL_BRANCH}.tar.gz intro ${LDDOWNL_DIR}/${BOARD}"
+        cd ${MAKE_DIR}
+        tar -czf ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.gz ./kernel
+        #tar -c ./kernel/ | pbzip2 -c -5 -p${CORES} > ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.bz2
+        print "end create archive ${KERNEL_BRANCH}.tar.gz"
+    else
+        rm -Rf ${KERNEL_DIR} || true
+        print "unpacking ${KERNEL_BRANCH}.tar.gz intro ${MAKE_DIR}"
+        tar -xf ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.gz -C ${MAKE_DIR}
+    fi
+else
+    print "git reset and clean for ${KERNEL_BRANCH}"
+    cd ${KERNEL_DIR}
+    git reset --hard ${KERNEL_CHA}
+    git clean -fdx
+    #git pull
+    #cd ${MAKE_DIR}; tar -czf ${LDDOWNL_DIR}/${BOARD}/${KERNEL_BRANCH}.tar.gz ./kernel
+fi
+
+# Download kernel patch
+cd ${MAKE_DIR}
+if  [ ! -f "${KERNEL_PATCH_DIR}/.git/config" ] || \
+    [ -f "${KERNEL_DIR}/.git/index.lock" ]; then
+
+    rm -rf ${KERNEL_PATCH_DIR}/ || true
+    if [ ! -f ${LDDOWNL_DIR}/${BOARD}/${KERNEL_PATCH_BRANCH}.tar.gz ]; then
+        print "git clone kernel patch ${KERNEL_PATCH_URL}"
+        git clone -b ${KERNEL_PATCH_BRANCH} --depth 1 ${KERNEL_PATCH_URL} kernel-patch
+        print "create archive ${KERNEL_PATCH_BRANCH}.tar.gz intro ${LDDOWNL_DIR}/${BOARD}"
+        tar -czf ${LDDOWNL_DIR}/${BOARD}/${KERNEL_PATCH_BRANCH}.tar.gz ./kernel-patch
+    else
+        print "unpacking ${KERNEL_PATCH_BRANCH}.tar.gz intro ${MAKE_DIR}"
+        tar -xf ${LDDOWNL_DIR}/${BOARD}/${KERNEL_PATCH_BRANCH}.tar.gz -C ${MAKE_DIR}
+    fi
+fi
+
+print "Apply kernel pach ${KERNEL_PATCH_URL}"
+cd ${KERNEL_DIR}
+chmod +x ${KERNEL_PATCH_DIR}/patch.sh
+env DIR=${KERNEL_PATCH_DIR} ${KERNEL_PATCH_DIR}/patch.sh
+
+
+# Xenomai patch kernel and build library
+xeno_apply
+
+mkdir -p ${KBUILD_DIR} || true
+cd ${KERNEL_DIR}
+make mrproper
+
+# Download minimal config
+if [ ! -f ${LDDOWNL_DIR}/${BOARD}/${KERNEL_CONF}-config ]; then
+    print "Download ${KERNEL_CONF}"
+    wget -c -P ${LDDOWNL_DIR}/${BOARD} https://cloud.mail.ru/public/95fd0247c068/kernel_config/${KERNEL_CONF}
+    #wget -c -P ${LDDOWNL_DIR}/${BOARD} http://www.acmesystems.it/www/compile_linux_3_16/acme-arietta_defconfig
+    #cp ${LDDOWNL_DIR}/${BOARD}/${KERNEL_CONF} ${KERNEL_DIR}/arch/arm/configs/${BOARD}-${KERNEL_VER}-${XENO}_defconfig
+fi
+
+#wget -c -P ${LDDOWNL_DIR}/${BOARD} http://www.acmesystems.it/www/compile_linux_3_16/acme-arietta.dts
+#cp ${LDDOWNL_DIR}/${BOARD}/acme-arietta.dts ${KERNEL_DIR}/arch/arm/boot/dts/
+
+TEST_CONFIG=$(grep "# Linux/arm .* Kernel Configuration" ${LDDOWNL_DIR}/${BOARD}/${KERNEL_CONF} || true)
+TEST_CONFIG_VER=$(echo "${TEST_CONFIG}" | grep -o ${KERNEL_VER} || true)
+if [ "x${TEST_CONFIG}" = "x" ]; then
+    print "Incorrect configuration of the kernel: ${KERNEL_CONF}"
+    rm ${LDDOWNL_DIR}/${BOARD}/${KERNEL_CONF} || true
+    exit 1
+elif [ "x${TEST_CONFIG_VER}" = "x" ]; then
+    print "Loaded version of the kernel configuration differs from the compile, run menuconfig"
+    MENUCONFIG=YES
+fi
+
+print "Copy configuration file to KERNEL_DIR"
+cp ${LDDOWNL_DIR}/${BOARD}/${KERNEL_CONF} ${KBUILD_DIR}/.config
+
+# Enabled used menuconfig for config kernel
+if [ "x${MENUCONFIG}" = "xYES" ];then
+    make ARCH=arm O=build menuconfig
+fi
+
+#make ARCH=arm O=${KBUILD_DIR} CROSS_COMPILE=${CC} -j${CORES} acme-arietta.dtb
+
+print "make ARCH=arm CROSS_COMPILE="${CC}" -j${CORES} LOCALVERSION=-${BUILD} ${image} modules"
+make ARCH=arm O=${KBUILD_DIR} CROSS_COMPILE="${CC}" -j${CORES} LOCALVERSION=-${BUILD} ${image} modules
+
+unset DTBS
+cat  ${KERNEL_DIR}/arch/arm/Makefile | grep "dtbs:" >/dev/null 2>&1 && DTBS=enable
+
+unset has_dtbs_install
+if [ "x${DTBS}" = "x" ] ; then
+    cat  ${KERNEL_DIR}/arch/arm/Makefile | grep "dtbs dtbs_install:" >/dev/null 2>&1 && DTBS=enable
+    if [ "x${DTBS}" = "xenable" ] ; then
+        has_dtbs_install=enable
+    fi
+fi
+
+if [ "x${DTBS}" = "xenable" ] ; then
+    print "make ARCH=arm CROSS_COMPILE="${CC}" -j${CORES} LOCALVERSION=-${BUILD} dtbs"
+    make ARCH=arm O=${KBUILD_DIR} CROSS_COMPILE="${CC}" -j${CORES} LOCALVERSION=-${BUILD} dtbs
+    ls arch/arm/boot/* | grep dtb >/dev/null 2>&1 || unset DTBS
+fi
+
+KERNEL_UTS=$(cat ${KBUILD_DIR}/include/generated/utsrelease.h | awk '{print $3}' | sed 's/\"//g' )
+
+# Remove old kernel modules
+if [ -d "${CHROOT_DIR}/lib/modules/${KERNEL_UTS}" ] ; then
+    sudo rm -rf "${CHROOT_DIR}/lib/modules/${KERNEL_UTS}" || true
+fi
+# Remove old kernel config in rootfs
+sudo rm -f "${CHROOT_DIR}/boot/${KERNEL_CONF}" || true
+
+# Install modules
+make -s ARCH=arm O=${KBUILD_DIR} INSTALL_MOD_PATH=dist modules_install -j${CORES}
+# Install firmware
+make -s ARCH=arm O=${KBUILD_DIR} INSTALL_FW_PATH=dist/lib/firmware firmware_install -j${CORES}
+# Install headers
+make -s ARCH=arm O=${KBUILD_DIR} INSTALL_HDR_PATH=dist/usr headers_install -j${CORES}
+find ${KBUILD_DIR}/dist/usr/include \( -name .install -o -name ..install.cmd \) -delete
+# Install dtbs
+if [ "x${has_dtbs_install}" = "xenable" ] ; then
+    make -s ARCH=arm O=${KBUILD_DIR} LOCALVERSION=-${BUILD} CROSS_COMPILE="${CC}" dtbs_install INSTALL_DTBS_PATH=dist/boot/dtbs/${KERNEL_UTS}
+else
+    mkdir -p ${KBUILD_DIR}/dist/boot/dtbs/${KERNEL_UTS}/
+    find ${KBUILD_DIR}/arch/arm/boot/ -iname "*.dtb" -exec cp -v '{}' ${KBUILD_DIR}/dist/boot/dtbs/${KERNEL_UTS}/ \;
+fi
+# Install kernel, config
+sudo cp ${KBUILD_DIR}/.config ${KBUILD_DIR}/dist/boot/${KERNEL_CONF}
+sudo cp ${KBUILD_DIR}/arch/arm/boot/${image} ${KBUILD_DIR}/dist/boot/${KERNEL_UTS}.${image}
+
+print "Copy kernel, modules, dtbs, firmware, and headers to rootfs"
+sudo cp -rf ${KBUILD_DIR}/dist/* ${CHROOT_DIR}/
+
+print "Edit kernel_version in /boot/uEnv.txt to uname_r=${KERNEL_UTS}.${image}"
+sudo sed -i "s/\(^uname_r=\).*/\1${KERNEL_UTS}.${image}/"  ${CHROOT_DIR}/boot/uEnv.txt
+
+print "End build_kernel_xeno2_g25"
+}
+
+
 # Compiled_and_install_nodejs for rpi
-compiled_and_install_nodejs_npm_rpi() {
+compiled_and_install_nodejs_npm() {
 print "Start compiled_and_install_nodejs for rpi"
 
 if  [ -f ${CHROOT_DIR}/usr/local/include/nodejs/node.h ] || \
@@ -1367,6 +1746,7 @@ if [ ! -f ${BOARD_DIR}/rootfs-${BOARD}-${DISTR}.tar.bz2 ]; then
     print "End created archive rootfs-${BOARD}-${DISTR}.tar.bz2 into ${BOARD_DIR}"
 fi
 
+print "End debootstrap for ${BOARD_FULL_NAME}"
 return 0
 }
 
@@ -1470,6 +1850,7 @@ print "End build and install software LinuxDrone to rootfs"
 #                Start script
 #------------------------------------------------
 
+# Default settings variable
 START_SHELL=NO
 DEV_DISK="/dev/sdX"
 DISK_IMAGE_CLEAN=NO
@@ -1564,17 +1945,26 @@ install_common_software_the_host
 case "${BOARD}" in
     bbb)
         BOARD_FULL_NAME="BeagleBone Black"
-        KERNEL_BRANCH="am33x-v3.8"
-        KERNEL_VER="3.8.13"
-        #KERNEL_BRANCH="am33x-v3.14"
-        #KERNEL_VER="3.14.17"
-        ARCH=armhf
-        MARCH=armv7-a
-        MFPU=vfp3
         DISTR=trusty
         #DISTR=saucy
         DISTR_MIRROR=http://ports.ubuntu.com/ubuntu-ports/
         PKG_LIST_BOARD="mongodb nodejs npm"
+
+        ARCH=armhf
+        MARCH=armv7-a
+        MFPU=vfp3
+
+        KERNEL_BRANCH="am33x-v3.8"
+        KERNEL_VER="3.8.13"
+        #KERNEL_BRANCH="am33x-v3.14"
+        #KERNEL_VER="3.14.17"
+
+        UBOOT_BRANCH="v2014.10"
+        UBOOT_PATCH_NAME="0001-am335x_evm-uEnv.txt-bootz-n-fixes.patch"
+        UBOOT_PATCH_URL=https://raw.githubusercontent.com/eewiki/u-boot-patches/master/${UBOOT_BRANCH}/${UBOOT_PATCH_NAME}
+        UBOOT_DEFCONFIG="am335x_evm_config"
+        UBOOT_FILES="MLO u-boot.img"
+
         NAME_LIBWEB=libwebsockets-1.3-chrome37-firefox30.tar.gz
         NAME_MONGOC=0.94.2
 
@@ -1585,27 +1975,12 @@ case "${BOARD}" in
         if [ ${START_SHELL} = YES ]; then
             start_shell_in_chroot
         fi
-        compiled_and_install_uboot_bbb
+        compiled_and_install_uboot
         build_kernel_xenomai_bbb
-        compiled_and_install_libwebsockets
-        compiled_and_install_mongoc
-        copy_truncate_rootfs
-        #build_install_linuxdrone
         ;;
 
     rpi)
         BOARD_FULL_NAME="Raspberry PI"
-        KERNEL_BRANCH="rpi-3.8.y"
-        KERNEL_VER="3.8.13"
-        #KERNEL_BRANCH="rpi-3.14.y"
-        #KERNEL_VER="3.14.17"
-        ARCH=armhf
-        MARCH=armv6 #j
-        MFPU=vfp
-        MCPU=arm1176jzf-s
-        MFLOAT_ABI=hard
-        NAME_LIBWEB=libwebsockets-1.3-chrome37-firefox30.tar.gz
-        NAME_MONGOC=0.94.2
         DISTR=wheezy
         DISTR_MIRROR=http://archive.raspbian.org/raspbian/
         #DISTR_MIRROR=http://mirrors-ru.go-parts.com/raspbian/
@@ -1614,6 +1989,20 @@ case "${BOARD}" in
         #DISTR_MIRROR=http://mirrordirector.raspbian.org/raspbian
         PKG_LIST_BOARD=""
 
+        ARCH=armhf
+        MARCH=armv6 #j
+        MFPU=vfp
+        MCPU=arm1176jzf-s
+        MFLOAT_ABI=hard
+
+        KERNEL_BRANCH="rpi-3.8.y"
+        KERNEL_VER="3.8.13"
+        #KERNEL_BRANCH="rpi-3.14.y"
+        #KERNEL_VER="3.14.17"
+
+        NAME_LIBWEB=libwebsockets-1.3-chrome37-firefox30.tar.gz
+        NAME_MONGOC=0.94.2
+
         download_install_crosscompiler_rpi
         debootstrap
         #rootfs_installing_packages
@@ -1621,14 +2010,56 @@ case "${BOARD}" in
             start_shell_in_chroot
         fi
         build_kernel_xenomai_rpi
-        compiled_and_install_mongodb_in_chroot_rpi
-        compiled_and_install_nodejs_npm_rpi
-        compiled_and_install_libwebsockets
-        compiled_and_install_mongoc
-        copy_truncate_rootfs
-        build_install_linuxdrone
+        compiled_and_install_mongodb_in_chroot
+        compiled_and_install_nodejs_npm
         ;;
 
+    g25)
+        BOARD_FULL_NAME="Arietta G25"
+        DISTR=wheezy
+        #DISTR_MIRROR=http://cdn.debian.net/debian/
+        DISTR_MIRROR=http://http.debian.net/debian/
+        PKG_LIST_BOARD=""
+
+        ARCH=armel
+        MARCH=armv5
+
+        KERNEL_VER="3.14.17"
+        KERNEL_BRANCH="v${KERNEL_VER}-${BOARD}"
+        KERNEL_PATCH_URL="https://github.com/RobertCNelson/armv5_devel.git"
+        KERNEL_PATCH_DIR="${MAKE_DIR}/kernel-patch"
+        KERNEL_PATCH_BRANCH="v3.14.x-at91"
+
+        AT91BS_GIT="git://github.com/linux4sam/at91bootstrap.git"
+        AT91BS_BRANCH="496c083"
+        AT91BS_DEFCONFIG="at91sam9x5eksd_uboot_defconfig"
+        AT91BS_FILES="at91sam9x5ek-sdcardboot-uboot-*.bin"
+        #AT91BS_GIT="git://github.com/tanzilli/at91bootstrap.git"
+        #AT91BS_DEFCONFIG="arietta-256m_defconfig"
+        #AT91BS_FILES="at91sam9x5_arietta-sdcardboot-linux-zimage-dt-*.bin"
+
+        UBOOT_BRANCH="v2014.10"
+        UBOOT_PATCH_NAME="0001-at91sam9x5ek-uEnv.txt-bootz-n-fixes.patch"
+        UBOOT_PATCH_URL=https://raw.githubusercontent.com/eewiki/u-boot-patches/master/${UBOOT_BRANCH}/${UBOOT_PATCH_NAME}
+        UBOOT_DEFCONFIG="at91sam9x5ek_mmc_defconfig"
+        UBOOT_FILES="u-boot.bin"
+
+
+        NAME_LIBWEB=libwebsockets-1.3-chrome37-firefox30.tar.gz
+        NAME_MONGOC=0.94.2
+
+        download_install_crosscompiler_g25
+        debootstrap
+        #rootfs_installing_packages
+        if [ ${START_SHELL} = YES ]; then
+            start_shell_in_chroot
+        fi
+        compiled_and_install_at91bootstrap
+        compiled_and_install_uboot
+        build_kernel_xenomai_g25
+        compiled_and_install_mongodb_in_chroot
+        compiled_and_install_nodejs_npm
+        ;;
     *)
         print "Unknown name board"
         echo ${USAGE}
@@ -1636,7 +2067,12 @@ case "${BOARD}" in
         ;;
 esac
 
+compiled_and_install_libwebsockets
+compiled_and_install_mongoc
+copy_truncate_rootfs
+build_install_linuxdrone
 create_image
+
 umount_proc_sysfs_devpts
 sudo_timestamp_timeout 10
 
