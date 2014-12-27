@@ -141,16 +141,6 @@ exports.getconfig = function (db) {
 var chost = undefined;
 
 
-var hostStatus = {
-    status: 'stopped', // running
-    schemaName: '',
-    schemaVersion: ''
-};
-
-
-exports.gethoststatus = function (req, res) {
-    res.json(hostStatus);
-};
 
 
 exports.runhosts = function (db) {

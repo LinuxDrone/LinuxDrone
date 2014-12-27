@@ -18,7 +18,7 @@ router.get('/getconfigs', routes.getconfigs);
 router.delete('/delconfig/:id', routes.delconfig);
 router.post('/runhosts', routes.runhosts);
 router.post('/stophosts', routes.stophosts);
-router.get('/gethoststatus', routes.gethoststatus);
+router.get('/gethoststatus', common.gethoststatus);
 
 
 var server = http.createServer(router);

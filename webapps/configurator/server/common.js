@@ -27,7 +27,7 @@ exports.metamodules = function (req, res) {
         var executeFile = function (arr, recursive, callback_end, was_previos) {
             if (arr.length > 0) {
                 var fullFile = arr.pop();
-                console.log(fullFile);
+                //console.log(fullFile);
 
                 exec(fullFile + ' --module-definition',
                     function (error, stdout, stderr) {
@@ -68,4 +68,23 @@ exports.metamodules = function (req, res) {
     });
 
 
+};
+
+
+var hostStatus = {
+    status: 'stopped', // running
+    schemaName: '',
+    schemaVersion: ''
+};
+
+
+exports.gethoststatus = function (req, res) {
+    if(req.body.callback){
+        res.writeHead(200, {"Content-Type": "application/javascript"});
+        res.write(req.body.callback + '(' + JSON.stringify(hostStatus) + ')');
+    }else{
+        res.writeHead(200, {"Content-Type": "application/json"});
+        res.write(JSON.stringify(hostStatus));
+    }
+    res.end();
 };

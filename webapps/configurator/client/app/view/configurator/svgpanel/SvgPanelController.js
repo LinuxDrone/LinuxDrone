@@ -6,7 +6,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
     requires: [
         'RtConfigurator.view.configurator.dialogs.ImportSchemaDialog',
-        'RtConfigurator.view.configurator.logpanel.LogContentPanel'
+        'RtConfigurator.view.configurator.logpanel.LogContentPanel',
+        'RtConfigurator.model.Schema'
     ],
 
     alias: 'controller.svgpanel',
@@ -63,6 +64,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
 
     initWebSockets: function () {
+        return;
         // Пока не установлено соединение вебсокета, кнопки старта и стопа будут красными
         //res.cssClass4ButtonsRunStop('btn btn-danger');
         var controller = this;
@@ -86,7 +88,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
             this.socketTelemetry.onmessage = function got_packet(msg) {
                 var PreparedLinks = model.get('PreparedLinks');
-                if(!PreparedLinks){
+                if (!PreparedLinks) {
                     return;
                 }
 
@@ -175,7 +177,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 // Найти панель для данного лога
 
                                 var logContentPanel = logPanel.lookupReference(resp.process);
-                                if(!logContentPanel){
+                                if (!logContentPanel) {
                                     logContentPanel = Ext.create('RtConfigurator.view.configurator.logpanel.LogContentPanel', {
                                         title: resp.process,
                                         reference: resp.process,
@@ -186,8 +188,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                     logPanel.add(logContentPanel).show();
                                 }
                                 var store = logContentPanel.getStore();
-                                store.add({log:text});
-                                if(store.count()>100){
+                                store.add({log: text});
+                                if (store.count() > 100) {
                                     store.removeAt(0);
                                 }
 
@@ -244,7 +246,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var configuratorModel = this.getView().ownerCt.getViewModel();
         if (!linkCell) {
             configuratorModel.set('hideLinkProperties', true);
-            if(configuratorModel.get('hideInstanceProperties')){
+            if (configuratorModel.get('hideInstanceProperties')) {
                 configuratorModel.set('nameOfSelectedInstance', 'Properties');
             }
         } else {
@@ -590,7 +592,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var configuratorModel = this.getView().ownerCt.getViewModel();
         if (!cell) {
             configuratorModel.set('hideInstanceProperties', true);
-            if(configuratorModel.get('hideLinkProperties')){
+            if (configuratorModel.get('hideLinkProperties')) {
                 configuratorModel.set('nameOfSelectedInstance', 'Properties');
             }
         } else {
@@ -643,7 +645,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     },
 
     // Создает тултипы для портов инстанса
-    MakeToolTipsForPortsOfInstance: function(element, paper, controller, storeMetamodules){
+    MakeToolTipsForPortsOfInstance: function (element, paper, controller, storeMetamodules) {
         var view = paper.findViewByModel(element);
         $.each([2, 3], function (i, s) {
             $.each(view.el.childNodes[0].childNodes[s].childNodes, function (k, port) {
@@ -806,7 +808,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             {
                 callback: function (batch, options) {
                     model.set('schemaChanged', false);
-                    if(callback){
+                    if (callback) {
                         callback();
                     }
                 }
@@ -836,8 +838,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             "version": currentSchema.get('version')
         };
 
-        if(model.get('schemaChanged')){
-            controller.SaveCurrentConfig(data4send.name, data4send.version, function(){
+        if (model.get('schemaChanged')) {
+            controller.SaveCurrentConfig(data4send.name, data4send.version, function () {
                 $.post("runhosts", data4send,
                     function (data) {
                         // Выполнение конфигурации начато.
@@ -845,7 +847,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                         controller.AllSubscribe2Telemetry(currentSchema, controller, 'subscribe');
                     });
             });
-        }else{
+        } else {
             $.post("runhosts", data4send,
                 function (data) {
                     // Выполнение конфигурации начато.
@@ -876,18 +878,19 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     // Запрос статуса процесса выполнения
     GetHostStatus: function () {
         var model = this.getView().getViewModel();
-        $.getJSON("gethoststatus",
-            function (resp) {
-                switch (resp.status) {
-                    case 'running':
-                        model.set('started', true);
-                        break;
 
-                    case 'stopped':
-                        model.set('started', false);
-                        break;
-                }
-            });
+        $.getJSON('http://192.168.1.20:4000/gethoststatus?callback=?').done(function (resp) {
+            switch (resp.status) {
+                case 'running':
+                    model.set('started', true);
+                    break;
+
+                case 'stopped':
+                    model.set('started', false);
+                    break;
+            }
+        });
+
     }
 })
 ;

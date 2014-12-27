@@ -6,6 +6,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
 
     alias: 'viewmodel.svgpanel',
 
+    requires: [
+        'RtConfigurator.model.Schema'
+    ],
+
     paperScaleX: 1,
     paperScaleY: 1,
 
