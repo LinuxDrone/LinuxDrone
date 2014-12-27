@@ -11,21 +11,7 @@ exports.droneconfig = function (req, res) {
     res.render('droneconfig', { title: 'Linuxdrone Configurator' });
 };
 
-exports.metamodules = function (req, res) {
-        db.get('modules_defs').find({}, {}, function (e, metaModules) {
-            if(req.body.callback){
-              res.writeHead(200, {"Content-Type": "application/javascript"});
-              res.write(req.body.callback + '(' + JSON.stringify(metaModules) + ')');
-            }else{
-              res.writeHead(200, {"Content-Type": "application/json"});
-              res.write(JSON.stringify(metaModules));
-            }
-            res.end();
-        });
-};
-
-exports.newconfig = function (db) {
-    return function (req, res) {
+exports.newconfig = function (req, res) {
 
         var collection = db.get('visual_configuration');
 
@@ -33,10 +19,12 @@ exports.newconfig = function (db) {
 
         var wr = collection.insert(req.body, function (err, docs) {
             if (err) {
-                res.send(400, err);
+                res.writeHead(400, {"Content-Type": "application/javascript"});
+                res.write(JSON.stringify(err));
             }
             else {
-                res.send(201, docs);
+                res.writeHead(201, {"Content-Type": "application/javascript"});
+                res.write(JSON.stringify(docs));
             }
         });
 
@@ -67,9 +55,6 @@ exports.newconfig = function (db) {
          });
          });
          */
-
-
-    };
 };
 
 exports.saveconfig = function (db) {
