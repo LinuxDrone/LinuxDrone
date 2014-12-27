@@ -441,8 +441,8 @@ sudo sh -c "echo 'deb-src ${DISTR_MIRROR} ${DISTR} main contrib non-free' >> ${C
 rootfs_common_settings
 
 # Remove eth0 in /etc/network/interfaces
-sed -i "s/auto eth0//g" ${CHROOT_DIR}/etc/network/interfaces
-sed -i "s/iface eth0 inet dhcp//g" ${CHROOT_DIR}/etc/network/interfaces
+sudo sed -i "s/auto eth0//g" ${CHROOT_DIR}/etc/network/interfaces
+sudo sed -i "s/iface eth0 inet dhcp//g" ${CHROOT_DIR}/etc/network/interfaces
 
 print "Edit /etc/fstab"
 sudo sh -c "cat> ${CHROOT_DIR}/etc/fstab << EOF
@@ -521,6 +521,43 @@ fi
 run_cmd_chroot "apt-get -y upgrade"
 
 run_cmd_chroot "apt-get -y install ${PKG_LIST_COMMON} ${PKG_LIST_BOARD}"
+run_cmd_chroot "apt-get clean; apt-get autoremove"
+}
+
+
+add_jessie_repository_in_debian() {
+if [ "x$(grep "deb ${DISTR_MIRROR} jessie main contrib non-free" ${CHROOT_DIR}/etc/apt/sources.list)" = "x" ]; then
+    print "Add repository jessie in sources.list"
+    sudo sh -c "echo 'deb ${DISTR_MIRROR} jessie main contrib non-free' >> ${CHROOT_DIR}/etc/apt/sources.list"
+    sudo sh -c "echo 'deb-src ${DISTR_MIRROR} jessie main contrib non-free' >> ${CHROOT_DIR}/etc/apt/sources.list"
+fi
+
+print "Add preferences file /etc/apt/preferences"
+sudo sh -c "cat> ${CHROOT_DIR}/etc/apt/preferences << EOF
+Package: *
+Pin: release n=${DISTR}
+Pin-Priority: 900
+Package: *
+Pin: release n=jessie
+Pin-Priority: 300
+Package: *
+EOF
+"
+}
+
+# GCC 4.8 ON WHEEZY
+gcc_4_8_on_wheezy() {
+
+add_jessie_repository_in_debian
+
+run_cmd_chroot "apt-get update"
+run_cmd_chroot "apt-get -y install -t jessie gcc-4.8 g++-4.8"
+
+#run_cmd_chroot "update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 20"
+#run_cmd_chroot "update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50"
+#run_cmd_chroot "update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.6 20"
+#run_cmd_chroot "update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 50"
+
 run_cmd_chroot "apt-get clean; apt-get autoremove"
 }
 
@@ -2005,6 +2042,7 @@ case "${BOARD}" in
 
         download_install_crosscompiler_rpi
         debootstrap
+        gcc_4_8_on_wheezy
         #rootfs_installing_packages
         if [ ${START_SHELL} = YES ]; then
             start_shell_in_chroot
@@ -2050,6 +2088,7 @@ case "${BOARD}" in
 
         download_install_crosscompiler_g25
         debootstrap
+        gcc_4_8_on_wheezy
         #rootfs_installing_packages
         if [ ${START_SHELL} = YES ]; then
             start_shell_in_chroot
