@@ -13,63 +13,80 @@ exports.metamodules = function (req, res) {
     } else {
         res.writeHead(200, {"Content-Type": "application/json"});
     }
-    res.write('[');
+
+    exports.MetaOfModules.get(function(meta){
+        res.write(JSON.stringify(meta));
+
+        if (req.body.callback) {
+            res.write(')');
+        }
+        res.end();
+    });
+};
 
 
-    fs.readdir(BIN_FOLDER, function (err, list) {
-        if (err) {
-            console.log(err);
+exports.MetaOfModules = {
+    meta: undefined,
+
+    // Рекурсивная функция. Запускает по очереди модйли перечисленные в массиве arr.
+    // Возвращаемый результат (определение модуля в JSON) пишет в выходной поток http ответа
+    executeFile : function (ar_res, files, recursive, callback_end) {
+        if (files.length > 0) {
+            var fullFile = files.pop();
+
+            process.stdout.write("execute " + fullFile + " --module-definition");
+
+            exec(fullFile + ' --module-definition',
+                function (error, stdout, stderr) {
+                    if (error !== null) {
+                        console.log('exec error: ' + error);
+                        return;
+                    }else{
+                        console.log('\tOK');
+                    }
+
+                    ar_res.push(JSON.parse(stdout));
+
+                    recursive(ar_res, files, recursive, callback_end);
+                });
+        } else {
+            callback_end();
+        }
+    },
+
+    get : function (callback) {
+        if (this.meta != undefined) {
+            callback(this.meta);
             return;
         }
 
-        // Рекурсивная функция. Запускает по очереди модйли перечисленные в массиве arr.
-        // Возвращаемый результат (определение модуля в JSON) пишет в выходной поток http ответа
-        var executeFile = function (arr, recursive, callback_end, was_previos) {
-            if (arr.length > 0) {
-                var fullFile = arr.pop();
-                //console.log(fullFile);
+        this.meta = new Array();
 
-                exec(fullFile + ' --module-definition',
-                    function (error, stdout, stderr) {
-                        if (error !== null) {
-                            console.log('exec error: ' + error);
-                            return;
-                        }
-                        if (was_previos) {
-                            res.write(',');
-                        }
-                        //console.log('stdout: ' + stdout);
-                        // TODO: Проверять валидность возвращаемого JSON
-                        res.write(stdout);
+        var self = this;
 
-                        recursive(arr, recursive, callback_end, true);
-                    });
-            } else {
-                callback_end();
+        fs.readdir(BIN_FOLDER, function (err, list) {
+            if (err) {
+                console.log(err);
+                return;
             }
-        }
 
-        var listFiles = new Array();
-        list.forEach(function (file) {
-            // для начала проверим, что расширение файла .mod
-            var ext = file.substr(file.length-4, 4);
-            if(ext==".mod"){
-                listFiles.push(BIN_FOLDER + '/' + file);
-            }
+            var listFiles = new Array();
+
+            list.forEach(function (file) {
+                // для начала проверим, что расширение файла .mod
+                var ext = file.substr(file.length - 4, 4);
+                if (ext == ".mod") {
+                    listFiles.push(BIN_FOLDER + '/' + file);
+                }
+            });
+
+            // Вызовем рекурсивную функцию, передав массив с именами исполнимых файлов модулей
+            self.executeFile(self.meta, listFiles, self.executeFile, function () {
+                callback(self.meta);
+            });
         });
-
-        executeFile(listFiles, executeFile, function () {
-            res.write(']');
-            if (req.body.callback) {
-                res.write(')');
-            }
-            res.end();
-        }, false);
-    });
-
-
-};
-
+    }
+}
 
 var hostStatus = {
     status: 'stopped', // running
@@ -79,10 +96,10 @@ var hostStatus = {
 
 
 exports.gethoststatus = function (req, res) {
-    if(req.body.callback){
+    if (req.body.callback) {
         res.writeHead(200, {"Content-Type": "application/javascript"});
         res.write(req.body.callback + '(' + JSON.stringify(hostStatus) + ')');
-    }else{
+    } else {
         res.writeHead(200, {"Content-Type": "application/json"});
         res.write(JSON.stringify(hostStatus));
     }
