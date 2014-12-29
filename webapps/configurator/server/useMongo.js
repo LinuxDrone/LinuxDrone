@@ -13,90 +13,98 @@ exports.droneconfig = function (req, res) {
 
 exports.newconfig = function (req, res) {
 
-        var collection = db.get('visual_configuration');
+    var collection = db.get('visual_configuration');
 
-        //delete req.body._id;
+    //delete req.body._id;
 
-        var wr = collection.insert(req.body, function (err, docs) {
-            if (err) {
-                res.writeHead(400, {"Content-Type": "application/javascript"});
-                res.write(JSON.stringify(err));
-            }
-            else {
-                res.writeHead(201, {"Content-Type": "application/javascript"});
-                res.write(JSON.stringify(docs));
-            }
-        });
+    var wr = collection.insert(req.body, function (err, docs) {
+        if (err) {
+            res.writeHead(400, {"Content-Type": "application/javascript"});
+            res.write(JSON.stringify(err));
+        }
+        else {
+            res.writeHead(201, {"Content-Type": "application/javascript"});
+            res.write(JSON.stringify(docs));
+        }
+    });
 
 
-        return;
-        /*
-         collection.findOne({_id:id}, {}, function(o, schema){
-         db.get('modules_defs').find({}, {}, function (e, metaModules) {
-         if(!schema.modulesParams){
-         var logMsg = 'In request, not found required property "modulesParams"';
-         console.log(logMsg);
-         res.send({"success": false, "message":logMsg});
-         return;
-         }
-         var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
-         configuration.version = schema.version;
-         configuration.name = schema.name;
+    return;
+    /*
+     collection.findOne({_id:id}, {}, function(o, schema){
+     db.get('modules_defs').find({}, {}, function (e, metaModules) {
+     if(!schema.modulesParams){
+     var logMsg = 'In request, not found required property "modulesParams"';
+     console.log(logMsg);
+     res.send({"success": false, "message":logMsg});
+     return;
+     }
+     var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
+     configuration.version = schema.version;
+     configuration.name = schema.name;
 
-         var configurations = db.get('configuration');
-         configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
-         if (err) {
-         res.send({"success": false, "message":"There was a problem adding the information to the database."});
-         return console.log(err);
-         }
-         console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
-         });
-         res.send({"success": true});
-         });
-         });
-         */
+     var configurations = db.get('configuration');
+     configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
+     if (err) {
+     res.send({"success": false, "message":"There was a problem adding the information to the database."});
+     return console.log(err);
+     }
+     console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
+     });
+     res.send({"success": true});
+     });
+     });
+     */
 };
 
-exports.saveconfig = function (db) {
-    return function (req, res) {
-        var collection = db.get('visual_configuration');
+exports.saveconfig = function (req, res) {
+    var collection = db.get('visual_configuration');
 
-        var id = req.body._id;
-        delete req.body._id;
+    var record = JSON.parse(req.body.records);
 
-        collection.update({"_id": id}, { $set: req.body }, {"upsert": true }, function (err, count) {
-            if (err) {
-                res.send({"success": false, "message": "There was a problem adding the information to the database."});
-                return console.log(err);
-            }
-            console.log("Save visual configuration for " + id + " - OK.");
+    var id = record._id;
+    delete record._id;
 
-            collection.findOne({_id: id}, {}, function (o, schema) {
-                db.get('modules_defs').find({}, {}, function (e, metaModules) {
-                    if (!schema.modulesParams) {
-                        var logMsg = 'In request, not found required property "modulesParams"';
-                        console.log(logMsg);
-                        res.send({"success": false, "message": logMsg});
-                        return;
+    collection.update({"_id": id}, { $set: record }, {"upsert": true }, function (err, count) {
+        if (err) {
+            res.send({"success": false, "message": "There was a problem adding the information to the database."});
+            return console.log(err);
+        }
+        console.log("Save visual configuration for " + id + " - OK.");
+
+        collection.findOne({_id: id}, {}, function (o, schema) {
+            db.get('modules_defs').find({}, {}, function (e, metaModules) {
+                if (!schema.modulesParams) {
+                    var logMsg = 'In request, not found required property "modulesParams"';
+                    console.log(logMsg);
+                    res.send({"success": false, "message": logMsg});
+                    return;
+                }
+                var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
+                configuration.version = schema.version;
+                configuration.name = schema.name;
+
+                var configurations = db.get('configuration');
+                configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
+                    if (err) {
+                        res.send({"success": false, "message": "There was a problem adding the information to the database."});
+                        return console.log(err);
                     }
-                    var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
-                    configuration.version = schema.version;
-                    configuration.name = schema.name;
-
-                    var configurations = db.get('configuration');
-                    configurations.update({"name": schema.name, "version": schema.version}, configuration, {"upsert": true }, function (err, count) {
-                        if (err) {
-                            res.send({"success": false, "message": "There was a problem adding the information to the database."});
-                            return console.log(err);
-                        }
-                        console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
-                    });
-                    res.send({"success": true});
+                    console.log("Save LinuxDrone configuration " + schema.name + "\\" + schema.version + " - OK.");
                 });
+
+                if (req.body.callback) {
+                    res.writeHead(200, {"Content-Type": "application/javascript"});
+                    res.write(req.body.callback + '({"success": true})');
+                } else {
+                    res.writeHead(200, {"Content-Type": "application/json"});
+                    res.write('{"success": true}');
+                }
+                res.end();
             });
         });
-    };
-};
+    });
+}
 
 exports.delconfig = function (db) {
     return function (req, res) {
@@ -113,17 +121,17 @@ exports.delconfig = function (db) {
 };
 
 exports.getconfigs = function (req, res) {
-        var collection = db.get('visual_configuration');
-        collection.find({}, {}, function (e, docs) {
-          if(req.body.callback){
+    var collection = db.get('visual_configuration');
+    collection.find({}, {}, function (e, docs) {
+        if (req.body.callback) {
             res.writeHead(200, {"Content-Type": "application/javascript"});
             res.write(req.body.callback + '(' + JSON.stringify(docs) + ')');
-          }else{
+        } else {
             res.writeHead(200, {"Content-Type": "application/json"});
             res.write(JSON.stringify(docs));
-          }
-          res.end();
-        });
+        }
+        res.end();
+    });
 };
 
 exports.getconfig = function (db) {
@@ -141,6 +149,17 @@ exports.getconfig = function (db) {
 var chost = undefined;
 
 
+var hostStatus = {
+    status: 'stopped', // running
+    schemaName: '',
+    schemaVersion: ''
+};
+
+
+exports.gethoststatus = function (req, res) {
+    return;
+    res.json(hostStatus);
+};
 
 
 exports.runhosts = function (db) {

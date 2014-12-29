@@ -8,9 +8,15 @@ Ext.define('RtConfigurator.store.StoreMetaModules', {
     proxy: {
         type: 'jsonp',
         url: location.protocol + '//' + location.hostname + ':4000/metamodules',
-        listeners : {
-            exception : function(proxy, response, operation) {
-                alert(operation.getError().statusText);
+
+        listeners: {
+            exception: function (proxy, request, operation, eOpts) {
+                //console.log(operation);
+                var errMsg = operation.getError();
+                if (operation.getError().statusText) {
+                    errMsg = operation.getError().statusText;
+                }
+                alert(errMsg);
             }
         }
     }
