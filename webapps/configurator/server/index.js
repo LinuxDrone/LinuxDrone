@@ -19,7 +19,7 @@ var router = new Router();
 
 router.get('/droneconfig', routes.droneconfig);
 router.get('/metamodules', common.metamodules);
-router.post('/newconfig', routes.newconfig);
+router.get('/newconfig', routes.newconfig);
 router.get('/saveconfig', routes.saveconfig);
 router.get('/getconfig/:id', routes.getconfig);
 router.get('/getconfigs', routes.getconfigs);

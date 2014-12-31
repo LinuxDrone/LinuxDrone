@@ -15,17 +15,33 @@ exports.newconfig = function (req, res) {
 
     var collection = db.get('visual_configuration');
 
-    //delete req.body._id;
+    var obj = JSON.parse(req.body.records);
 
-    var wr = collection.insert(req.body, function (err, docs) {
+    delete obj._id;
+
+    var wr = collection.insert(obj, function (err, docs) {
         if (err) {
-            res.writeHead(400, {"Content-Type": "application/javascript"});
+            if (req.body.callback) {
+                res.writeHead(400, {"Content-Type": "application/javascript"});
+                res.write(req.body.callback + '(');
+            } else {
+                res.writeHead(400, {"Content-Type": "application/json"});
+            }
             res.write(JSON.stringify(err));
-        }
-        else {
-            res.writeHead(201, {"Content-Type": "application/javascript"});
+        } else {
+            if (req.body.callback) {
+                res.writeHead(200, {"Content-Type": "application/javascript"});
+                res.write(req.body.callback + '(');
+            } else {
+                res.writeHead(200, {"Content-Type": "application/json"});
+            }
             res.write(JSON.stringify(docs));
         }
+
+        if (req.body.callback) {
+            res.write(')');
+        }
+        res.end();
     });
 
 

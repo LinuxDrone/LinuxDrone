@@ -24,7 +24,7 @@ exports.metamodules = function (req, res) {
     });
 };
 
-
+// Объект, содержащий метод get, возвращающий массив с определениями модулей
 exports.MetaOfModules = {
     meta: undefined,
 
@@ -54,6 +54,7 @@ exports.MetaOfModules = {
         }
     },
 
+    // Возвращает в калбеке массив с определениями модулей
     get : function (callback) {
         if (this.meta != undefined) {
             callback(this.meta);
