@@ -2,7 +2,7 @@ var _ = require('underscore');
 var spawn = require('child_process').spawn;
 var commonModuleParams = require('../client/ModulesCommonParams.def.js');
 
-var mongo = require('mongodb');
+//var mongo = require('mongodb');
 var monk = require('monk');
 var db = monk('localhost:27017/test');
 
@@ -45,7 +45,7 @@ exports.newconfig = function (req, res) {
     });
 
 
-    return;
+
     /*
      collection.findOne({_id:id}, {}, function(o, schema){
      db.get('modules_defs').find({}, {}, function (e, metaModules) {
