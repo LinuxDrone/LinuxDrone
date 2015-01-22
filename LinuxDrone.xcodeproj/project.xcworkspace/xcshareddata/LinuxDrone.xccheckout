@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>8BB791EB-FCD1-441C-B1BA-2623AF3D5F56</string>
+	<key>IDESourceControlProjectName</key>
+	<string>LinuxDrone</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>1E4B7D5B9FE8700CBA9EDCFCE3B7D1011A205287</key>
+		<string>ssh://git.linuxdrone.org/LinuxDrone.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>LinuxDrone.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>1E4B7D5B9FE8700CBA9EDCFCE3B7D1011A205287</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://git.linuxdrone.org/LinuxDrone.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>1E4B7D5B9FE8700CBA9EDCFCE3B7D1011A205287</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>1E4B7D5B9FE8700CBA9EDCFCE3B7D1011A205287</string>
+			<key>IDESourceControlWCCName</key>
+			<string>LinuxDrone</string>
+		</dict>
+	</array>
+</dict>
+</plist>
