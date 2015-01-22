@@ -7,10 +7,10 @@
 
 #include <stdio.h>
 #include <getopt.h>
-#include <native/queue.h>
-#include <native/heap.h>
-#include <native/event.h>
-#include <native/timer.h>
+//#include <native/queue.h>
+//#include <native/heap.h>
+//#include <native/event.h>
+//#include <native/timer.h>
 #include "../include/apr-module-functions.h"
 
 

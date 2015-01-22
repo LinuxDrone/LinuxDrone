@@ -104,8 +104,9 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B10493881A717BE3001F0221 /* Build configuration list for PBXNativeTarget "sdk" */;
 			buildPhases = (
-				B10493831A717BE3001F0221 /* Sources */,
 				B10493841A717BE3001F0221 /* Frameworks */,
+				B104939A1A7185A0001F0221 /* ShellScript */,
+				B10493831A717BE3001F0221 /* Sources */,
 				B10493851A717BE3001F0221 /* Headers */,
 			);
 			buildRules = (
@@ -169,6 +170,24 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B104939A1A7185A0001F0221 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/common-params.h",
+				"$(DERIVED_FILE_DIR)/common-params.c",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/opt/local/bin/node libraries/sdk/CommonParamsGenerator.js $SOURCE_ROOT/webapps/configurator/client/ModulesCommonParams.def.js  $DERIVED_FILE_DIR";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B10493831A717BE3001F0221 /* Sources */ = {
