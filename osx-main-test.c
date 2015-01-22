@@ -18,5 +18,7 @@ int main(int argc, const char * argv[]) {
     
     
     apr_terminate();
+
+	getchar();
     return 0;
 }
