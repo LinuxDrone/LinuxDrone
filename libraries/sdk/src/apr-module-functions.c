@@ -11,7 +11,7 @@
 #include <native/heap.h>
 #include <native/event.h>
 #include <native/timer.h>
-#include "../include/module-functions.h"
+#include "../include/apr-module-functions.h"
 
 
 #define SHMEM_WRITER_MASK	0x7FFFFFFF
