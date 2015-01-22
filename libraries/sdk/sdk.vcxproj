@@ -74,11 +74,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\helper-functions.c" />
-    <ClCompile Include="src\module-functions.c" />
+    <ClCompile Include="src\apr-helper-functions.c" />
+    <ClCompile Include="src\apr-module-functions.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\module-functions.h" />
+    <ClInclude Include="include\apr-module-functions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
