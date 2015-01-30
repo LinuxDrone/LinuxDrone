@@ -1,5 +1,17 @@
 #pragma once
 
+#define RT_HEAP int
+#define RT_EVENT int
+#define RT_MUTEX int
+#define RT_QUEUE int
+#define RT_TASK int
+#define RT_COND int
+#define RTIME int
+#define TM_INFINITE int
+#define XNOBJECT_NAME_LEN 32
+
+
+
 #include <bson.h>
 //#include <native/task.h>
 //#include <native/queue.h>

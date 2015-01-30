@@ -6,7 +6,8 @@
   */
 
 #include <stdio.h>
-#include <getopt.h>
+//#include <getopt.h>
+
 //#include <native/queue.h>
 //#include <native/heap.h>
 //#include <native/event.h>
@@ -31,6 +32,7 @@
  */
 int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
 {
+/*
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
     {
@@ -60,6 +62,7 @@ int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool wa
         return res1;
     }
     return res;
+*/
 }
 
 
@@ -73,6 +76,7 @@ int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool wa
  */
 int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
 {
+	/*
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
     {
@@ -112,6 +116,7 @@ int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was
         return res1;
     }
     return res;
+	*/
 }
 
 
@@ -126,6 +131,7 @@ int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was
  */
 int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name)
 {
+	/*
     if(strlen(instance_name) > XNOBJECT_NAME_LEN-5)
     {
         fprintf(stdout, "Function init_object_set, Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", instance_name, strlen(instance_name), XNOBJECT_NAME_LEN-5);
@@ -175,6 +181,7 @@ int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name
     }
 
     return 0;
+	*/
 }
 
 
@@ -388,6 +395,7 @@ remote_queue_t* register_remote_queue(module_t* module, const char* name_remote_
  */
 int init(module_t* module, int argc, char *argv[])
 {
+	/*
     const char* short_options = "hdsn:o:i:d";
     const struct option long_options[] = {
         {"help",no_argument,NULL,'h'},
@@ -605,6 +613,7 @@ int init(module_t* module, int argc, char *argv[])
     }
 
     return 0;
+	*/
 }
 
 
@@ -657,6 +666,7 @@ int get_porttype_by_portname(module_t* module, const char* port_name, char* port
 // Convert argv to structure common_params_t
 int argv2common_params(void* in_module, int argc, char *argv[])
 {
+	/*
     module_t* module = in_module;
 
     const char* short_options = "r::m::t::";
@@ -725,6 +735,7 @@ int argv2common_params(void* in_module, int argc, char *argv[])
     }
 
     return 0;
+	*/
 }
 
 
@@ -776,6 +787,7 @@ usage(module_t* module, char *argv[])
  */
 void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datalen)
 {
+	/*
     unsigned long after_mask;
     int res = rt_event_clear(&shmem->eflags, ~SHMEM_WRITER_MASK, &after_mask);
     if (res != 0)
@@ -785,9 +797,9 @@ void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datale
     }
     //fprintf(stderr, "was mask = 0x%08X\n", after_mask);
 
-    /**
-     * \~russian Подождем, пока все читающие потоки выйдут из функции чтения и обнулят счетчик читающих потоков
-     */
+    
+      // russian Подождем, пока все читающие потоки выйдут из функции чтения и обнулят счетчик читающих потоков
+     
     res = rt_event_wait(&shmem->eflags, SHMEM_WRITER_MASK, &after_mask, EV_ALL, TM_INFINITE);
 
     if (res != 0)
@@ -815,11 +827,13 @@ void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datale
         fprintf(stderr, "error write_shmem: rt_event_signal\n");
         return;
     }
+	*/
 }
 
 
 void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datalen)
 {
+	/*
     if(!remote_shmem->f_event_connected || !remote_shmem->f_mutex_connected || !remote_shmem->f_shmem_connected)
     {
         *datalen = 0;
@@ -829,9 +843,8 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
     shmem_out_set_t* shmem = &remote_shmem->remote_shmem;
 
     unsigned long after_mask;
-    /**
-     * \~russian Подождем, если пишущий поток выставил флаг, что он занят записью
-     */
+     //~russian Подождем, если пишущий поток выставил флаг, что он занят записью
+
     int res = rt_event_wait(&shmem->eflags, ~SHMEM_WRITER_MASK, &after_mask, EV_ALL, TM_INFINITE);
     if (res != 0) {
         fprintf(stderr, "error read_shmem: rt_event_wait\n");
@@ -839,9 +852,9 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
         return;
     }
 
-    /**
-     * Залочим мьютекс
-     */
+
+     // Залочим мьютекс
+
     res = rt_mutex_acquire(&shmem->mutex_read_shmem, TM_INFINITE);
     if (res != 0)
     {
@@ -849,9 +862,7 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
         return;
     }
 
-    /**
-     * Считываем показания счетчика (младших битов флагов)
-     */
+	// Считываем показания счетчика (младших битов флагов)
     RT_EVENT_INFO info;
     res = rt_event_inquire(&shmem->eflags, &info);
     if (res != 0) {
@@ -893,18 +904,14 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
     }
     *datalen = buflen;
 
-    /**
-     * Залочим мьютекс
-     */
+	// Залочим мьютекс
     res = rt_mutex_acquire(&shmem->mutex_read_shmem, TM_INFINITE);
     if (res != 0) {
         fprintf(stderr, "error read_shmem: rt_mutex_acquire2\n");
         return;
     }
 
-    /**
-     * Считываем показания счетчика (младших битов флагов)
-     */
+	// Считываем показания счетчика (младших битов флагов)
     res = rt_event_inquire(&shmem->eflags, &info);
     if (res != 0) {
         fprintf(stderr, "error read_shmem: rt_event_inquire1\n");
@@ -930,6 +937,7 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
         fprintf(stderr, "error read_shmem:  rt_mutex_release2\n");
         return;
     }
+	*/
 }
 
 
@@ -942,6 +950,7 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
  */
 int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 {
+	/*
     void* pval;
     int i;
     for(i=0;i<out_object->out_queue_sets_len;i++)
@@ -1014,6 +1023,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
     }
 
     return 0;
+	*/
 }
 
 
@@ -1024,6 +1034,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
  */
 void get_input_data(module_t *module)
 {
+	/*
     if (!module) {
         return;
     }
@@ -1088,6 +1099,7 @@ void get_input_data(module_t *module)
     }
 
     refresh_input(module);
+	*/
 }
 
 /**
@@ -1098,6 +1110,7 @@ void get_input_data(module_t *module)
  */
 int connect_out_links(void *p_module)
 {
+	/*
     module_t* module = p_module;
 
     int count_connected = 0, i;
@@ -1139,6 +1152,7 @@ int connect_out_links(void *p_module)
     }
 
     return 0;
+	*/
 }
 
 
@@ -1150,6 +1164,7 @@ int connect_out_links(void *p_module)
  */
 int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_name)
 {
+	/*
     int count_connected = 0, i;
     for(i=0; i < ar_remote_shmems->remote_shmems_len;i++)
     {
@@ -1228,11 +1243,13 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
     }
 
     return 0;
+	*/
 }
 
 
 int disconnect_in_links(shmem_in_set_t* remote_shmem)
 {
+	/*
     if(remote_shmem->f_shmem_connected)
     {
         int res = rt_heap_unbind	(&remote_shmem->remote_shmem.h_shmem);
@@ -1273,11 +1290,13 @@ int disconnect_in_links(shmem_in_set_t* remote_shmem)
     }
 
     return 0;
+	*/
 }
 
 
 int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_queue)
 {
+	/*
     void* obj;
     bson_t bson_tr;
 
@@ -1324,6 +1343,7 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
     }
     if(time2publish2shmem)
         *time_last_publish_shmem=rt_timer_read();
+		*/
 }
 
 
@@ -1333,6 +1353,7 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
  */
 void task_transmit(void *p_module)
 {
+	/*
     module_t* module = p_module;
     int cycle = 0;
 
@@ -1389,16 +1410,16 @@ void task_transmit(void *p_module)
             }
         }
     }
+	*/
 }
 
 
 int start(void* p_module)
 {
+	/*
     module_t* module = p_module;
 
-    /**
-     * Create required xenomai services
-     */
+     // Create required xenomai services
     int err = create_xenomai_services(module);
     if (err != 0) {
         fprintf(stderr, "Error create xenomai services\n");
@@ -1431,11 +1452,13 @@ int start(void* p_module)
     }
 
     return err;
+	*/
 }
 
 
 int stop(void* p_module)
 {
+	/*
     module_t* module = p_module;
 
     // TODO: Удалить и все сервисы ксеномая
@@ -1451,11 +1474,13 @@ int stop(void* p_module)
     free(module);
 
     return 0;
+	*/
 }
 
 
 int create_xenomai_services(module_t* module)
 {
+	/*
     if(module->input_data)
     {
         // Create input queue
@@ -1521,6 +1546,7 @@ int create_xenomai_services(module_t* module)
     }
 
     return 0;
+	*/
 }
 
 
@@ -1534,6 +1560,7 @@ int create_xenomai_services(module_t* module)
  */
 int checkout4writer(module_t* module, out_object_t* set, void** obj)
 {
+	/*
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
     {
@@ -1568,6 +1595,7 @@ int checkout4writer(module_t* module, out_object_t* set, void** obj)
         return res1;
     }
     return res;
+	*/
 }
 
 
@@ -1581,6 +1609,7 @@ int checkout4writer(module_t* module, out_object_t* set, void** obj)
  */
 int checkin4writer(module_t* module, out_object_t* set, void** obj)
 {
+	/*
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
     if (res != 0)
     {
@@ -1623,6 +1652,7 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
     }
 
     return res;
+	*/
 }
 
 
@@ -1634,6 +1664,7 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
  */
 int refresh_input(void* p_module)
 {
+	/*
     module_t* module = p_module;
     void* pval;
 
@@ -1769,6 +1800,7 @@ int refresh_input(void* p_module)
     // перед выходом обнулить биты. они отработаны
     module->refresh_input_mask = 0;
     return 0;
+	*/
 }
 
 

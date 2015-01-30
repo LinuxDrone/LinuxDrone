@@ -198,7 +198,7 @@ function Create_C_file(paramsDefinitions) {
     var r = "";
 
     r += "#include \"common-params.h\"\n";
-    r += "#include \"module-functions.h\"\n\n";
+    r += "#include \"apr-module-functions.h\"\n\n";
 
     // Хитрожопая процедура преобразования массива объектов в объект, где каждый член - объект из массива.
     // Все танцы для того, чтобы вызвать функции создания функций bson преобразования, без их изменения.
