@@ -12,6 +12,7 @@
 		B10493941A717CAE001F0221 /* apr-module-functions.h in Headers */ = {isa = PBXBuildFile; fileRef = B10493911A717CAE001F0221 /* apr-module-functions.h */; };
 		B10493951A717CAE001F0221 /* apr-helper-functions.c in Sources */ = {isa = PBXBuildFile; fileRef = B10493921A717CAE001F0221 /* apr-helper-functions.c */; };
 		B10493961A717CAE001F0221 /* apr-module-functions.c in Sources */ = {isa = PBXBuildFile; fileRef = B10493931A717CAE001F0221 /* apr-module-functions.c */; };
+		B1F0A3351A863DF700C7E995 /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +45,7 @@
 		B10493921A717CAE001F0221 /* apr-helper-functions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "apr-helper-functions.c"; path = "libraries/sdk/src/apr-helper-functions.c"; sourceTree = "<group>"; };
 		B10493931A717CAE001F0221 /* apr-module-functions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "apr-module-functions.c"; path = "libraries/sdk/src/apr-module-functions.c"; sourceTree = "<group>"; };
 		B1BF4C581A70398E009CEFDC /* LinuxDrone */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LinuxDrone; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libbson-1.0.0.dylib"; path = "tools/libbson/libbson-1.0.0.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +53,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1F0A3351A863DF700C7E995 /* libbson-1.0.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -68,6 +71,7 @@
 		B1BF4C4F1A70398E009CEFDC = {
 			isa = PBXGroup;
 			children = (
+				B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */,
 				B10493911A717CAE001F0221 /* apr-module-functions.h */,
 				B10493921A717CAE001F0221 /* apr-helper-functions.c */,
 				B10493931A717CAE001F0221 /* apr-module-functions.c */,
@@ -221,6 +225,7 @@
 		B10493891A717BE3001F0221 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
@@ -228,17 +233,30 @@
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				GCC_VERSION = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/tools/libbson",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Debug;
 		};
 		B104938A1A717BE3001F0221 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
+				GCC_VERSION = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/tools/libbson",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Release;
 		};
@@ -324,6 +342,7 @@
 		B1BF4C601A70398E009CEFDC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -340,6 +359,7 @@
 		B1BF4C611A70398E009CEFDC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/apr/lib,
@@ -358,6 +378,7 @@
 				B104938A1A717BE3001F0221 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B1BF4C531A70398E009CEFDC /* Build configuration list for PBXProject "LinuxDrone" */ = {
 			isa = XCConfigurationList;

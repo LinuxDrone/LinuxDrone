@@ -9,6 +9,27 @@
 //#include <native/cond.h>
 #include "common-params.h"
 
+#define RT_HEAP int
+#define RT_EVENT int
+#define RT_MUTEX int
+#define RT_QUEUE int
+#define RT_TASK int
+#define RT_COND int
+#define RTIME int
+
+#define TM_INFINITE 0
+#define XNOBJECT_NAME_LEN 32
+#define H_PRIO 0
+#define H_SHARED 0
+#define EV_PRIO 0
+#define EV_ALL 0
+#define RT_EVENT_INFO int
+#define RT_HEAP_INFO int
+#define Q_NORMAL 0
+#define TM_NONBLOCK 0
+#define Q_FIFO 0
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
