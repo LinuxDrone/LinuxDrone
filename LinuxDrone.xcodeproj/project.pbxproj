@@ -15,7 +15,24 @@
 		B1F0A3351A863DF700C7E995 /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
 		B1F0A3371A864F9100C7E995 /* test-sender.c in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A3361A864F9100C7E995 /* test-sender.c */; };
 		B1F0A3431A864FF100C7E995 /* test-sender.c in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A3361A864F9100C7E995 /* test-sender.c */; };
+		B1F0A34C1A878F3E00C7E995 /* test-sender.def.json in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A34B1A878F3200C7E995 /* test-sender.def.json */; };
+		B1F0A34E1A87913200C7E995 /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		B1F0A34D1A878F4900C7E995 /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = "*.def.json";
+			fileType = pattern.proxy;
+			isEditable = 1;
+			outputFiles = (
+				"$(DERIVED_SOURCES_DIR)/test-sender.helper.h",
+				"$(DERIVED_SOURCES_DIR)/test-sender.helper.c",
+			);
+			script = "/opt/local/bin/node libraries/sdk/ModuleGenerator.js $SOURCE_ROOT/modules/test-sender/test-sender.def.json $DERIVED_SOURCES_DIR";
+		};
+/* End PBXBuildRule section */
 
 /* Begin PBXContainerItemProxy section */
 		B10493971A717D41001F0221 /* PBXContainerItemProxy */ = {
@@ -66,6 +83,7 @@
 		B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libbson-1.0.0.dylib"; path = "tools/libbson/libbson-1.0.0.dylib"; sourceTree = "<group>"; };
 		B1F0A3361A864F9100C7E995 /* test-sender.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "test-sender.c"; path = "modules/test-sender/test-sender.c"; sourceTree = "<group>"; };
 		B1F0A33C1A864FDB00C7E995 /* test-sender */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "test-sender"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1F0A34B1A878F3200C7E995 /* test-sender.def.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = "test-sender.def.json"; path = "modules/test-sender/test-sender.def.json"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +107,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1F0A34E1A87913200C7E995 /* libbson-1.0.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +149,7 @@
 		B1F0A3481A8650D200C7E995 /* modules */ = {
 			isa = PBXGroup;
 			children = (
+				B1F0A34B1A878F3200C7E995 /* test-sender.def.json */,
 				B1F0A3361A864F9100C7E995 /* test-sender.c */,
 			);
 			name = modules;
@@ -189,12 +209,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B1F0A3401A864FDB00C7E995 /* Build configuration list for PBXNativeTarget "test-sender" */;
 			buildPhases = (
-				B1F0A3461A86506C00C7E995 /* ShellScript */,
 				B1F0A3381A864FDB00C7E995 /* Sources */,
 				B1F0A3391A864FDB00C7E995 /* Frameworks */,
 				B1F0A33A1A864FDB00C7E995 /* CopyFiles */,
 			);
 			buildRules = (
+				B1F0A34D1A878F4900C7E995 /* PBXBuildRule */,
 			);
 			dependencies = (
 				B1F0A3451A864FFD00C7E995 /* PBXTargetDependency */,
@@ -259,22 +279,6 @@
 			shellPath = /bin/sh;
 			shellScript = "/opt/local/bin/node libraries/sdk/CommonParamsGenerator.js $SOURCE_ROOT/webapps/configurator/client/ModulesCommonParams.def.js  $DERIVED_FILE_DIR";
 		};
-		B1F0A3461A86506C00C7E995 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SOURCE_ROOT)/modules/test-sender/test-sender.def.json",
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/test-sender.helper.h",
-				"$(DERIVED_FILE_DIR)/test-sender.helper.c",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/opt/local/bin/node libraries/sdk/ModuleGenerator.js $SOURCE_ROOT/modules/test-sender/test-sender.def.json $DERIVED_FILE_DIR";
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -300,6 +304,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1F0A34C1A878F3E00C7E995 /* test-sender.def.json in Sources */,
 				B1F0A3431A864FF100C7E995 /* test-sender.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -480,6 +485,10 @@
 					"tools/rootfs/beaglebone/usr/local/include/libbson-1.0",
 					"$(DERIVED_FILE_DIR)/../../sdk.build/DerivedSources/**",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/tools/libbson",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -489,6 +498,10 @@
 			buildSettings = {
 				HEADER_SEARCH_PATHS = "";
 				"HEADER_SEARCH_PATHS[arch=*]" = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/tools/libbson",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
