@@ -11,15 +11,7 @@ function make_params_structure(params_definitions, moduleName) {
         if (i != 0) {
             r += ",\n";
         }
-        r += "\t" + paramName + " =\t0b";
-        for (var c = 0; c < 32; c++) {
-            if (i == 31 - c) {
-                r += "1";
-            }
-            else {
-                r += "0";
-            }
-        }
+        r += "\t" + paramName + " =\t1 << " + i;
         i++;
     });
 
@@ -48,15 +40,7 @@ function make_structures(properties, outName) {
         if (i != 0) {
             r += ",\n";
         }
-        r += "\t" + key + " =\t0b";
-        for (var c = 0; c < 32; c++) {
-            if (i == 31 - c) {
-                r += "1";
-            }
-            else {
-                r += "0";
-            }
-        }
+        r += "\t" + key + " =\t1 << " + i;
         i++;
     }
     r += "\n";
@@ -600,7 +584,7 @@ function Create_C_file(module) {
                 for (var key in out.Schema.properties) {
                     r += "    if(!strncmp(name_out_pin, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
                     r += "    {\n";
-                    r += "        (*offset_field) = (void*)&module->obj1_" + outName + "." + key + " - (void*)&module->obj1_" + outName + ";\n";
+                    r += "        (*offset_field) = (uintptr_t)&module->obj1_" + outName + "." + key + " - (uintptr_t)&module->obj1_" + outName + ";\n";
                     r += "        (*index_port) = " + index_port + ";\n";
                     r += "        return &module->" + outName + ";\n";
                     r += "    }\n";
