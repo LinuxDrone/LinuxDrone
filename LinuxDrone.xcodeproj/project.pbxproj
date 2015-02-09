@@ -12,10 +12,37 @@
 		B10493941A717CAE001F0221 /* apr-module-functions.h in Headers */ = {isa = PBXBuildFile; fileRef = B10493911A717CAE001F0221 /* apr-module-functions.h */; };
 		B10493951A717CAE001F0221 /* apr-helper-functions.c in Sources */ = {isa = PBXBuildFile; fileRef = B10493921A717CAE001F0221 /* apr-helper-functions.c */; };
 		B10493961A717CAE001F0221 /* apr-module-functions.c in Sources */ = {isa = PBXBuildFile; fileRef = B10493931A717CAE001F0221 /* apr-module-functions.c */; };
+		B1F0A3351A863DF700C7E995 /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
+		B1F0A3371A864F9100C7E995 /* test-sender.c in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A3361A864F9100C7E995 /* test-sender.c */; };
+		B1F0A3431A864FF100C7E995 /* test-sender.c in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A3361A864F9100C7E995 /* test-sender.c */; };
+		B1F0A34C1A878F3E00C7E995 /* test-sender.def.json in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A34B1A878F3200C7E995 /* test-sender.def.json */; };
+		B1F0A34E1A87913200C7E995 /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		B1F0A34D1A878F4900C7E995 /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = "*.def.json";
+			fileType = pattern.proxy;
+			isEditable = 1;
+			outputFiles = (
+				"$(DERIVED_SOURCES_DIR)/test-sender.helper.h",
+				"$(DERIVED_SOURCES_DIR)/test-sender.helper.c",
+			);
+			script = "/opt/local/bin/node libraries/sdk/ModuleGenerator.js $SOURCE_ROOT/modules/test-sender/test-sender.def.json $DERIVED_SOURCES_DIR";
+		};
+/* End PBXBuildRule section */
 
 /* Begin PBXContainerItemProxy section */
 		B10493971A717D41001F0221 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B1BF4C501A70398E009CEFDC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B10493861A717BE3001F0221;
+			remoteInfo = sdk;
+		};
+		B1F0A3441A864FFD00C7E995 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B1BF4C501A70398E009CEFDC /* Project object */;
 			proxyType = 1;
@@ -34,6 +61,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		B1F0A33A1A864FDB00C7E995 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +80,10 @@
 		B10493921A717CAE001F0221 /* apr-helper-functions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "apr-helper-functions.c"; path = "libraries/sdk/src/apr-helper-functions.c"; sourceTree = "<group>"; };
 		B10493931A717CAE001F0221 /* apr-module-functions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "apr-module-functions.c"; path = "libraries/sdk/src/apr-module-functions.c"; sourceTree = "<group>"; };
 		B1BF4C581A70398E009CEFDC /* LinuxDrone */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LinuxDrone; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libbson-1.0.0.dylib"; path = "tools/libbson/libbson-1.0.0.dylib"; sourceTree = "<group>"; };
+		B1F0A3361A864F9100C7E995 /* test-sender.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "test-sender.c"; path = "modules/test-sender/test-sender.c"; sourceTree = "<group>"; };
+		B1F0A33C1A864FDB00C7E995 /* test-sender */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "test-sender"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1F0A34B1A878F3200C7E995 /* test-sender.def.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = "test-sender.def.json"; path = "modules/test-sender/test-sender.def.json"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +91,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1F0A3351A863DF700C7E995 /* libbson-1.0.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,15 +103,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B1F0A3391A864FDB00C7E995 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1F0A34E1A87913200C7E995 /* libbson-1.0.0.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		B1BF4C4F1A70398E009CEFDC = {
 			isa = PBXGroup;
 			children = (
-				B10493911A717CAE001F0221 /* apr-module-functions.h */,
-				B10493921A717CAE001F0221 /* apr-helper-functions.c */,
-				B10493931A717CAE001F0221 /* apr-module-functions.c */,
+				B1F0A3481A8650D200C7E995 /* modules */,
+				B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */,
+				B1F0A3471A8650C800C7E995 /* sdk */,
 				B10493811A703AC3001F0221 /* libapr-2.0.dylib */,
 				B104937F1A703A35001F0221 /* osx-main-test.c */,
 				B1BF4C591A70398E009CEFDC /* Products */,
@@ -82,8 +131,28 @@
 			children = (
 				B1BF4C581A70398E009CEFDC /* LinuxDrone */,
 				B10493871A717BE3001F0221 /* libsdk.dylib */,
+				B1F0A33C1A864FDB00C7E995 /* test-sender */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B1F0A3471A8650C800C7E995 /* sdk */ = {
+			isa = PBXGroup;
+			children = (
+				B10493911A717CAE001F0221 /* apr-module-functions.h */,
+				B10493921A717CAE001F0221 /* apr-helper-functions.c */,
+				B10493931A717CAE001F0221 /* apr-module-functions.c */,
+			);
+			name = sdk;
+			sourceTree = "<group>";
+		};
+		B1F0A3481A8650D200C7E995 /* modules */ = {
+			isa = PBXGroup;
+			children = (
+				B1F0A34B1A878F3200C7E995 /* test-sender.def.json */,
+				B1F0A3361A864F9100C7E995 /* test-sender.c */,
+			);
+			name = modules;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -104,10 +173,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B10493881A717BE3001F0221 /* Build configuration list for PBXNativeTarget "sdk" */;
 			buildPhases = (
-				B10493841A717BE3001F0221 /* Frameworks */,
 				B104939A1A7185A0001F0221 /* ShellScript */,
 				B10493831A717BE3001F0221 /* Sources */,
 				B10493851A717BE3001F0221 /* Headers */,
+				B10493841A717BE3001F0221 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -136,6 +205,25 @@
 			productReference = B1BF4C581A70398E009CEFDC /* LinuxDrone */;
 			productType = "com.apple.product-type.tool";
 		};
+		B1F0A33B1A864FDB00C7E995 /* test-sender */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1F0A3401A864FDB00C7E995 /* Build configuration list for PBXNativeTarget "test-sender" */;
+			buildPhases = (
+				B1F0A3381A864FDB00C7E995 /* Sources */,
+				B1F0A3391A864FDB00C7E995 /* Frameworks */,
+				B1F0A33A1A864FDB00C7E995 /* CopyFiles */,
+			);
+			buildRules = (
+				B1F0A34D1A878F4900C7E995 /* PBXBuildRule */,
+			);
+			dependencies = (
+				B1F0A3451A864FFD00C7E995 /* PBXTargetDependency */,
+			);
+			name = "test-sender";
+			productName = "test-sender";
+			productReference = B1F0A33C1A864FDB00C7E995 /* test-sender */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -149,6 +237,9 @@
 						CreatedOnToolsVersion = 6.1.1;
 					};
 					B1BF4C571A70398E009CEFDC = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+					B1F0A33B1A864FDB00C7E995 = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
 				};
@@ -167,6 +258,7 @@
 			targets = (
 				B1BF4C571A70398E009CEFDC /* LinuxDrone */,
 				B10493861A717BE3001F0221 /* sdk */,
+				B1F0A33B1A864FDB00C7E995 /* test-sender */,
 			);
 		};
 /* End PBXProject section */
@@ -203,7 +295,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1F0A3371A864F9100C7E995 /* test-sender.c in Sources */,
 				B10493801A703A35001F0221 /* osx-main-test.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1F0A3381A864FDB00C7E995 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1F0A34C1A878F3E00C7E995 /* test-sender.def.json in Sources */,
+				B1F0A3431A864FF100C7E995 /* test-sender.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,12 +317,18 @@
 			target = B10493861A717BE3001F0221 /* sdk */;
 			targetProxy = B10493971A717D41001F0221 /* PBXContainerItemProxy */;
 		};
+		B1F0A3451A864FFD00C7E995 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B10493861A717BE3001F0221 /* sdk */;
+			targetProxy = B1F0A3441A864FFD00C7E995 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		B10493891A717BE3001F0221 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
@@ -228,17 +336,30 @@
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				GCC_VERSION = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/tools/libbson",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Debug;
 		};
 		B104938A1A717BE3001F0221 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
+				GCC_VERSION = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/tools/libbson",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Release;
 		};
@@ -324,6 +445,7 @@
 		B1BF4C601A70398E009CEFDC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -340,9 +462,45 @@
 		B1BF4C611A70398E009CEFDC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/apr/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		B1F0A3411A864FDB00C7E995 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = "";
+				"HEADER_SEARCH_PATHS[arch=*]" = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"tools/rootfs/beaglebone/usr/local/include/libbson-1.0",
+					"$(DERIVED_FILE_DIR)/../../sdk.build/DerivedSources/**",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/tools/libbson",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		B1F0A3421A864FDB00C7E995 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = "";
+				"HEADER_SEARCH_PATHS[arch=*]" = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/tools/libbson",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -358,6 +516,7 @@
 				B104938A1A717BE3001F0221 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B1BF4C531A70398E009CEFDC /* Build configuration list for PBXProject "LinuxDrone" */ = {
 			isa = XCConfigurationList;
@@ -376,6 +535,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		B1F0A3401A864FDB00C7E995 /* Build configuration list for PBXNativeTarget "test-sender" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1F0A3411A864FDB00C7E995 /* Debug */,
+				B1F0A3421A864FDB00C7E995 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};

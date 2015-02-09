@@ -12,6 +12,8 @@
 	<dict>
 		<key>1E4B7D5B9FE8700CBA9EDCFCE3B7D1011A205287</key>
 		<string>ssh://git.linuxdrone.org/LinuxDrone.git</string>
+		<key>9A96748234B91F0949764DE8405817039D66DAF6</key>
+		<string>git://github.com/mongodb/libbson.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
 	<string>LinuxDrone.xcodeproj</string>
@@ -19,6 +21,8 @@
 	<dict>
 		<key>1E4B7D5B9FE8700CBA9EDCFCE3B7D1011A205287</key>
 		<string>../..</string>
+		<key>9A96748234B91F0949764DE8405817039D66DAF6</key>
+		<string>../../tools/libbson/</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>ssh://git.linuxdrone.org/LinuxDrone.git</string>
@@ -28,6 +32,14 @@
 	<string>1E4B7D5B9FE8700CBA9EDCFCE3B7D1011A205287</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>9A96748234B91F0949764DE8405817039D66DAF6</string>
+			<key>IDESourceControlWCCName</key>
+			<string>libbson</string>
+		</dict>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
