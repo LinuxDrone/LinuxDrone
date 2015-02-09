@@ -636,13 +636,15 @@ typedef int (*start_f)(module_t*);
 // Тип функции удаления модуля
 typedef void (*delete_f)(module_t*);
 
-int init(module_t* module, int argc, char *argv[]);
+__declspec(dllexport) int init(module_t* module, int argc, char *argv[]);
 
-int start(void* module);
+__declspec(dllexport) int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name);
 
-int stop(void* module);
+__declspec(dllexport) int start(void* module);
 
-void get_input_data(module_t *module);
+__declspec(dllexport) int stop(void* module);
+
+__declspec(dllexport) void get_input_data(module_t *module);
 
 int refresh_input(void* p_module);
 
