@@ -16,7 +16,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
-#include "../include/pru-functions.h"
+#include "../include/pru/pru-functions.h"
 
 
 #define PRUSS_MAX_IRAM_SIZE	0x2000
