@@ -5,7 +5,7 @@
       {
         "name": "generation",
         "url": "guides/modules/generation",
-        "title": "Генерация исходного кода модулей"
+        "title": "Генерация кода модулей"
       },
       {
         "name": "start",
