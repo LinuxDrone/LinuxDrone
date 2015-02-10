@@ -1,0 +1,17 @@
+[
+  {
+    "title": "Модули",
+    "items": [
+      {
+        "name": "generation",
+        "url": "guides/modules/generation",
+        "title": "Генерация исходного кода модулей"
+      },
+      {
+        "name": "start",
+        "url": "guides/modules/start",
+        "title": "Старт модуля"
+      }
+    ]
+  }
+]

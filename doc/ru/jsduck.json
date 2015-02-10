@@ -1,0 +1,5 @@
+{
+    "--guides": "guides.json",
+
+    "--output": "release"
+}
