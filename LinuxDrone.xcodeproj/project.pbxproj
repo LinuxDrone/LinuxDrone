@@ -17,6 +17,8 @@
 		B1F0A3431A864FF100C7E995 /* test-sender.c in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A3361A864F9100C7E995 /* test-sender.c */; };
 		B1F0A34C1A878F3E00C7E995 /* test-sender.def.json in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A34B1A878F3200C7E995 /* test-sender.def.json */; };
 		B1F0A34E1A87913200C7E995 /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
+		B1F0A3511A8BDB3A00C7E995 /* ModulesCommonParams.def.js in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A3501A8BDB3A00C7E995 /* ModulesCommonParams.def.js */; };
+		B1F0A3521A8BDE8800C7E995 /* libsdk.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493871A717BE3001F0221 /* libsdk.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -31,6 +33,18 @@
 				"$(DERIVED_SOURCES_DIR)/test-sender.helper.c",
 			);
 			script = "/opt/local/bin/node libraries/sdk/ModuleGenerator.js $SOURCE_ROOT/modules/test-sender/test-sender.def.json $DERIVED_SOURCES_DIR";
+		};
+		B1F0A34F1A8BD99200C7E995 /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = "*.def.js";
+			fileType = pattern.proxy;
+			isEditable = 1;
+			outputFiles = (
+				"$(DERIVED_SOURCES_DIR)/common-params.h",
+				"$(DERIVED_SOURCES_DIR)/common-params.c",
+			);
+			script = "/opt/local/bin/node libraries/sdk/CommonParamsGenerator.js $SOURCE_ROOT/webapps/configurator/client/ModulesCommonParams.def.js  $DERIVED_SOURCES_DIR";
 		};
 /* End PBXBuildRule section */
 
@@ -84,6 +98,7 @@
 		B1F0A3361A864F9100C7E995 /* test-sender.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "test-sender.c"; path = "modules/test-sender/test-sender.c"; sourceTree = "<group>"; };
 		B1F0A33C1A864FDB00C7E995 /* test-sender */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "test-sender"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1F0A34B1A878F3200C7E995 /* test-sender.def.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = "test-sender.def.json"; path = "modules/test-sender/test-sender.def.json"; sourceTree = "<group>"; };
+		B1F0A3501A8BDB3A00C7E995 /* ModulesCommonParams.def.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = ModulesCommonParams.def.js; path = webapps/configurator/client/ModulesCommonParams.def.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,6 +122,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1F0A3521A8BDE8800C7E995 /* libsdk.dylib in Frameworks */,
 				B1F0A34E1A87913200C7E995 /* libbson-1.0.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -117,6 +133,7 @@
 		B1BF4C4F1A70398E009CEFDC = {
 			isa = PBXGroup;
 			children = (
+				B1F0A3501A8BDB3A00C7E995 /* ModulesCommonParams.def.js */,
 				B1F0A3481A8650D200C7E995 /* modules */,
 				B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */,
 				B1F0A3471A8650C800C7E995 /* sdk */,
@@ -173,12 +190,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B10493881A717BE3001F0221 /* Build configuration list for PBXNativeTarget "sdk" */;
 			buildPhases = (
-				B104939A1A7185A0001F0221 /* ShellScript */,
 				B10493831A717BE3001F0221 /* Sources */,
 				B10493851A717BE3001F0221 /* Headers */,
 				B10493841A717BE3001F0221 /* Frameworks */,
 			);
 			buildRules = (
+				B1F0A34F1A8BD99200C7E995 /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -263,29 +280,12 @@
 		};
 /* End PBXProject section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		B104939A1A7185A0001F0221 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/common-params.h",
-				"$(DERIVED_FILE_DIR)/common-params.c",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/opt/local/bin/node libraries/sdk/CommonParamsGenerator.js $SOURCE_ROOT/webapps/configurator/client/ModulesCommonParams.def.js  $DERIVED_FILE_DIR";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		B10493831A717BE3001F0221 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1F0A3511A8BDB3A00C7E995 /* ModulesCommonParams.def.js in Sources */,
 				B10493951A717CAE001F0221 /* apr-helper-functions.c in Sources */,
 				B10493961A717CAE001F0221 /* apr-module-functions.c in Sources */,
 			);
