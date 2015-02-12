@@ -27,7 +27,7 @@ set(EXTRA_LIBS
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/common-params.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/CommonParamsGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/../../webapps/configurator/client/ModulesCommonParams.def.js ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/CommonParamsGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/../../webapps/configurator/client/ModulesCommonParams.def.js ${CMAKE_CURRENT_BINARY_DIR} XENO
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../webapps/configurator/client/ModulesCommonParams.def.js
 )
 
