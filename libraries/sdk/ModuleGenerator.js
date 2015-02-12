@@ -515,7 +515,13 @@ function Create_C_file(module) {
         r += "#include <getopt.h>\n\n";
     }
 
-    r += "#include \"" + module_type + ".helper.h\"\n";
+    if(platform!="XENO") {
+        r += "#include <apr_general.h>\n\n";
+    }
+
+
+
+        r += "#include \"" + module_type + ".helper.h\"\n";
 
 
     r += "// Определение модуля в JSON\n";
@@ -813,12 +819,19 @@ function Create_C_file(module) {
     if(platform==="XENO") {
         r += "    mlockall(MCL_CURRENT|MCL_FUTURE);\n";
         r += "    setvbuf(stdout, NULL, _IONBF, 0);\n\n\n";
+    }else{
+        r += "    apr_initialize();\n\n\n";
     }
     r += "    m_module = " + module_type + "_create(NULL);\n\n";
     r += "    " + module_type + "_init(m_module, argc, argv);\n\n";
     r += "    " + module_type + "_start(m_module);\n\n";
     r += "    printf(\"\\nPress ENTER for exit\\n\\n\");\n";
     r += "    getchar();\n\n";
+
+    if(platform!="XENO") {
+        r += "    apr_terminate();\n\n\n";
+    }
+
     r += "    return 0;\n";
     r += "}\n";
 
