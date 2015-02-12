@@ -30,7 +30,11 @@
  * @return
  * \~russian 0 в случае успеха
  */
+#ifdef WIN32
 __declspec(dllexport) int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
+#else
+int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
+#endif
 {
     /*
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
@@ -131,7 +135,11 @@ int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was
  * @param out_name Имя выходного объекта (имя группы портов, объедененных в логический объект)
  * @return Код ошибки. 0 в случае успеха.
  */
+#ifdef WIN32
 __declspec(dllexport) int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name)
+#else
+int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name)
+#endif
 {
     /*
     if(strlen(instance_name) > XNOBJECT_NAME_LEN-5)
@@ -1050,7 +1058,11 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
  * Должна вызываться из бизнес функции модуля. Доставляет данные из входной очереди и из шаред мемори инстансов поставщиков
  * @param p_module
  */
+#ifdef WIN32
 __declspec(dllexport) void get_input_data(module_t *module)
+#else
+void get_input_data(module_t *module)
+#endif
 {
     /*
     if (!module) {
@@ -1432,8 +1444,11 @@ void task_transmit(void *p_module)
      */
 }
 
-
+#ifdef WIN32
 __declspec(dllexport) int start(void* p_module)
+#else
+int start(void* p_module)
+#endif
 {
     /*
     module_t* module = p_module;
@@ -1480,7 +1495,11 @@ __declspec(dllexport) int start(void* p_module)
 }
 
 
+#ifdef WIN32
 __declspec(dllexport) int stop(void* p_module)
+#else
+int stop(void* p_module)
+#endif
 {
     /*
     module_t* module = p_module;
@@ -1582,7 +1601,11 @@ int create_xenomai_services(module_t* module)
  * @return
  * \~russian 0 в случае успеха
  */
+#ifdef WIN32
 __declspec(dllexport) int checkout4writer(module_t* module, out_object_t* set, void** obj)
+#else
+checkout4writer(module_t* module, out_object_t* set, void** obj)
+#endif
 {
     /*
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
@@ -1632,7 +1655,11 @@ __declspec(dllexport) int checkout4writer(module_t* module, out_object_t* set, v
  * @param obj \~russian Объект
  * @return
  */
+#ifdef WIN32
 __declspec(dllexport) int checkin4writer(module_t* module, out_object_t* set, void** obj)
+#else
+int checkin4writer(module_t* module, out_object_t* set, void** obj)
+#endif
 {
     /*
     int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
