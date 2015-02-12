@@ -10,8 +10,8 @@
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
 
-file(GLOB_RECURSE INC "include/*.h")
-file(GLOB_RECURSE SRC "src/*.c")
+file(GLOB_RECURSE INC "include/module-functions.h" "include/math/*" "include/pru/*")
+file(GLOB_RECURSE SRC "src/helper-functions.c" "src/module-functions.c" "src/math/*" "src/pru/*")
 
 include_directories(${RFS_DIR}/usr/local/include/libbson-1.0 ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
