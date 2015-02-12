@@ -155,7 +155,7 @@
       <Command>node CommonParamsGenerator.js /../../webapps/configurator/client/ModulesCommonParams.def.js .</Command>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>node $(ProjectDir)CommonParamsGenerator.js $(SolutionDir)webapps\configurator\client\ModulesCommonParams.def.js $(ProjectDir)include</Command>
+      <Command>node $(ProjectDir)CommonParamsGenerator.js $(SolutionDir)webapps\configurator\client\ModulesCommonParams.def.js $(ProjectDir)include MSVC</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='d1|Win32'">

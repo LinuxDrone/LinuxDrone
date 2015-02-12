@@ -71,7 +71,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
+    <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <IncludePath>D:\Projects\LinuxDrone\tools\libbson-win\include\libbson-1.0;D:\Projects\LinuxDrone\libraries\sdk\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -110,7 +110,7 @@
       <AdditionalDependencies>bson-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>node $(SolutionDir)libraries\sdk\ModuleGenerator.js $(ProjectDir)test-sender.def.json $(ProjectDir)</Command>
+      <Command>node $(SolutionDir)libraries\sdk\ModuleGenerator.js $(ProjectDir)test-sender.def.json $(ProjectDir) MSVC</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

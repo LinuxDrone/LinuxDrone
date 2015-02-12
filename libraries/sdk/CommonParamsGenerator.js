@@ -1,3 +1,5 @@
+var platform; // Values XENO,MSVC,GCC
+
 function make_params_structure(params_definitions) {
     var r = "";
 
@@ -198,7 +200,11 @@ function Create_C_file(paramsDefinitions) {
     var r = "";
 
     r += "#include \"common-params.h\"\n";
-    r += "#include \"apr-module-functions.h\"\n\n";
+    if(platform==="XENO") {
+        r += "#include \"module-functions.h\"\n\n";
+    }else{
+        r += "#include \"apr-module-functions.h\"\n\n";
+    }
 
     // Хитрожопая процедура преобразования массива объектов в объект, где каждый член - объект из массива.
     // Все танцы для того, чтобы вызвать функции создания функций bson преобразования, без их изменения.
@@ -216,13 +222,19 @@ function Create_C_file(paramsDefinitions) {
 }
 
 function main() {
-    if (process.argv.length < 4) {
-        console.log("Use " + process.argv[0] + " " + process.argv[1] + " path_to/ModulesCommonParams.def.js OUT_DIR");
+    if (process.argv.length < 5) {
+        console.log("Use " + process.argv[0] + " " + process.argv[1] + " path_to/ModulesCommonParams.def.js OUT_DIR PLATFORM");
+        console.log("Where PLATFORM = XENO,MSVC,GCC");
+        console.log("XENO - to use the XENOMAI library and the GCC. Only Linux.");
+        console.log("GCC - to use the APR library and the GCC. Linux, Mac OS X.");
+        console.log("MSVC - to use the APR library and the MSVC. Only Windows.");
         return -1;
     }
 
+
     var file_module_definition = process.argv[2];
     var out_dir = process.argv[3];
+    platform = process.argv[4];
 
     var commonModuleParams = require(file_module_definition);
 
