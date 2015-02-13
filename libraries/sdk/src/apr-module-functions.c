@@ -418,225 +418,234 @@ remote_queue_t* register_remote_queue(module_t* module, const char* name_remote_
  */
 int init(module_t* module, int argc, char *argv[])
 {
-    /*
-    const char* short_options = "hdsn:o:i:d";
-    const struct option long_options[] = {
-        {"help",no_argument,NULL,'h'},
-        {"module-definition",optional_argument,NULL,'d'},
-        {"print-params",optional_argument,NULL,'s'},
-        {"name",required_argument,NULL,'n'},
-        {"out-link",required_argument,NULL,'o'},
-        {"in-link",required_argument,NULL,'i'},
-        {NULL,0,NULL,0}
-    };
+	apr_status_t rv;
+	apr_pool_t *mp;
+	/* API is data structure driven */
+	static const apr_getopt_option_t opt_option[] = {
+		// long-option, short-option, has-arg flag, description 
+		{ "help", 'h', FALSE, "help" },
+		{ "module-definition", 'd', FALSE, "module definition" },
+		{ "print-params", 's', FALSE, "print params" },
+		{ "name", 'n', TRUE, "instance name" },
+		{ "out-link", 'o', TRUE, "out link" },
+		{ "in-link", 'i', TRUE, "in link" },
+		{ NULL, 0, 0, NULL } /* end (a.k.a. sentinel) */
+	};
+	apr_getopt_t *opt;
+	int optch;
+	const char *optarg;
 
-    int res;
-    int option_index;
-    opterr=0;
-    optind=0;
-    bool print_params = false;
-    while ((res = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1)
-    {
-        switch(res)
-        {
-            case 'h':
-                usage(module, argv);
-            break;
+	apr_pool_create(&mp, NULL);
 
-            case 's':
-                print_params = true;
-            break;
+	/* initialize apr_getopt_t */
+	apr_getopt_init(&opt, mp, argc, argv);
 
 
-        // Имя инстанса
-            case 'n':
-                if (optarg!=NULL){
-                // Проверяем, не превышает ли длина имени инстанса значения 32-5=27
-                // Т.к. максимальная длина имен объектов ксеномая равна 32 а 5 символов могут быть использованы на суфикс,
-                // при формировании имен тасков, очередй и пр., необходимых для объетов ксеномая используемых инстансом в работе
-                    if(strlen(optarg) > XNOBJECT_NAME_LEN-5)
-                    {
-                        fprintf(stderr, "Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", module->instance_name, strlen(module->instance_name), XNOBJECT_NAME_LEN-5);
-                        return -1;
-                    }
-                    module->instance_name = optarg;
-                    //fprintf(stdout, "instance name=%s\n\n", module->instance_name);
-                }
-                else
-                {
-                    printf("required value for argument --name\n\n");
-                    usage(module, argv);
-                }
-            break;
+	opt->errfn = NULL;
+	opt->interleave = true;
+
+	bool print_params = false;
+	/* parse the all options based on opt_option[] */
+	while ((rv = apr_getopt_long(opt, opt_option, &optch, &optarg)) != APR_EOF) {
+		switch (optch) {
+		case 'h':
+			usage(module, argv);
+			break;
+
+		case 's':
+			print_params = true;
+			break;
 
 
-            case 'o': // Исходящие связи (`OUT_NAME->INSTANCE_RECEIVER.IN_NAME`)
-                if (optarg!=NULL){
-                // Выделяем память под структуры, представляющие связи с модулями подписчиками
-                // Связи через очередь (данный модуль поставщик, другие потребители данных)
-                char* param_val = malloc(strlen(optarg)+1);
-                strcpy(param_val, optarg);
-
-                char* name_out_pin = strtok(param_val, ">");
-                name_out_pin[strlen(name_out_pin)-1] = 0;
-                //printf("name_out_pin=%s\n", name_out_pin);
-
-                char* name_remote_instance = strtok('\0', ".");
-                //printf("name_remote_instance=%s\n", name_remote_instance);
-
-                char* name_remote_pin = strtok('\0', ".");
-                //printf("name_remote_pin=%s\n", name_remote_pin);
-
-                if(strlen(name_remote_instance) > XNOBJECT_NAME_LEN-5)
-                {
-                    fprintf(stderr, "Remote Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", name_remote_instance, strlen(name_remote_instance), XNOBJECT_NAME_LEN-5);
-                    free(param_val);
-                    return -1;
-                }
-
-                // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-                remote_queue_t* remote_queue = register_remote_queue(module, name_remote_instance);
-
-                // Получим название типа данных связи
-                char portType_name[32];
-                get_porttype_by_portname(module, name_out_pin, portType_name);
-                TypeFieldObj port_type = convert_port_type_str2type(portType_name);
-                if(port_type==-1)
-                {
-                    fprintf(stderr, "Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", name_out_pin, portType_name, module->instance_name);
-                    free(param_val);
-                    return -1;
-                }
-
-                unsigned short offset_field;
-                unsigned short index_port;
-                out_object_t* out_object = (*module->get_outobj_by_outpin)(module, name_out_pin, &offset_field, &index_port);
-                if(out_object)
-                {
-                    register_out_link(out_object, name_remote_instance, offset_field, port_type, name_remote_pin, remote_queue);
-                }
-                else
-                {
-                    fprintf(stderr, "Not found OUT PIN \"%s\" in instance \"%s\"\n", name_out_pin, module->instance_name);
-                }
-                free(param_val);
-            }
-                else
-                {
-                    printf("require value for argument --out-link\n\n");
-                    usage(module, argv);
-                }
-            break;
+			// Имя инстанса
+		case 'n':
+			if (optarg != NULL){
+				// Проверяем, не превышает ли длина имени инстанса значения 32-5=27
+				// Т.к. максимальная длина имен объектов ксеномая равна 32 а 5 символов могут быть использованы на суфикс,
+				// при формировании имен тасков, очередй и пр., необходимых для объетов ксеномая используемых инстансом в работе
+				if (strlen(optarg) > XNOBJECT_NAME_LEN - 5)
+				{
+					fprintf(stderr, "Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", module->instance_name, strlen(module->instance_name), XNOBJECT_NAME_LEN - 5);
+					return -1;
+				}
+				module->instance_name = optarg;
+				//fprintf(stdout, "instance name=%s\n\n", module->instance_name);
+			}
+			else
+			{
+				printf("required value for argument --name\n\n");
+				usage(module, argv);
+			}
+			break;
 
 
-            case 'i': // Входящие связи (`INSTANCE_TRANSMITTER.OBJ_NAME.OUT_NAME->IN_NAME`)
-            // Выделяем память под структуры, представляющие связи с модулями поставщиками
-            // Связи через разделяемую память (данный модуль потребитель, другие поставщики данных)
-            // Список входящих связей, должен быть в массиве "in_links" в объекте конфигурации
-            // но его может не быть, если модуль не имеет входа
-                if (optarg!=NULL)
-            {
-                char* param_val = malloc(strlen(optarg)+1);
-                strcpy(param_val, optarg);
+		case 'o': // Исходящие связи (`OUT_NAME->INSTANCE_RECEIVER.IN_NAME`)
+			if (optarg != NULL){
+				// Выделяем память под структуры, представляющие связи с модулями подписчиками
+				// Связи через очередь (данный модуль поставщик, другие потребители данных)
+				char* param_val = malloc(strlen(optarg) + 1);
+				strcpy(param_val, optarg);
 
-                // имя инстанса модуля поставщика
-                char* publisher_instance_name = strtok(param_val, ".");
+				char* name_out_pin = strtok(param_val, ">");
+				name_out_pin[strlen(name_out_pin) - 1] = 0;
+				//printf("name_out_pin=%s\n", name_out_pin);
 
-                // имя группы пинов инстанса поставщика
-                char* publisher_nameOutGroup = strtok('\0', ".");
+				char* name_remote_instance = strtok('\0', ".");
+				//printf("name_remote_instance=%s\n", name_remote_instance);
 
-                // название выходного пина инстанса поставщика
-                char* remote_out_pin_name = strtok('\0', ">");
-                remote_out_pin_name[strlen(remote_out_pin_name)-1] = 0;
+				char* name_remote_pin = strtok('\0', ".");
+				//printf("name_remote_pin=%s\n", name_remote_pin);
 
-                // название входного пина данного модуля
-                char* input_pin_name = strtok('\0', ".");
+				if (strlen(name_remote_instance) > XNOBJECT_NAME_LEN - 5)
+				{
+					fprintf(stderr, "Remote Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", name_remote_instance, strlen(name_remote_instance), XNOBJECT_NAME_LEN - 5);
+					free(param_val);
+					return -1;
+				}
 
-                //printf("publisher_instance_name=%s\n", publisher_instance_name);
-                //printf("publisher_nameOutGroup=%s\n", publisher_nameOutGroup);
-                //printf("remote_out_pin_name=%s\n", remote_out_pin_name);
-                //printf("input_pin_name=%s\n", input_pin_name);
+				// Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
+				remote_queue_t* remote_queue = register_remote_queue(module, name_remote_instance);
 
-                if(strlen(publisher_instance_name) > XNOBJECT_NAME_LEN-5)
-                {
-                    fprintf(stderr, "Remote Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", publisher_instance_name, strlen(publisher_instance_name), XNOBJECT_NAME_LEN-5);
-                    free(param_val);
-                    return -1;
-                }
+				// Получим название типа данных связи
+				char portType_name[32];
+				get_porttype_by_portname(module, name_out_pin, portType_name);
+				TypeFieldObj port_type = convert_port_type_str2type(portType_name);
+				if (port_type == -1)
+				{
+					fprintf(stderr, "Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", name_out_pin, portType_name, module->instance_name);
+					free(param_val);
+					return -1;
+				}
 
-
-                // Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-                shmem_in_set_t* remote_shmem = register_remote_shmem(&module->ar_remote_shmems, publisher_instance_name, publisher_nameOutGroup);
-
-
-                // Получим название типа данных входной связи
-                char portType_name[32];
-                get_porttype_by_portname(module, input_pin_name, portType_name);
-                //printf("portType_name=%s\n", portType_name);
-                TypeFieldObj port_type = convert_port_type_str2type(portType_name);
-
-                //int port_type = get_porttype_by_in_portname(module->json_module_definition, input_pin_name);
-                if(port_type==-1)
-                {
-                    fprintf(stderr, "Error convert data type of port \"%s\" from string for instance \"%s\"\n", remote_out_pin_name, module->instance_name);
-                    free(param_val);
-                    return -1;
-                }
-
-                t_mask input_port_mask = (*module->get_inmask_by_inputname)(input_pin_name);
-                if(input_port_mask)
-                {
-                    remote_shmem->assigned_input_ports_mask |= input_port_mask;
-                    int offset_field = (*module->get_offset_in_input_by_inpinname)(module, input_pin_name);
-
-                    register_in_link(remote_shmem, port_type, remote_out_pin_name, offset_field);
-                }
-                else
-                {
-                    fprintf(stderr, "Not found INPUT PIN \"%s\" in instance \"%s\"\n", input_pin_name, module->instance_name);
-                }
-                free(param_val);
-            }
-                else
-                {
-                    printf("require value for argument --in-link\n\n");
-                    usage(module, argv);
-                }
-            break;
-
-            case 'd':
-                fprintf(stdout, "%s\n", module->json_module_definition);
-                exit(EXIT_SUCCESS);
-            break;
-        }
-    }
-
-    if(module->instance_name==NULL)
-    {
-        printf("required argument --name\n\n");
-        usage(module, argv);
-        exit(EXIT_FAILURE);
-    }
+				unsigned short offset_field;
+				unsigned short index_port;
+				out_object_t* out_object = (*module->get_outobj_by_outpin)(module, name_out_pin, &offset_field, &index_port);
+				if (out_object)
+				{
+					register_out_link(out_object, name_remote_instance, offset_field, port_type, name_remote_pin, remote_queue);
+				}
+				else
+				{
+					fprintf(stderr, "Not found OUT PIN \"%s\" in instance \"%s\"\n", name_out_pin, module->instance_name);
+				}
+				free(param_val);
+			}
+			else
+			{
+				printf("require value for argument --out-link\n\n");
+				usage(module, argv);
+			}
+			break;
 
 
-    // Запись в структуру общих параметров модуля (информация вынимается из параметров командной строки модуля)
-    argv2common_params(module, argc, argv);
+		case 'i': // Входящие связи (`INSTANCE_TRANSMITTER.OBJ_NAME.OUT_NAME->IN_NAME`)
+			// Выделяем память под структуры, представляющие связи с модулями поставщиками
+			// Связи через разделяемую память (данный модуль потребитель, другие поставщики данных)
+			// Список входящих связей, должен быть в массиве "in_links" в объекте конфигурации
+			// но его может не быть, если модуль не имеет входа
+			if (optarg != NULL)
+			{
+				char* param_val = malloc(strlen(optarg) + 1);
+				strcpy(param_val, optarg);
 
-    // Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна принимать на вход наносекунды (а использоваться будут тики)
-    module->common_params.transfer_task_period = rt_timer_ns2ticks(module->common_params.transfer_task_period * 1000);
-    module->common_params.main_task_period = rt_timer_ns2ticks(module->common_params.main_task_period * 1000);
+				// имя инстанса модуля поставщика
+				char* publisher_instance_name = strtok(param_val, ".");
 
-    // Запись в структуру специфичных параметров модуля
-    (*module->argv2params)(module, argc, argv);    
+				// имя группы пинов инстанса поставщика
+				char* publisher_nameOutGroup = strtok('\0', ".");
 
-    if(print_params)
-    {
-        print_common_params(&module->common_params);
-        (*module->print_params)(module->specific_params);
-    }
-*/
+				// название выходного пина инстанса поставщика
+				char* remote_out_pin_name = strtok('\0', ">");
+				remote_out_pin_name[strlen(remote_out_pin_name) - 1] = 0;
+
+				// название входного пина данного модуля
+				char* input_pin_name = strtok('\0', ".");
+
+				//printf("publisher_instance_name=%s\n", publisher_instance_name);
+				//printf("publisher_nameOutGroup=%s\n", publisher_nameOutGroup);
+				//printf("remote_out_pin_name=%s\n", remote_out_pin_name);
+				//printf("input_pin_name=%s\n", input_pin_name);
+
+				if (strlen(publisher_instance_name) > XNOBJECT_NAME_LEN - 5)
+				{
+					fprintf(stderr, "Remote Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", publisher_instance_name, strlen(publisher_instance_name), XNOBJECT_NAME_LEN - 5);
+					free(param_val);
+					return -1;
+				}
+
+
+				// Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
+				shmem_in_set_t* remote_shmem = register_remote_shmem(&module->ar_remote_shmems, publisher_instance_name, publisher_nameOutGroup);
+
+
+				// Получим название типа данных входной связи
+				char portType_name[32];
+				get_porttype_by_portname(module, input_pin_name, portType_name);
+				//printf("portType_name=%s\n", portType_name);
+				TypeFieldObj port_type = convert_port_type_str2type(portType_name);
+
+				//int port_type = get_porttype_by_in_portname(module->json_module_definition, input_pin_name);
+				if (port_type == -1)
+				{
+					fprintf(stderr, "Error convert data type of port \"%s\" from string for instance \"%s\"\n", remote_out_pin_name, module->instance_name);
+					free(param_val);
+					return -1;
+				}
+
+				t_mask input_port_mask = (*module->get_inmask_by_inputname)(input_pin_name);
+				if (input_port_mask)
+				{
+					remote_shmem->assigned_input_ports_mask |= input_port_mask;
+					int offset_field = (*module->get_offset_in_input_by_inpinname)(module, input_pin_name);
+
+					register_in_link(remote_shmem, port_type, remote_out_pin_name, offset_field);
+				}
+				else
+				{
+					fprintf(stderr, "Not found INPUT PIN \"%s\" in instance \"%s\"\n", input_pin_name, module->instance_name);
+				}
+				free(param_val);
+			}
+			else
+			{
+				printf("require value for argument --in-link\n\n");
+				usage(module, argv);
+			}
+			break;
+
+		case 'd':
+			fprintf(stdout, "%s\n", module->json_module_definition);
+			exit(EXIT_SUCCESS);
+			break;
+		}
+	}
+
+
+	if (module->instance_name == NULL)
+	{
+		printf("required argument --name\n\n");
+		usage(module, argv);
+		exit(EXIT_FAILURE);
+	}
+
+
+	// Запись в структуру общих параметров модуля (информация вынимается из параметров командной строки модуля)
+	argv2common_params(module, argc, argv);
+
+	// Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна принимать на вход наносекунды (а использоваться будут тики)
+	//module->common_params.transfer_task_period = rt_timer_ns2ticks(module->common_params.transfer_task_period * 1000);
+	//module->common_params.main_task_period = rt_timer_ns2ticks(module->common_params.main_task_period * 1000);
+
+	// Запись в структуру специфичных параметров модуля
+	(*module->argv2params)(module, argc, argv);
+
+	if (print_params)
+	{
+		print_common_params(&module->common_params);
+		(*module->print_params)(module->specific_params);
+	}
+
     return 0;
-     
 }
 
 
@@ -691,76 +700,81 @@ int get_porttype_by_portname(module_t* module, const char* port_name, char* port
 // Convert argv to structure common_params_t
 int argv2common_params(void* in_module, int argc, char *argv[])
 {
-    /*
-    module_t* module = in_module;
+	module_t* module = in_module;
+	if (!module)
+	{
+		printf("Error: func bson2common_params, NULL parameter\n");
+		return -1;
+	}
 
-    const char* short_options = "r::m::t::";
 
-    if(!module)
-    {
-        printf("Error: func bson2common_params, NULL parameter\n");
-        return -1;
-    }
+	apr_status_t rv;
+	apr_pool_t *mp;
+	/* API is data structure driven */
+	static const apr_getopt_option_t opt_option[] = {
+		// long-option, short-option, has-arg flag, description 
+		{ "rt-priority", 'r', TRUE, "realtime thread priority" },
+		{ "main-task-period", 'm', TRUE, "main task period" },
+		{ "transfer-task-period", 't', TRUE, "transfer task period" },
+		{ NULL, 0, 0, NULL }, /* end (a.k.a. sentinel) */
+	};
+	apr_getopt_t *opt;
+	int optch;
+	const char *optarg;
 
-    const struct option long_options[] = {
-        {"rt-priority",optional_argument,NULL,'r'},
-        {"main-task-period",optional_argument,NULL,'m'},
-        {"transfer-task-period",optional_argument,NULL,'t'},
-        {NULL,0,NULL,0}
-    };
+	apr_pool_create(&mp, NULL);
 
-    module->common_params.rt_priority = 80;
-    module->common_params.main_task_period = 20000;
-    module->common_params.transfer_task_period = 20000;
+	/* initialize apr_getopt_t */
+	apr_getopt_init(&opt, mp, argc, argv);
 
-    int res;
-    int option_index;
-    opterr=0;
-    optind=0;
-    while ((res = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1)
-    {
-        switch(res)
-        {
-            case 'r':
-                if (optarg!=NULL)
-                {
-                    module->common_params.rt_priority = atoi(optarg);
-                    if(module->common_params.rt_priority < 1 || module->common_params.rt_priority > 99)
-                    {
-                        printf("argument 'priority' valid values in the range 1-99\n\n");
-                        usage(argv);
-                    }
-                }
-                break;
 
-            case 'm':
-                if (optarg!=NULL)
-                {
-                    module->common_params.main_task_period = atoll(optarg);
-                    if(module->common_params.main_task_period < 0)
-                    {
-                        printf("argument 'main-task-period' valid values >-1\n\n");
-                        usage(argv);
-                    }
-                }
-                break;
+	module->common_params.rt_priority = 80;
+	module->common_params.main_task_period = 20000;
+	module->common_params.transfer_task_period = 20000;
 
-            case 't':
-                if (optarg!=NULL)
-                {
-                    module->common_params.transfer_task_period = atoll(optarg);
-                    if(module->common_params.transfer_task_period < 0)
-                    {
-                        printf("argument 'transfer-task-period' valid values >-1\n\n");
-                        usage(argv);
-                    }
-                }
-                break;
-        }
-    }
-*/
+	opt->errfn = NULL;
+	opt->interleave = true;
+
+	while ((rv = apr_getopt_long(opt, opt_option, &optch, &optarg)) != APR_EOF) {
+		switch (optch) {
+		case 'r':
+			if (optarg != NULL)
+			{
+				module->common_params.rt_priority = atoi(optarg);
+				if (module->common_params.rt_priority < 1 || module->common_params.rt_priority > 99)
+				{
+					printf("argument 'priority' valid values in the range 1-99\n\n");
+					usage(module, argv);
+				}
+			}
+			break;
+
+		case 'm':
+			if (optarg != NULL)
+			{
+				module->common_params.main_task_period = atoll(optarg);
+				if (module->common_params.main_task_period < 0)
+				{
+					printf("argument 'main-task-period' valid values >-1\n\n");
+					usage(module, argv);
+				}
+			}
+			break;
+
+		case 't':
+			if (optarg != NULL)
+			{
+				module->common_params.transfer_task_period = atoll(optarg);
+				if (module->common_params.transfer_task_period < 0)
+				{
+					printf("argument 'transfer-task-period' valid values >-1\n\n");
+					usage(module, argv);
+				}
+			}
+			break;
+		}
+	}
     return 0;
-     
 }
 
 
