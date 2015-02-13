@@ -6,6 +6,8 @@
   */
 
 #include <stdio.h>
+#include <apr_getopt.h>
+
 //#include <getopt.h>
 //#include <native/queue.h>
 //#include <native/heap.h>

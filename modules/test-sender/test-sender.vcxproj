@@ -72,7 +72,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
-    <IncludePath>D:\Projects\LinuxDrone\tools\libbson-win\include\libbson-1.0;D:\Projects\LinuxDrone\libraries\sdk\include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Projects\LinuxDrone\tools\apr-1.5.1\include;D:\Projects\LinuxDrone\tools\libbson-win\include\libbson-1.0;D:\Projects\LinuxDrone\libraries\sdk\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Projects\LinuxDrone\tools\apr-1.5.1\x64\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -107,7 +108,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Projects\LinuxDrone\tools\libbson\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bson-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libapr-1.lib;bson-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>node $(SolutionDir)libraries\sdk\ModuleGenerator.js $(ProjectDir)test-sender.def.json $(ProjectDir) MSVC</Command>

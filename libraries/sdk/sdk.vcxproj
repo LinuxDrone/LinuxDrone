@@ -91,8 +91,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Projects\LinuxDrone\tools\libbson-win\include\libbson-1.0;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Projects\LinuxDrone\tools\apr-1.5.1\Release;D:\Projects\LinuxDrone\tools\libbson-win\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\Projects\LinuxDrone\tools\apr-1.5.1\include;D:\Projects\LinuxDrone\tools\libbson-win\include\libbson-1.0;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Projects\LinuxDrone\tools\apr-1.5.1\x64\Release;D:\Projects\LinuxDrone\tools\libbson-win\lib;$(LibraryPath)</LibraryPath>
     <CustomBuildBeforeTargets>Compile</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='d1|Win32'">

@@ -11,7 +11,8 @@
 
 int main(int argc, const char * argv[]) {
     
-    apr_initialize();
+    //apr_initialize();
+	apr_app_initialize(&argc, argv, NULL);
     
     // insert code here...
     printf("Hello, World!\n");

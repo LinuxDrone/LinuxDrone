@@ -820,7 +820,7 @@ function Create_C_file(module) {
         r += "    mlockall(MCL_CURRENT|MCL_FUTURE);\n";
         r += "    setvbuf(stdout, NULL, _IONBF, 0);\n\n\n";
     }else{
-        r += "    apr_initialize();\n\n\n";
+        r += "    apr_app_initialize(&argc, argv, NULL);\n\n\n";
     }
     r += "    m_module = " + module_type + "_create(NULL);\n\n";
     r += "    " + module_type + "_init(m_module, argc, argv);\n\n";

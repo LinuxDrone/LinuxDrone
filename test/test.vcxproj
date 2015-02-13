@@ -97,7 +97,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>D:\Projects\LinuxDrone\tools\apr-1.5.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Projects\LinuxDrone\tools\apr-1.5.1\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\Projects\LinuxDrone\tools\apr-1.5.1\x64\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='d1|Win32'">
     <IncludePath>D:\Projects\LinuxDrone\tools\apr-1.5.1\include;$(IncludePath)</IncludePath>
