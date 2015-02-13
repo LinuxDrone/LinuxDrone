@@ -20,6 +20,7 @@
 		B1F0A3511A8BDB3A00C7E995 /* ModulesCommonParams.def.js in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A3501A8BDB3A00C7E995 /* ModulesCommonParams.def.js */; };
 		B1F0A3521A8BDE8800C7E995 /* libsdk.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493871A717BE3001F0221 /* libsdk.dylib */; };
 		B1F0A3531A8D451C00C7E995 /* libapr-2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493811A703AC3001F0221 /* libapr-2.0.dylib */; };
+		B1F0A3541A8E676700C7E995 /* libapr-2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493811A703AC3001F0221 /* libapr-2.0.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -107,6 +108,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1F0A3541A8E676700C7E995 /* libapr-2.0.dylib in Frameworks */,
 				B1F0A3351A863DF700C7E995 /* libbson-1.0.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -339,9 +341,16 @@
 					"$(inherited)",
 				);
 				GCC_VERSION = "";
+				"HEADER_SEARCH_PATHS[arch=*]" = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"tools/rootfs/beaglebone/usr/local/include/libbson-1.0",
+					"/usr/local/apr/include/apr-2",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
+					/usr/local/apr/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VALID_ARCHS = "i386 x86_64";
@@ -359,6 +368,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
+					/usr/local/apr/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VALID_ARCHS = "i386 x86_64";
