@@ -787,8 +787,8 @@ function Create_C_file(module) {
             r += "      printf(\"error checkout_params_" + module_type + ": rt_mutex_acquire\\n\");\n";
             r += "      return res;\n";
             r += "  }\n";
-            r += "  *params = module->specific_params;\n";
         }
+        r += "  *params = module->specific_params;\n";
         r += "  return 0;\n";
         r += "}\n\n";
 
