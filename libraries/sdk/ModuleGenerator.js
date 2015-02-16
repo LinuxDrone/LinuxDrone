@@ -821,13 +821,20 @@ function Create_C_file(module) {
     }else{
         r += "    apr_initialize();\n\n\n";
     }
-    r += "    m_module = " + module_type + "_create(NULL);\n\n";
+
+    r += "    m_module = " + module_type + "_create(NULL);\n";
+
+    if(platform!="XENO") {
+        r += "    apr_pool_create(&m_module->module_info.mp, NULL);\n\n";
+    }
+
     r += "    " + module_type + "_init(m_module, argc, argv);\n\n";
     r += "    " + module_type + "_start(m_module);\n\n";
     r += "    printf(\"\\nPress ENTER for exit\\n\\n\");\n";
     r += "    getchar();\n\n";
 
     if(platform!="XENO") {
+        r += "    apr_pool_destroy(m_module->module_info.mp);\n";
         r += "    apr_terminate();\n\n\n";
     }
 

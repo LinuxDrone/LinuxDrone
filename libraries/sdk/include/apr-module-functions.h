@@ -11,6 +11,8 @@
 #define XNOBJECT_NAME_LEN 32
 
 
+#include <apr_general.h>
+
 
 #include <bson.h>
 //#include <native/task.h>
@@ -618,6 +620,11 @@ typedef struct {
      * @brief \~russian Строка в формате JSON содержащая определение модуля
      */
     const char* json_module_definition;
+
+    /**
+     * @brief \~russian Memory pool библиотеки apr
+     */
+    apr_pool_t *mp;
 
 } module_t;
 

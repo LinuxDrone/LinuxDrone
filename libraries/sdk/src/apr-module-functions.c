@@ -7,6 +7,10 @@
 
 #include <stdio.h>
 #include <apr_getopt.h>
+#include <apr_network_io.h>
+
+/* default listen port number */
+#define DEF_LISTEN_PORT		8081
 
 //#include <native/queue.h>
 //#include <native/heap.h>
@@ -1465,7 +1469,6 @@ __declspec(dllexport) int start(void* p_module)
 int start(void* p_module)
 #endif
 {
-    /*
     module_t* module = p_module;
 
     
@@ -1487,7 +1490,7 @@ int start(void* p_module)
         fprintf(stderr, "module->func for main task required\n");
         return -1;
     }
-
+/*
     err = rt_task_start(&module->task_main, module->func, p_module);
     if (err != 0)
         fprintf(stderr, "Error start main task\n");
@@ -1538,24 +1541,49 @@ int stop(void* p_module)
 
 int create_xenomai_services(module_t* module)
 {
-    /*
     if(module->input_data)
     {
+        apr_status_t rv;
+        apr_socket_t *s;
+        apr_sockaddr_t *sa;
+        
+        rv = apr_sockaddr_info_get(&sa, NULL, APR_INET, DEF_LISTEN_PORT, 0, module->mp);
+        if (rv != APR_SUCCESS) {
+            return rv;
+        }
+        
+        rv = apr_socket_create(&s, sa->family, SOCK_DGRAM, APR_PROTO_UDP, module->mp);
+        if (rv != APR_SUCCESS) {
+            return rv;
+        }
+        
+        /* it is a good idea to specify socket options explicitly.
+         * in this case, we make a blocking socket as the listening socket */
+        apr_socket_opt_set(s, APR_SO_NONBLOCK, 0);
+        apr_socket_timeout_set(s, -1);
+        apr_socket_opt_set(s, APR_SO_REUSEADDR, 1);/* this is useful for a server(socket listening) process */
+        
+        rv = apr_socket_bind(s, sa);
+        if (rv != APR_SUCCESS) {
+            return rv;
+        }
+        
+        
         // Create input queue
         // But only defined input buffer
         char name_queue[XNOBJECT_NAME_LEN] = "";
         strcat(name_queue, module->instance_name);
         strcat(name_queue, SUFFIX_QUEUE);
         int queue_poolsize = 200; //TODO вынести эту цифру в настройки
-        int err = rt_queue_create(&module->in_queue, name_queue, queue_poolsize, 10, Q_FIFO);
-        if (err != 0)
+//        int err = rt_queue_create(&module->in_queue, name_queue, queue_poolsize, 10, Q_FIFO);
+  //      if (err != 0)
         {
             fprintf(stdout, "Error create queue \"%s\"\n", name_queue);
-            return err;
+    //        return err;
         }
     }
 
-
+/*
     // Create main task
     char name_task_main[XNOBJECT_NAME_LEN] = "";
     strcat(name_task_main, module->instance_name);
