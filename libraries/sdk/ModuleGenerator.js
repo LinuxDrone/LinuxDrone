@@ -282,74 +282,78 @@ function make_argv2Structure(properties, module_type) {
     r += "// Convert argv to structure " + structureName + "\n";
     r += "int argv2" + structureName + "(module_t* module, int argc, char *argv[])\n";
     r += "{\n";
-    if(platform!="MSVC") {
-        r += "    if(!module)\n";
-        r += "    {\n";
-        r += "        printf(\"Error: func argv2" + structureName + ", NULL parameter\\n\");\n";
-        r += "        return -1;\n";
-        r += "    }\n\n";
 
-        r += "    const char* short_options = \"\";\n";
-        r += "    const struct option long_options[] = {\n";
-        var ip = 100;
-        for (var key in properties) {
-            var propName = key.replace(/\ /g, "_");
-            r += "        {\"" + propName + "\",required_argument,NULL," + ip + "},\n";
-            ip++;
-        }
-        r += "        {NULL,0,NULL,0}\n";
-        r += "    };\n\n";
+    r += "    if(!module)\n";
+    r += "    {\n";
+    r += "        printf(\"Error: func argv2" + structureName + ", NULL parameter\\n\");\n";
+    r += "        return -1;\n";
+    r += "    }\n\n";
 
-        r += "    int res;\n";
-        r += "    int option_index;\n";
-        r += "    opterr=0;\n";
-        r += "    optind=0;\n";
-        r += "    while ((res=getopt_long(argc,argv,short_options, long_options,&option_index))!=-1){\n";
-        r += "                    " + structureName + "_t* obj = (" + structureName + "_t*)module->specific_params;\n";
-
-        r += "        if (optarg!=NULL){\n";
-        r += "            switch(res){\n";
-        ip = 100;
-        for (var key in properties) {
-            r += "                case " + ip + ":\n";
-            var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
-            switch (properties[key].type) {
-                case "float":
-                case "double":
-                    r += "                    obj->" + propName + " = atof(optarg);\n";
-
-                case "char":
-                case "short":
-                case "int":
-                case "bool":
-                    r += "                    obj->" + propName + " = atoi(optarg);\n";
-                    break;
-
-                case "long":
-                    r += "                    obj->" + propName + " = atol(optarg);\n";
-                    break;
-
-                case "long long":
-                    r += "                    obj->" + propName + " = atoll(optarg);\n";
-                    break;
-
-                case "const char*":
-                    // TODO: Возможна проблема с тем, что строку надо освобождать
-                    r += "                    obj->" + propName + " = malloc(strlen(optarg)+1);\n";
-                    r += "                    strcpy((char*)obj->" + propName + ", optarg);\n";
-                    break;
-
-                default:
-                    console.log("Unknown type " + properties[key].type + " for port " + propName);
-                    break;
-            }
-            r += "                break;\n\n";
-            ip++;
-        }
-        r += "            }\n";
-        r += "        }\n";
-        r += "    }\n";
+    r += "    apr_status_t rv;\n";
+    r += "    apr_pool_t *mp;\n";
+    r += "    static const apr_getopt_option_t opt_option[] = {\n";
+    var ip = 100;
+    for (var key in properties) {
+        var propName = key.replace(/\ /g, "_");
+        r += "        {\"" + propName + "\", " + ip + ", TRUE, NULL },\n";
+        ip++;
     }
+    r += "        {NULL,0,NULL,0}\n";
+    r += "    };\n\n";
+
+    r += "    apr_getopt_t *opt;\n";
+    r += "    int optch;\n";
+    r += "    const char *optarg;\n";
+    r += "    apr_pool_create(&mp, NULL);\n";
+    r += "    apr_getopt_init(&opt, mp, argc, argv);\n";
+    r += "    opt->errfn = NULL;\n";
+    r += "    opt->interleave = true;\n";
+
+    r += "    while ((rv = apr_getopt_long(opt, opt_option, &optch, &optarg)) != APR_EOF) {\n";
+    r += "        " + structureName + "_t* obj = (" + structureName + "_t*)module->specific_params;\n";
+    r += "        if (optarg!=NULL){\n";
+    r += "            switch(optch){\n";
+    ip = 100;
+    for (var key in properties) {
+        r += "                case " + ip + ":\n";
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
+        switch (properties[key].type) {
+            case "float":
+            case "double":
+                r += "                    obj->" + propName + " = atof(optarg);\n";
+
+            case "char":
+            case "short":
+            case "int":
+            case "bool":
+                r += "                    obj->" + propName + " = atoi(optarg);\n";
+                break;
+
+            case "long":
+                r += "                    obj->" + propName + " = atol(optarg);\n";
+                break;
+
+            case "long long":
+                r += "                    obj->" + propName + " = atoll(optarg);\n";
+                break;
+
+            case "const char*":
+                // TODO: Возможна проблема с тем, что строку надо освобождать
+                r += "                    obj->" + propName + " = malloc(strlen(optarg)+1);\n";
+                r += "                    strcpy((char*)obj->" + propName + ", optarg);\n";
+                break;
+
+            default:
+                console.log("Unknown type " + properties[key].type + " for port " + propName);
+                break;
+        }
+        r += "                break;\n\n";
+        ip++;
+    }
+    r += "            }\n";
+    r += "        }\n";
+    r += "    }\n";
+
     r += "    return 0;\n";
     r += "}\n\n";
 
@@ -510,19 +514,14 @@ function Create_C_file(module) {
     var module_type = module.name;
     var r = "";
 
+    r += "#include <apr_general.h>\n";
+    r += "#include <apr_getopt.h>\n\n";
+
     if(platform!="MSVC") {
         r += "#include <sys/mman.h>\n";
-        r += "#include <getopt.h>\n\n";
     }
 
-    if(platform!="XENO") {
-        r += "#include <apr_general.h>\n\n";
-    }
-
-
-
-        r += "#include \"" + module_type + ".helper.h\"\n";
-
+    r += "#include \"" + module_type + ".helper.h\"\n";
 
     r += "// Определение модуля в JSON\n";
     r += "const char* m_definition = \"" + JSON.stringify(module).replace(/"/g, "\\\"") + "\";\n\n";
