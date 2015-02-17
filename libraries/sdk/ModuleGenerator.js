@@ -620,7 +620,7 @@ function Create_C_file(module) {
         for (var key in module.inputShema.properties) {
             r += "    if(!strncmp(name_inpin, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
             r += "    {\n";
-            r += "        return (void*)&module->input4module." + key + " - (void*)&module->input4module;\n";
+            r += "        return (uintptr_t)&module->input4module." + key + " - (uintptr_t)&module->input4module;\n";
             r += "    }\n";
         }
         r += "    printf(\"Not found property \\\"%s\\\" among properties in input object\\n\", name_inpin);\n";

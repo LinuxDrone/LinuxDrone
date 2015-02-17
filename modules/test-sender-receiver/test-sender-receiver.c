@@ -3,9 +3,9 @@
 
 void test_sender_receiver_run (module_test_sender_receiver_t *module)
 {
-    long last_print_time = rt_timer_read();
+	long last_print_time = 0;// rt_timer_read();
     int count_reads=0;
-    long print_period = rt_timer_ns2ticks(1000000000);
+	long print_period = 0;// rt_timer_ns2ticks(1000000000);
 
     int cycle=0;
     while(1) {
@@ -16,11 +16,11 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
         {
             // есть новые данные
             count_reads++;
-            if(rt_timer_read() - last_print_time > print_period)
+            //if(rt_timer_read() - last_print_time > print_period)
             {
                 printf("count_reads=%i\n", count_reads);
 
-                last_print_time = rt_timer_read();
+                //last_print_time = rt_timer_read();
                 count_reads=0;
             }
         }

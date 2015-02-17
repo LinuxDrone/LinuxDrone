@@ -1090,7 +1090,7 @@ void get_input_data(module_t *module)
     if(module->input_data==NULL)
     {
         //здесь просто поспать потоку
-        rt_task_sleep(module->common_params.main_task_period);
+        apr_sleep(module->common_params.main_task_period);
 
         //fprintf(stderr, "Module don't have input\n");
         return;
