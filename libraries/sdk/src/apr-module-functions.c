@@ -1083,6 +1083,30 @@ __declspec(dllexport) void get_input_data(module_t *module)
 void get_input_data(module_t *module)
 #endif
 {
+	/*
+	while (1) {
+	char buf[BUFSIZE];
+	apr_size_t len = sizeof(buf) - 1;
+
+	apr_status_t rv = apr_socket_recv(s, buf, &len);
+
+	//if (rv == APR_TIMEUP)
+	{
+		printf("timeout\n");
+		//continue;
+	}
+
+	if (len == 0) {
+		continue;
+	}
+
+
+	buf[len] = '\0';
+
+	printf(buf);
+}
+	*/
+
     /*
     if (!module) {
         return;
@@ -1538,6 +1562,10 @@ int stop(void* p_module)
      
 }
 
+/* default buffer size */
+#define BUFSIZE			4096
+/* useful macro */
+#define CRLF_STR		"\r\n"
 
 int create_xenomai_services(module_t* module)
 {
@@ -1557,82 +1585,14 @@ int create_xenomai_services(module_t* module)
             return rv;
         }
         
-        /* it is a good idea to specify socket options explicitly.
-         * in this case, we make a blocking socket as the listening socket */
-        apr_socket_opt_set(s, APR_SO_NONBLOCK, 0);
-        apr_socket_timeout_set(s, -1);
-        apr_socket_opt_set(s, APR_SO_REUSEADDR, 1);/* this is useful for a server(socket listening) process */
+        apr_socket_timeout_set(s, module->common_params.main_task_period);
         
         rv = apr_socket_bind(s, sa);
         if (rv != APR_SUCCESS) {
             return rv;
         }
-        
-        
-        // Create input queue
-        // But only defined input buffer
-        char name_queue[XNOBJECT_NAME_LEN] = "";
-        strcat(name_queue, module->instance_name);
-        strcat(name_queue, SUFFIX_QUEUE);
-        int queue_poolsize = 200; //TODO вынести эту цифру в настройки
-//        int err = rt_queue_create(&module->in_queue, name_queue, queue_poolsize, 10, Q_FIFO);
-  //      if (err != 0)
-        {
-            fprintf(stdout, "Error create queue \"%s\"\n", name_queue);
-    //        return err;
-        }
     }
-
-/*
-    // Create main task
-    char name_task_main[XNOBJECT_NAME_LEN] = "";
-    strcat(name_task_main, module->instance_name);
-    strcat(name_task_main, SUFFIX_TASK);
-    int err = rt_task_create(&module->task_main, name_task_main, TASK_STKSZ, module->common_params.rt_priority, TASK_MODE);
-    if (err != 0)
-    {
-        fprintf(stdout, "Error create work task \"%s\"\n", name_task_main);
-        return err;
-    }
-
-    // Если не определены выходы для модуля, то нефиг и создавать сервисы
-    if(module->out_objects[0]==NULL)
-        return 0;
-
-    // Create transmit task
-    char name_tr_task_main[XNOBJECT_NAME_LEN] = "";
-    strcat(name_tr_task_main, module->instance_name);
-    strcat(name_tr_task_main, SUFFIX_TR_TASK);
-    err = rt_task_create(&module->task_transmit, name_tr_task_main, TASK_STKSZ, 99, TASK_MODE);
-    if (err != 0)
-    {
-        fprintf(stdout, "Error create transmit task \"%s\"\n", name_tr_task_main);
-        return err;
-    }
-
-
-    // Create mutex for exchange between main and transmit task
-    char name_objmutex[XNOBJECT_NAME_LEN] = "";
-    strcat(name_objmutex, module->instance_name);
-    strcat(name_objmutex, SUFFIX_EXCHANGE_MUTEX);
-    err = rt_mutex_create(&module->mutex_obj_exchange, name_objmutex);
-    if (err != 0) {
-        fprintf(stdout, "Error create mutex_obj_exchange \"%s\"\n", name_objmutex);
-        return err;
-    }
-
-    // Create condition for exchange between main and transmit task
-    char name_cond[XNOBJECT_NAME_LEN] = "";
-    strcat(name_cond, module->instance_name);
-    strcat(name_cond, SUFFIX_CONDITION);
-    err = rt_cond_create(&module->obj_cond, name_cond);
-    if (err != 0) {
-        fprintf(stdout, "Error create obj_cond \"%s\"\n", name_cond);
-        return err;
-    }
-*/
     return 0;
-     
 }
 
 
