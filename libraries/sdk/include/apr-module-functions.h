@@ -12,6 +12,7 @@
 
 
 #include <apr_general.h>
+#include <apr_network_io.h>
 
 
 #include <bson.h>
@@ -331,10 +332,10 @@ typedef struct {
  */
 typedef struct {
     void* obj1;
-    StatusObj status_obj1;
+    //StatusObj status_obj1;
 
     void* obj2;
-    StatusObj status_obj2;
+    //StatusObj status_obj2;
 
     p_obj2bson obj2bson;
     p_bson2obj bson2obj;
@@ -457,7 +458,8 @@ typedef struct {
      * \~english input queue
      * \~russian Входная очередь сообщений модуля
      */
-    RT_QUEUE in_queue;
+    //RT_QUEUE in_queue;
+	apr_socket_t *in_socket;
 
     /**
      * @brief \~russian Массив указателей на структуры содержащие информацию о

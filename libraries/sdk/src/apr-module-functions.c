@@ -7,7 +7,6 @@
 
 #include <stdio.h>
 #include <apr_getopt.h>
-#include <apr_network_io.h>
 
 /* default listen port number */
 #define DEF_LISTEN_PORT		8081
@@ -1072,6 +1071,11 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 }
 
 
+/* default buffer size */
+#define BUFSIZE			4096
+
+
+
 /**
  * @brief get_input_data Функция получения данных
  * Должна вызываться из бизнес функции модуля. Доставляет данные из входной очереди и из шаред мемори инстансов поставщиков
@@ -1083,32 +1087,7 @@ __declspec(dllexport) void get_input_data(module_t *module)
 void get_input_data(module_t *module)
 #endif
 {
-	/*
-	while (1) {
-	char buf[BUFSIZE];
-	apr_size_t len = sizeof(buf) - 1;
-
-	apr_status_t rv = apr_socket_recv(s, buf, &len);
-
-	//if (rv == APR_TIMEUP)
-	{
-		printf("timeout\n");
-		//continue;
-	}
-
-	if (len == 0) {
-		continue;
-	}
-
-
-	buf[len] = '\0';
-
-	printf(buf);
-}
-	*/
-
-    /*
-    if (!module) {
+	if (!module) {
         return;
     }
     if(module->input_data==NULL)
@@ -1120,30 +1099,41 @@ void get_input_data(module_t *module)
         return;
     }
 
-    //TODO: Определить размер буфера где нибудь в настройках
-    // и вынести в структуру
-    char buf[256];
-
     module->updated_input_properties = 0;
 
-    int res_read = rt_queue_read(&module->in_queue, buf, 256, module->common_params.main_task_period);
-    if (res_read > 0)
+	//TODO: Определить размер буфера где нибудь в настройках
+	// и вынести в структуру
+	char buf[BUFSIZE];
+	apr_size_t len = sizeof(buf) - 1;
+
+
+    //int res_read = rt_queue_read(&module->in_queue, buf, 256, module->common_params.main_task_period);
+	apr_status_t rv = apr_socket_recv(module->in_socket, buf, &len);
+	if (len > 0)
     {
         bson_t bson;
-        bson_init_static(&bson, buf, res_read);
-        //debug_print_bson("get_input_data", &bson);
-        if ((*module->input_bson2obj)(module, &bson) != 0)
-        {
-            fprintf(stderr, "Error: func get_input_data, input_bson2obj\n");
-        }
-        else
-        {
-            //fprintf(stderr, "%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
-            //(*module->print_input)(module->input_data);
-        }
+		bson_init_static(&bson, buf, len);
+
+		size_t err_offset;
+		if (!bson_validate(&bson, BSON_VALIDATE_NONE, &err_offset)) {
+			fprintf(stderr, "The document failed to validate at offset: %u\n", (unsigned)err_offset);
+		}
+		else{
+			//debug_print_bson("get_input_data", &bson);
+			if ((*module->input_bson2obj)(module, &bson) != 0)
+			{
+				fprintf(stderr, "Error: func get_input_data, input_bson2obj\n");
+			}
+			else
+			{
+				//fprintf(stderr, "%s%s:%s ",ANSI_COLOR_RED, module->instance_name, ANSI_COLOR_RESET);
+				//(*module->print_input)(module->input_data);
+			}
+		}
         bson_destroy(&bson);
     }
 
+	/*
     // Если установлены флаги того, что юзер обязательно хочет каких то данных,
     // то постараемся их вытащить из разделяемой памяти
     // Если конечно его запрос не удовлетворен уже (возможно) полученными данными
@@ -1157,7 +1147,6 @@ void get_input_data(module_t *module)
     module->refresh_input_mask ^= (module->refresh_input_mask & module->updated_input_properties);
     //fprintf(stderr, "before refresh mask=0x%08X\n", module->refresh_input_mask);
 
-
     if(!module->ar_remote_shmems.f_connected_in_links)
     {
         // Если не все связи модуля установлены, то будем пытаться их установить
@@ -1170,10 +1159,11 @@ void get_input_data(module_t *module)
             module->time_attempt_link_modules=rt_timer_read();
         }
     }
+	*/
 
     refresh_input(module);
-     */
 }
+
 
 /**
  * @brief connect_links Устанавливает исходящие соединения посредством очередей
@@ -1514,26 +1504,13 @@ int start(void* p_module)
         fprintf(stderr, "module->func for main task required\n");
         return -1;
     }
-/*
-    err = rt_task_start(&module->task_main, module->func, p_module);
-    if (err != 0)
-        fprintf(stderr, "Error start main task\n");
 
-    // Если нет выходов не нужна и таска передатчика
-    if(module->out_objects[0]==NULL)
-        return err;
+	
+	// Вызовем функцию. Возврата из нее нет.
+	// Лучше бы вызвать ее из потока.
+	module->func(p_module);
 
-    err = rt_task_start(&module->task_transmit, &task_transmit, p_module);
-    if (err != 0) {
-        fprintf(stderr, "Error start transmit task. err=%i\n", err);
-        print_task_start_error(err);
-    }
-
-    return err;
-     */
-    
     return 0;
-     
 }
 
 
@@ -1562,17 +1539,12 @@ int stop(void* p_module)
      
 }
 
-/* default buffer size */
-#define BUFSIZE			4096
-/* useful macro */
-#define CRLF_STR		"\r\n"
 
 int create_xenomai_services(module_t* module)
 {
     if(module->input_data)
     {
         apr_status_t rv;
-        apr_socket_t *s;
         apr_sockaddr_t *sa;
         
         rv = apr_sockaddr_info_get(&sa, NULL, APR_INET, DEF_LISTEN_PORT, 0, module->mp);
@@ -1580,14 +1552,14 @@ int create_xenomai_services(module_t* module)
             return rv;
         }
         
-        rv = apr_socket_create(&s, sa->family, SOCK_DGRAM, APR_PROTO_UDP, module->mp);
+        rv = apr_socket_create(&module->in_socket, sa->family, SOCK_DGRAM, APR_PROTO_UDP, module->mp);
         if (rv != APR_SUCCESS) {
             return rv;
         }
         
-        apr_socket_timeout_set(s, module->common_params.main_task_period);
+		apr_socket_timeout_set(module->in_socket, module->common_params.main_task_period);
         
-        rv = apr_socket_bind(s, sa);
+		rv = apr_socket_bind(module->in_socket, sa);
         if (rv != APR_SUCCESS) {
             return rv;
         }
@@ -1610,42 +1582,7 @@ __declspec(dllexport) int checkout4writer(module_t* module, out_object_t* set, v
 checkout4writer(module_t* module, out_object_t* set, void** obj)
 #endif
 {
-    /*
-    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
-    if (res != 0)
-    {
-        fprintf(stderr, "error checkout4writer: rt_mutex_acquire\n");
-        return res;
-    }
-
-    if(set->status_obj1 == Empty || set->status_obj1 == Filled || set->status_obj1 == Transferred2Queue)
-    {
-        set->status_obj1 = Writing;
-        (*obj)=set->obj1;
-    }
-    else if(set->status_obj2 == Empty || set->status_obj2 == Filled || set->status_obj2 == Transferred2Queue)
-    {
-        set->status_obj2 = Writing;
-        (*obj)=set->obj2;
-    }
-    else
-    {
-        fprintf(stderr, "checkout4writer: Error in logic use function checkout4writer.\n Impossible combination statuses\n");
-        print_obj_status(1, set->status_obj1);
-        print_obj_status(2, set->status_obj2);
-        fprintf(stderr, "\n");
-        (*obj)=NULL;
-        res = -1;
-    }
-
-    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
-    if (res1 != 0)
-    {
-        fprintf(stderr, "checkout4writer: error:  rt_mutex_release\n");
-        return res1;
-    }
-    return res;
-     */
+	(*obj)=set->obj1;
     return 0;
 }
 
@@ -1664,50 +1601,7 @@ __declspec(dllexport) int checkin4writer(module_t* module, out_object_t* set, vo
 int checkin4writer(module_t* module, out_object_t* set, void** obj)
 #endif
 {
-    /*
-    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
-    if (res != 0)
-    {
-        fprintf(stderr, "error checkin4writer: rt_mutex_acquire\n");
-        return res;
-    }
-
-    if(set->status_obj1 == Writing)
-    {
-        set->status_obj1 = Filled;
-    }
-    else if(set->status_obj2 == Writing)
-    {
-        set->status_obj2 = Filled;
-    }
-    else
-    {
-        fprintf(stderr, "checkin4writer: Error in logic use function checkin4writer.\n Impossible combination statuses\n");
-        print_obj_status(1, set->status_obj1);
-        print_obj_status(2, set->status_obj2);
-        fprintf(stderr, "\n");
-        res = -1;
-    }
-
     (*obj)=NULL;
-
-    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
-    if (res1 != 0)
-    {
-        fprintf(stderr, "error checkin4writer:  rt_mutex_release\n");
-        return res1;
-    }
-
-    // просигнализируем (потоку передачи) что объект готов к передаче
-    int res2 = rt_cond_signal(&module->obj_cond);
-    if (res2 != 0)
-    {
-        fprintf(stderr, "error checkin4writer:  rt_cond_signal\n");
-        return res2;
-    }
-
-    return res;
-     */
     return 0;
 }
 
