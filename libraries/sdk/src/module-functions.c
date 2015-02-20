@@ -1287,7 +1287,10 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
     while(out_object)
     {
         if(!time2publish2shmem && !to_queue)
+        {
+            out_object = module->out_objects[++i];
             continue;
+        }
 
         //fprintf(stderr, "outside=%i bool=%i\n",i,time2publish2shmem);
         // Нашли обновившийся в основном потоке объект
