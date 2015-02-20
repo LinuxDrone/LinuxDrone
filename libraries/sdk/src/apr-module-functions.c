@@ -8,6 +8,12 @@
 #include <stdio.h>
 #include <apr_getopt.h>
 
+#define INSTANCE_SEPARATOR "#"
+#define PIN_SEPARATOR "!"
+#define PORT_SEPARATOR ":"
+
+
+
 /* default listen port number */
 #define DEF_LISTEN_PORT		8081
 
@@ -310,7 +316,6 @@ int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* na
  */
 remote_queue_t* register_remote_queue(module_t* module, const char* name_remote_instance)
 {
-    /*
     if(module==NULL)
     {
         fprintf(stderr, "Function \"register_remote_queue\" null parameter module\n");
@@ -337,8 +342,6 @@ remote_queue_t* register_remote_queue(module_t* module, const char* name_remote_
     module->remote_queues[module->remote_queues_len-1] = new_remote_queue;
 
     return new_remote_queue;
-     */
-    return NULL;
 }
 
 
@@ -420,14 +423,14 @@ int init(module_t* module, int argc, char *argv[])
 				char* param_val = malloc(strlen(optarg) + 1);
 				strcpy(param_val, optarg);
 
-				char* name_out_pin = strtok(param_val, ":");
+				char* name_out_pin = strtok(param_val, INSTANCE_SEPARATOR);
 				//name_out_pin[strlen(name_out_pin) - 1] = 0;
 				//printf("name_out_pin=%s\n", name_out_pin);
 
-				char* name_remote_instance = strtok('\0', ".");
+				char* name_remote_instance = strtok('\0', PIN_SEPARATOR);
 				//printf("name_remote_instance=%s\n", name_remote_instance);
 
-				char* name_remote_pin = strtok('\0', ".");
+				char* name_remote_pin = strtok('\0', "");
 				//printf("name_remote_pin=%s\n", name_remote_pin);
 
 				if (strlen(name_remote_instance) > XNOBJECT_NAME_LEN - 5)
@@ -1007,6 +1010,7 @@ debug_print_bson("send2queues", bson_obj);
 
 
 RTIME time_last_publish_shmem;
+RTIME time_attempt_link_modules;
 
 /**
  * @brief get_input_data Функция получения данных
@@ -1026,6 +1030,18 @@ void get_input_data(module_t *module)
 	// Передадим объекты, заполненные в предыдущем цикле
 	transmit_object(module, &time_last_publish_shmem, true);
 	transmit_object(module, &time_last_publish_shmem, false);
+	if (!module->f_connected_out_links)
+	{
+		// Если не все связи модуля установлены, то будем пытаться их установить
+		if (apr_time_now() - time_attempt_link_modules > 1000000)
+		{
+fprintf(stderr, "попытка out связи\n");
+
+			connect_out_links(module);
+
+			time_attempt_link_modules = apr_time_now();
+		}
+	}
 
 
     if(module->input_data==NULL)
@@ -1111,7 +1127,6 @@ void get_input_data(module_t *module)
  */
 int connect_out_links(void *p_module)
 {
-    /*
     module_t* module = p_module;
 
     int count_connected = 0, i;
@@ -1125,14 +1140,28 @@ int connect_out_links(void *p_module)
             continue;
         }
 
-        char name_queue[XNOBJECT_NAME_LEN] = "";
-        strcat(name_queue, info_remote_queue->name_instance);
-        strcat(name_queue, SUFFIX_QUEUE);
 
-        //fprintf(stderr, "attempt connect %s to %s\n", module->instance_name, name_queue);
+		char* remote_addr = malloc(strlen(info_remote_queue->name_instance) + 1);
+		strcpy(remote_addr, info_remote_queue->name_instance);
 
-        int res = rt_queue_bind	(&info_remote_queue->remote_queue, name_queue, TM_NONBLOCK);
-        if(res!=0)
+
+		char* name_remote_host = strtok(remote_addr, PORT_SEPARATOR);
+		//name_out_pin[strlen(name_out_pin) - 1] = 0;
+		//printf("name_out_pin=%s\n", name_out_pin);
+
+		char* name_remote_port = strtok('\0', "");
+		apr_port_t remote_port = atoi(name_remote_port);
+		//printf("name_remote_pin=%s\n", name_remote_pin);
+
+
+		apr_status_t rv;
+		apr_sockaddr_t *sa;
+		apr_sockaddr_info_get(&sa, name_remote_host, APR_INET, remote_port, 0, module->mp);
+		apr_socket_create(&info_remote_queue->remote_queue, sa->family, SOCK_DGRAM, APR_PROTO_UDP, module->mp);
+		rv = apr_socket_connect(info_remote_queue->remote_queue, sa);
+		free(remote_addr);
+
+		if (rv != APR_SUCCESS) 
         {
             //fprintf(stderr, "Error:%i rt_queue_bind instance=%s to queue %s\n", res, module->instance_name, name_queue);
             continue;
@@ -1140,7 +1169,7 @@ int connect_out_links(void *p_module)
         else
         {
             info_remote_queue->f_queue_connected=true;
-            fprintf(stderr, "%sCONNECTED: %s to queue %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_queue, ANSI_COLOR_RESET);
+			fprintf(stderr, "%sCONNECTED: %s to queue %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_remote_host, ANSI_COLOR_RESET);
         }
 
         count_connected++;
@@ -1151,9 +1180,7 @@ int connect_out_links(void *p_module)
         module->f_connected_out_links=true;
         fprintf(stderr, "%s%s: ALL QUEUES CONNECTED%s\n", ANSI_COLOR_GREEN, module->instance_name, ANSI_COLOR_RESET);
     }
-*/
     return 0;
-     
 }
 
 
@@ -1379,6 +1406,7 @@ int start(void* p_module)
     }
 
 	time_last_publish_shmem = apr_time_now();
+	time_attempt_link_modules = apr_time_now();
 	
 	// Вызовем функцию. Возврата из нее нет.
 	// Лучше бы вызвать ее из потока.

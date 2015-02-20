@@ -1,33 +1,15 @@
 #pragma once
 
-#define RT_HEAP int
-#define RT_EVENT int
-#define RT_MUTEX int
-#define RT_QUEUE int
-#define RT_TASK int
-#define RT_COND int
-#define RTIME int
-#define TM_INFINITE int
-#define XNOBJECT_NAME_LEN 32
-
-
 #include <apr_general.h>
 #include <apr_network_io.h>
 
-
 #include <bson.h>
-//#include <native/task.h>
-//#include <native/queue.h>
-//#include <native/heap.h>
-//#include <native/event.h>
-//#include <native/mutex.h>
-//#include <native/cond.h>
 #include "common-params.h"
 
 #define RT_HEAP int
 #define RT_EVENT int
 #define RT_MUTEX int
-#define RT_QUEUE int
+#define RT_QUEUE apr_socket_t
 #define RT_TASK int
 #define RT_COND int
 #define RTIME apr_time_t
@@ -285,7 +267,7 @@ typedef struct {
     /**
      * @brief \~russian Входная очередь модуля подписчика
      */
-    RT_QUEUE remote_queue;
+    RT_QUEUE* remote_queue;
 
     /**
      * @brief \~russian флаг говорящий, что очередь подсоединена
