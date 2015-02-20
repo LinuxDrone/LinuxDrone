@@ -1284,14 +1284,13 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
     int i=0;
     out_object_t* out_object = module->out_objects[i];
     bool time2publish2shmem = (rt_timer_read() - *time_last_publish_shmem) > module->common_params.transfer_task_period;
+    if(!time2publish2shmem && !to_queue)
+    {
+        return 0;
+    }
+
     while(out_object)
     {
-        if(!time2publish2shmem && !to_queue)
-        {
-            out_object = module->out_objects[++i];
-            continue;
-        }
-
         //fprintf(stderr, "outside=%i bool=%i\n",i,time2publish2shmem);
         // Нашли обновившийся в основном потоке объект
         // Пуш в очереди подписчиков
