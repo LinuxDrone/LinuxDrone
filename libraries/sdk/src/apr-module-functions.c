@@ -420,8 +420,8 @@ int init(module_t* module, int argc, char *argv[])
 				char* param_val = malloc(strlen(optarg) + 1);
 				strcpy(param_val, optarg);
 
-				char* name_out_pin = strtok(param_val, ">");
-				name_out_pin[strlen(name_out_pin) - 1] = 0;
+				char* name_out_pin = strtok(param_val, ":");
+				//name_out_pin[strlen(name_out_pin) - 1] = 0;
 				//printf("name_out_pin=%s\n", name_out_pin);
 
 				char* name_remote_instance = strtok('\0', ".");
@@ -590,7 +590,6 @@ int init(module_t* module, int argc, char *argv[])
  */
 int get_porttype_by_portname(module_t* module, const char* port_name, char* port_type_name)
 {
-    /*
     char m_format[64] = "\"";
     strcat(m_format, port_name);
     strcat(m_format, "\":{");
@@ -625,9 +624,8 @@ int get_porttype_by_portname(module_t* module, const char* port_name, char* port
     port_type_name[str_type_len]=0;
 
     //printf("str_port_type=%s\n", port_type_name);
-*/
+
     return 0;
-     
 }
 
 
@@ -926,7 +924,6 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
  */
 int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 {
-    /*
     void* pval;
     int i;
     for(i=0;i<out_object->out_queue_sets_len;i++)
@@ -940,7 +937,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
         {
             remote_out_obj_field_t* remote_obj_field = out_queue_set->remote_out_obj_fields[cl];
 
-            pval = data_obj + remote_obj_field->offset_field_obj;
+			pval = (uintptr_t)data_obj + remote_obj_field->offset_field_obj;
 
             switch (remote_obj_field->type_field_obj)
             {
@@ -986,18 +983,20 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
             }
         }
 
-//debug_print_bson("send2queues", bson_obj);
+debug_print_bson("send2queues", bson_obj);
 
+		/*
         int res = rt_queue_write(&out_queue_set->out_queue->remote_queue, bson_get_data(bson_obj), bson_obj->len, Q_NORMAL);
         if(res<0)
         {
             //fprintf(stderr, "Warning: %i rt_queue_write\n", res);
             // TODO: если нет коннекта у очереди, то сбросить флаг коннекта всех очередей.
         }
+		*/
 
         bson_destroy(bson_obj);
     }
-*/
+
     return 0;
      
 }
@@ -1007,6 +1006,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 #define BUFSIZE			4096
 
 
+RTIME time_last_publish_shmem;
 
 /**
  * @brief get_input_data Функция получения данных
@@ -1022,6 +1022,12 @@ void get_input_data(module_t *module)
 	if (!module) {
         return;
     }
+
+	// Передадим объекты, заполненные в предыдущем цикле
+	transmit_object(module, &time_last_publish_shmem, true);
+	transmit_object(module, &time_last_publish_shmem, false);
+
+
     if(module->input_data==NULL)
     {
         //здесь просто поспать потоку
@@ -1082,13 +1088,13 @@ void get_input_data(module_t *module)
     if(!module->ar_remote_shmems.f_connected_in_links)
     {
         // Если не все связи модуля установлены, то будем пытаться их установить
-        if(rt_timer_read() - module->time_attempt_link_modules > 100000000)
+        if( apr_time_now() - module->time_attempt_link_modules > 100000000)
         {
             //fprintf(stderr, "попытка in связи\n");
 
             connect_in_links(&module->ar_remote_shmems, module->instance_name);
 
-            module->time_attempt_link_modules=rt_timer_read();
+            module->time_attempt_link_modules= apr_time_now();
         }
     }
 	*/
@@ -1291,17 +1297,17 @@ int disconnect_in_links(shmem_in_set_t* remote_shmem)
 
 int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_queue)
 {
-    /*
     void* obj;
     bson_t bson_tr;
 
     int i=0;
     out_object_t* out_object = module->out_objects[i];
-    bool time2publish2shmem = (rt_timer_read() - *time_last_publish_shmem) > module->common_params.transfer_task_period;
+    bool time2publish2shmem = ( apr_time_now() - *time_last_publish_shmem) > module->common_params.transfer_task_period;
+	if(!time2publish2shmem && !to_queue)
+		return 0;
+
     while(out_object)
     {
-        if(!time2publish2shmem && !to_queue)
-            continue;
 
         //fprintf(stderr, "outside=%i bool=%i\n",i,time2publish2shmem);
         // Нашли обновившийся в основном потоке объект
@@ -1337,77 +1343,12 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
         out_object = module->out_objects[++i];
     }
     if(time2publish2shmem)
-        *time_last_publish_shmem=rt_timer_read();
-     */
+        *time_last_publish_shmem= apr_time_now();
+
     return 0;
 }
 
 
-/**
- * @brief task_transmit Функция выполняется в потоке задачи передачи данных подписчикам
- * @param p_module Указатель на инстанс модуль
- */
-void task_transmit(void *p_module)
-{
-    /*
-    module_t* module = p_module;
-    int cycle = 0;
-
-    RTIME time_last_publish_shmem;
-    RTIME time_attempt_link_modules;
-
-    time_last_publish_shmem = rt_timer_read();
-    time_attempt_link_modules = rt_timer_read();
-
-    while (1) {
-        int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
-        if (res != 0)
-        {
-            fprintf(stderr, "error function task_transmit_body: rt_mutex_acquire\n");
-            return;
-        }
-        // Если нет заполненных объектов, то поспим пока они не появятся
-        res = rt_cond_wait(&module->obj_cond, &module->mutex_obj_exchange, module->common_params.transfer_task_period);
-
-
-        int res1 = rt_mutex_release(&module->mutex_obj_exchange);
-        if (res1 != 0)
-        {
-            fprintf(stderr, "task_transmit: error: %i rt_mutex_release\n", res1);
-            return;
-        }
-
-
-        if (res == 0)
-        {
-            transmit_object(module, &time_last_publish_shmem,  true);
-        }
-        else if (res==-ETIMEDOUT)
-        {
-            transmit_object(module, &time_last_publish_shmem, false);
-        }
-        else
-        {
-            fprintf(stderr, "error=%i in task_transmit_body:  rt_cond_wait\n", res);
-            return;
-        }
-
-        //fprintf(stderr, "task_transmit cycle %i\n", cycle++);
-        if(!module->f_connected_out_links)
-        {
-            // Если не все связи модуля установлены, то будем пытаться их установить
-            if(rt_timer_read() - time_attempt_link_modules > 100000000)
-            {
-                //fprintf(stderr, "попытка out связи\n");
-
-                connect_out_links(module);
-
-                time_attempt_link_modules=rt_timer_read();
-            }
-        }
-    }
-     */
-}
 
 #ifdef WIN32
 __declspec(dllexport) int start(void* p_module)
@@ -1437,6 +1378,7 @@ int start(void* p_module)
         return -1;
     }
 
+	time_last_publish_shmem = apr_time_now();
 	
 	// Вызовем функцию. Возврата из нее нет.
 	// Лучше бы вызвать ее из потока.

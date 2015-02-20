@@ -3,9 +3,9 @@
 
 void test_sender_receiver_run (module_test_sender_receiver_t *module)
 {
-	long last_print_time = 0;// rt_timer_read();
+	long last_print_time = apr_time_now();
     int count_reads=0;
-	long print_period = 0;// rt_timer_ns2ticks(1000000000);
+	long print_period = 1000000;
 
     int cycle=0;
     while(1) {
@@ -16,11 +16,11 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
         {
             // есть новые данные
             count_reads++;
-            //if(rt_timer_read() - last_print_time > print_period)
+            if( apr_time_now() - last_print_time > print_period)
             {
                 printf("count_reads=%i\n", count_reads);
 
-                //last_print_time = rt_timer_read();
+                last_print_time =  apr_time_now();
                 count_reads=0;
             }
         }
@@ -31,7 +31,7 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
 
         input_t* input = (input_t*)module->module_info.input_data;
 
-//printf("input->in1 = %f\n", input->in1);
+printf("input->in1 = %f\n", input->in1);
 
         Output1_t* objOutput1;
         checkout_Output1(module, &objOutput1);

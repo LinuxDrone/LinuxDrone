@@ -30,7 +30,7 @@
 #define RT_QUEUE int
 #define RT_TASK int
 #define RT_COND int
-#define RTIME int
+#define RTIME apr_time_t
 
 #define TM_INFINITE 0
 #define XNOBJECT_NAME_LEN 32
