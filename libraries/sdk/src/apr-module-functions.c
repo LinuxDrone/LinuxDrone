@@ -145,7 +145,6 @@ int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name
  */
 int register_out_link(out_object_t* out_object, const char* subscriber_instance_name, unsigned short offset_field, TypeFieldObj type_field_obj, const char* remote_field_name, remote_queue_t* remote_queue)
 {
-    /*
     // Найдем данные ассоциированные с инстансом подписчика
     // Если таковых не зарегистрировано, то создадим (выделим память и заполним) необходимые структуры
     out_queue_set_t* out_queue_set=NULL;
@@ -181,9 +180,8 @@ int register_out_link(out_object_t* out_object, const char* subscriber_instance_
     strcpy(remote_obj_field->remote_field_name, remote_field_name);
     remote_obj_field->type_field_obj = type_field_obj;
     out_queue_set->remote_out_obj_fields[out_queue_set->len-1] = remote_obj_field;
-*/
+
     return 0;
-     
 }
 
 
@@ -935,6 +933,11 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 
         out_queue_set_t* out_queue_set = out_object->out_queue_sets[i];
 
+		if (out_queue_set->out_queue->remote_queue == NULL)
+		{
+			continue;
+		}
+
         int cl;
         for(cl=0;cl<out_queue_set->len;cl++)
         {
@@ -986,7 +989,16 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
             }
         }
 
-debug_print_bson("send2queues", bson_obj);
+//debug_print_bson("send2queues", bson_obj);
+
+		apr_size_t len = bson_obj->len;
+		apr_status_t rv = apr_socket_send(out_queue_set->out_queue->remote_queue, bson_get_data(bson_obj), &len);
+		if (rv != APR_SUCCESS) {
+			fprintf(stderr, "Warning: %i rt_queue_write\n", rv);
+			bson_destroy(bson_obj);
+			return rv;
+		}
+
 
 		/*
         int res = rt_queue_write(&out_queue_set->out_queue->remote_queue, bson_get_data(bson_obj), bson_obj->len, Q_NORMAL);
@@ -1001,7 +1013,6 @@ debug_print_bson("send2queues", bson_obj);
     }
 
     return 0;
-     
 }
 
 
@@ -1035,10 +1046,8 @@ void get_input_data(module_t *module)
 		// Если не все связи модуля установлены, то будем пытаться их установить
 		if (apr_time_now() - time_attempt_link_modules > 1000000)
 		{
-fprintf(stderr, "попытка out связи\n");
-
+			//fprintf(stderr, "попытка out связи\n");
 			connect_out_links(module);
-
 			time_attempt_link_modules = apr_time_now();
 		}
 	}
@@ -1073,7 +1082,7 @@ fprintf(stderr, "попытка out связи\n");
 			fprintf(stderr, "The document failed to validate at offset: %u\n", (unsigned)err_offset);
 		}
 		else{
-			//debug_print_bson("get_input_data", &bson);
+debug_print_bson("get_input_data", &bson);
 			if ((*module->input_bson2obj)(module, &bson) != 0)
 			{
 				fprintf(stderr, "Error: func get_input_data, input_bson2obj\n");

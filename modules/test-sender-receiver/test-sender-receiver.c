@@ -9,6 +9,8 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
 
     int cycle=0;
     while(1) {
+		apr_sleep(module->module_info.common_params.main_task_period);
+
         get_input_data(&module->module_info);
 
         // проверим, обновились ли данные
@@ -31,7 +33,7 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
 
         input_t* input = (input_t*)module->module_info.input_data;
 
-printf("input->in1 = %f\n", input->in1);
+//printf("input->in1 = %f\n", input->in1);
 
         Output1_t* objOutput1;
         checkout_Output1(module, &objOutput1);
