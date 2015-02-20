@@ -40,37 +40,8 @@ __declspec(dllexport) int checkout4transmiter(module_t* module, out_object_t* se
 int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
 #endif
 {
-    /*
-    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
-    if (res != 0)
-    {
-        fprintf(stderr, "error checkout4transmiter: rt_mutex_acquire\n");
-        return res;
-    }
+	(*obj)=set->obj1;
 
-    if(set->status_obj1 == Filled || (!was_queue && (set->status_obj1 == Transferred2Queue)))
-    {
-        set->status_obj1 = Transferring;
-        (*obj)=set->obj1;
-    }
-    else if(set->status_obj2 == Filled || (!was_queue && (set->status_obj2 == Transferred2Queue)))
-    {
-        set->status_obj2 = Transferring;
-        (*obj)=set->obj2;
-    }
-    else
-    {
-        (*obj)=NULL;
-    }
-
-    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
-    if (res1 != 0)
-    {
-        fprintf(stderr, "error checkout4transmiter:  rt_mutex_release\n");
-        return res1;
-    }
-    return res;
-     */
     return 0;
 }
 
@@ -85,48 +56,9 @@ int checkout4transmiter(module_t* module, out_object_t* set, void** obj, bool wa
  */
 int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was_queue)
 {
-    /*
-    int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);
-    if (res != 0)
-    {
-        fprintf(stderr, "error checkin4transmiter: rt_mutex_acquire\n");
-        return res;
-    }
-
-    if(set->status_obj1 == Transferring)
-    {
-        if(was_queue)
-            set->status_obj1 = Transferred2Queue;
-        else
-            set->status_obj1 = Empty;
-    }
-    else if(set->status_obj2 == Transferring)
-    {
-        if(was_queue)
-            set->status_obj2 = Transferred2Queue;
-        else
-            set->status_obj2 = Empty;
-    }
-    else
-    {
-        fprintf(stderr, "checkin4transmiter: Error in logic use function checkin4transmiter.\n Impossible combination statuses\n");
-        print_obj_status(1, set->status_obj1);
-        print_obj_status(2, set->status_obj2);
-        fprintf(stderr, "\n");
-        res = -1;
-    }
-
     (*obj)=NULL;
 
-    int res1 = rt_mutex_release(&module->mutex_obj_exchange);
-    if (res1 != 0)
-    {
-        fprintf(stderr, "error checkin4transmiter:  rt_mutex_release\n");
-        return res1;
-    }
-    return res;
-     */
-        return 0;
+	return 0;
 }
 
 
