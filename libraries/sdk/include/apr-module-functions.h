@@ -639,6 +639,7 @@ int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name
 int start(void* module);
 int stop(void* module);
 void get_input_data(module_t *module);
+int transmit_object(module_t *module, RTIME* time_last_publish_shmem, bool to_queue);
 #endif
 
 
