@@ -49,7 +49,7 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
 
         input_t* input = (input_t*)module->module_info.input_data;
 
-//printf("input->in1 = %f\n", input->in1);
+printf("input->in1 = %f\n", input->in1);
 
         Output1_t* objOutput1;
         checkout_Output1(module, &objOutput1);

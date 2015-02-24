@@ -14,7 +14,7 @@
 #include "../include/module-functions.h"
 
 #define INSTANCE_SEPARATOR "#"
-#define PIN_SEPARATOR "!"
+#define PIN_SEPARATOR "@"
 
 #define SHMEM_WRITER_MASK	0x7FFFFFFF
 
@@ -452,7 +452,7 @@ int init(module_t* module, int argc, char *argv[])
             break;
 
 
-            case 'o': // Исходящие связи (`OUT_NAME#INSTANCE_RECEIVER!IN_NAME`)
+            case 'o': // Исходящие связи (`OUT_NAME#INSTANCE_RECEIVER@IN_NAME`)
                 if (optarg!=NULL){
                 // Выделяем память под структуры, представляющие связи с модулями подписчиками
                 // Связи через очередь (данный модуль поставщик, другие потребители данных)
@@ -781,7 +781,7 @@ usage(module_t* module, char *argv[])
     fprintf(stderr, "\toptional\n");
     fprintf(stderr, "\tInput link (provides data from another instance to this one through shared memory)\n\n");
 
-    fprintf(stderr, "--out-link=OUT_NAME->INSTANCE_RECEIVER.IN_NAME\n");
+    fprintf(stderr, "--out-link=OUT_NAME#INSTANCE_RECEIVER!IN_NAME\n");
     fprintf(stderr, "\toptional\n");
     fprintf(stderr, "\tOutput link (provides data from this instance to another one through pipe)\n\n");
 

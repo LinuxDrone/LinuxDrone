@@ -75,7 +75,7 @@ ELSE()
     SET(DTC ${TLS_DIR}/dtc/dtc)
 ENDIF()
 
-SET(DO_POST_BUILD NO)
+SET(DO_POST_BUILD YES)
 
 SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 #SET(URL_TARGET_SYSTEM root@192.168.1.20)
