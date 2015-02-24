@@ -17,7 +17,7 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
     int cycle=0;
     while(1) {
 #ifndef XENO
-		apr_sleep(module->module_info.common_params.main_task_period);
+        //apr_sleep(module->module_info.common_params.main_task_period);
 #endif   
 
         get_input_data(&module->module_info);

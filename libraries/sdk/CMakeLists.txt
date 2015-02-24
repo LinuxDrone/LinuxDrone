@@ -9,9 +9,16 @@
 # The human-readable summary of (and not a substitute for) the
 # license: http://creativecommons.org/licenses/by-sa/4.0/
 #--------------------------------------------------------------------
+IF(${PLATFORM} STREQUAL "XENO")
+    SET(INCLUDE_FILES "include/module-functions.h" )
+    SET(SRC_FILES "src/helper-functions.c" "src/module-functions.c")
+ELSE()
+    SET(INCLUDE_FILES "include/apr-module-functions.h" )
+    SET(SRC_FILES "src/apr-helper-functions.c" "src/apr-module-functions.c" )
+ENDIF()
 
-file(GLOB_RECURSE INC "include/module-functions.h" "include/math/*" "include/pru/*")
-file(GLOB_RECURSE SRC "src/helper-functions.c" "src/module-functions.c" "src/math/*" "src/pru/*")
+file(GLOB_RECURSE INC "include/math/*" "include/pru/*" ${INCLUDE_FILES})
+file(GLOB_RECURSE SRC "src/math/*" "src/pru/*" ${SRC_FILES})
 
 include_directories(${RFS_DIR}/usr/local/include/libbson-1.0 ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -25,7 +32,7 @@ set(EXTRA_LIBS
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/common-params.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/CommonParamsGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/../../webapps/configurator/client/ModulesCommonParams.def.js ${CMAKE_CURRENT_BINARY_DIR} XENO
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/CommonParamsGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/../../webapps/configurator/client/ModulesCommonParams.def.js ${CMAKE_CURRENT_BINARY_DIR} ${PLATFORM}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../webapps/configurator/client/ModulesCommonParams.def.js
 )
 

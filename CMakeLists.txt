@@ -26,7 +26,9 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 project(linuxdrone)
 
-add_definitions(-DXENO)
+set(PLATFORM GCC) #XENO,GCC,MSVC
+
+add_definitions(-D${PLATFORM})
 add_definitions(-D_LARGEFILE64_SOURCE) # Need for apr
 
 
@@ -190,19 +192,28 @@ add_subdirectory(${LIB_DIR}/sdk)
 # Loadable modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
 #add_subdirectory(${MOD_DIR}/gy87)
-add_subdirectory(${MOD_DIR}/rx-openlrs)
+IF(${PLATFORM} STREQUAL "XENO")
+    add_subdirectory(${MOD_DIR}/rx-openlrs)
+    add_subdirectory(${MOD_DIR}/c-gy87)
+    add_subdirectory(${MOD_DIR}/test-receiver)
+    add_subdirectory(${MOD_DIR}/c-pid)
+    add_subdirectory(${MOD_DIR}/c-ms5611)
+    add_subdirectory(${MOD_DIR}/c-bmp180)
+    add_subdirectory(${MOD_DIR}/c-mpu9250)
+ELSE()
+
+ENDIF()
+
+
 add_subdirectory(${MOD_DIR}/short_terminator)
-add_subdirectory(${MOD_DIR}/c-gy87)
 #add_subdirectory(${MOD_DIR}/test-params)
 add_subdirectory(${MOD_DIR}/test-sender)
-add_subdirectory(${MOD_DIR}/test-receiver)
 add_subdirectory(${MOD_DIR}/test-sender-receiver)
 #add_subdirectory(${MOD_DIR}/c-pru-pwmout)
 #add_subdirectory(${MOD_DIR}/c-pru-pwmin)
-add_subdirectory(${MOD_DIR}/c-pid)
 add_subdirectory(${MOD_DIR}/c-sum-scale)
 add_subdirectory(${MOD_DIR}/c-scale)
-add_subdirectory(${MOD_DIR}/c-ms5611)
+
 #add_subdirectory(${MOD_DIR}/MyModule)
 #add_subdirectory(${MOD_DIR}/bmp180)
 #add_subdirectory(${MOD_DIR}/ms5611)
@@ -211,9 +222,7 @@ add_subdirectory(${MOD_DIR}/c-ms5611)
 #add_subdirectory(${MOD_DIR}/PwmInput)
 #add_subdirectory(${MOD_DIR}/SimpleTransform)
 #add_subdirectory(${MOD_DIR}/SerialGps)
-add_subdirectory(${MOD_DIR}/c-bmp180)
 add_subdirectory(${MOD_DIR}/c-generator)
-add_subdirectory(${MOD_DIR}/c-mpu9250)
 add_subdirectory(${MOD_DIR}/attitude)
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
