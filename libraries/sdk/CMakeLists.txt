@@ -19,10 +19,8 @@ set(EXTRA_LIBS
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
     ${RFS_DIR}/usr/local/lib/libbson-1.0.so
     m
-
-    #ncurses
-    #dl
-    #tinfo
+    ${RFS_DIR}/usr/local/apr/lib/libapr-2.so
+    expat
 )
 
 ADD_CUSTOM_COMMAND(

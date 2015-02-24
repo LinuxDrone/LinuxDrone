@@ -6,7 +6,7 @@
   */
 
 #include <stdio.h>
-#include <getopt.h>
+#include <apr_getopt.h>
 #include <native/queue.h>
 #include <native/heap.h>
 #include <native/event.h>
@@ -388,25 +388,36 @@ remote_queue_t* register_remote_queue(module_t* module, const char* name_remote_
  */
 int init(module_t* module, int argc, char *argv[])
 {
-    const char* short_options = "hdsn:o:i:d";
-    const struct option long_options[] = {
-        {"help",no_argument,NULL,'h'},
-        {"module-definition",optional_argument,NULL,'d'},
-        {"print-params",optional_argument,NULL,'s'},
-        {"name",required_argument,NULL,'n'},
-        {"out-link",required_argument,NULL,'o'},
-        {"in-link",required_argument,NULL,'i'},
-        {NULL,0,NULL,0}
+    apr_status_t rv;
+    apr_pool_t *mp;
+    /* API is data structure driven */
+    static const apr_getopt_option_t opt_option[] = {
+        // long-option, short-option, has-arg flag, description
+        { "help", 'h', FALSE, "help" },
+        { "module-definition", 'd', FALSE, "module definition" },
+        { "print-params", 's', FALSE, "print params" },
+        { "name", 'n', TRUE, "instance name" },
+        { "out-link", 'o', TRUE, "out link" },
+        { "in-link", 'i', TRUE, "in link" },
+        { NULL, 0, 0, NULL } /* end (a.k.a. sentinel) */
     };
+    apr_getopt_t *opt;
+    int optch;
+    const char *optarg;
 
-    int res;
-    int option_index;
-    opterr=0;
-    optind=0;
+    apr_pool_create(&mp, NULL);
+
+    /* initialize apr_getopt_t */
+    apr_getopt_init(&opt, mp, argc, argv);
+
+
+    opt->errfn = NULL;
+    opt->interleave = true;
+
     bool print_params = false;
-    while ((res = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1)
-    {
-        switch(res)
+    /* parse the all options based on opt_option[] */
+    while ((rv = apr_getopt_long(opt, opt_option, &optch, &optarg)) != APR_EOF) {
+        switch(optch)
         {
             case 'h':
                 usage(module, argv);
@@ -658,33 +669,43 @@ int get_porttype_by_portname(module_t* module, const char* port_name, char* port
 int argv2common_params(void* in_module, int argc, char *argv[])
 {
     module_t* module = in_module;
-
-    const char* short_options = "r::m::t::";
-
-    if(!module)
+    if (!module)
     {
         printf("Error: func bson2common_params, NULL parameter\n");
         return -1;
     }
 
-    const struct option long_options[] = {
-        {"rt-priority",optional_argument,NULL,'r'},
-        {"main-task-period",optional_argument,NULL,'m'},
-        {"transfer-task-period",optional_argument,NULL,'t'},
-        {NULL,0,NULL,0}
+
+    apr_status_t rv;
+    apr_pool_t *mp;
+    /* API is data structure driven */
+    static const apr_getopt_option_t opt_option[] = {
+        // long-option, short-option, has-arg flag, description
+        { "rt-priority", 'r', TRUE, "realtime thread priority" },
+        { "main-task-period", 'm', TRUE, "main task period" },
+        { "transfer-task-period", 't', TRUE, "transfer task period" },
+        { NULL, 0, 0, NULL }, /* end (a.k.a. sentinel) */
     };
+    apr_getopt_t *opt;
+    int optch;
+    const char *optarg;
+
+    apr_pool_create(&mp, NULL);
+
+    /* initialize apr_getopt_t */
+    apr_getopt_init(&opt, mp, argc, argv);
+
 
     module->common_params.rt_priority = 80;
     module->common_params.main_task_period = 20000;
     module->common_params.transfer_task_period = 20000;
 
-    int res;
-    int option_index;
-    opterr=0;
-    optind=0;
-    while ((res = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1)
+    opt->errfn = NULL;
+    opt->interleave = true;
+
+    while ((rv = apr_getopt_long(opt, opt_option, &optch, &optarg)) != APR_EOF)
     {
-        switch(res)
+        switch(optch)
         {
             case 'r':
                 if (optarg!=NULL)

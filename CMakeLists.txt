@@ -27,6 +27,8 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 project(linuxdrone)
 
 add_definitions(-DXENO)
+add_definitions(-D_LARGEFILE64_SOURCE) # Need for apr
+
 
 # Extra cmake modules path (must be set by toolchain file passed from command line)
 #set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
@@ -54,6 +56,7 @@ set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
 set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
 set(WEB_DIR ${PROJECT_SOURCE_DIR}/webapps)
 set(RFS_DIR ${TLS_DIR}/rootfs/${BOARD_TYPE})
+set(APR_DIR ${RFS_DIR}/usr/local/apr)
 
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(SCP ${TLS_DIR}/pscp.exe)
@@ -81,6 +84,7 @@ SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 #SET(SSH_PORT_TARGET_SYSTEM 1234)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
+
 # MongoDB
 # Libraries: ${MongoDB_LIBRARIES}
 find_package(MongoDB REQUIRED)
@@ -90,6 +94,10 @@ include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 # Libraries: ${MongoC_LIBRARIES}
 find_package(MongoC REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${MongoC_INCLUDE_DIR})
+
+# APR
+include_directories(${INCLUDE_DIRECTORIES} ${APR_DIR}/include/apr-2)
+
 
 # Boost
 # Libraries: ${Boost_LIBRARIES}
@@ -161,11 +169,12 @@ IF(BUILD_DOCUMENTATION)
 ENDIF()
 
 
-
 # Link-only libraries (do not check headers, just link shared objects)
 find_library(ZLIB_LIBRARIES z)
 find_library(OPENSSL_LIBRARIES ssl)
 find_library(CRYPTO_LIBRARIES crypto)
+find_library(EXPAT_LIBRARIES expat)
+
 
 # RPATH handling to use relative paths in the install tree
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
