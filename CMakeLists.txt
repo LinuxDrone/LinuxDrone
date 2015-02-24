@@ -26,6 +26,8 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 project(linuxdrone)
 
+add_definitions(-DXENO)
+
 # Extra cmake modules path (must be set by toolchain file passed from command line)
 #set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
 
@@ -70,16 +72,13 @@ ELSE()
     SET(DTC ${TLS_DIR}/dtc/dtc)
 ENDIF()
 
-SET(DO_POST_BUILD YES)
+SET(DO_POST_BUILD NO)
 
-#SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
-#SET(URL_TARGET_SYSTEM root@192.168.1.2)
-#SET(SSH_PORT_TARGET_SYSTEM 22)
-
+SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
+#SET(URL_TARGET_SYSTEM root@192.168.1.20)
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
-#SET(SSH_PORT_TARGET_SYSTEM 1234)
 
-SET(URL_TARGET_SYSTEM root@192.168.1.20)
+#SET(SSH_PORT_TARGET_SYSTEM 1234)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
 # MongoDB

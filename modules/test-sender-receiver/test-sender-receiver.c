@@ -3,13 +3,22 @@
 
 void test_sender_receiver_run (module_test_sender_receiver_t *module)
 {
+#ifdef XENO
+	long last_print_time = rt_timer_read();
+	long print_period = rt_timer_ns2ticks(1000000000);
+#else
 	long last_print_time = apr_time_now();
-    int count_reads=0;
 	long print_period = 1000000;
+#endif
+	
+    int count_reads=0;
+	
 
     int cycle=0;
     while(1) {
+#ifndef XENO
 		apr_sleep(module->module_info.common_params.main_task_period);
+#endif   
 
         get_input_data(&module->module_info);
 
@@ -18,11 +27,18 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
         {
             // есть новые данные
             count_reads++;
-            if( apr_time_now() - last_print_time > print_period)
+#ifdef XENO
+			if (rt_timer_read() - last_print_time > print_period)
+#else
+			if (apr_time_now() - last_print_time > print_period)
+#endif            
             {
                 printf("count_reads=%i\n", count_reads);
-
-                last_print_time =  apr_time_now();
+#ifdef XENO
+				last_print_time = rt_timer_read();
+#else
+				last_print_time = apr_time_now();
+#endif            
                 count_reads=0;
             }
         }
