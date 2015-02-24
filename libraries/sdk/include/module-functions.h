@@ -1,5 +1,6 @@
 #pragma once
 
+#include <apr_general.h>
 #include <native/task.h>
 #include <bson.h>
 #include <native/queue.h>
@@ -585,6 +586,11 @@ typedef struct {
      * @brief \~russian Строка в формате JSON содержащая определение модуля
      */
     const char* json_module_definition;
+
+    /**
+     * @brief \~russian Memory pool библиотеки apr
+     */
+    apr_pool_t *mp;
 
 } module_t;
 
