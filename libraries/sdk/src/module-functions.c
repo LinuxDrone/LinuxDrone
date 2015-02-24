@@ -13,6 +13,8 @@
 #include <native/timer.h>
 #include "../include/module-functions.h"
 
+#define INSTANCE_SEPARATOR "#"
+#define PIN_SEPARATOR "!"
 
 #define SHMEM_WRITER_MASK	0x7FFFFFFF
 
@@ -450,21 +452,21 @@ int init(module_t* module, int argc, char *argv[])
             break;
 
 
-            case 'o': // Исходящие связи (`OUT_NAME->INSTANCE_RECEIVER.IN_NAME`)
+            case 'o': // Исходящие связи (`OUT_NAME#INSTANCE_RECEIVER!IN_NAME`)
                 if (optarg!=NULL){
                 // Выделяем память под структуры, представляющие связи с модулями подписчиками
                 // Связи через очередь (данный модуль поставщик, другие потребители данных)
                 char* param_val = malloc(strlen(optarg)+1);
                 strcpy(param_val, optarg);
 
-                char* name_out_pin = strtok(param_val, ">");
-                name_out_pin[strlen(name_out_pin)-1] = 0;
+                char* name_out_pin = strtok(param_val, INSTANCE_SEPARATOR);
+                //name_out_pin[strlen(name_out_pin) - 1] = 0;
                 //printf("name_out_pin=%s\n", name_out_pin);
 
-                char* name_remote_instance = strtok('\0', ".");
+                char* name_remote_instance = strtok('\0', PIN_SEPARATOR);
                 //printf("name_remote_instance=%s\n", name_remote_instance);
 
-                char* name_remote_pin = strtok('\0', ".");
+                char* name_remote_pin = strtok('\0', "");
                 //printf("name_remote_pin=%s\n", name_remote_pin);
 
                 if(strlen(name_remote_instance) > XNOBJECT_NAME_LEN-5)
