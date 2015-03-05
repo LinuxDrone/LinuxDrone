@@ -12,23 +12,16 @@
 #define PIN_SEPARATOR "@"
 #define PORT_SEPARATOR ":"
 
-
-
-/* default listen port number */
-#define DEF_LISTEN_PORT		8081
-
-//#include <native/queue.h>
-//#include <native/heap.h>
-//#include <native/event.h>
-//#include <native/timer.h>
 #include "../include/apr-module-functions.h"
 
 
 #define SHMEM_WRITER_MASK	0x7FFFFFFF
-
 #define SHMEM_HEAP_SIZE		300
 #define SHMEM_BLOCK1_SIZE	200
 
+
+/* listen port number */
+int listen_port = 0;
 
 /**
  * @brief
@@ -364,6 +357,7 @@ int init(module_t* module, int argc, char *argv[])
 		{ "name", 'n', TRUE, "instance name" },
 		{ "out-link", 'o', TRUE, "out link" },
 		{ "in-link", 'i', TRUE, "in link" },
+		{ "port", 'p', TRUE, "IP port for TCP and UDP sockets" },
 		{ NULL, 0, 0, NULL } /* end (a.k.a. sentinel) */
 	};
 	apr_getopt_t *opt;
@@ -552,6 +546,15 @@ int init(module_t* module, int argc, char *argv[])
 			fprintf(stdout, "%s\n", module->json_module_definition);
 			exit(EXIT_SUCCESS);
 			break;
+
+		case 'p':
+			if (optarg != NULL)
+			{
+				listen_port = atoi(optarg);
+				fprintf(stdout, "port: %i\n", listen_port);
+			}
+			break;
+
 		}
 	}
 
@@ -724,6 +727,10 @@ usage(module_t* module, char *argv[])
     fprintf(stderr, "--name=NAME\n");
     fprintf(stderr, "\trequired argument\n");
     fprintf(stderr, "\tInstance name\n\n");
+
+	fprintf(stderr, "--port=PORT\n");
+	fprintf(stderr, "\trequired argument\n");
+	fprintf(stderr, "\tListen IP port\n\n");
 
     fprintf(stderr, "--rt-priority=PRIORITY\n");
     fprintf(stderr, "\toptional\n");
@@ -999,16 +1006,6 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 			return rv;
 		}
 
-
-		/*
-        int res = rt_queue_write(&out_queue_set->out_queue->remote_queue, bson_get_data(bson_obj), bson_obj->len, Q_NORMAL);
-        if(res<0)
-        {
-            //fprintf(stderr, "Warning: %i rt_queue_write\n", res);
-            // TODO: если нет коннекта у очереди, то сбросить флаг коннекта всех очередей.
-        }
-		*/
-
         bson_destroy(bson_obj);
     }
 
@@ -1159,6 +1156,11 @@ int connect_out_links(void *p_module)
 		//printf("name_out_pin=%s\n", name_out_pin);
 
 		char* name_remote_port = strtok('\0', "");
+		if (name_remote_port == NULL)
+		{
+			fprintf(stderr, "Need port for remote instance\n");
+			exit(EXIT_FAILURE);
+		}
 		apr_port_t remote_port = atoi(name_remote_port);
 		//printf("name_remote_pin=%s\n", name_remote_pin);
 
@@ -1458,7 +1460,13 @@ int create_xenomai_services(module_t* module)
         apr_status_t rv;
         apr_sockaddr_t *sa;
         
-        rv = apr_sockaddr_info_get(&sa, NULL, APR_INET, DEF_LISTEN_PORT, 0, module->mp);
+		if (listen_port == 0)
+		{
+			fprintf(stderr, "need --port param\n");
+			exit(EXIT_FAILURE);
+		}
+
+        rv = apr_sockaddr_info_get(&sa, NULL, APR_INET, listen_port, 0, module->mp);
         if (rv != APR_SUCCESS) {
             return rv;
         }
