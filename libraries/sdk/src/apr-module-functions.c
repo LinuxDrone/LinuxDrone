@@ -199,9 +199,12 @@ int register_in_link(shmem_in_set_t* shmem, TypeFieldObj type_field_obj, const c
 }
 
 
+/**
+* @brief Функция регистрирует удаленный инстанс, к которому будем бегать выпрашивать его информацию.
+* @return
+*/
 shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
 {
-    /*
     if(ar_remote_shmems==NULL)
     {
         fprintf(stderr, "Function \"register_remote_shmem\" null parameter ar_remote_shmems\n");
@@ -235,8 +238,6 @@ shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, cons
     ar_remote_shmems->f_connected_in_links=false;
 
     return new_remote_shmem;
-     */
-    return NULL;
 }
 
 
@@ -467,7 +468,7 @@ int init(module_t* module, int argc, char *argv[])
 			break;
 
 
-		case 'i': // Входящие связи (`INSTANCE_TRANSMITTER.OBJ_NAME.OUT_NAME->IN_NAME`)
+		case 'i': // Входящие связи (`INSTANCE_TRANSMITTER@OBJ_NAME@OUT_NAME#IN_NAME`)
 			// Выделяем память под структуры, представляющие связи с модулями поставщиками
 			// Связи через разделяемую память (данный модуль потребитель, другие поставщики данных)
 			// Список входящих связей, должен быть в массиве "in_links" в объекте конфигурации
@@ -478,17 +479,17 @@ int init(module_t* module, int argc, char *argv[])
 				strcpy(param_val, optarg);
 
 				// имя инстанса модуля поставщика
-				char* publisher_instance_name = strtok(param_val, ".");
+				char* publisher_instance_name = strtok(param_val, PIN_SEPARATOR);
 
 				// имя группы пинов инстанса поставщика
-				char* publisher_nameOutGroup = strtok('\0', ".");
+				char* publisher_nameOutGroup = strtok('\0', PIN_SEPARATOR);
 
 				// название выходного пина инстанса поставщика
-				char* remote_out_pin_name = strtok('\0', ">");
-				remote_out_pin_name[strlen(remote_out_pin_name) - 1] = 0;
+				char* remote_out_pin_name = strtok('\0', INSTANCE_SEPARATOR);
+				//remote_out_pin_name[strlen(remote_out_pin_name) - 1] = 0;
 
 				// название входного пина данного модуля
-				char* input_pin_name = strtok('\0', ".");
+				char* input_pin_name = strtok('\0', "");
 
 				//printf("publisher_instance_name=%s\n", publisher_instance_name);
 				//printf("publisher_nameOutGroup=%s\n", publisher_nameOutGroup);
@@ -601,14 +602,14 @@ int get_porttype_by_portname(module_t* module, const char* port_name, char* port
     char* f = strstr(module->json_module_definition, m_format);
     if(f==NULL)
     {
-        fprintf(stderr, "Function: get_porttype_by_out_portname. Not found substring: \"%s\" in string: %s\n", m_format, module->json_module_definition);
+        fprintf(stderr, "Function: get_porttype_by_portname. Not found substring: \"%s\" in string: %s\n", m_format, module->json_module_definition);
     }
 
     char* t_find = "\"type\":\"";
     char* s = strstr(f, t_find);
     if(f==NULL)
     {
-        fprintf(stderr, "Function: get_porttype_by_out_portname. Not found substring: \"%s\" in string: %s\n", t_find, f);
+        fprintf(stderr, "Function: get_porttype_by_portname. Not found substring: \"%s\" in string: %s\n", t_find, f);
     }
 
     char* s_begin = s + strlen(t_find);
@@ -619,7 +620,7 @@ int get_porttype_by_portname(module_t* module, const char* port_name, char* port
     char* s_end = strstr(s_begin, q_find);
     if(f==NULL)
     {
-        fprintf(stderr, "Function: get_porttype_by_out_portname. Not found substring: \"%s\" in string: %s\n", q_find, s_begin);
+        fprintf(stderr, "Function: get_porttype_by_portname. Not found substring: \"%s\" in string: %s\n", q_find, s_begin);
     }
 
     int str_type_len = s_end - s_begin;
@@ -1093,7 +1094,7 @@ debug_print_bson("get_input_data", &bson);
         bson_destroy(&bson);
     }
 
-	/*
+	
     // Если установлены флаги того, что юзер обязательно хочет каких то данных,
     // то постараемся их вытащить из разделяемой памяти
     // Если конечно его запрос не удовлетворен уже (возможно) полученными данными
@@ -1110,7 +1111,7 @@ debug_print_bson("get_input_data", &bson);
     if(!module->ar_remote_shmems.f_connected_in_links)
     {
         // Если не все связи модуля установлены, то будем пытаться их установить
-        if( apr_time_now() - module->time_attempt_link_modules > 100000000)
+        if( apr_time_now() - module->time_attempt_link_modules > 1000000)
         {
             //fprintf(stderr, "попытка in связи\n");
 
@@ -1119,7 +1120,7 @@ debug_print_bson("get_input_data", &bson);
             module->time_attempt_link_modules= apr_time_now();
         }
     }
-	*/
+	
 
     refresh_input(module);
 }
@@ -1483,6 +1484,14 @@ int create_xenomai_services(module_t* module)
             return rv;
         }
     }
+
+
+	if (module->ar_remote_shmems.remote_shmems_len > 0)
+	{
+		// Есть входящие pull связи
+
+	}
+
     return 0;
 }
 
