@@ -1456,22 +1456,23 @@ int stop(void* p_module)
 
 int create_xenomai_services(module_t* module)
 {
+	if (listen_port == 0)
+	{
+		fprintf(stderr, "need --port param\n");
+		exit(EXIT_FAILURE);
+	}
+
+	apr_status_t rv;
+	apr_sockaddr_t *sa;
+
+	rv = apr_sockaddr_info_get(&sa, NULL, APR_INET, listen_port, 0, module->mp);
+	if (rv != APR_SUCCESS) {
+		return rv;
+	}
+
+
     if(module->input_data)
     {
-        apr_status_t rv;
-        apr_sockaddr_t *sa;
-        
-		if (listen_port == 0)
-		{
-			fprintf(stderr, "need --port param\n");
-			exit(EXIT_FAILURE);
-		}
-
-        rv = apr_sockaddr_info_get(&sa, NULL, APR_INET, listen_port, 0, module->mp);
-        if (rv != APR_SUCCESS) {
-            return rv;
-        }
-        
         rv = apr_socket_create(&module->in_socket, sa->family, SOCK_DGRAM, APR_PROTO_UDP, module->mp);
         if (rv != APR_SUCCESS) {
             return rv;
@@ -1489,6 +1490,25 @@ int create_xenomai_services(module_t* module)
 	if (module->ar_remote_shmems.remote_shmems_len > 0)
 	{
 		// Есть входящие pull связи
+		rv = apr_socket_create(&module->tcp_socket, sa->family, SOCK_STREAM, APR_PROTO_TCP, module->mp);
+		if (rv != APR_SUCCESS) {
+			return rv;
+		}
+
+		/* it is a good idea to specify socket options explicitly.
+		* in this case, we make a blocking socket as the listening socket */
+		apr_socket_opt_set(module->tcp_socket, APR_SO_NONBLOCK, 0);
+		apr_socket_timeout_set(module->tcp_socket, -1);
+		apr_socket_opt_set(module->tcp_socket, APR_SO_REUSEADDR, 1);/* this is useful for a server(socket listening) process */
+
+		rv = apr_socket_bind(module->tcp_socket, sa);
+		if (rv != APR_SUCCESS) {
+			return rv;
+		}
+		rv = apr_socket_listen(module->tcp_socket, SOMAXCONN);
+		if (rv != APR_SUCCESS) {
+			return rv;
+		}
 
 	}
 
