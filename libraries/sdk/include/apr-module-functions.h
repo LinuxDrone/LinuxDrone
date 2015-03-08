@@ -2,6 +2,7 @@
 
 #include <apr_general.h>
 #include <apr_network_io.h>
+#include <apr_poll.h>
 
 #include <bson.h>
 #include "common-params.h"
@@ -612,6 +613,11 @@ typedef struct {
      * @brief \~russian Memory pool библиотеки apr
      */
     apr_pool_t *mp;
+
+    /**
+     * @brief \~russian Пул серверных сокетов принимающих запросы на данные от других модулей
+     */
+    apr_pollset_t *pollset;
 
 } module_t;
 

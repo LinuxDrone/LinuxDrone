@@ -31,7 +31,6 @@
 			fileType = pattern.proxy;
 			isEditable = 1;
 			outputFiles = (
-				"$(DERIVED_SOURCES_DIR)/test-sender.helper.h",
 				"$(DERIVED_SOURCES_DIR)/test-sender.helper.c",
 			);
 			script = "/opt/local/bin/node libraries/sdk/ModuleGenerator.js $SOURCE_ROOT/modules/test-sender/test-sender.def.json $DERIVED_SOURCES_DIR GCC";
@@ -139,9 +138,9 @@
 			children = (
 				B1F0A3501A8BDB3A00C7E995 /* ModulesCommonParams.def.js */,
 				B1F0A3481A8650D200C7E995 /* modules */,
-				B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */,
 				B1F0A3471A8650C800C7E995 /* sdk */,
 				B10493811A703AC3001F0221 /* libapr-2.0.dylib */,
+				B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */,
 				B104937F1A703A35001F0221 /* osx-main-test.c */,
 				B1BF4C591A70398E009CEFDC /* Products */,
 			);
@@ -558,6 +557,7 @@
 				B1F0A3421A864FDB00C7E995 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

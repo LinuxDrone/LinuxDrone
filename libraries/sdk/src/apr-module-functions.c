@@ -12,6 +12,8 @@
 #define PIN_SEPARATOR "@"
 #define PORT_SEPARATOR ":"
 
+#define DEF_POLLSET_NUM		32
+
 #include "../include/apr-module-functions.h"
 
 
@@ -1032,6 +1034,12 @@ __declspec(dllexport) void get_input_data(module_t *module)
 void get_input_data(module_t *module)
 #endif
 {
+    //TODO: Определить размер буфера где нибудь в настройках
+    // и вынести в структуру
+    uint8_t buf[BUFSIZE];
+    apr_size_t len = sizeof(buf) - 1;
+    
+    
 	if (!module) {
         return;
     }
@@ -1050,6 +1058,43 @@ void get_input_data(module_t *module)
 		}
 	}
 
+    
+    
+    // Проверим не подцепился ли еще кто то к нашему TCP сокету с жаждой пулить с нас данные
+    apr_socket_t *ns;/* accepted socket */
+    apr_status_t rv;
+    
+    rv = apr_socket_accept(&ns, module->tcp_socket, module->mp);
+    if (rv == APR_SUCCESS) {
+        /* we watch @ns(connected socket) to know whether it is ready to read(APR_POLLIN) */
+        apr_pollfd_t pfd = { module->mp, APR_POLL_SOCKET, APR_POLLIN, 0, { NULL }, NULL };
+        pfd.desc.s = ns;
+        apr_pollset_add(module->pollset, &pfd);
+    }
+    
+    
+    // Проверим не прилетел ли новый запрос данные наших выходов
+    apr_int32_t num;
+    const apr_pollfd_t *ret_pfd;
+
+    rv = apr_pollset_poll(module->pollset, 0, &num, &ret_pfd);
+    if (rv == APR_SUCCESS) {
+        int i;
+        assert(num > 0);
+        /* scan the active sockets */
+        for (i = 0; i < num; i++)
+        {
+            rv = apr_socket_recv(ret_pfd[i].desc.s, (char*)buf, &len);
+            if (len > 0)
+            {
+                buf[len] = '\0';
+                fprintf(stdout, "len=%i str=%s", len, buf);
+                
+            }
+        }
+    }
+
+    
 
     if(module->input_data==NULL)
     {
@@ -1062,18 +1107,14 @@ void get_input_data(module_t *module)
 
     module->updated_input_properties = 0;
 
-	//TODO: Определить размер буфера где нибудь в настройках
-	// и вынести в структуру
-	char buf[BUFSIZE];
-	apr_size_t len = sizeof(buf) - 1;
 
 
-    //int res_read = rt_queue_read(&module->in_queue, buf, 256, module->common_params.main_task_period);
-	apr_status_t rv = apr_socket_recv(module->in_socket, buf, &len);
+
+	rv = apr_socket_recv(module->in_socket, (char*)buf, &len);
 	if (len > 0)
     {
         bson_t bson;
-		bson_init_static(&bson, buf, len);
+		bson_init_static(&bson, buf, (uint32_t)len);
 
 		size_t err_offset;
 		if (!bson_validate(&bson, BSON_VALIDATE_NONE, &err_offset)) {
@@ -1093,6 +1134,7 @@ debug_print_bson("get_input_data", &bson);
 		}
         bson_destroy(&bson);
     }
+    
 
 	
     // Если установлены флаги того, что юзер обязательно хочет каких то данных,
@@ -1487,26 +1529,39 @@ int create_xenomai_services(module_t* module)
     }
 
 
-	if (module->ar_remote_shmems.remote_shmems_len > 0)
+	if (module->out_objects)
 	{
+
+        
+        apr_pollset_create(&module->pollset, DEF_POLLSET_NUM, module->mp, 0);
+        /*
+        {
+            apr_pollfd_t pfd = { module->mp, APR_POLL_SOCKET, APR_POLLIN, 0, { NULL }, NULL };
+            pfd.desc.s = lsock;
+            apr_pollset_add(pollset, &pfd);
+        }
+         */
+        
+        
 		// Есть входящие pull связи
 		rv = apr_socket_create(&module->tcp_socket, sa->family, SOCK_STREAM, APR_PROTO_TCP, module->mp);
 		if (rv != APR_SUCCESS) {
 			return rv;
 		}
-
-		/* it is a good idea to specify socket options explicitly.
-		* in this case, we make a blocking socket as the listening socket */
-		apr_socket_opt_set(module->tcp_socket, APR_SO_NONBLOCK, 0);
-		apr_socket_timeout_set(module->tcp_socket, -1);
+        
+        /* non-blocking socket */
+		apr_socket_opt_set(module->tcp_socket, APR_SO_NONBLOCK, 1);
+		apr_socket_timeout_set(module->tcp_socket, 0);
 		apr_socket_opt_set(module->tcp_socket, APR_SO_REUSEADDR, 1);/* this is useful for a server(socket listening) process */
 
 		rv = apr_socket_bind(module->tcp_socket, sa);
 		if (rv != APR_SUCCESS) {
+            fprintf(stderr, "error: apr_socket_bind\n");
 			return rv;
 		}
 		rv = apr_socket_listen(module->tcp_socket, SOMAXCONN);
 		if (rv != APR_SUCCESS) {
+            fprintf(stderr, "error: apr_socket_listen\n");
 			return rv;
 		}
 
