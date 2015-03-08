@@ -1531,19 +1531,9 @@ int create_xenomai_services(module_t* module)
 
 	if (module->out_objects)
 	{
-
-        
+        // В принципе есть выходы у модуля
         apr_pollset_create(&module->pollset, DEF_POLLSET_NUM, module->mp, 0);
-        /*
-        {
-            apr_pollfd_t pfd = { module->mp, APR_POLL_SOCKET, APR_POLLIN, 0, { NULL }, NULL };
-            pfd.desc.s = lsock;
-            apr_pollset_add(pollset, &pfd);
-        }
-         */
         
-        
-		// Есть входящие pull связи
 		rv = apr_socket_create(&module->tcp_socket, sa->family, SOCK_STREAM, APR_PROTO_TCP, module->mp);
 		if (rv != APR_SUCCESS) {
 			return rv;
@@ -1564,7 +1554,6 @@ int create_xenomai_services(module_t* module)
             fprintf(stderr, "error: apr_socket_listen\n");
 			return rv;
 		}
-
 	}
 
     return 0;
