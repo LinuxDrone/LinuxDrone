@@ -231,6 +231,18 @@ typedef struct {
      * \~russian Текущая длина массива remote_in_obj_fields
      */
     size_t len_remote_in_obj_fields;
+    
+    /**
+     * @brief
+     * \~russian IP Адрес удаленного инстанса, у которого мы будем выпрашмвать входные для нас данные
+     */
+    apr_sockaddr_t *sockaddr;
+    
+    /**
+     * @brief
+     * \~russian клинтский TCP сокет для коннекта к удаленному модулю поставщику данных (будем пулить его)
+     */
+    apr_socket_t *socket;
 
 } shmem_in_set_t;
 
@@ -666,7 +678,7 @@ char *replace(const char *s, char ch, const char *repl);
 int connect_in_links(ar_remote_shmems_t* ar_remote_shmems,
                      const char* instance_name);
 
-shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems,
+shmem_in_set_t* register_remote_shmem(module_t *module, ar_remote_shmems_t* ar_remote_shmems,
                                       const char* name_remote_instance, const char* name_remote_outgroup);
 
 int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems,

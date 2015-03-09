@@ -205,7 +205,7 @@ int register_in_link(shmem_in_set_t* shmem, TypeFieldObj type_field_obj, const c
 * @brief Функция регистрирует удаленный инстанс, к которому будем бегать выпрашивать его информацию.
 * @return
 */
-shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
+shmem_in_set_t* register_remote_shmem(module_t *module, ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
 {
     if(ar_remote_shmems==NULL)
     {
@@ -234,6 +234,37 @@ shmem_in_set_t* register_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, cons
 
     new_remote_shmem->name_outgroup = malloc(strlen(name_remote_outgroup)+1);
     strcpy(new_remote_shmem->name_outgroup, name_remote_outgroup);
+    
+    
+    // создадим клинский сокет для пулинга по данной входящей связи
+    char* remote_addr = malloc(strlen(name_remote_instance) + 1);
+    strcpy(remote_addr, name_remote_instance);
+    char* name_remote_host = strtok(remote_addr, PORT_SEPARATOR);
+    char* name_remote_port = strtok('\0', "");
+    if (name_remote_port == NULL)
+    {
+        fprintf(stderr, "Need port for remote instance for link %s:%s\n", name_remote_instance, name_remote_outgroup);
+        exit(EXIT_FAILURE);
+    }
+    apr_port_t remote_port = atoi(name_remote_port);
+    
+    
+    apr_status_t rv;
+    rv = apr_sockaddr_info_get(&new_remote_shmem->sockaddr, name_remote_host, APR_INET, remote_port, 0, module->mp);
+    if (rv != APR_SUCCESS) {
+        fprintf(stderr, "error: apr_sockaddr_info_get. new_remote_shmem->sockaddr\n");
+        return NULL;
+    }
+    rv = apr_socket_create(&new_remote_shmem->socket, new_remote_shmem->sockaddr->family, SOCK_STREAM, APR_PROTO_TCP, module->mp);
+    if (rv != APR_SUCCESS) {
+        fprintf(stderr, "error: apr_socket_create. new_remote_shmem->socket\n");
+        return NULL;
+    }
+    /* it is a good idea to specify socket options explicitly.
+     * in this case, we make a blocking socket with timeout. */
+    apr_socket_opt_set(new_remote_shmem->socket, APR_SO_NONBLOCK, 1);
+    apr_socket_timeout_set(new_remote_shmem->socket, 0);
+
 
     ar_remote_shmems->remote_shmems[ar_remote_shmems->remote_shmems_len-1] = new_remote_shmem;
 
@@ -676,7 +707,7 @@ int init(module_t* module, int argc, char *argv[])
 
 
 				// Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-				shmem_in_set_t* remote_shmem = register_remote_shmem(&module->ar_remote_shmems, publisher_instance_name, publisher_nameOutGroup);
+				shmem_in_set_t* remote_shmem = register_remote_shmem(module, &module->ar_remote_shmems, publisher_instance_name, publisher_nameOutGroup);
 
 
 				// Получим название типа данных входной связи
@@ -1456,6 +1487,7 @@ int create_xenomai_services(module_t* module)
     {
         rv = apr_socket_create(&module->in_socket, sa->family, SOCK_DGRAM, APR_PROTO_UDP, module->mp);
         if (rv != APR_SUCCESS) {
+            fprintf(stderr, "error: apr_socket_create. in_socket\n");
             return rv;
         }
         
@@ -1463,6 +1495,7 @@ int create_xenomai_services(module_t* module)
         
         rv = apr_socket_bind(module->in_socket, sa);
         if (rv != APR_SUCCESS) {
+            fprintf(stderr, "error: apr_socket_bind. in_socket\n");
             return rv;
         }
     }
@@ -1485,12 +1518,12 @@ int create_xenomai_services(module_t* module)
         
         rv = apr_socket_bind(module->tcp_socket, sa);
         if (rv != APR_SUCCESS) {
-            fprintf(stderr, "error: apr_socket_bind\n");
+            fprintf(stderr, "error: apr_socket_bind. tcp_socket\n");
             return rv;
         }
         rv = apr_socket_listen(module->tcp_socket, SOMAXCONN);
         if (rv != APR_SUCCESS) {
-            fprintf(stderr, "error: apr_socket_listen\n");
+            fprintf(stderr, "error: apr_socket_listen. tcp_socket\n");
             return rv;
         }
     }
