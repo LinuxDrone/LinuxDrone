@@ -678,7 +678,8 @@ function Create_C_file(module) {
             r += "    module->" + outName + ".obj2 = &module->obj2_" + outName + ";\n";
             r += "    module->" + outName + ".obj2bson = (p_obj2bson)&" + outName + "2bson;\n";
             r += "    module->" + outName + ".bson2obj = (p_bson2obj)&bson2" + outName + ";\n";
-            r += "    module->" + outName + ".print_obj = (p_print_obj)&print_" + outName + ";\n\n";
+            r += "    module->" + outName + ".print_obj = (p_print_obj)&print_" + outName + ";\n";
+            r += "    module->" + outName + ".out_name = \"" + outName + "\";\n\n";
         });
         r += "    module->module_info.get_outobj_by_outpin = (p_get_outobj_by_outpin)&get_outobject_by_outpin;\n";
     }

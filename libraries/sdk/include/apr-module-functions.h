@@ -153,7 +153,7 @@ typedef struct {
 
     /**
      * @brief
-     * \~russian IP Адрес удаленного инстанса, у которого мы будем выпрашмвать входные для нас данные
+     * \~russian IP Адрес удаленного инстанса, у которого мы будем выпрашивать входные для нас данные
      */
     apr_sockaddr_t *sockaddr;
     
@@ -294,6 +294,7 @@ typedef struct {
     p_obj2bson obj2bson;
     p_bson2obj bson2obj;
     p_print_obj print_obj;
+    const char* out_name;
 
     /**
      * @brief \~russian Данные необходимые для публикации объекта в разделяемую память
@@ -314,7 +315,7 @@ typedef struct {
 } out_object_t;
 
 
-// Тип функции, возаращающей структуру данных, соответствующую выходу, содержащему именованный выходной порт
+// Тип функции, возвращающей структуру данных, соответствующую выходу, содержащему именованный выходной порт
 typedef out_object_t* (*p_get_outobj_by_outpin)(void* p_module,
                                                 const char* name_out_pin, unsigned short* size_of_type,
                                                 unsigned short* index_port);

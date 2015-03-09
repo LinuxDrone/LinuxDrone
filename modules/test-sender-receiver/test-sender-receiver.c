@@ -60,8 +60,13 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
         Output2_t* objOutput2;
         checkout_Output2(module, &objOutput2);
         objOutput2->out3 = cycle;
+        
+printf("objOutput2->out3 = %f\n", objOutput2->out3);
+        
         checkin_Output2(module, &objOutput2);
 
+        
+        
         // Скажем какие данные следует добыть из разделяемой памяти, если они не придут через трубу
         module->module_info.refresh_input_mask = in1 | in2;
 

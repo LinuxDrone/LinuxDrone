@@ -1119,12 +1119,50 @@ void get_input_data(module_t *module)
         /* scan the active sockets */
         for (i = 0; i < num; i++)
         {
-            rv = apr_socket_recv(ret_pfd[i].desc.s, (char*)buf, &len);
+            apr_socket_t *socket = ret_pfd[i].desc.s;
+            rv = apr_socket_recv(socket, (char*)buf, &len);
             if (len > 0)
             {
-                buf[len] = '\0';
+                if(buf[len-1]=='\n'){
+                    buf[len-1] = '\0';
+                }else
+                    buf[len] = '\0';
                 fprintf(stdout, "len=%lu str=%s", len, buf);
                 
+                
+                void* obj;
+                bson_t bson_tr;
+                int i_obj=0;
+                out_object_t* out_object = module->out_objects[i_obj];
+                while(out_object)
+                {
+                    if(strcmp(out_object->out_name, (const char*)buf)!=0)
+                    {
+                        out_object = module->out_objects[++i_obj];
+                        continue;
+                    }
+
+                     checkout4transmiter(module, out_object, &obj, false);
+                     if(obj!=NULL)
+                     {
+                         bson_init (&bson_tr);
+                         // Call user convert function
+                         (*out_object->obj2bson)(obj, &bson_tr);
+                         
+                         apr_size_t len = bson_tr.len;
+                         apr_status_t rv = apr_socket_send(socket, (const char*)bson_get_data(&bson_tr), &len);
+                         if (rv != APR_SUCCESS) {
+                             fprintf(stderr, "error: %i apr_socket_send in get_input_data\n", rv);
+                             //bson_destroy(bson_obj);
+                             //return rv;
+                         }
+                         bson_destroy(&bson_tr);
+                     
+                         // Вернуть объект основному потоку на новое заполнение
+                         checkin4transmiter(module, out_object, &obj, false);
+                     }
+                    out_object = module->out_objects[++i_obj];
+                }
             }
         }
     }
@@ -1344,6 +1382,7 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
             }
         }
          */
+        
         out_object = module->out_objects[++i];
     }
     if(time2publish2shmem)
