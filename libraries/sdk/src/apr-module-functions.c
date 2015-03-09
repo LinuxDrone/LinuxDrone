@@ -63,75 +63,6 @@ int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was
 }
 
 
-/**
- * @brief init_object_set Инициализируети структуру, представляющую выходной объект инстанса в системе.
- * Каждый тип объекта, который порождает модуль, должен иметь некоторый набор сущностей, требуемых ему для передачи данных объекта другим инстансам.
- * Данная функция создает необходимые сущности (очереди, мьютексы и т.д.)
- * @param pset Указатель на структуру, содержащую необхоимые для объекта сущности
- * @param instance_name Имя инстанса объекта
- * @param out_name Имя выходного объекта (имя группы портов, объедененных в логический объект)
- * @return Код ошибки. 0 в случае успеха.
- */
-#ifdef WIN32
-__declspec(dllexport) int init_object_set(shmem_out_set_t * shmem, const char* instance_name, char* out_name)
-#else
-int init_object_set(shmem_out_set_t * shmem, const char* instance_name, char* out_name)
-#endif
-{
-    /*
-    if(strlen(instance_name) > XNOBJECT_NAME_LEN-5)
-    {
-        fprintf(stdout, "Function init_object_set, Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", instance_name, strlen(instance_name), XNOBJECT_NAME_LEN-5);
-        return -1;
-    }
-
-    // Create shared memory
-    char name_shmem[XNOBJECT_NAME_LEN] = "";
-    strcat(name_shmem, instance_name);
-    strcat(name_shmem, out_name);
-    strcat(name_shmem, SUFFIX_SHMEM);
-
-    int err = rt_heap_create(&shmem->h_shmem, name_shmem, shmem->shmem_len, H_SHARED | H_PRIO);
-    if (err != 0) {
-        fprintf(stdout, "Error %i create shared memory \"%s\"\n", err, name_shmem);
-        print_heap_create_error(err);
-        return err;
-    }
-    //fprintf(stderr, "shmem name=%s\n", name_shmem);
-
-    // Alloc shared memory block
-    err = rt_heap_alloc(&shmem->h_shmem, 0, TM_INFINITE, &shmem->shmem);
-    if (err != 0)
-        fprintf(stderr, "Error rt_heap_alloc for block1 err=%i\n", err);
-    memset(shmem->shmem, 0, shmem->shmem_len);
-
-    // Create event service
-    char name_eflags[XNOBJECT_NAME_LEN] = "";
-    strcat(name_eflags, instance_name);
-    strcat(name_eflags, out_name);
-    strcat(name_eflags, SUFFIX_EVENT);
-    err = rt_event_create(&shmem->eflags, name_eflags, ULONG_MAX, EV_PRIO);
-    if (err != 0) {
-        fprintf(stdout, "Error create event service \"%s\"\n", name_eflags);
-        return err;
-    }
-
-    // Create mutex for read shared memory
-    char name_rmutex[XNOBJECT_NAME_LEN] = "";
-    strcat(name_rmutex, instance_name);
-    strcat(name_rmutex, out_name);
-    strcat(name_rmutex, SUFFIX_MUTEX);
-    err = rt_mutex_create(&shmem->mutex_read_shmem, name_rmutex);
-    if (err != 0) {
-        fprintf(stdout, "Error create mutex_read_shmem \"%s\"\n", name_rmutex);
-        return err;
-    }
-*/
-    return 0;
-     
-}
-
-
 
 /**
  * @brief Функция добавляет линк в список линков, связывающих данный модуль с удаленным модулем подписчиком (обмен через очередь)
@@ -262,8 +193,8 @@ shmem_in_set_t* register_remote_shmem(module_t *module, ar_remote_shmems_t* ar_r
     }
     /* it is a good idea to specify socket options explicitly.
      * in this case, we make a blocking socket with timeout. */
-    apr_socket_opt_set(new_remote_shmem->socket, APR_SO_NONBLOCK, 1);
-    apr_socket_timeout_set(new_remote_shmem->socket, 0);
+//    apr_socket_opt_set(new_remote_shmem->socket, APR_SO_NONBLOCK, 0);
+//    apr_socket_timeout_set(new_remote_shmem->socket, -1);
 
 
     ar_remote_shmems->remote_shmems[ar_remote_shmems->remote_shmems_len-1] = new_remote_shmem;
@@ -800,7 +731,7 @@ int init(module_t* module, int argc, char *argv[])
  * @param data данные копируемые в разделяемую память
  * @param datalen длина копируемых данных
  */
-void write_shmem(shmem_out_set_t* shmem, const char* data, unsigned short datalen)
+void write_shmem(const char* data, unsigned short datalen)
 {
     /*
     unsigned long after_mask;
@@ -1282,73 +1213,27 @@ debug_print_bson("get_input_data", &bson);
  */
 int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_name)
 {
-    /*
+    
     int count_connected = 0, i;
     for(i=0; i < ar_remote_shmems->remote_shmems_len;i++)
     {
         shmem_in_set_t* remote_shmem = ar_remote_shmems->remote_shmems[i];
 
-        if(!remote_shmem->f_shmem_connected)
+        if(!remote_shmem->f_socket_connected)
         {
-            //fprintf(stderr, "attempt connect %s to %s\n", instance_name, name_shmem);
-            char name_shmem[XNOBJECT_NAME_LEN] = "";
-            strcat(name_shmem, remote_shmem->name_instance);
-            strcat(name_shmem, remote_shmem->name_outgroup);
-            strcat(name_shmem, SUFFIX_SHMEM);
-            int res = rt_heap_bind	(&remote_shmem->remote_shmem.h_shmem, name_shmem, TM_NONBLOCK);
-            if(res!=0)
-            {
-                if(res!=-EWOULDBLOCK)
-                    print_rt_heap_bind_error(res);
-                continue;
+            apr_status_t rv = apr_socket_connect(remote_shmem->socket, remote_shmem->sockaddr);
+            if (rv != APR_SUCCESS) {
+                fprintf(stderr, "error: apr_socket_connect addr:%s\n", remote_shmem->name_instance);
+                return rv;
             }
+            
+            /* see the tutorial about the reason why we have to specify options again */
+//            apr_socket_opt_set(remote_shmem->socket, APR_SO_NONBLOCK, 0);
+//            apr_socket_timeout_set(remote_shmem->socket, 1000);
+            
 
-            // Alloc shared memory block
-            int err = rt_heap_alloc(&remote_shmem->remote_shmem.h_shmem, 0, TM_INFINITE, &remote_shmem->remote_shmem.shmem);
-            if (err != 0)
-            {
-                fprintf(stderr, "Function: connect_in_links, Error rt_heap_alloc for \"%s\", err=%i\n", name_shmem, err);
-                continue;
-            }
-
-            fprintf(stderr, "%sCONNECTED: %s to shmem %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_shmem, ANSI_COLOR_RESET);
-            remote_shmem->f_shmem_connected = true;
-        }
-
-
-        if(!remote_shmem->f_event_connected)
-        {
-            char name_event[XNOBJECT_NAME_LEN] = "";
-            strcat(name_event, remote_shmem->name_instance);
-            strcat(name_event, remote_shmem->name_outgroup);
-            strcat(name_event, SUFFIX_EVENT);
-            int res = rt_event_bind	(&remote_shmem->remote_shmem.eflags, name_event, TM_NONBLOCK);
-            if(res!=0)
-            {
-                if(res!=-EWOULDBLOCK)
-                    print_rt_event_bind_error(res);
-                continue;
-            }
-            fprintf(stderr, "%sCONNECTED: %s to event service %s%s\n", ANSI_COLOR_YELLOW, instance_name, name_event, ANSI_COLOR_RESET);
-            remote_shmem->f_event_connected = true;
-        }
-
-
-        if(!remote_shmem->f_mutex_connected)
-        {
-            char name_mutex[XNOBJECT_NAME_LEN] = "";
-            strcat(name_mutex, remote_shmem->name_instance);
-            strcat(name_mutex, remote_shmem->name_outgroup);
-            strcat(name_mutex, SUFFIX_MUTEX);
-            int res = rt_mutex_bind	(&remote_shmem->remote_shmem.mutex_read_shmem, name_mutex, TM_NONBLOCK);
-            if(res!=0)
-            {
-                if(res!=-EWOULDBLOCK)
-                    print_rt_mutex_bind_error(res);
-                continue;
-            }
-            fprintf(stderr, "%sCONNECTED: %s to mutex service %s%s\n\n", ANSI_COLOR_YELLOW, instance_name, name_mutex, ANSI_COLOR_RESET);
-            remote_shmem->f_mutex_connected = true;
+            fprintf(stderr, "%sCONNECTED: %s to socket %s%s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, remote_shmem->name_outgroup, ANSI_COLOR_RESET);
+            remote_shmem->f_socket_connected = true;
         }
 
         count_connected++;
@@ -1357,9 +1242,9 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
     if(ar_remote_shmems->remote_shmems_len>0 && count_connected==ar_remote_shmems->remote_shmems_len)
     {
         ar_remote_shmems->f_connected_in_links=true;
-        fprintf(stderr, "%s%s: ALL SHMEMS CONNECTED%s\n", ANSI_COLOR_GREEN, instance_name, ANSI_COLOR_RESET);
+        fprintf(stderr, "%s%s: ALL SOCKETS CONNECTED%s\n", ANSI_COLOR_GREEN, instance_name, ANSI_COLOR_RESET);
     }
-*/
+
     return 0;
      
 }
@@ -1441,6 +1326,7 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
             }
         }
 
+        /*
         // Публикация данных в разделяемую память, не чаще чем в оговоренный период
         if(time2publish2shmem)
         {
@@ -1457,6 +1343,7 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
                 checkin4transmiter(module, out_object, &obj, false);
             }
         }
+         */
         out_object = module->out_objects[++i];
     }
     if(time2publish2shmem)

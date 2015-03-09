@@ -671,7 +671,9 @@ function Create_C_file(module) {
             r += "    // " + outName + "\n";
             r += "    // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа\n";
             r += "    // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации\n";
-            r += "    module->" + outName + ".shmem_set.shmem_len = 300;\n";
+            if (platform==="XENO") {
+                r += "    module->" + outName + ".shmem_set.shmem_len = 300;\n";
+            }
             r += "    module->" + outName + ".obj1 = &module->obj1_" + outName + ";\n";
             r += "    module->" + outName + ".obj2 = &module->obj2_" + outName + ";\n";
             r += "    module->" + outName + ".obj2bson = (p_obj2bson)&" + outName + "2bson;\n";
@@ -720,7 +722,7 @@ function Create_C_file(module) {
         r += "    module->module_info.print_input = &print_" + module_type + ";\n\n";
     }
     r += "    int res = init(&module->module_info, argc, argv);\n\n";
-    if (module.outputs) {
+    if (module.outputs && platform==="XENO") {
         r += "    // для каждого типа порождаемого объекта инициализируется соответсвующая структура\n";
         r += "    // и указываются буферы (для обмена данными между основным и передающим потоком)\n";
         module.outputs.forEach(function (out) {

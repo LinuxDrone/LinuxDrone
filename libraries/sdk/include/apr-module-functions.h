@@ -117,36 +117,6 @@ typedef void (*p_print_help)();
 // Тип функции возвращающей маску входного порта, по его имени
 typedef t_mask (*p_get_inputmask_by_inputname)(const char* input_name);
 
-/**
- * @brief
- * \~russian Структура данных, необходимых для записи в блок разделяемой памяти
- */
-typedef struct {
-    RT_HEAP h_shmem;
-
-    /**
-     * @brief
-     * \~russian Указатель на блок памяти
-     */
-    void* shmem;
-
-    /**
-     * @brief
-     * \~russian Длина блока памяти
-     */
-    int shmem_len;
-
-    RT_EVENT eflags;
-
-    /**
-     * @brief
-     * \~russian мьютех используемый для синхронизации при обмене через разделяемую память,
-     * потоков разных модулей
-     */
-    RT_MUTEX mutex_read_shmem;
-
-} shmem_out_set_t;
-
 
 /**
  * @brief
@@ -180,25 +150,25 @@ typedef struct {
  * \~russian Структура данных, необходимых для чтения из блока разделяемой памяти
  */
 typedef struct {
-    shmem_out_set_t remote_shmem;
 
+    /**
+     * @brief
+     * \~russian IP Адрес удаленного инстанса, у которого мы будем выпрашмвать входные для нас данные
+     */
+    apr_sockaddr_t *sockaddr;
+    
+    /**
+     * @brief
+     * \~russian клинтский TCP сокет для коннекта к удаленному модулю поставщику данных (будем пулить его)
+     */
+    apr_socket_t *socket;
+    
+    
     /**
      * @brief
      * \~russian Флаг. Установлена связь (bind) с блоком разделяемой памяти, пренадлежащим инстансу поставщику
      */
-    bool f_shmem_connected;
-
-    /**
-     * @brief
-     * \~russian Флаг. Установлена связь (bind) с сервисом уведомлений, пренадлежащим инстансу поставщику
-     */
-    bool f_event_connected;
-
-    /**
-     * @brief
-     * \~russian Флаг. Установлена связь (bind) с мьютексом, пренадлежащим инстансу поставщику
-     */
-    bool f_mutex_connected;
+    bool f_socket_connected;
 
     /**
      * @brief
@@ -232,18 +202,6 @@ typedef struct {
      */
     size_t len_remote_in_obj_fields;
     
-    /**
-     * @brief
-     * \~russian IP Адрес удаленного инстанса, у которого мы будем выпрашмвать входные для нас данные
-     */
-    apr_sockaddr_t *sockaddr;
-    
-    /**
-     * @brief
-     * \~russian клинтский TCP сокет для коннекта к удаленному модулю поставщику данных (будем пулить его)
-     */
-    apr_socket_t *socket;
-
 } shmem_in_set_t;
 
 
@@ -340,7 +298,7 @@ typedef struct {
     /**
      * @brief \~russian Данные необходимые для публикации объекта в разделяемую память
      */
-    shmem_out_set_t shmem_set;
+//    shmem_out_set_t shmem_set;
 
     /**
      * @brief \~russian Массив указателей на структуры содержащие информацию о очередях модулей потребителей
@@ -657,7 +615,6 @@ __declspec(dllexport) int stop(void* module);
 __declspec(dllexport) void get_input_data(module_t *module);
 #else
 int init(module_t* module, int argc, char *argv[]);
-int init_object_set(shmem_out_set_t * shmem, const char* instance_name, char* out_name);
 int start(void* module);
 int stop(void* module);
 void get_input_data(module_t *module);
