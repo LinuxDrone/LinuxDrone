@@ -492,5 +492,5 @@ TypeFieldObj convert_port_type_str2type(const char* str_type)
     if(strcmp(str_type, "bool")==0)
         return field_bool;
     
-    return -1;
+    return field_unknown;
 }

@@ -298,14 +298,14 @@ function make_argv2Structure(properties, module_type) {
         r += "        {\"" + propName + "\", " + ip + ", TRUE, NULL },\n";
         ip++;
     }
-    r += "        {NULL,0,NULL,0}\n";
+    r += "        {NULL,0,0,NULL}\n";
     r += "    };\n\n";
 
     r += "    apr_getopt_t *opt;\n";
     r += "    int optch;\n";
     r += "    const char *optarg;\n";
     r += "    apr_pool_create(&mp, NULL);\n";
-    r += "    apr_getopt_init(&opt, mp, argc, argv);\n";
+    r += "    apr_getopt_init(&opt, mp, argc, (const char *const *)argv);\n";
     r += "    opt->errfn = NULL;\n";
     r += "    opt->interleave = true;\n";
 
@@ -620,7 +620,7 @@ function Create_C_file(module) {
         for (var key in module.inputShema.properties) {
             r += "    if(!strncmp(name_inpin, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
             r += "    {\n";
-            r += "        return (uintptr_t)&module->input4module." + key + " - (uintptr_t)&module->input4module;\n";
+            r += "        return (int)((uintptr_t)&module->input4module." + key + " - (uintptr_t)&module->input4module);\n";
             r += "    }\n";
         }
         r += "    printf(\"Not found property \\\"%s\\\" among properties in input object\\n\", name_inpin);\n";

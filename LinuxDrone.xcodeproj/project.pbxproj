@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B10493801A703A35001F0221 /* osx-main-test.c in Sources */ = {isa = PBXBuildFile; fileRef = B104937F1A703A35001F0221 /* osx-main-test.c */; };
-		B10493821A703AC3001F0221 /* libapr-2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493811A703AC3001F0221 /* libapr-2.0.dylib */; };
 		B10493941A717CAE001F0221 /* apr-module-functions.h in Headers */ = {isa = PBXBuildFile; fileRef = B10493911A717CAE001F0221 /* apr-module-functions.h */; };
 		B10493951A717CAE001F0221 /* apr-helper-functions.c in Sources */ = {isa = PBXBuildFile; fileRef = B10493921A717CAE001F0221 /* apr-helper-functions.c */; };
 		B10493961A717CAE001F0221 /* apr-module-functions.c in Sources */ = {isa = PBXBuildFile; fileRef = B10493931A717CAE001F0221 /* apr-module-functions.c */; };
@@ -18,7 +16,6 @@
 		B135AD151AAC5CCF005EAF8E /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
 		B135AD161AAC5CFF005EAF8E /* libapr-2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493811A703AC3001F0221 /* libapr-2.0.dylib */; };
 		B1F0A3351A863DF700C7E995 /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
-		B1F0A3371A864F9100C7E995 /* test-sender.c in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A3361A864F9100C7E995 /* test-sender.c */; };
 		B1F0A3431A864FF100C7E995 /* test-sender.c in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A3361A864F9100C7E995 /* test-sender.c */; };
 		B1F0A34C1A878F3E00C7E995 /* test-sender.def.json in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A34B1A878F3200C7E995 /* test-sender.def.json */; };
 		B1F0A34E1A87913200C7E995 /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
@@ -68,13 +65,6 @@
 /* End PBXBuildRule section */
 
 /* Begin PBXContainerItemProxy section */
-		B10493971A717D41001F0221 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B1BF4C501A70398E009CEFDC /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B10493861A717BE3001F0221;
-			remoteInfo = sdk;
-		};
 		B135AD101AAC5C2E005EAF8E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B1BF4C501A70398E009CEFDC /* Project object */;
@@ -101,15 +91,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		B1BF4C561A70398E009CEFDC /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
 		B1F0A33A1A864FDB00C7E995 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -122,7 +103,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		B104937F1A703A35001F0221 /* osx-main-test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "osx-main-test.c"; sourceTree = "<group>"; };
 		B10493811A703AC3001F0221 /* libapr-2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libapr-2.0.dylib"; path = "../../../usr/local/apr/lib/libapr-2.0.dylib"; sourceTree = "<group>"; };
 		B10493871A717BE3001F0221 /* libsdk.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libsdk.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10493911A717CAE001F0221 /* apr-module-functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "apr-module-functions.h"; path = "libraries/sdk/include/apr-module-functions.h"; sourceTree = "<group>"; };
@@ -131,8 +111,6 @@
 		B135AD031AAC5794005EAF8E /* test-sender-receiver.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "test-sender-receiver.c"; path = "modules/test-sender-receiver/test-sender-receiver.c"; sourceTree = "<group>"; };
 		B135AD041AAC5794005EAF8E /* test-sender-receiver.def.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = "test-sender-receiver.def.json"; path = "modules/test-sender-receiver/test-sender-receiver.def.json"; sourceTree = "<group>"; };
 		B135AD091AAC5852005EAF8E /* test-sender-receiver */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "test-sender-receiver"; sourceTree = BUILT_PRODUCTS_DIR; };
-		B135AD0B1AAC5852005EAF8E /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
-		B1BF4C581A70398E009CEFDC /* LinuxDrone */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LinuxDrone; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libbson-1.0.0.dylib"; path = "tools/libbson/libbson-1.0.0.dylib"; sourceTree = "<group>"; };
 		B1F0A3361A864F9100C7E995 /* test-sender.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "test-sender.c"; path = "modules/test-sender/test-sender.c"; sourceTree = "<group>"; };
 		B1F0A33C1A864FDB00C7E995 /* test-sender */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "test-sender"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -157,14 +135,6 @@
 				B135AD161AAC5CFF005EAF8E /* libapr-2.0.dylib in Frameworks */,
 				B135AD151AAC5CCF005EAF8E /* libbson-1.0.0.dylib in Frameworks */,
 				B135AD141AAC5C69005EAF8E /* libsdk.dylib in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B1BF4C551A70398E009CEFDC /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				B10493821A703AC3001F0221 /* libapr-2.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,14 +169,6 @@
 			name = "test-sender-receiver";
 			sourceTree = "<group>";
 		};
-		B135AD0A1AAC5852005EAF8E /* test-sender-receiver */ = {
-			isa = PBXGroup;
-			children = (
-				B135AD0B1AAC5852005EAF8E /* main.c */,
-			);
-			path = "test-sender-receiver";
-			sourceTree = "<group>";
-		};
 		B1BF4C4F1A70398E009CEFDC = {
 			isa = PBXGroup;
 			children = (
@@ -215,8 +177,6 @@
 				B1F0A3471A8650C800C7E995 /* sdk */,
 				B10493811A703AC3001F0221 /* libapr-2.0.dylib */,
 				B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */,
-				B104937F1A703A35001F0221 /* osx-main-test.c */,
-				B135AD0A1AAC5852005EAF8E /* test-sender-receiver */,
 				B1BF4C591A70398E009CEFDC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -224,7 +184,6 @@
 		B1BF4C591A70398E009CEFDC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B1BF4C581A70398E009CEFDC /* LinuxDrone */,
 				B10493871A717BE3001F0221 /* libsdk.dylib */,
 				B1F0A33C1A864FDB00C7E995 /* test-sender */,
 				B135AD091AAC5852005EAF8E /* test-sender-receiver */,
@@ -302,24 +261,6 @@
 			productReference = B135AD091AAC5852005EAF8E /* test-sender-receiver */;
 			productType = "com.apple.product-type.tool";
 		};
-		B1BF4C571A70398E009CEFDC /* LinuxDrone */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = B1BF4C5F1A70398E009CEFDC /* Build configuration list for PBXNativeTarget "LinuxDrone" */;
-			buildPhases = (
-				B1BF4C541A70398E009CEFDC /* Sources */,
-				B1BF4C551A70398E009CEFDC /* Frameworks */,
-				B1BF4C561A70398E009CEFDC /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				B10493981A717D41001F0221 /* PBXTargetDependency */,
-			);
-			name = LinuxDrone;
-			productName = LinuxDrone;
-			productReference = B1BF4C581A70398E009CEFDC /* LinuxDrone */;
-			productType = "com.apple.product-type.tool";
-		};
 		B1F0A33B1A864FDB00C7E995 /* test-sender */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B1F0A3401A864FDB00C7E995 /* Build configuration list for PBXNativeTarget "test-sender" */;
@@ -354,9 +295,6 @@
 					B135AD081AAC5852005EAF8E = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
-					B1BF4C571A70398E009CEFDC = {
-						CreatedOnToolsVersion = 6.1.1;
-					};
 					B1F0A33B1A864FDB00C7E995 = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
@@ -374,7 +312,6 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B1BF4C571A70398E009CEFDC /* LinuxDrone */,
 				B10493861A717BE3001F0221 /* sdk */,
 				B1F0A33B1A864FDB00C7E995 /* test-sender */,
 				B135AD081AAC5852005EAF8E /* test-sender-receiver */,
@@ -402,15 +339,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B1BF4C541A70398E009CEFDC /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				B1F0A3371A864F9100C7E995 /* test-sender.c in Sources */,
-				B10493801A703A35001F0221 /* osx-main-test.c in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		B1F0A3381A864FDB00C7E995 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -423,11 +351,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		B10493981A717D41001F0221 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B10493861A717BE3001F0221 /* sdk */;
-			targetProxy = B10493971A717D41001F0221 /* PBXContainerItemProxy */;
-		};
 		B135AD111AAC5C2E005EAF8E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B10493861A717BE3001F0221 /* sdk */;
@@ -601,35 +524,6 @@
 			};
 			name = Release;
 		};
-		B1BF4C601A70398E009CEFDC /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"/usr/local/apr/include/apr-2",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/apr/lib,
-				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		B1BF4C611A70398E009CEFDC /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/apr/lib,
-				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
 		B1F0A3411A864FDB00C7E995 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -687,21 +581,13 @@
 				B135AD0F1AAC5853005EAF8E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B1BF4C531A70398E009CEFDC /* Build configuration list for PBXProject "LinuxDrone" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B1BF4C5D1A70398E009CEFDC /* Debug */,
 				B1BF4C5E1A70398E009CEFDC /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		B1BF4C5F1A70398E009CEFDC /* Build configuration list for PBXNativeTarget "LinuxDrone" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B1BF4C601A70398E009CEFDC /* Debug */,
-				B1BF4C611A70398E009CEFDC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

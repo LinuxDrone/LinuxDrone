@@ -73,9 +73,9 @@ int checkin4transmiter(module_t* module, out_object_t* set, void** obj, bool was
  * @return Код ошибки. 0 в случае успеха.
  */
 #ifdef WIN32
-__declspec(dllexport) int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name)
+__declspec(dllexport) int init_object_set(shmem_out_set_t * shmem, const char* instance_name, char* out_name)
 #else
-int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name)
+int init_object_set(shmem_out_set_t * shmem, const char* instance_name, char* out_name)
 #endif
 {
     /*
@@ -338,6 +338,175 @@ remote_queue_t* register_remote_queue(module_t* module, const char* name_remote_
     return new_remote_queue;
 }
 
+int usage(module_t* module, char *argv[])
+{
+    fprintf(stderr, "\nusage: %s [OPTION]...\n\n", argv[0]);
+    
+    fprintf(stderr, "--help\n\tdisplay this help and exit\n\n");
+    
+    fprintf(stderr, "--module-definition\n\tprint JSON module definition\n\n");
+    
+    fprintf(stderr, "--print-params\n\tprint params for module instance\n\n");
+    
+    fprintf(stderr, "--name=NAME\n");
+    fprintf(stderr, "\trequired argument\n");
+    fprintf(stderr, "\tInstance name\n\n");
+    
+    fprintf(stderr, "--port=PORT\n");
+    fprintf(stderr, "\trequired argument\n");
+    fprintf(stderr, "\tListen IP port\n\n");
+    
+    fprintf(stderr, "--rt-priority=PRIORITY\n");
+    fprintf(stderr, "\toptional\n");
+    fprintf(stderr, "\tMain realtime thread priority (1-99, default: 80)\n\n");
+    
+    fprintf(stderr, "--main-task-period=PERIOD\n");
+    fprintf(stderr, "\toptional\n");
+    fprintf(stderr, "\tBusiness function execution period in microseconds (default: 20000)\n\n");
+    
+    fprintf(stderr, "--transfer-task-period=PERIOD\n");
+    fprintf(stderr, "\toptional\n");
+    fprintf(stderr, "\tOutput data to shared memory copy period in microseconds (default: 20000)\n\n");
+    
+    fprintf(stderr, "--in-link=INSTANCE_TRANSMITTER.OBJ_NAME.OUT_NAME->IN_NAME\n");
+    fprintf(stderr, "\toptional\n");
+    fprintf(stderr, "\tInput link (provides data from another instance to this one through shared memory)\n\n");
+    
+    fprintf(stderr, "--out-link=OUT_NAME#INSTANCE_RECEIVER@IN_NAME\n");
+    fprintf(stderr, "\toptional\n");
+    fprintf(stderr, "\tOutput link (provides data from this instance to another one through pipe)\n\n");
+    
+    module->print_help();
+    
+    exit(EXIT_SUCCESS);
+}
+
+
+/**
+ * @brief Возвращает название типа данных порта (входного или выходного), по имени порта
+ * @param port_name
+ * @return 0 в случае успеха
+ */
+int get_porttype_by_portname(module_t* module, const char* port_name, char* port_type_name)
+{
+    char m_format[64] = "\"";
+    strcat(m_format, port_name);
+    strcat(m_format, "\":{");
+    
+    char* f = strstr(module->json_module_definition, m_format);
+    if(f==NULL)
+    {
+        fprintf(stderr, "Function: get_porttype_by_portname. Not found substring: \"%s\" in string: %s\n", m_format, module->json_module_definition);
+    }
+    
+    char* t_find = "\"type\":\"";
+    char* s = strstr(f, t_find);
+    if(f==NULL)
+    {
+        fprintf(stderr, "Function: get_porttype_by_portname. Not found substring: \"%s\" in string: %s\n", t_find, f);
+    }
+    
+    char* s_begin = s + strlen(t_find);
+    //printf("s_begin:=%s\n", s_begin);
+    
+    
+    char* q_find = "\"";
+    char* s_end = strstr(s_begin, q_find);
+    if(f==NULL)
+    {
+        fprintf(stderr, "Function: get_porttype_by_portname. Not found substring: \"%s\" in string: %s\n", q_find, s_begin);
+    }
+    
+    long str_type_len = s_end - s_begin;
+    
+    memcpy(port_type_name, s_begin, str_type_len);
+    port_type_name[str_type_len]=0;
+    
+    //printf("str_port_type=%s\n", port_type_name);
+    
+    return 0;
+}
+
+// Convert argv to structure common_params_t
+int argv2common_params(void* in_module, int argc, char *argv[])
+{
+    module_t* module = in_module;
+    if (!module)
+    {
+        printf("Error: func bson2common_params, NULL parameter\n");
+        return -1;
+    }
+    
+    
+    apr_status_t rv;
+    apr_pool_t *mp;
+    /* API is data structure driven */
+    static const apr_getopt_option_t opt_option[] = {
+        // long-option, short-option, has-arg flag, description
+        { "rt-priority", 'r', TRUE, "realtime thread priority" },
+        { "main-task-period", 'm', TRUE, "main task period" },
+        { "transfer-task-period", 't', TRUE, "transfer task period" },
+        { NULL, 0, 0, NULL }, /* end (a.k.a. sentinel) */
+    };
+    apr_getopt_t *opt;
+    int optch;
+    const char *optarg;
+    
+    apr_pool_create(&mp, NULL);
+    
+    /* initialize apr_getopt_t */
+    apr_getopt_init(&opt, mp, argc, (const char *const *)argv);
+    
+    
+    module->common_params.rt_priority = 80;
+    module->common_params.main_task_period = 20000;
+    module->common_params.transfer_task_period = 20000;
+    
+    opt->errfn = NULL;
+    opt->interleave = true;
+    
+    while ((rv = apr_getopt_long(opt, opt_option, &optch, &optarg)) != APR_EOF) {
+        switch (optch) {
+            case 'r':
+                if (optarg != NULL)
+                {
+                    module->common_params.rt_priority = atoi(optarg);
+                    if (module->common_params.rt_priority < 1 || module->common_params.rt_priority > 99)
+                    {
+                        printf("argument 'priority' valid values in the range 1-99\n\n");
+                        usage(module, argv);
+                    }
+                }
+                break;
+                
+            case 'm':
+                if (optarg != NULL)
+                {
+                    module->common_params.main_task_period = atoll(optarg);
+                    if (module->common_params.main_task_period < 0)
+                    {
+                        printf("argument 'main-task-period' valid values >-1\n\n");
+                        usage(module, argv);
+                    }
+                }
+                break;
+                
+            case 't':
+                if (optarg != NULL)
+                {
+                    module->common_params.transfer_task_period = atoll(optarg);
+                    if (module->common_params.transfer_task_period < 0)
+                    {
+                        printf("argument 'transfer-task-period' valid values >-1\n\n");
+                        usage(module, argv);
+                    }
+                }
+                break;
+        }
+    }
+    return 0;
+}
+
 
 /**
  * @brief init Инициализация инстанса модуля
@@ -370,7 +539,7 @@ int init(module_t* module, int argc, char *argv[])
 	apr_pool_create(&mp, NULL);
 
 	/* initialize apr_getopt_t */
-	apr_getopt_init(&opt, mp, argc, argv);
+	apr_getopt_init(&opt, mp, argc, (const char * const*)argv);
 
 
 	opt->errfn = NULL;
@@ -397,7 +566,7 @@ int init(module_t* module, int argc, char *argv[])
 				// при формировании имен тасков, очередй и пр., необходимых для объетов ксеномая используемых инстансом в работе
 				if (strlen(optarg) > XNOBJECT_NAME_LEN - 5)
 				{
-					fprintf(stderr, "Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", module->instance_name, strlen(module->instance_name), XNOBJECT_NAME_LEN - 5);
+					fprintf(stderr, "Instance name (\"%s\") length (%lu) exceeds the maximum length allowed (%i)\n", module->instance_name, strlen(module->instance_name), XNOBJECT_NAME_LEN - 5);
 					return -1;
 				}
 				module->instance_name = optarg;
@@ -430,7 +599,7 @@ int init(module_t* module, int argc, char *argv[])
 
 				if (strlen(name_remote_instance) > XNOBJECT_NAME_LEN - 5)
 				{
-					fprintf(stderr, "Remote Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", name_remote_instance, strlen(name_remote_instance), XNOBJECT_NAME_LEN - 5);
+					fprintf(stderr, "Remote Instance name (\"%s\") length (%lu) exceeds the maximum length allowed (%i)\n", name_remote_instance, strlen(name_remote_instance), XNOBJECT_NAME_LEN - 5);
 					free(param_val);
 					return -1;
 				}
@@ -442,7 +611,7 @@ int init(module_t* module, int argc, char *argv[])
 				char portType_name[32];
 				get_porttype_by_portname(module, name_out_pin, portType_name);
 				TypeFieldObj port_type = convert_port_type_str2type(portType_name);
-				if (port_type == -1)
+				if (port_type == field_unknown)
 				{
 					fprintf(stderr, "Error convert data type of port \"%s\" from string \"%s\" for instance \"%s\"\n", name_out_pin, portType_name, module->instance_name);
 					free(param_val);
@@ -500,7 +669,7 @@ int init(module_t* module, int argc, char *argv[])
 
 				if (strlen(publisher_instance_name) > XNOBJECT_NAME_LEN - 5)
 				{
-					fprintf(stderr, "Remote Instance name (\"%s\") length (%i) exceeds the maximum length allowed (%i)\n", publisher_instance_name, strlen(publisher_instance_name), XNOBJECT_NAME_LEN - 5);
+					fprintf(stderr, "Remote Instance name (\"%s\") length (%lu) exceeds the maximum length allowed (%i)\n", publisher_instance_name, strlen(publisher_instance_name), XNOBJECT_NAME_LEN - 5);
 					free(param_val);
 					return -1;
 				}
@@ -517,7 +686,7 @@ int init(module_t* module, int argc, char *argv[])
 				TypeFieldObj port_type = convert_port_type_str2type(portType_name);
 
 				//int port_type = get_porttype_by_in_portname(module->json_module_definition, input_pin_name);
-				if (port_type == -1)
+				if (port_type == field_unknown)
 				{
 					fprintf(stderr, "Error convert data type of port \"%s\" from string for instance \"%s\"\n", remote_out_pin_name, module->instance_name);
 					free(param_val);
@@ -590,175 +759,8 @@ int init(module_t* module, int argc, char *argv[])
 }
 
 
-/**
- * @brief Возвращает название типа данных порта (входного или выходного), по имени порта
- * @param port_name
- * @return 0 в случае успеха
- */
-int get_porttype_by_portname(module_t* module, const char* port_name, char* port_type_name)
-{
-    char m_format[64] = "\"";
-    strcat(m_format, port_name);
-    strcat(m_format, "\":{");
-
-    char* f = strstr(module->json_module_definition, m_format);
-    if(f==NULL)
-    {
-        fprintf(stderr, "Function: get_porttype_by_portname. Not found substring: \"%s\" in string: %s\n", m_format, module->json_module_definition);
-    }
-
-    char* t_find = "\"type\":\"";
-    char* s = strstr(f, t_find);
-    if(f==NULL)
-    {
-        fprintf(stderr, "Function: get_porttype_by_portname. Not found substring: \"%s\" in string: %s\n", t_find, f);
-    }
-
-    char* s_begin = s + strlen(t_find);
-    //printf("s_begin:=%s\n", s_begin);
 
 
-    char* q_find = "\"";
-    char* s_end = strstr(s_begin, q_find);
-    if(f==NULL)
-    {
-        fprintf(stderr, "Function: get_porttype_by_portname. Not found substring: \"%s\" in string: %s\n", q_find, s_begin);
-    }
-
-    int str_type_len = s_end - s_begin;
-
-    memcpy(port_type_name, s_begin, str_type_len);
-    port_type_name[str_type_len]=0;
-
-    //printf("str_port_type=%s\n", port_type_name);
-
-    return 0;
-}
-
-
-// Convert argv to structure common_params_t
-int argv2common_params(void* in_module, int argc, char *argv[])
-{
-	module_t* module = in_module;
-	if (!module)
-	{
-		printf("Error: func bson2common_params, NULL parameter\n");
-		return -1;
-	}
-
-
-	apr_status_t rv;
-	apr_pool_t *mp;
-	/* API is data structure driven */
-	static const apr_getopt_option_t opt_option[] = {
-		// long-option, short-option, has-arg flag, description 
-		{ "rt-priority", 'r', TRUE, "realtime thread priority" },
-		{ "main-task-period", 'm', TRUE, "main task period" },
-		{ "transfer-task-period", 't', TRUE, "transfer task period" },
-		{ NULL, 0, 0, NULL }, /* end (a.k.a. sentinel) */
-	};
-	apr_getopt_t *opt;
-	int optch;
-	const char *optarg;
-
-	apr_pool_create(&mp, NULL);
-
-	/* initialize apr_getopt_t */
-	apr_getopt_init(&opt, mp, argc, argv);
-
-
-	module->common_params.rt_priority = 80;
-	module->common_params.main_task_period = 20000;
-	module->common_params.transfer_task_period = 20000;
-
-	opt->errfn = NULL;
-	opt->interleave = true;
-
-	while ((rv = apr_getopt_long(opt, opt_option, &optch, &optarg)) != APR_EOF) {
-		switch (optch) {
-		case 'r':
-			if (optarg != NULL)
-			{
-				module->common_params.rt_priority = atoi(optarg);
-				if (module->common_params.rt_priority < 1 || module->common_params.rt_priority > 99)
-				{
-					printf("argument 'priority' valid values in the range 1-99\n\n");
-					usage(module, argv);
-				}
-			}
-			break;
-
-		case 'm':
-			if (optarg != NULL)
-			{
-				module->common_params.main_task_period = atoll(optarg);
-				if (module->common_params.main_task_period < 0)
-				{
-					printf("argument 'main-task-period' valid values >-1\n\n");
-					usage(module, argv);
-				}
-			}
-			break;
-
-		case 't':
-			if (optarg != NULL)
-			{
-				module->common_params.transfer_task_period = atoll(optarg);
-				if (module->common_params.transfer_task_period < 0)
-				{
-					printf("argument 'transfer-task-period' valid values >-1\n\n");
-					usage(module, argv);
-				}
-			}
-			break;
-		}
-	}
-    return 0;
-}
-
-
-usage(module_t* module, char *argv[])
-{
-    fprintf(stderr, "\nusage: %s [OPTION]...\n\n", argv[0]);
-
-    fprintf(stderr, "--help\n\tdisplay this help and exit\n\n");
-
-    fprintf(stderr, "--module-definition\n\tprint JSON module definition\n\n");
-
-    fprintf(stderr, "--print-params\n\tprint params for module instance\n\n");
-
-    fprintf(stderr, "--name=NAME\n");
-    fprintf(stderr, "\trequired argument\n");
-    fprintf(stderr, "\tInstance name\n\n");
-
-	fprintf(stderr, "--port=PORT\n");
-	fprintf(stderr, "\trequired argument\n");
-	fprintf(stderr, "\tListen IP port\n\n");
-
-    fprintf(stderr, "--rt-priority=PRIORITY\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tMain realtime thread priority (1-99, default: 80)\n\n");
-
-    fprintf(stderr, "--main-task-period=PERIOD\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tBusiness function execution period in microseconds (default: 20000)\n\n");
-
-    fprintf(stderr, "--transfer-task-period=PERIOD\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tOutput data to shared memory copy period in microseconds (default: 20000)\n\n");
-
-    fprintf(stderr, "--in-link=INSTANCE_TRANSMITTER.OBJ_NAME.OUT_NAME->IN_NAME\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tInput link (provides data from another instance to this one through shared memory)\n\n");
-
-	fprintf(stderr, "--out-link=OUT_NAME#INSTANCE_RECEIVER@IN_NAME\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tOutput link (provides data from this instance to another one through pipe)\n\n");
-
-    module->print_help();
-
-    exit(EXIT_SUCCESS);
-}
 
 
 /**
@@ -935,7 +937,7 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
  */
 int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 {
-    void* pval;
+    uintptr_t pval;
     int i;
     for(i=0;i<out_object->out_queue_sets_len;i++)
     {
@@ -970,7 +972,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
                 break;
 
             case field_long:
-                bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, -1, *((long*)pval));
+                bson_append_int32 (bson_obj, remote_obj_field->remote_field_name, -1, *((int32_t*)pval));
                 break;
 
             case field_long_long:
@@ -1002,7 +1004,7 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 //debug_print_bson("send2queues", bson_obj);
 
 		apr_size_t len = bson_obj->len;
-		apr_status_t rv = apr_socket_send(out_queue_set->out_queue->remote_queue, bson_get_data(bson_obj), &len);
+		apr_status_t rv = apr_socket_send(out_queue_set->out_queue->remote_queue, (const char *)bson_get_data(bson_obj), &len);
 		if (rv != APR_SUCCESS) {
 			fprintf(stderr, "Warning: %i rt_queue_write\n", rv);
 			bson_destroy(bson_obj);
@@ -1022,6 +1024,77 @@ int send2queues(out_object_t* out_object, void* data_obj, bson_t* bson_obj)
 
 RTIME time_last_publish_shmem;
 RTIME time_attempt_link_modules;
+
+
+/**
+ * @brief connect_links Устанавливает исходящие соединения посредством очередей
+ * С входными очередями инстансов подписчиков
+ * @param p_module
+ * @return
+ */
+int connect_out_links(void *p_module)
+{
+    module_t* module = p_module;
+    
+    int count_connected = 0, i;
+    for(i=0; i < module->remote_queues_len;i++)
+    {
+        remote_queue_t* info_remote_queue = module->remote_queues[i];
+        
+        if(info_remote_queue->f_queue_connected)
+        {
+            count_connected++;
+            continue;
+        }
+        
+        
+        char* remote_addr = malloc(strlen(info_remote_queue->name_instance) + 1);
+        strcpy(remote_addr, info_remote_queue->name_instance);
+        
+        
+        char* name_remote_host = strtok(remote_addr, PORT_SEPARATOR);
+        //name_out_pin[strlen(name_out_pin) - 1] = 0;
+        //printf("name_out_pin=%s\n", name_out_pin);
+        
+        char* name_remote_port = strtok('\0', "");
+        if (name_remote_port == NULL)
+        {
+            fprintf(stderr, "Need port for remote instance\n");
+            exit(EXIT_FAILURE);
+        }
+        apr_port_t remote_port = atoi(name_remote_port);
+        //printf("name_remote_pin=%s\n", name_remote_pin);
+        
+        
+        apr_status_t rv;
+        apr_sockaddr_t *sa;
+        apr_sockaddr_info_get(&sa, name_remote_host, APR_INET, remote_port, 0, module->mp);
+        apr_socket_create(&info_remote_queue->remote_queue, sa->family, SOCK_DGRAM, APR_PROTO_UDP, module->mp);
+        rv = apr_socket_connect(info_remote_queue->remote_queue, sa);
+        free(remote_addr);
+        
+        if (rv != APR_SUCCESS)
+        {
+            //fprintf(stderr, "Error:%i rt_queue_bind instance=%s to queue %s\n", res, module->instance_name, name_queue);
+            continue;
+        }
+        else
+        {
+            info_remote_queue->f_queue_connected=true;
+            fprintf(stderr, "%sCONNECTED: %s to queue %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_remote_host, ANSI_COLOR_RESET);
+        }
+        
+        count_connected++;
+    }
+    
+    if(count_connected==module->remote_queues_len)
+    {
+        module->f_connected_out_links=true;
+        fprintf(stderr, "%s%s: ALL QUEUES CONNECTED%s\n", ANSI_COLOR_GREEN, module->instance_name, ANSI_COLOR_RESET);
+    }
+    return 0;
+}
+
 
 /**
  * @brief get_input_data Функция получения данных
@@ -1088,7 +1161,7 @@ void get_input_data(module_t *module)
             if (len > 0)
             {
                 buf[len] = '\0';
-                fprintf(stdout, "len=%i str=%s", len, buf);
+                fprintf(stdout, "len=%lu str=%s", len, buf);
                 
             }
         }
@@ -1168,74 +1241,6 @@ debug_print_bson("get_input_data", &bson);
 }
 
 
-/**
- * @brief connect_links Устанавливает исходящие соединения посредством очередей
- * С входными очередями инстансов подписчиков
- * @param p_module
- * @return
- */
-int connect_out_links(void *p_module)
-{
-    module_t* module = p_module;
-
-    int count_connected = 0, i;
-    for(i=0; i < module->remote_queues_len;i++)
-    {
-        remote_queue_t* info_remote_queue = module->remote_queues[i];
-
-        if(info_remote_queue->f_queue_connected)
-        {
-            count_connected++;
-            continue;
-        }
-
-
-		char* remote_addr = malloc(strlen(info_remote_queue->name_instance) + 1);
-		strcpy(remote_addr, info_remote_queue->name_instance);
-
-
-		char* name_remote_host = strtok(remote_addr, PORT_SEPARATOR);
-		//name_out_pin[strlen(name_out_pin) - 1] = 0;
-		//printf("name_out_pin=%s\n", name_out_pin);
-
-		char* name_remote_port = strtok('\0', "");
-		if (name_remote_port == NULL)
-		{
-			fprintf(stderr, "Need port for remote instance\n");
-			exit(EXIT_FAILURE);
-		}
-		apr_port_t remote_port = atoi(name_remote_port);
-		//printf("name_remote_pin=%s\n", name_remote_pin);
-
-
-		apr_status_t rv;
-		apr_sockaddr_t *sa;
-		apr_sockaddr_info_get(&sa, name_remote_host, APR_INET, remote_port, 0, module->mp);
-		apr_socket_create(&info_remote_queue->remote_queue, sa->family, SOCK_DGRAM, APR_PROTO_UDP, module->mp);
-		rv = apr_socket_connect(info_remote_queue->remote_queue, sa);
-		free(remote_addr);
-
-		if (rv != APR_SUCCESS) 
-        {
-            //fprintf(stderr, "Error:%i rt_queue_bind instance=%s to queue %s\n", res, module->instance_name, name_queue);
-            continue;
-        }
-        else
-        {
-            info_remote_queue->f_queue_connected=true;
-			fprintf(stderr, "%sCONNECTED: %s to queue %s%s\n", ANSI_COLOR_YELLOW, module->instance_name, name_remote_host, ANSI_COLOR_RESET);
-        }
-
-        count_connected++;
-    }
-
-    if(count_connected==module->remote_queues_len)
-    {
-        module->f_connected_out_links=true;
-        fprintf(stderr, "%s%s: ALL QUEUES CONNECTED%s\n", ANSI_COLOR_GREEN, module->instance_name, ANSI_COLOR_RESET);
-    }
-    return 0;
-}
 
 
 /**
@@ -1414,7 +1419,7 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
                 bson_init (&bson_tr);
                 // Call user convert function
                 (*out_object->obj2bson)(obj, &bson_tr);
-                write_shmem(&out_object->shmem_set, bson_get_data(&bson_tr), bson_tr.len);
+                write_shmem(&out_object->shmem_set, (const char*)bson_get_data(&bson_tr), bson_tr.len);
                 bson_destroy(&bson_tr);
 
                 // Вернуть объект основному потоку на новое заполнение
@@ -1426,6 +1431,70 @@ int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_qu
     if(time2publish2shmem)
         *time_last_publish_shmem= apr_time_now();
 
+    return 0;
+}
+
+
+int create_xenomai_services(module_t* module)
+{
+    if (listen_port == 0)
+    {
+        fprintf(stderr, "need --port param\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    apr_status_t rv;
+    apr_sockaddr_t *sa;
+    
+    rv = apr_sockaddr_info_get(&sa, NULL, APR_INET, listen_port, 0, module->mp);
+    if (rv != APR_SUCCESS) {
+        return rv;
+    }
+    
+    
+    if(module->input_data)
+    {
+        rv = apr_socket_create(&module->in_socket, sa->family, SOCK_DGRAM, APR_PROTO_UDP, module->mp);
+        if (rv != APR_SUCCESS) {
+            return rv;
+        }
+        
+        apr_socket_timeout_set(module->in_socket, module->common_params.main_task_period);
+        
+        rv = apr_socket_bind(module->in_socket, sa);
+        if (rv != APR_SUCCESS) {
+            return rv;
+        }
+    }
+    
+    
+    if (module->out_objects)
+    {
+        // В принципе есть выходы у модуля
+        apr_pollset_create(&module->pollset, DEF_POLLSET_NUM, module->mp, 0);
+        
+        rv = apr_socket_create(&module->tcp_socket, sa->family, SOCK_STREAM, APR_PROTO_TCP, module->mp);
+        if (rv != APR_SUCCESS) {
+            return rv;
+        }
+        
+        /* non-blocking socket */
+        apr_socket_opt_set(module->tcp_socket, APR_SO_NONBLOCK, 1);
+        apr_socket_timeout_set(module->tcp_socket, 0);
+        apr_socket_opt_set(module->tcp_socket, APR_SO_REUSEADDR, 1);/* this is useful for a server(socket listening) process */
+        
+        rv = apr_socket_bind(module->tcp_socket, sa);
+        if (rv != APR_SUCCESS) {
+            fprintf(stderr, "error: apr_socket_bind\n");
+            return rv;
+        }
+        rv = apr_socket_listen(module->tcp_socket, SOMAXCONN);
+        if (rv != APR_SUCCESS) {
+            fprintf(stderr, "error: apr_socket_listen\n");
+            return rv;
+        }
+    }
+    
     return 0;
 }
 
@@ -1496,68 +1565,6 @@ int stop(void* p_module)
 }
 
 
-int create_xenomai_services(module_t* module)
-{
-	if (listen_port == 0)
-	{
-		fprintf(stderr, "need --port param\n");
-		exit(EXIT_FAILURE);
-	}
-
-	apr_status_t rv;
-	apr_sockaddr_t *sa;
-
-	rv = apr_sockaddr_info_get(&sa, NULL, APR_INET, listen_port, 0, module->mp);
-	if (rv != APR_SUCCESS) {
-		return rv;
-	}
-
-
-    if(module->input_data)
-    {
-        rv = apr_socket_create(&module->in_socket, sa->family, SOCK_DGRAM, APR_PROTO_UDP, module->mp);
-        if (rv != APR_SUCCESS) {
-            return rv;
-        }
-        
-		apr_socket_timeout_set(module->in_socket, module->common_params.main_task_period);
-        
-		rv = apr_socket_bind(module->in_socket, sa);
-        if (rv != APR_SUCCESS) {
-            return rv;
-        }
-    }
-
-
-	if (module->out_objects)
-	{
-        // В принципе есть выходы у модуля
-        apr_pollset_create(&module->pollset, DEF_POLLSET_NUM, module->mp, 0);
-        
-		rv = apr_socket_create(&module->tcp_socket, sa->family, SOCK_STREAM, APR_PROTO_TCP, module->mp);
-		if (rv != APR_SUCCESS) {
-			return rv;
-		}
-        
-        /* non-blocking socket */
-		apr_socket_opt_set(module->tcp_socket, APR_SO_NONBLOCK, 1);
-		apr_socket_timeout_set(module->tcp_socket, 0);
-		apr_socket_opt_set(module->tcp_socket, APR_SO_REUSEADDR, 1);/* this is useful for a server(socket listening) process */
-
-		rv = apr_socket_bind(module->tcp_socket, sa);
-		if (rv != APR_SUCCESS) {
-            fprintf(stderr, "error: apr_socket_bind\n");
-			return rv;
-		}
-		rv = apr_socket_listen(module->tcp_socket, SOMAXCONN);
-		if (rv != APR_SUCCESS) {
-            fprintf(stderr, "error: apr_socket_listen\n");
-			return rv;
-		}
-	}
-
-    return 0;
-}
 
 
 /**
@@ -1571,7 +1578,7 @@ int create_xenomai_services(module_t* module)
 #ifdef WIN32
 __declspec(dllexport) int checkout4writer(module_t* module, out_object_t* set, void** obj)
 #else
-checkout4writer(module_t* module, out_object_t* set, void** obj)
+int checkout4writer(module_t* module, out_object_t* set, void** obj)
 #endif
 {
 	(*obj)=set->obj1;

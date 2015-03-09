@@ -95,7 +95,8 @@ typedef enum {
     field_float,
     field_double,
     field_const_char,
-    field_bool
+    field_bool,
+    field_unknown
 } TypeFieldObj;
 
 // Тип функции конвертирующей данные структуры в BSON объект
@@ -244,7 +245,7 @@ typedef struct {
      * @brief
      * \~russian Смещение данных в структуре объекта источника
      */
-    unsigned short offset_field_obj;
+    uintptr_t offset_field_obj;
 
     /**
      * @brief
@@ -644,7 +645,7 @@ __declspec(dllexport) int stop(void* module);
 __declspec(dllexport) void get_input_data(module_t *module);
 #else
 int init(module_t* module, int argc, char *argv[]);
-int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name);
+int init_object_set(shmem_out_set_t * shmem, const char* instance_name, char* out_name);
 int start(void* module);
 int stop(void* module);
 void get_input_data(module_t *module);
@@ -682,6 +683,8 @@ void print_rt_mutex_bind_error(int err);
 void print_rt_mutex_acquire(int err);
 
 void debug_print_bson(char* where, bson_t* bson);
+    
+TypeFieldObj convert_port_type_str2type(const char* str_type);
 
 #ifdef __cplusplus
 }
