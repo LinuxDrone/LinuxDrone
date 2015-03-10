@@ -148,7 +148,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
             case "double":
                 r += "            if(BSON_ITER_HOLDS_DOUBLE(&iter))\n";
                 r += "            {\n";
-                r += "                obj->" + propName + " = bson_iter_double(&iter);\n";
+                r += "                obj->" + propName + " = ("+properties[key].type+")bson_iter_double(&iter);\n";
                 r += "            }\nelse ";
 
             case "char":
@@ -158,11 +158,11 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
             case "long long":
                 r += "            if(BSON_ITER_HOLDS_INT32(&iter))\n";
                 r += "            {\n";
-                r += "                obj->" + propName + " = bson_iter_int32(&iter);\n";
+                r += "                obj->" + propName + " = ("+properties[key].type+")bson_iter_int32(&iter);\n";
                 r += "            }\n";
                 r += "            else if(BSON_ITER_HOLDS_INT64(&iter))\n";
                 r += "            {\n";
-                r += "                obj->" + propName + " = bson_iter_int64(&iter);\n";
+                r += "                obj->" + propName + " = ("+properties[key].type+")bson_iter_int64(&iter);\n";
                 r += "            }\n";
                 r += "            else\n";
                 r += "            {\n";
@@ -320,7 +320,8 @@ function make_argv2Structure(properties, module_type) {
         switch (properties[key].type) {
             case "float":
             case "double":
-                r += "                    obj->" + propName + " = atof(optarg);\n";
+                r += "                    obj->" + propName + " = ("+properties[key].type+")atof(optarg);\n";
+                break;
 
             case "char":
             case "short":
@@ -589,7 +590,7 @@ function Create_C_file(module) {
     if (module.outputs) {
         r += "// Возвращает указатель на структуру выходного объекта, по имени пина\n";
         r += "// Используется при подготовке списка полей, для мапинга объектов (для передачи в очередь)\n";
-        r += "out_object_t* get_outobject_by_outpin(module_" + module_type + "_t* module, char* name_out_pin, unsigned short* offset_field, unsigned short* index_port)\n";
+        r += "out_object_t* get_outobject_by_outpin(module_" + module_type + "_t* module, char* name_out_pin, uintptr_t* offset_field, unsigned short* index_port)\n";
         r += "{\n";
         r += "    (*offset_field) = 0;\n";
         r += "    (*index_port) = 0;\n";

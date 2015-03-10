@@ -7,7 +7,7 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
 	long last_print_time = rt_timer_read();
 	long print_period = rt_timer_ns2ticks(1000000000);
 #else
-	long last_print_time = apr_time_now();
+	apr_time_t last_print_time = apr_time_now();
 	long print_period = 1000000;
 #endif
 	
@@ -59,7 +59,7 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
 
         Output2_t* objOutput2;
         checkout_Output2(module, &objOutput2);
-        objOutput2->out3 = cycle;
+        objOutput2->out3 = (float)cycle;
         
 printf("objOutput2->out3 = %f\n", objOutput2->out3);
         

@@ -94,7 +94,7 @@ function make_Bson2Structure(properties) {
             case "double":
                 r += "            if(BSON_ITER_HOLDS_DOUBLE(&iter))\n";
                 r += "            {\n";
-                r += "                module->common_params." + propName + " = bson_iter_double(&iter);\n";
+                r += "                module->common_params." + propName + " = ("+properties[key].type+")bson_iter_double(&iter);\n";
                 r += "            }\nelse ";
 
             case "char":
@@ -104,11 +104,11 @@ function make_Bson2Structure(properties) {
             case "long long":
                 r += "            if(BSON_ITER_HOLDS_INT32(&iter))\n";
                 r += "            {\n";
-                r += "                module->common_params." + propName + " = bson_iter_int32(&iter);\n";
+                r += "                module->common_params." + propName + " = ("+properties[key].type+")bson_iter_int32(&iter);\n";
                 r += "            }\n";
                 r += "            else if(BSON_ITER_HOLDS_INT64(&iter))\n";
                 r += "            {\n";
-                r += "                module->common_params." + propName + " = bson_iter_int64(&iter);\n";
+                r += "                module->common_params." + propName + " = ("+properties[key].type+")bson_iter_int64(&iter);\n";
                 r += "            }\n";
                 r += "            else\n";
                 r += "            {\n";

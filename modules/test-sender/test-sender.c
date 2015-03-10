@@ -28,7 +28,7 @@ void test_sender_run (module_test_sender_t *module)
         objOutput1->int_out = cycle;
         objOutput1->long_out = cycle;
         objOutput1->long_long_out = cycle;
-        objOutput1->float_out = cycle * 0.11;
+        objOutput1->float_out = (float)(cycle * 0.11);
         objOutput1->double_out = cycle * 0.23;
         char buffer_string_out [32];
         //snprintf(buffer_string_out, 32, "data: %i", cycle);

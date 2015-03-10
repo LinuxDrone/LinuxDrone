@@ -379,7 +379,7 @@ int get_porttype_by_portname(module_t* module, const char* port_name, char* port
         fprintf(stderr, "Function: get_porttype_by_portname. Not found substring: \"%s\" in string: %s\n", q_find, s_begin);
     }
     
-    long str_type_len = s_end - s_begin;
+	uintptr_t str_type_len = s_end - s_begin;
     
     memcpy(port_type_name, s_begin, str_type_len);
     port_type_name[str_type_len]=0;
@@ -1058,6 +1058,63 @@ int connect_out_links(void *p_module)
 }
 
 
+int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_queue)
+{
+	void* obj;
+	bson_t bson_tr;
+
+	int i = 0;
+	out_object_t* out_object = module->out_objects[i];
+	bool time2publish2shmem = (apr_time_now() - *time_last_publish_shmem) > module->common_params.transfer_task_period;
+	if (!time2publish2shmem && !to_queue)
+		return 0;
+
+	while (out_object)
+	{
+
+		//fprintf(stderr, "outside=%i bool=%i\n",i,time2publish2shmem);
+		// Нашли обновившийся в основном потоке объект
+		// Пуш в очереди подписчиков
+		if (to_queue)
+		{
+			checkout4transmiter(module, out_object, &obj, true);
+			if (obj != NULL)
+			{
+				send2queues(out_object, obj, &bson_tr);
+				//fprintf(stderr, "send2queues\t");
+				//(*out_object->print_obj)(obj);
+				checkin4transmiter(module, out_object, &obj, true);
+			}
+		}
+
+		/*
+		// Публикация данных в разделяемую память, не чаще чем в оговоренный период
+		if(time2publish2shmem)
+		{
+		checkout4transmiter(module, out_object, &obj, false);
+		if(obj!=NULL)
+		{
+		bson_init (&bson_tr);
+		// Call user convert function
+		(*out_object->obj2bson)(obj, &bson_tr);
+		write_shmem(&out_object->shmem_set, (const char*)bson_get_data(&bson_tr), bson_tr.len);
+		bson_destroy(&bson_tr);
+
+		// Вернуть объект основному потоку на новое заполнение
+		checkin4transmiter(module, out_object, &obj, false);
+		}
+		}
+		*/
+
+		out_object = module->out_objects[++i];
+	}
+	if (time2publish2shmem)
+		*time_last_publish_shmem = apr_time_now();
+
+	return 0;
+}
+
+
 /**
  * @brief get_input_data Функция получения данных
  * Должна вызываться из бизнес функции модуля. Доставляет данные из входной очереди и из шаред мемори инстансов поставщиков
@@ -1335,61 +1392,6 @@ int disconnect_in_links(shmem_in_set_t* remote_shmem)
 }
 
 
-int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_queue)
-{
-    void* obj;
-    bson_t bson_tr;
-
-    int i=0;
-    out_object_t* out_object = module->out_objects[i];
-    bool time2publish2shmem = ( apr_time_now() - *time_last_publish_shmem) > module->common_params.transfer_task_period;
-	if(!time2publish2shmem && !to_queue)
-		return 0;
-
-    while(out_object)
-    {
-
-        //fprintf(stderr, "outside=%i bool=%i\n",i,time2publish2shmem);
-        // Нашли обновившийся в основном потоке объект
-        // Пуш в очереди подписчиков
-        if(to_queue)
-        {
-            checkout4transmiter(module, out_object, &obj, true);
-            if(obj!=NULL)
-            {
-                send2queues(out_object, obj, &bson_tr);
-                //fprintf(stderr, "send2queues\t");
-                //(*out_object->print_obj)(obj);
-                checkin4transmiter(module, out_object, &obj, true);
-            }
-        }
-
-        /*
-        // Публикация данных в разделяемую память, не чаще чем в оговоренный период
-        if(time2publish2shmem)
-        {
-            checkout4transmiter(module, out_object, &obj, false);
-            if(obj!=NULL)
-            {
-                bson_init (&bson_tr);
-                // Call user convert function
-                (*out_object->obj2bson)(obj, &bson_tr);
-                write_shmem(&out_object->shmem_set, (const char*)bson_get_data(&bson_tr), bson_tr.len);
-                bson_destroy(&bson_tr);
-
-                // Вернуть объект основному потоку на новое заполнение
-                checkin4transmiter(module, out_object, &obj, false);
-            }
-        }
-         */
-        
-        out_object = module->out_objects[++i];
-    }
-    if(time2publish2shmem)
-        *time_last_publish_shmem= apr_time_now();
-
-    return 0;
-}
 
 
 int create_xenomai_services(module_t* module)
