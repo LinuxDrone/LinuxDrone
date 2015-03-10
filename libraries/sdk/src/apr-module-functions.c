@@ -193,8 +193,8 @@ shmem_in_set_t* register_remote_shmem(module_t *module, ar_remote_shmems_t* ar_r
     }
     /* it is a good idea to specify socket options explicitly.
      * in this case, we make a blocking socket with timeout. */
-//    apr_socket_opt_set(new_remote_shmem->socket, APR_SO_NONBLOCK, 0);
-//    apr_socket_timeout_set(new_remote_shmem->socket, -1);
+    apr_socket_opt_set(new_remote_shmem->socket, APR_SO_NONBLOCK, 0);
+    apr_socket_timeout_set(new_remote_shmem->socket, 1000000);
 
 
     ar_remote_shmems->remote_shmems[ar_remote_shmems->remote_shmems_len-1] = new_remote_shmem;
@@ -777,7 +777,7 @@ void write_shmem(const char* data, unsigned short datalen)
 }
 
 
-void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datalen)
+void read_shmem(shmem_in_set_t* remote_shmem, void* data, apr_size_t* datalen)
 {
 	if (!remote_shmem->f_socket_connected)
     {
@@ -785,6 +785,15 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datale
         return;
     }
 
+	apr_status_t rv;
+	apr_size_t len = strlen(remote_shmem->name_outgroup);
+	rv = apr_socket_send(remote_shmem->socket, remote_shmem->name_outgroup, &len); // Посылаем в качестве запроса имя выходного объекта
+
+
+	rv = apr_socket_recv(remote_shmem->socket, data, datalen);
+	if (rv == APR_EOF || datalen == 0) {
+		return rv;
+	}
 
 
 	//memcpy(data, shmem->shmem + sizeof(unsigned short), buflen);
@@ -1018,7 +1027,7 @@ void get_input_data(module_t *module)
     rv = apr_pollset_poll(module->pollset, 0, &num, &ret_pfd);
     if (rv == APR_SUCCESS) {
         int i;
-        assert(num > 0);
+        //assert(num > 0);
         /* scan the active sockets */
         for (i = 0; i < num; i++)
         {
@@ -1030,7 +1039,7 @@ void get_input_data(module_t *module)
                     buf[len-1] = '\0';
                 }else
                     buf[len] = '\0';
-                fprintf(stdout, "len=%lu str=%s", len, buf);
+                fprintf(stdout, "len=%lu str=%s\n", len, buf);
                 
                 
                 void* obj;
@@ -1169,8 +1178,8 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
             }
             
             /* see the tutorial about the reason why we have to specify options again */
-//            apr_socket_opt_set(remote_shmem->socket, APR_SO_NONBLOCK, 0);
-//            apr_socket_timeout_set(remote_shmem->socket, 1000);
+            apr_socket_opt_set(remote_shmem->socket, APR_SO_NONBLOCK, 0);
+            apr_socket_timeout_set(remote_shmem->socket, 1000000);
             
 
             fprintf(stderr, "%sCONNECTED: %s to socket %s%s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, remote_shmem->name_outgroup, ANSI_COLOR_RESET);
@@ -1466,6 +1475,7 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
     return 0;
 }
 
+#define BUFSIZE 4096
 
 /**
  * @brief refresh_input
@@ -1484,7 +1494,7 @@ int refresh_input(void* p_module)
 
     //TODO: Определить размер буфера где нибудь в настройках
     // и вынести в структуру
-    char buf[500];
+	char buf[BUFSIZE];
 
     // Бежим по всем входящим связям типа разделяемой памяти и если какая то из них
     // ассоциирована с требуемыми для обновления входами, произведем чтение объекта из разделяемой памяти и мапинг свойств
@@ -1494,8 +1504,8 @@ int refresh_input(void* p_module)
         shmem_in_set_t* remote_shmem = module->ar_remote_shmems.remote_shmems[i];
         if(remote_shmem->assigned_input_ports_mask & module->refresh_input_mask)
         {
-            unsigned short retlen;
-            retlen=0;
+			apr_size_t retlen;
+			retlen = BUFSIZE;
             read_shmem(remote_shmem, buf, &retlen);
             //fprintf(stderr, "retlen=%i\n", retlen);
             bson_t bson;

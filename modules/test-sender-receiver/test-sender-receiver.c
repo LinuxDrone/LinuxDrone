@@ -49,7 +49,7 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
 
         input_t* input = (input_t*)module->module_info.input_data;
 
-//printf("input->in1 = %f\n", input->in1);
+printf("input->in1 = %f\n", input->in2);
 
         Output1_t* objOutput1;
         checkout_Output1(module, &objOutput1);
@@ -61,7 +61,7 @@ void test_sender_receiver_run (module_test_sender_receiver_t *module)
         checkout_Output2(module, &objOutput2);
         objOutput2->out3 = cycle;
         
-printf("objOutput2->out3 = %f\n", objOutput2->out3);
+//printf("objOutput2->out3 = %f\n", objOutput2->out3);
         
         checkin_Output2(module, &objOutput2);
 
