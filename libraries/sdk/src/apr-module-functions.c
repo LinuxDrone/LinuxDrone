@@ -779,114 +779,17 @@ void write_shmem(const char* data, unsigned short datalen)
 
 void read_shmem(shmem_in_set_t* remote_shmem, void* data, unsigned short* datalen)
 {
-    /*
-    if(!remote_shmem->f_event_connected || !remote_shmem->f_mutex_connected || !remote_shmem->f_shmem_connected)
+	if (!remote_shmem->f_socket_connected)
     {
         *datalen = 0;
         return;
     }
 
-    shmem_out_set_t* shmem = &remote_shmem->remote_shmem;
-
-    unsigned long after_mask;
-
-     // \~russian Подождем, если пишущий поток выставил флаг, что он занят записью
-
-    int res = rt_event_wait(&shmem->eflags, ~SHMEM_WRITER_MASK, &after_mask, EV_ALL, TM_INFINITE);
-    if (res != 0) {
-        fprintf(stderr, "error read_shmem: rt_event_wait\n");
-        print_event_wait_error(res);
-        return;
-    }
 
 
-     // Залочим мьютекс
-    res = rt_mutex_acquire(&shmem->mutex_read_shmem, TM_INFINITE);
-    if (res != 0)
-    {
-        fprintf(stderr, "error read_shmem: rt_mutex_acquire1\n");
-        return;
-    }
+	//memcpy(data, shmem->shmem + sizeof(unsigned short), buflen);
 
-
-     // Считываем показания счетчика (младших битов флагов)
-    RT_EVENT_INFO info;
-    res = rt_event_inquire(&shmem->eflags, &info);
-    if (res != 0) {
-        fprintf(stderr, "error read_shmem: rt_event_inquire1\n");
-        return;
-    }
-    //fprintf(stderr, "read raw mask = 0x%08X\n", info.value);
-
-    // инкрементируем показания счетчика
-    unsigned long count = (~(info.value & SHMEM_WRITER_MASK)) & SHMEM_WRITER_MASK;
-    //fprintf(stderr, "masked raw mask = 0x%08X\n", count);
-    if (count == 0)
-        count = 1;
-    else
-        count = count << 1;
-
-    //fprintf(stderr, "clear mask = 0x%08X\n", count);
-
-    // Сбросим флаги в соответствии со значением счетчика
-    res = rt_event_clear(&shmem->eflags, count, &after_mask);
-    if (res != 0) {
-        fprintf(stderr, "error read_shmem: rt_event_clear\n");
-        return;
-    }
-
-    res = rt_mutex_release(&shmem->mutex_read_shmem);
-    if (res != 0) {
-        fprintf(stderr, "error read_shmem:  rt_mutex_release1\n");
-        return;
-    }
-
-    // из первых двух байт считываем блину последующего блока
-    unsigned short buflen = *((unsigned short*) shmem->shmem);
-    //fprintf(stderr, "buflen read_shmem: %i\n", buflen);
-
-    if (buflen != 0) {
-        // со смещением в два байта читаем следующий блок данных
-        memcpy(data, shmem->shmem + sizeof(unsigned short), buflen);
-    }
-    *datalen = buflen;
-
-
-     // Залочим мьютекс
-    res = rt_mutex_acquire(&shmem->mutex_read_shmem, TM_INFINITE);
-    if (res != 0) {
-        fprintf(stderr, "error read_shmem: rt_mutex_acquire2\n");
-        return;
-    }
-
-
-     // Считываем показания счетчика (младших битов флагов)
-    res = rt_event_inquire(&shmem->eflags, &info);
-    if (res != 0) {
-        fprintf(stderr, "error read_shmem: rt_event_inquire1\n");
-        return;
-    }
-    // декрементируем показания счетчика
-    count = (~(info.value & SHMEM_WRITER_MASK));
-
-    count = count ^ (count >> 1);
-
-    //fprintf(stderr, "set mask = 0x%08X\n", count);
-
-    // Установим флаги в соответствии со значением счетчика
-    res = rt_event_signal(&shmem->eflags, count);
-    if (res != 0) {
-        fprintf(stderr, "error read_shmem: rt_event_signal\n");
-        return;
-    }
-
-    res = rt_mutex_release(&shmem->mutex_read_shmem);
-    if (res != 0)
-    {
-        fprintf(stderr, "error read_shmem:  rt_mutex_release2\n");
-        return;
-    }
-     */
+    //*datalen = buflen;
 }
 
 
@@ -1193,7 +1096,7 @@ void get_input_data(module_t *module)
                 out_object_t* out_object = module->out_objects[i_obj];
                 while(out_object)
                 {
-                    if(strcmp(out_object->out_name, (const char*)buf)!=0)
+                    if(strcmp(out_object->out_name, (const char*)buf)!=0) // Если имя выходного объекта совпадает с именем присланным в запросе
                     {
                         out_object = module->out_objects[++i_obj];
                         continue;
@@ -1574,9 +1477,8 @@ int checkin4writer(module_t* module, out_object_t* set, void** obj)
  */
 int refresh_input(void* p_module)
 {
-    /*
     module_t* module = p_module;
-    void* pval;
+	uintptr_t pval;
 
     // биты не установлены, обновления данных не требуется
     if(module->refresh_input_mask == 0)
@@ -1608,8 +1510,7 @@ int refresh_input(void* p_module)
                 {
                     remote_in_obj_field_t* remote_in_obj_field = remote_shmem->remote_in_obj_fields[f];
 
-
-                    pval = module->input_data + remote_in_obj_field->offset_field_obj;
+					pval = (uintptr_t)module->input_data + (uintptr_t)remote_in_obj_field->offset_field_obj;
 
                     bson_iter_t iter;
                     if (!bson_iter_init_find(&iter, &bson, remote_in_obj_field->remote_field_name)) {
@@ -1709,9 +1610,8 @@ int refresh_input(void* p_module)
 
     // перед выходом обнулить биты. они отработаны
     module->refresh_input_mask = 0;
-     */
+
     return 0;
-     
 }
 
 
