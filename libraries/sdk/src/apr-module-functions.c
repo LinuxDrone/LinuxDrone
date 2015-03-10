@@ -792,7 +792,7 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, apr_size_t* datalen)
 
 	rv = apr_socket_recv(remote_shmem->socket, data, datalen);
 	if (rv == APR_EOF || datalen == 0) {
-		return rv;
+		return;
 	}
 
 
@@ -1510,7 +1510,7 @@ int refresh_input(void* p_module)
             //fprintf(stderr, "retlen=%i\n", retlen);
             bson_t bson;
             if (retlen > 0) {
-                bson_init_static(&bson, buf, retlen);
+                bson_init_static(&bson, (const uint8_t*)buf, (uint32_t)retlen);
                 //debug_print_bson("Receive from shared memory", &bson);
 
                 int f;
@@ -1526,7 +1526,6 @@ int refresh_input(void* p_module)
                         return -1;
                     }
 
-                    uint32_t length;
                     switch (remote_in_obj_field->type_field_obj)
                     {
                     case field_char:
