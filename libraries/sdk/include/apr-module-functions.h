@@ -610,7 +610,6 @@ typedef void (*delete_f)(module_t*);
 
 #ifdef WIN32
 __declspec(dllexport) int init(module_t* module, int argc, char *argv[]);
-__declspec(dllexport) int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name);
 __declspec(dllexport) int start(void* module);
 __declspec(dllexport) int stop(void* module);
 __declspec(dllexport) void get_input_data(module_t *module);
