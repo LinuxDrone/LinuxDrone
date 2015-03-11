@@ -6,6 +6,7 @@
   */
 
 #include <stdio.h>
+#include <locale.h>
 #include <apr_getopt.h>
 
 #define INSTANCE_SEPARATOR "#"
@@ -481,6 +482,8 @@ int argv2common_params(void* in_module, int argc, char *argv[])
  */
 int init(module_t* module, int argc, char *argv[])
 {
+	setlocale(LC_ALL, "ru-RU");
+
 	apr_status_t rv;
 	apr_pool_t *mp;
 	/* API is data structure driven */
@@ -717,6 +720,8 @@ int init(module_t* module, int argc, char *argv[])
 		print_common_params(&module->common_params);
 		(*module->print_params)(module->specific_params);
 	}
+
+	
 
     return 0;
 }
