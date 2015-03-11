@@ -21,6 +21,8 @@
 #define SHMEM_HEAP_SIZE		300
 #define SHMEM_BLOCK1_SIZE	200
 
+#define CLIENT_TCP_SOCKET_TIMEOUT 100000 // Таймаут операций клиенского TCP сокета в микросекундах
+
 
 /* listen port number */
 int listen_port = 0;
@@ -179,7 +181,6 @@ shmem_in_set_t* register_remote_shmem(module_t *module, ar_remote_shmems_t* ar_r
     }
     apr_port_t remote_port = atoi(name_remote_port);
     
-    
     apr_status_t rv;
     rv = apr_sockaddr_info_get(&new_remote_shmem->sockaddr, name_remote_host, APR_INET, remote_port, 0, module->mp);
     if (rv != APR_SUCCESS) {
@@ -194,7 +195,7 @@ shmem_in_set_t* register_remote_shmem(module_t *module, ar_remote_shmems_t* ar_r
     /* it is a good idea to specify socket options explicitly.
      * in this case, we make a blocking socket with timeout. */
     apr_socket_opt_set(new_remote_shmem->socket, APR_SO_NONBLOCK, 0);
-    apr_socket_timeout_set(new_remote_shmem->socket, 1000000);
+	apr_socket_timeout_set(new_remote_shmem->socket, CLIENT_TCP_SOCKET_TIMEOUT);
 
 
     ar_remote_shmems->remote_shmems[ar_remote_shmems->remote_shmems_len-1] = new_remote_shmem;
@@ -789,16 +790,15 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, apr_size_t* datalen)
 	apr_size_t len = strlen(remote_shmem->name_outgroup);
 	rv = apr_socket_send(remote_shmem->socket, remote_shmem->name_outgroup, &len); // Посылаем в качестве запроса имя выходного объекта
 
-
 	rv = apr_socket_recv(remote_shmem->socket, data, datalen);
-	if (rv == APR_EOF || datalen == 0) {
+	if (rv == APR_EOF || *datalen == 0) {
+		char buf_err[250];
+		apr_strerror(rv, buf_err,	250);
+		fprintf(stderr, buf_err);
+
+		*datalen = 0;
 		return;
 	}
-
-
-	//memcpy(data, shmem->shmem + sizeof(unsigned short), buflen);
-
-    //*datalen = buflen;
 }
 
 
@@ -1172,20 +1172,25 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
         if(!remote_shmem->f_socket_connected)
         {
             apr_status_t rv = apr_socket_connect(remote_shmem->socket, remote_shmem->sockaddr);
-            if (rv != APR_SUCCESS) {
-                fprintf(stderr, "error: apr_socket_connect addr:%s\n", remote_shmem->name_instance);
-                return rv;
+            if (rv == APR_SUCCESS) 
+			{
+				/* see the tutorial about the reason why we have to specify options again */
+				//apr_socket_opt_set(remote_shmem->socket, APR_SO_NONBLOCK, 0);
+				//apr_socket_timeout_set(remote_shmem->socket, CLIENT_TCP_SOCKET_TIMEOUT);
+
+				fprintf(stderr, "%sCONNECTED: %s to socket %s%s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, remote_shmem->name_outgroup, ANSI_COLOR_RESET);
+				remote_shmem->f_socket_connected = true;
             }
-            
-            /* see the tutorial about the reason why we have to specify options again */
-            apr_socket_opt_set(remote_shmem->socket, APR_SO_NONBLOCK, 0);
-            apr_socket_timeout_set(remote_shmem->socket, 1000000);
-            
-
-            fprintf(stderr, "%sCONNECTED: %s to socket %s%s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, remote_shmem->name_outgroup, ANSI_COLOR_RESET);
-            remote_shmem->f_socket_connected = true;
+			else
+			{
+				//fprintf(stderr, "error: apr_socket_connect addr:%s\n", remote_shmem->name_instance);
+				char buf_err[250];
+				apr_strerror(rv, buf_err, 250);
+				fprintf(stderr, buf_err);
+				
+				continue;
+			}
         }
-
         count_connected++;
     }
 
@@ -1196,7 +1201,6 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
     }
 
     return 0;
-     
 }
 
 
@@ -1509,7 +1513,8 @@ int refresh_input(void* p_module)
             read_shmem(remote_shmem, buf, &retlen);
             //fprintf(stderr, "retlen=%i\n", retlen);
             bson_t bson;
-            if (retlen > 0) {
+            if (retlen > 0) 
+			{
                 bson_init_static(&bson, (const uint8_t*)buf, (uint32_t)retlen);
                 //debug_print_bson("Receive from shared memory", &bson);
 
@@ -1612,6 +1617,27 @@ int refresh_input(void* p_module)
                 //(*module->print_input)(module->input_data);
                 bson_destroy(&bson);
             }
+			else
+			{
+				// Разрыв соединения сокета.
+				// Закроем сокет и вновь создадим его, т.к. ссылка на сокет после закрытия обнуляется
+				apr_socket_close(remote_shmem->socket);
+
+				apr_status_t rv = apr_socket_create(&remote_shmem->socket, remote_shmem->sockaddr->family, SOCK_STREAM, APR_PROTO_TCP, module->mp);
+				if (rv != APR_SUCCESS) {
+					fprintf(stderr, "error: apr_socket_create in refresh_input. remote_shmem->socket\n");
+					return NULL;
+				}
+				/* it is a good idea to specify socket options explicitly.
+				* in this case, we make a blocking socket with timeout. */
+				apr_socket_opt_set(remote_shmem->socket, APR_SO_NONBLOCK, 0);
+				apr_socket_timeout_set(remote_shmem->socket, CLIENT_TCP_SOCKET_TIMEOUT);
+
+				// Пометим данное соединение как не установленное.
+				remote_shmem->f_socket_connected = false;
+				// И установим флаг, говорящий о том, что не все входящие связи установлены.
+				module->ar_remote_shmems.f_connected_in_links = false;
+			}
         }
     }
 
