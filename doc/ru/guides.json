@@ -1,16 +1,66 @@
 [
   {
+    "title": "О системе",
+    "items": [
+      {
+        "title": "Введение",
+        "name": "introduction",
+        "url": "guides/about/introduction"
+      }
+    ]
+  },
+  {
     "title": "Модули",
     "items": [
       {
-        "name": "generation",
-        "url": "guides/modules/generation",
-        "title": "Генерация кода модулей"
+        "title": "Определение модуля",
+        "name": "definition",
+        "url": "guides/modules/definition"
       },
       {
+        "title": "Генерация кода бизнес-функции",
+        "name": "bgeneration",
+        "url": "guides/modules/generation"
+      },
+      {
+        "title": "Создание проекта в IDE",
+        "items": [
+          {
+            "title": "Visual Studio",
+            "name": "visualstudio",
+            "url": "guides/modules/ide/vs"
+          },
+          {
+            "title": "QT Creator",
+            "name": "qtcreator",
+            "url": "guides/modules/ide/qt"
+          },
+          {
+            "title": "XCode",
+            "name": "xcode",
+            "url": "guides/modules/ide/xcode"
+          }
+        ]
+      },
+      {
+        "title": "Запуск модуля",
         "name": "start",
-        "url": "guides/modules/start",
-        "title": "Старт модуля"
+        "url": "guides/modules/start"
+      },
+      {
+        "title": "Анатомия модуля",
+        "items": [
+          {
+            "title": "Генерация helper кода модуля",
+            "name": "hgeneration",
+            "url": "guides/modules/anatomy/helpers"
+          },
+          {
+            "title": "Внутреннее устройство",
+            "name": "internal",
+            "url": "guides/modules/anatomy/internal"
+          }
+        ]
       }
     ]
   }
