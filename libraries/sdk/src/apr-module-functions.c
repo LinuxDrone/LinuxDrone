@@ -1038,8 +1038,26 @@ void get_input_data(module_t *module)
         {
             apr_socket_t *socket = ret_pfd[i].desc.s;
             rv = apr_socket_recv(socket, (char*)buf, &len);
-            if (len > 0)
-            {
+
+			if (APR_STATUS_IS_EAGAIN(rv)) {
+				/* we have no data to read. we should keep polling the socket */
+			}
+			else if (APR_STATUS_IS_EOF(rv) || len == 0) {
+				/* we lost TCP session.
+				* XXX On Windows, rv would equal to APR_SUCCESS and len==0 in this case. So, we should check @len in addition to APR_EOF check */
+				
+				apr_pollfd_t pfd = { module->mp, APR_POLL_SOCKET, APR_POLLIN, 0, { NULL }, NULL };
+				pfd.desc.s = socket;
+				apr_pollset_remove(module->pollset, &pfd);
+
+				apr_socket_close(socket);
+
+				printf("zero data from socket\n");
+				continue;
+			}
+
+
+
                 if(buf[len-1]=='\n'){
                     buf[len-1] = '\0';
                 }else
@@ -1080,7 +1098,7 @@ void get_input_data(module_t *module)
                      }
                     out_object = module->out_objects[++i_obj];
                 }
-            }
+            
         }
     }
 
