@@ -320,17 +320,9 @@ int usage(module_t* module, char *argv[])
     fprintf(stderr, "\trequired argument\n");
     fprintf(stderr, "\tListen IP port\n\n");
     
-    fprintf(stderr, "--rt-priority=PRIORITY\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tMain realtime thread priority (1-99, default: 80)\n\n");
-    
     fprintf(stderr, "--main-task-period=PERIOD\n");
     fprintf(stderr, "\toptional\n");
     fprintf(stderr, "\tBusiness function execution period in microseconds (default: 20000)\n\n");
-    
-    fprintf(stderr, "--transfer-task-period=PERIOD\n");
-    fprintf(stderr, "\toptional\n");
-    fprintf(stderr, "\tOutput data to shared memory copy period in microseconds (default: 20000)\n\n");
     
     fprintf(stderr, "--in-link=INSTANCE_TRANSMITTER.OBJ_NAME.OUT_NAME->IN_NAME\n");
     fprintf(stderr, "\toptional\n");
@@ -407,9 +399,7 @@ int argv2common_params(void* in_module, int argc, char *argv[])
     /* API is data structure driven */
     static const apr_getopt_option_t opt_option[] = {
         // long-option, short-option, has-arg flag, description
-        { "rt-priority", 'r', TRUE, "realtime thread priority" },
         { "main-task-period", 'm', TRUE, "main task period" },
-        { "transfer-task-period", 't', TRUE, "transfer task period" },
         { NULL, 0, 0, NULL }, /* end (a.k.a. sentinel) */
     };
     apr_getopt_t *opt;
@@ -421,28 +411,13 @@ int argv2common_params(void* in_module, int argc, char *argv[])
     /* initialize apr_getopt_t */
     apr_getopt_init(&opt, mp, argc, (const char *const *)argv);
     
-    
-    module->common_params.rt_priority = 80;
-    module->common_params.main_task_period = 20000;
-    module->common_params.transfer_task_period = 20000;
+    module->common_params.main_task_period = 20000; // Дефолтное значение в микросекундах для периода выполнения бизнес-функции
     
     opt->errfn = NULL;
     opt->interleave = true;
     
     while ((rv = apr_getopt_long(opt, opt_option, &optch, &optarg)) != APR_EOF) {
         switch (optch) {
-            case 'r':
-                if (optarg != NULL)
-                {
-                    module->common_params.rt_priority = atoi(optarg);
-                    if (module->common_params.rt_priority < 1 || module->common_params.rt_priority > 99)
-                    {
-                        printf("argument 'priority' valid values in the range 1-99\n\n");
-                        usage(module, argv);
-                    }
-                }
-                break;
-                
             case 'm':
                 if (optarg != NULL)
                 {
@@ -450,18 +425,6 @@ int argv2common_params(void* in_module, int argc, char *argv[])
                     if (module->common_params.main_task_period < 0)
                     {
                         printf("argument 'main-task-period' valid values >-1\n\n");
-                        usage(module, argv);
-                    }
-                }
-                break;
-                
-            case 't':
-                if (optarg != NULL)
-                {
-                    module->common_params.transfer_task_period = atoll(optarg);
-                    if (module->common_params.transfer_task_period < 0)
-                    {
-                        printf("argument 'transfer-task-period' valid values >-1\n\n");
                         usage(module, argv);
                     }
                 }
@@ -709,7 +672,6 @@ int init(module_t* module, int argc, char *argv[])
 	argv2common_params(module, argc, argv);
 
 	// Умножаем на тысячу потому, что время в конфиге указывается в микросекундах, а функция должна принимать на вход наносекунды (а использоваться будут тики)
-	//module->common_params.transfer_task_period = rt_timer_ns2ticks(module->common_params.transfer_task_period * 1000);
 	//module->common_params.main_task_period = rt_timer_ns2ticks(module->common_params.main_task_period * 1000);
 
 	// Запись в структуру специфичных параметров модуля
@@ -726,61 +688,6 @@ int init(module_t* module, int argc, char *argv[])
     return 0;
 }
 
-
-
-
-
-
-/**
- * @brief write_shmem копирует блок данных (data) в разделяемую память, определенную в set
- * @param set структура, содержащая все необходимые данные для работы с блоком разделяемой памяти
- * @param data данные копируемые в разделяемую память
- * @param datalen длина копируемых данных
- */
-void write_shmem(const char* data, unsigned short datalen)
-{
-    /*
-    unsigned long after_mask;
-    int res = rt_event_clear(&shmem->eflags, ~SHMEM_WRITER_MASK, &after_mask);
-    if (res != 0)
-    {
-        fprintf(stderr, "error write_shmem: rt_event_clear1\n");
-        return;
-    }
-    //fprintf(stderr, "was mask = 0x%08X\n", after_mask);
-
-    
-    //\~russian Подождем, пока все читающие потоки выйдут из функции чтения и обнулят счетчик читающих потоков
-     
-    res = rt_event_wait(&shmem->eflags, SHMEM_WRITER_MASK, &after_mask, EV_ALL, TM_INFINITE);
-
-    if (res != 0)
-    {
-        fprintf(stderr, "error write_shmem: rt_event_wait\n");
-        return;
-    }
-
-    // В первые два байта сохраняем длину блока
-    *((unsigned short*) shmem->shmem) = datalen;
-
-    RT_HEAP_INFO info;
-    rt_heap_inquire	(&shmem->h_shmem, &info);
-
-    //fprintf(stderr, "write to shmem=%s\n", info.name);
-
-    // в буфер (со смещением в два байта) копируем блок данных
-    memcpy(shmem->shmem + sizeof(unsigned short), data, datalen);
-
-    //fprintf(stderr, "datalen write_shmem: %i\n", datalen);
-
-    res = rt_event_signal(&shmem->eflags, ~SHMEM_WRITER_MASK);
-    if (res != 0)
-    {
-        fprintf(stderr, "error write_shmem: rt_event_signal\n");
-        return;
-    }
-     */
-}
 
 
 void read_shmem(shmem_in_set_t* remote_shmem, void* data, apr_size_t* datalen)
@@ -1274,58 +1181,28 @@ int disconnect_in_links(shmem_in_set_t* remote_shmem)
 }
 
 
-int transmit_object(module_t* module, RTIME* time_last_publish_shmem, bool to_queue)
+int transmit_object(module_t* module, RTIME* time_last_publish_shmem)
 {
     void* obj;
     bson_t bson_tr;
 
     int i=0;
     out_object_t* out_object = module->out_objects[i];
-    bool time2publish2shmem = ( apr_time_now() - *time_last_publish_shmem) > module->common_params.transfer_task_period;
-	if(!time2publish2shmem && !to_queue)
-		return 0;
-
     while(out_object)
     {
-
         //fprintf(stderr, "outside=%i bool=%i\n",i,time2publish2shmem);
         // Нашли обновившийся в основном потоке объект
         // Пуш в очереди подписчиков
-        if(to_queue)
+        checkout4transmiter(module, out_object, &obj, true);
+        if(obj!=NULL)
         {
-            checkout4transmiter(module, out_object, &obj, true);
-            if(obj!=NULL)
-            {
-                send2queues(out_object, obj, &bson_tr);
-                //fprintf(stderr, "send2queues\t");
-                //(*out_object->print_obj)(obj);
-                checkin4transmiter(module, out_object, &obj, true);
-            }
+            send2queues(out_object, obj, &bson_tr);
+            //fprintf(stderr, "send2queues\t");
+            //(*out_object->print_obj)(obj);
+            checkin4transmiter(module, out_object, &obj, true);
         }
-
-        /*
-        // Публикация данных в разделяемую память, не чаще чем в оговоренный период
-        if(time2publish2shmem)
-        {
-            checkout4transmiter(module, out_object, &obj, false);
-            if(obj!=NULL)
-            {
-                bson_init (&bson_tr);
-                // Call user convert function
-                (*out_object->obj2bson)(obj, &bson_tr);
-                write_shmem(&out_object->shmem_set, (const char*)bson_get_data(&bson_tr), bson_tr.len);
-                bson_destroy(&bson_tr);
-
-                // Вернуть объект основному потоку на новое заполнение
-                checkin4transmiter(module, out_object, &obj, false);
-            }
-        }
-         */
-        
         out_object = module->out_objects[++i];
     }
-    if(time2publish2shmem)
-        *time_last_publish_shmem= apr_time_now();
 
     return 0;
 }
