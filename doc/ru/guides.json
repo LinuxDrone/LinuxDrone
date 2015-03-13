@@ -63,5 +63,30 @@
         ]
       }
     ]
+  },
+  {
+    "title": "Конфигуратор",
+    "items": [
+      {
+        "title": "Клиентское Web приложение",
+        "items": [
+          {
+            "title": "Сборка web приложения",
+            "name": "clientBuild",
+            "url": "guides/configurator/client/build"
+          },
+          {
+            "title": "Обновление версии ExtJS",
+            "name": "clientUpgrade",
+            "url": "guides/configurator/client/upgrade"
+          }
+        ]
+      },
+      {
+        "title": "Серверная часть",
+        "name": "webServer",
+        "url": "guides/configurator/server"
+      }
+    ]
   }
 ]
