@@ -49,3 +49,5 @@ webapps/configurator/public/ext
 *.filters
 *.sdf
 *.opensdf
+*.dia~
+/doc/ru/release

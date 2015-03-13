@@ -1,5 +1,5 @@
 {
-    "--guides": "guides.json",
-
-    "--output": "release"
+  "--title": "Документация RT Platform",
+  "--guides": "guides.json",
+  "--output": "release"
 }
