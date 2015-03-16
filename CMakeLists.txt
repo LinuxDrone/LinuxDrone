@@ -77,7 +77,7 @@ ELSE()
     SET(DTC ${TLS_DIR}/dtc/dtc)
 ENDIF()
 
-SET(DO_POST_BUILD YES)
+SET(DO_POST_BUILD NO)
 
 SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 #SET(URL_TARGET_SYSTEM root@192.168.1.20)
@@ -189,7 +189,7 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 #add_subdirectory(${LIB_DIR}/dotnet-sdk)
 add_subdirectory(${LIB_DIR}/sdk)
 
-# Loadable modules (one level deeper than apps or libs)
+# Modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
 #add_subdirectory(${MOD_DIR}/gy87)
 IF(${PLATFORM} STREQUAL "XENO")
@@ -205,6 +205,7 @@ ELSE()
 ENDIF()
 
 
+#add_subdirectory(${MOD_DIR}/test)
 add_subdirectory(${MOD_DIR}/short_terminator)
 #add_subdirectory(${MOD_DIR}/test-params)
 add_subdirectory(${MOD_DIR}/test-sender)

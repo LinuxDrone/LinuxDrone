@@ -10,6 +10,26 @@
     ]
   },
   {
+    "title": "Сборка системы",
+    "items": [
+      {
+        "title": "Сборка под Windows",
+        "name": "buildUnderWindows",
+        "url": "guides/build/windows"
+      },
+      {
+        "title": "Сборка под Mac OS X",
+        "name": "buildUnderMacOS",
+        "url": "guides/build/macos"
+      },
+      {
+        "title": "Кросс-компиляция",
+        "name": "crossCompilation",
+        "url": "guides/build/cross"
+      }
+    ]
+  },
+  {
     "title": "Модули",
     "items": [
       {
@@ -18,7 +38,7 @@
         "url": "guides/modules/definition"
       },
       {
-        "title": "Генерация кода бизнес-функции",
+        "title": "Генерация исходного кода модуля",
         "name": "bgeneration",
         "url": "guides/modules/generation"
       },
