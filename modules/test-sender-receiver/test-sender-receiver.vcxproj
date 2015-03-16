@@ -68,13 +68,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Projects\LinuxDrone\tools\apr-1.5.1\include;D:\Projects\LinuxDrone\tools\libbson-win\include\libbson-1.0;D:\Projects\LinuxDrone\libraries\sdk\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Projects\LinuxDrone\tools\apr-1.5.1\x64\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)tools\apr-1.5.1\include;$(SolutionDir)tools\libbson-win\include\libbson-1.0;$(SolutionDir)libraries\sdk\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)tools\apr-1.5.1\x64\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Projects\LinuxDrone\tools\apr-1.5.1\include;D:\Projects\LinuxDrone\tools\libbson-win\include\libbson-1.0;D:\Projects\LinuxDrone\libraries\sdk\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Projects\LinuxDrone\tools\apr-1.5.1\x64\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)tools\apr-1.5.1\include;$(SolutionDir)tools\libbson-win\include\libbson-1.0;$(SolutionDir)libraries\sdk\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\tools\apr-1.5.1\x64\Release;$(LibraryPath)</LibraryPath>
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <TargetName>$(ProjectName).mod</TargetName>
   </PropertyGroup>
@@ -114,7 +114,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>libapr-1.lib;bson-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>D:\Projects\LinuxDrone\tools\libbson\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)tools\libbson\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>node $(SolutionDir)libraries\sdk\ModuleGenerator.js $(ProjectDir)test-sender-receiver.def.json $(ProjectDir) MSVC</Command>
