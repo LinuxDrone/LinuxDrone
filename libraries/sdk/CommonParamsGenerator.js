@@ -199,8 +199,8 @@ function Create_H_file(paramsDefinitions) {
 function Create_C_file(paramsDefinitions) {
     var r = "";
 
-    r += "#include \"common-params.h\"\n";
     if(platform==="XENO") {
+        //r += "#include \"common-params.h\"\n";
         r += "#include \"module-functions.h\"\n\n";
     }else{
         r += "#include \"apr-module-functions.h\"\n\n";

@@ -27,11 +27,11 @@ function CreateCMakeLists(module_name) {
 
     r += "ADD_CUSTOM_COMMAND(\n";
     r += "    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/" + module_name + ".helper.c\n";
-    r += "    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/" + module_name + ".def.json ${CMAKE_CURRENT_BINARY_DIR}\n";
+    r += "    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/" + module_name + ".def.json ${CMAKE_CURRENT_BINARY_DIR} ${PLATFORM}\n";
     r += "    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/" + module_name + ".def.json\n";
     r += ")\n\n";
 
-    r += "add_executable(" + module_name + " ${INC} ${SRC} " + module_name + ".helper.c)\n\n";
+    r += "add_executable(" + module_name + " ${INC} ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/" + module_name + ".helper.c)\n\n";
 
     r += "target_link_libraries(" + module_name + " ${EXTRA_LIBS})\n\n";
 

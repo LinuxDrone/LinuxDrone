@@ -904,8 +904,7 @@ void get_input_data(module_t *module)
     }
 
 	// Передадим объекты, заполненные в предыдущем цикле
-	transmit_object(module, &time_last_publish_shmem, true);
-	transmit_object(module, &time_last_publish_shmem, false);
+    transmit_object(module, &time_last_publish_shmem);
 	if (!module->f_connected_out_links)
 	{
 		// Если не все связи модуля установлены, то будем пытаться их установить
@@ -1526,7 +1525,7 @@ int refresh_input(void* p_module)
 				apr_status_t rv = apr_socket_create(&remote_shmem->socket, remote_shmem->sockaddr->family, SOCK_STREAM, APR_PROTO_TCP, module->mp);
 				if (rv != APR_SUCCESS) {
 					fprintf(stderr, "error: apr_socket_create in refresh_input. remote_shmem->socket\n");
-					return NULL;
+                    return rv;
 				}
 				/* it is a good idea to specify socket options explicitly.
 				* in this case, we make a blocking socket with timeout. */

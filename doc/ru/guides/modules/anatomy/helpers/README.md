@@ -8,12 +8,12 @@
 - **YOUR_MODULE.helper.h** Заголовочный файл
 - **YOUR_MODULE.helper.c** Файл с исходным кодом
 
-*Функция main() размещается в YOUR_MODULE.helper.c*
+`Функция main() размещается в YOUR_MODULE.helper.c`
 
 ## Параметры скрипта
 
 Пример вызова:
-```node ModuleGenerator.js YOUR_MODULE.def.json OUT_DIR PLATFORM```
+`node ModuleGenerator.js YOUR_MODULE.def.json OUT_DIR PLATFORM`
 
 - **YOUR_MODULE.def.json** Файл определения модуля
 - **OUT_DIR** Директория в которую будут записаны сгенерированные файлы

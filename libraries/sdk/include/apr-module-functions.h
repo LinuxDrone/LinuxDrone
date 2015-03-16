@@ -618,8 +618,15 @@ int init(module_t* module, int argc, char *argv[]);
 int start(void* module);
 int stop(void* module);
 void get_input_data(module_t *module);
-int transmit_object(module_t *module, RTIME* time_last_publish_shmem, bool to_queue);
 #endif
+
+#ifdef XENO
+int transmit_object(module_t *module, RTIME* time_last_publish_shmem, bool to_queue);
+#else
+int transmit_object(module_t *module, RTIME* time_last_publish_shmem);
+#endif
+
+
 
 
 int refresh_input(void* p_module);
