@@ -706,7 +706,7 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, apr_size_t* datalen)
 	if (rv == APR_EOF || *datalen == 0) {
 		char buf_err[250];
 		apr_strerror(rv, buf_err,	250);
-		fprintf(stderr, buf_err);
+		fprintf(stderr, "%s", buf_err);
 
 		*datalen = 0;
 		return;
@@ -1115,7 +1115,7 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
 				//fprintf(stderr, "error: apr_socket_connect addr:%s\n", remote_shmem->name_instance);
 				char buf_err[250];
 				apr_strerror(rv, buf_err, 250);
-				fprintf(stderr, buf_err);
+				fprintf(stderr, "%s", buf_err);
 				
 				continue;
 			}
