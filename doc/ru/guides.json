@@ -84,6 +84,31 @@
       }
     ]
   },
+    {
+        "title": "Сервисы",
+        "items": [
+            {
+                "title": "О сервисах",
+                "name": "aboutServices",
+                "url": "guides/services/about"
+            },
+            {
+                "title": "Сервис телеметрии",
+                "name": "telemetry",
+                "url": "guides/services/telemetry"
+            },
+            {
+                "title": "Сервис I2C",
+                "name": "i2c",
+                "url": "guides/services/i2c"
+            },
+            {
+                "title": "Сервис SPI",
+                "name": "spi",
+                "url": "guides/services/spi"
+            }
+        ]
+    },
   {
     "title": "Конфигуратор",
     "items": [
