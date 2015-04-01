@@ -43,7 +43,7 @@
         "url": "guides/modules/generation"
       },
       {
-        "title": "Создание проекта в IDE",
+        "title": "Создание проекта модуля в IDE",
         "items": [
           {
             "title": "Visual Studio",
