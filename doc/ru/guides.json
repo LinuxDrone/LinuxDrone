@@ -13,19 +13,74 @@
     "title": "Сборка системы",
     "items": [
       {
-        "title": "Сборка под Windows",
-        "name": "buildUnderWindows",
-        "url": "guides/build/windows"
+        "title": "О сборке на различных платформах",
+        "name": "buildUnderDifferentOS",
+        "url": "guides/build"
       },
       {
-        "title": "Сборка под Mac OS X",
-        "name": "buildUnderMacOS",
-        "url": "guides/build/macos"
+        "title": "Сборка на Windows",
+        "items": [
+          {
+            "title": "Общие требования",
+            "name": "buildWindowsCommon",
+            "url": "guides/build/windows/common"
+          },
+          {
+            "title": "Для Windows в Visual Studio",
+            "name": "buildWwindowsVs",
+            "url": "guides/build/windows/vs"
+          },
+          {
+            "title": "Для Windows в QT Creator",
+            "name": "buildWindowsQtCreator",
+            "url": "guides/build/windows/qtcreator"
+          },
+          {
+            "title": "Для Linux (ARM)",
+            "name": "buildWindowsARM",
+            "url": "guides/build/windows/arm"
+          }
+        ]
       },
       {
-        "title": "Кросс-компиляция",
-        "name": "crossCompilation",
-        "url": "guides/build/cross"
+        "title": "Сборка на Mac OS X",
+        "items": [
+          {
+            "title": "Общие требования",
+            "name": "buildMacosCommon",
+            "url": "guides/build/macos/common"
+          },
+          {
+            "title": "Для Mac OS в XCode",
+            "name": "buildMacosXcode",
+            "url": "guides/build/macos/xcode"
+          },
+          {
+            "title": "Для Linux (ARM)",
+            "name": "buildMacosArm",
+            "url": "guides/build/macos/arm"
+          }
+        ]
+      },
+      {
+        "title": "Сборка на Linux",
+        "items": [
+          {
+            "title": "Общие требования",
+            "name": "buildLinuxCommon",
+            "url": "guides/build/linux/common"
+          },
+          {
+            "title": "Для Linux в QT Creator",
+            "name": "buildLinuxCreator",
+            "url": "guides/build/linux/qtcreator"
+          },
+          {
+            "title": "Для Linux (ARM)",
+            "name": "buildLinuxARM",
+            "url": "guides/build/linux/arm"
+          }
+        ]
       }
     ]
   },
@@ -84,31 +139,31 @@
       }
     ]
   },
-    {
-        "title": "Сервисы",
-        "items": [
-            {
-                "title": "О сервисах",
-                "name": "aboutServices",
-                "url": "guides/services/about"
-            },
-            {
-                "title": "Сервис телеметрии",
-                "name": "telemetry",
-                "url": "guides/services/telemetry"
-            },
-            {
-                "title": "Сервис I2C",
-                "name": "i2c",
-                "url": "guides/services/i2c"
-            },
-            {
-                "title": "Сервис SPI",
-                "name": "spi",
-                "url": "guides/services/spi"
-            }
-        ]
-    },
+  {
+    "title": "Сервисы",
+    "items": [
+      {
+        "title": "О сервисах",
+        "name": "aboutServices",
+        "url": "guides/services/about"
+      },
+      {
+        "title": "Сервис телеметрии",
+        "name": "telemetry",
+        "url": "guides/services/telemetry"
+      },
+      {
+        "title": "Сервис I2C",
+        "name": "i2c",
+        "url": "guides/services/i2c"
+      },
+      {
+        "title": "Сервис SPI",
+        "name": "spi",
+        "url": "guides/services/spi"
+      }
+    ]
+  },
   {
     "title": "Конфигуратор",
     "items": [
