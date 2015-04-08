@@ -6,6 +6,22 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		B18F2A511AD5D379001324C2 /* rt-platform */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = B18F2A541AD5D379001324C2 /* Build configuration list for PBXAggregateTarget "rt-platform" */;
+			buildPhases = (
+			);
+			dependencies = (
+				B18F2A561AD5D386001324C2 /* PBXTargetDependency */,
+				B18F2A581AD5D386001324C2 /* PBXTargetDependency */,
+				B18F2A5A1AD5D386001324C2 /* PBXTargetDependency */,
+			);
+			name = "rt-platform";
+			productName = "rt-platform";
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		B10493941A717CAE001F0221 /* apr-module-functions.h in Headers */ = {isa = PBXBuildFile; fileRef = B10493911A717CAE001F0221 /* apr-module-functions.h */; };
 		B10493951A717CAE001F0221 /* apr-helper-functions.c in Sources */ = {isa = PBXBuildFile; fileRef = B10493921A717CAE001F0221 /* apr-helper-functions.c */; };
@@ -71,6 +87,27 @@
 			proxyType = 1;
 			remoteGlobalIDString = B10493861A717BE3001F0221;
 			remoteInfo = sdk;
+		};
+		B18F2A551AD5D386001324C2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B1BF4C501A70398E009CEFDC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B10493861A717BE3001F0221;
+			remoteInfo = sdk;
+		};
+		B18F2A571AD5D386001324C2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B1BF4C501A70398E009CEFDC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B1F0A33B1A864FDB00C7E995;
+			remoteInfo = "test-sender";
+		};
+		B18F2A591AD5D386001324C2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B1BF4C501A70398E009CEFDC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B135AD081AAC5852005EAF8E;
+			remoteInfo = "test-sender-receiver";
 		};
 		B1F0A3441A864FFD00C7E995 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -295,6 +332,9 @@
 					B135AD081AAC5852005EAF8E = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
+					B18F2A511AD5D379001324C2 = {
+						CreatedOnToolsVersion = 6.2;
+					};
 					B1F0A33B1A864FDB00C7E995 = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
@@ -315,6 +355,7 @@
 				B10493861A717BE3001F0221 /* sdk */,
 				B1F0A33B1A864FDB00C7E995 /* test-sender */,
 				B135AD081AAC5852005EAF8E /* test-sender-receiver */,
+				B18F2A511AD5D379001324C2 /* rt-platform */,
 			);
 		};
 /* End PBXProject section */
@@ -355,6 +396,21 @@
 			isa = PBXTargetDependency;
 			target = B10493861A717BE3001F0221 /* sdk */;
 			targetProxy = B135AD101AAC5C2E005EAF8E /* PBXContainerItemProxy */;
+		};
+		B18F2A561AD5D386001324C2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B10493861A717BE3001F0221 /* sdk */;
+			targetProxy = B18F2A551AD5D386001324C2 /* PBXContainerItemProxy */;
+		};
+		B18F2A581AD5D386001324C2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B1F0A33B1A864FDB00C7E995 /* test-sender */;
+			targetProxy = B18F2A571AD5D386001324C2 /* PBXContainerItemProxy */;
+		};
+		B18F2A5A1AD5D386001324C2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B135AD081AAC5852005EAF8E /* test-sender-receiver */;
+			targetProxy = B18F2A591AD5D386001324C2 /* PBXContainerItemProxy */;
 		};
 		B1F0A3451A864FFD00C7E995 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -441,6 +497,20 @@
 					"$(PROJECT_DIR)/tools/libbson",
 					/usr/local/apr/lib,
 				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		B18F2A521AD5D379001324C2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		B18F2A531AD5D379001324C2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -582,6 +652,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		B18F2A541AD5D379001324C2 /* Build configuration list for PBXAggregateTarget "rt-platform" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B18F2A521AD5D379001324C2 /* Debug */,
+				B18F2A531AD5D379001324C2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		B1BF4C531A70398E009CEFDC /* Build configuration list for PBXProject "LinuxDrone" */ = {
 			isa = XCConfigurationList;
