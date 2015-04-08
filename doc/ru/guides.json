@@ -88,6 +88,11 @@
     "title": "Модули",
     "items": [
       {
+        "title": "О модулях",
+        "name": "aboutModules",
+        "url": "guides/modules/about"
+      },
+      {
         "title": "Определение модуля",
         "name": "definition",
         "url": "guides/modules/definition"
