@@ -139,7 +139,12 @@ int register_in_link(shmem_in_set_t* shmem, TypeFieldObj type_field_obj, const c
 * @brief Функция регистрирует удаленный инстанс, к которому будем бегать выпрашивать его информацию.
 * @return
 */
-shmem_in_set_t* register_remote_shmem(module_t *module, ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
+
+#ifdef WIN32
+__declspec(dllexport) shmem_in_set_t* register_remote_shmem(apr_pool_t *mp, ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
+#else
+shmem_in_set_t* register_remote_shmem(apr_pool_t *mp, ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
+#endif
 {
     if(ar_remote_shmems==NULL)
     {
@@ -183,12 +188,12 @@ shmem_in_set_t* register_remote_shmem(module_t *module, ar_remote_shmems_t* ar_r
     apr_port_t remote_port = atoi(name_remote_port);
     
     apr_status_t rv;
-    rv = apr_sockaddr_info_get(&new_remote_shmem->sockaddr, name_remote_host, APR_INET, remote_port, 0, module->mp);
+    rv = apr_sockaddr_info_get(&new_remote_shmem->sockaddr, name_remote_host, APR_INET, remote_port, 0, mp);
     if (rv != APR_SUCCESS) {
         fprintf(stderr, "error: apr_sockaddr_info_get. new_remote_shmem->sockaddr\n");
         return NULL;
     }
-    rv = apr_socket_create(&new_remote_shmem->socket, new_remote_shmem->sockaddr->family, SOCK_STREAM, APR_PROTO_TCP, module->mp);
+    rv = apr_socket_create(&new_remote_shmem->socket, new_remote_shmem->sockaddr->family, SOCK_STREAM, APR_PROTO_TCP, mp);
     if (rv != APR_SUCCESS) {
         fprintf(stderr, "error: apr_socket_create. new_remote_shmem->socket\n");
         return NULL;
@@ -206,9 +211,11 @@ shmem_in_set_t* register_remote_shmem(module_t *module, ar_remote_shmems_t* ar_r
     return new_remote_shmem;
 }
 
-
-
+#ifdef WIN32
+__declspec(dllexport) int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
+#else
 int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
+#endif
 {
     /*
     if(ar_remote_shmems==NULL)
@@ -605,7 +612,7 @@ int init(module_t* module, int argc, char *argv[])
 
 
 				// Добавим имя инстанса подписчика и ссылку на объект его очереди (если оно не было зафиксировано раньше, то будут созданы необходимые структуры для его хранения)
-				shmem_in_set_t* remote_shmem = register_remote_shmem(module, &module->ar_remote_shmems, publisher_instance_name, publisher_nameOutGroup);
+				shmem_in_set_t* remote_shmem = register_remote_shmem(module->mp, &module->ar_remote_shmems, publisher_instance_name, publisher_nameOutGroup);
 
 
 				// Получим название типа данных входной связи
@@ -689,8 +696,11 @@ int init(module_t* module, int argc, char *argv[])
 }
 
 
-
+#ifdef WIN32
+__declspec(dllexport) void read_shmem(shmem_in_set_t* remote_shmem, void* data, apr_size_t* datalen)
+#else
 void read_shmem(shmem_in_set_t* remote_shmem, void* data, apr_size_t* datalen)
+#endif
 {
 	if (!remote_shmem->f_socket_connected)
     {
@@ -1090,7 +1100,12 @@ debug_print_bson("get_input_data", &bson);
  * @param p_module
  * @return
  */
+
+#ifdef WIN32
+__declspec(dllexport) int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_name)
+#else
 int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_name)
+#endif
 {
     
     int count_connected = 0, i;

@@ -91,8 +91,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Projects\LinuxDrone\tools\apr-1.5.1\include;D:\Projects\LinuxDrone\tools\libbson-win\include\libbson-1.0;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Projects\LinuxDrone\tools\apr-1.5.1\x64\Release;D:\Projects\LinuxDrone\tools\libbson-win\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)tools\apr-1.5.1\include;$(SolutionDir)tools\libbson-win\include\libbson-1.0;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)tools\apr-1.5.1\x64\Release;$(SolutionDir)tools\libbson-win\lib;$(LibraryPath)</LibraryPath>
     <CustomBuildBeforeTargets>Compile</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='d1|Win32'">
@@ -148,7 +148,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>libapr-1.lib;bson-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>D:\Projects\LinuxDrone\tools\libbson\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
       <Outputs>common-params.c;common-params.h;%(Outputs)</Outputs>

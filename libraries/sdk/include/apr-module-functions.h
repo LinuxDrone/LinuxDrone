@@ -639,16 +639,19 @@ char *replace(const char *s, char ch, const char *repl);
  * @param p_module
  * @return
  */
-int connect_in_links(ar_remote_shmems_t* ar_remote_shmems,
-                     const char* instance_name);
+//int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_name);
 
-shmem_in_set_t* register_remote_shmem(module_t *module, ar_remote_shmems_t* ar_remote_shmems,
-                                      const char* name_remote_instance, const char* name_remote_outgroup);
-
-int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems,
-                            const char* name_remote_instance, const char* name_remote_outgroup);
-
+#ifdef WIN32
+__declspec(dllexport) int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_name);
+__declspec(dllexport) shmem_in_set_t* register_remote_shmem(apr_pool_t *mp, ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup);
+__declspec(dllexport) int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup);
+__declspec(dllexport) void read_shmem(shmem_in_set_t* remote_shmem, void* data, apr_size_t* datalen);
+#else
+int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_name);
+shmem_in_set_t* register_remote_shmem(apr_pool_t *mp, ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup);
+int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup);
 void read_shmem(shmem_in_set_t* remote_shmem, void* data, apr_size_t* datalen);
+#endif
 
 void print_task_receive_error(int err);
 void print_task_reply_error(int err);
