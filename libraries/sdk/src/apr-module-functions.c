@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <locale.h>
-#include <apr_getopt.h>
+#include <apr-1/apr_getopt.h>
 
 #define INSTANCE_SEPARATOR "#"
 #define PIN_SEPARATOR "@"
