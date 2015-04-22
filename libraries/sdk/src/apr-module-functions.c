@@ -7,7 +7,14 @@
 
 #include <stdio.h>
 #include <locale.h>
+
+#ifdef WIN32
+#include <apr_getopt.h>
+#else
+// Mac OS X
 #include <apr-1/apr_getopt.h>
+#endif
+
 
 #define INSTANCE_SEPARATOR "#"
 #define PIN_SEPARATOR "@"
