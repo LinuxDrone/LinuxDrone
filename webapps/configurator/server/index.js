@@ -11,8 +11,8 @@ common.MetaOfModules.get(function(res){
 
 
 
-//var routes = require("./useFiles");
-var routes = require("./useMongo");
+var routes = require("./useFiles");
+//var routes = require("./useMongo");
 
 
 var router = new Router();

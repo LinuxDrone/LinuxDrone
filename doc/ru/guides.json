@@ -203,7 +203,7 @@
         ]
       },
       {
-        "title": "Серверная часть",
+        "title": "Серверное приложение",
         "name": "webServer",
         "url": "guides/configurator/server"
       }
