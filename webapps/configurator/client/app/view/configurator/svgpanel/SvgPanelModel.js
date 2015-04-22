@@ -37,10 +37,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
                         if (operation.getError().statusText) {
                             errMsg = operation.getError().statusText;
                         }
-                        Ext.window.MessageBox.show({
+                        Ext.MessageBox.show({
                             title: 'REMOTE EXCEPTION',
                             msg: errMsg,
-                            icon: Ext.window.MessageBox.ERROR,
+                            icon: Ext.MessageBox.ERROR,
                             buttons: Ext.Msg.OK
                         });
                     }

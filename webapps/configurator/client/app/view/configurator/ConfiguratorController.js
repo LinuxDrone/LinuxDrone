@@ -115,10 +115,10 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
         reader.onload = function (e) {
             var importedSchema = Ext.JSON.decode(e.target.result, true);
             if (importedSchema == null) {
-                Ext.window.MessageBox.show({
+                Ext.MessageBox.show({
                     title: 'Error',
                     msg: 'Invalid file format',
-                    icon: Ext.window.MessageBox.ERROR,
+                    icon: Ext.MessageBox.ERROR,
                     buttons: Ext.Msg.OK
                 });
                 return;

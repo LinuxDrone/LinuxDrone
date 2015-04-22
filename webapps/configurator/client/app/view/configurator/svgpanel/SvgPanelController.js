@@ -64,7 +64,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
 
     initWebSockets: function () {
-        return;
+        //return;
         // Пока не установлено соединение вебсокета, кнопки старта и стопа будут красными
         //res.cssClass4ButtonsRunStop('btn btn-danger');
         var controller = this;

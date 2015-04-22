@@ -74,13 +74,9 @@ exports.MetaOfModules = {
             }
 
             var listFiles = new Array();
-
             list.forEach(function (file) {
                 // для начала проверим, что расширение файла .mod или .mod.exe
-
                 var ar = file.split('.');
-
-                //var ext = file.substr(file.length - 4, 4);
 
                 if (ar[ar.length-1] == "mod" || (ar[ar.length-2] == "mod" && ar[ar.length-1] == "exe")) {
                     listFiles.push(BIN_FOLDER + '/' + file);
