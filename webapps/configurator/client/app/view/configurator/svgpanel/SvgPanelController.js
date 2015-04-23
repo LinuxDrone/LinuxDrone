@@ -515,7 +515,7 @@ return;
         versionsStore.addFilter([
             {
                 property: 'name',
-                value: records[0].get('name'),
+                value: records.get('name'),
                 operator: '='
             }
         ]);

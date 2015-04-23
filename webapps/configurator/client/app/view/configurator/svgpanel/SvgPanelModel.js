@@ -28,7 +28,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
                 api: {
                     read: location.protocol + '//' + location.hostname + ':4000/getconfigs',
                     update: location.protocol + '//' + location.hostname + ':4000/saveconfig',
-                    create: location.protocol + '//' + location.hostname + ':4000/newconfig',
+                    create: location.protocol + '//' + location.hostname + ':4000/saveconfig',
                     destroy: location.protocol + '//' + location.hostname + ':4000/delconfig'
                 },
                 listeners: {
