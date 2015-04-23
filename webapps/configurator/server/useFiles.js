@@ -10,10 +10,10 @@ var hostStatus = {
 
 
 exports.gethoststatus = function (req, res) {
-    if(req.body.callback){
+    if (req.body.callback) {
         res.writeHead(200, {"Content-Type": "application/javascript"});
         res.write(req.body.callback + '(' + JSON.stringify(hostStatus) + ')');
-    }else{
+    } else {
         res.writeHead(200, {"Content-Type": "application/json"});
         res.write(JSON.stringify(hostStatus));
     }
@@ -32,7 +32,7 @@ exports.getconfigs = function (req, res) {
             // для начала проверим, что расширение файла .json
             var ar = file.split('.');
 
-            if (ar[ar.length-1] == "json") {
+            if (ar[ar.length - 1] == "json") {
                 var cfg = require(CFG_FOLDER + '/' + file);
                 cfgFiles.push(cfg);
             }
@@ -51,24 +51,36 @@ exports.getconfigs = function (req, res) {
 
 
 exports.saveconfig = function (req, res) {
-    var record = JSON.parse(req.body.records);
 
-    var cfgFileName = CFG_FOLDER + "/" + record.name + "." + record.version + ".json";
-    fs.writeFile(cfgFileName, req.body.records, function(err) {
-        if(err) {
-            res.send({"success": false, "message": err});
-            return console.log(err);
-        }
+    var ar;
+    if ( Array.isArray(req.body.records)) {
+        ar = req.body.records;
+    } else {
+        ar = new Array();
+        ar.push(req.body.records);
+    }
 
-        if (req.body.callback) {
-            res.writeHead(200, {"Content-Type": "application/javascript"});
-            res.write(req.body.callback + '({"success": true})');
-        } else {
-            res.writeHead(200, {"Content-Type": "application/json"});
-            res.write('{"success": true}');
-        }
+    ar.forEach(function (item, i, arr) {
+        var record = JSON.parse(item);
 
-        console.log("The file \""+cfgFileName+"\" was saved!");
+        var cfgFileName = CFG_FOLDER + "/" + record.name + "." + record.version + ".json";
+        fs.writeFile(cfgFileName, JSON.stringify(record), function (err) {
+            if (err) {
+                res.send({"success": false, "message": err});
+                res.end();
+                return console.log(err);
+            }
+            console.log("The file \"" + cfgFileName + "\" was saved!");
+        });
     });
+
+    if (req.body.callback) {
+        res.writeHead(200, {"Content-Type": "application/javascript"});
+        res.write(req.body.callback + '({"success": true})');
+    } else {
+        res.writeHead(200, {"Content-Type": "application/json"});
+        res.write('{"success": true}');
+    }
+    res.end();
 }
 

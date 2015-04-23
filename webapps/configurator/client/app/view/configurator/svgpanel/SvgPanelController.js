@@ -64,7 +64,11 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
 
     initWebSockets: function () {
-        //return;
+
+
+return;
+
+
         // Пока не установлено соединение вебсокета, кнопки старта и стопа будут красными
         //res.cssClass4ButtonsRunStop('btn btn-danger');
         var controller = this;
@@ -533,7 +537,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
         // Найдем в хранилище схему с указанными именем и версией
         var ind = storeListSchemas.findBy(function (record, id) {
-            return record.get('version') == records[0].get('version') && record.get('name') == model.get('currentSchema').get('name');
+            return record.get('version') == records.get('version') && record.get('name') == model.get('currentSchema').get('name');
         });
 
         // Но перед эти пометим текущую схему как не активную
