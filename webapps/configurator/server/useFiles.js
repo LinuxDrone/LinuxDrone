@@ -49,9 +49,7 @@ exports.getconfigs = function (req, res) {
     });
 };
 
-
 exports.saveconfig = function (req, res) {
-
     var ar;
     if ( Array.isArray(req.body.records)) {
         ar = req.body.records;
@@ -84,3 +82,34 @@ exports.saveconfig = function (req, res) {
     res.end();
 }
 
+
+function getTimeStamp() {
+    var now = new Date();
+    return ((now.getMonth() + 1) + '-' + (now.getDate()) + '-' + now.getFullYear() + "_" + now.getHours() + '-' + ((now.getMinutes() < 10) ? ("0" + now.getMinutes()) : (now.getMinutes())) + '-' + ((now.getSeconds() < 10) ? ("0" + now.getSeconds()) : (now.getSeconds())));
+}
+
+
+exports.delconfig = function (req, res) {
+    var record = JSON.parse(req.body.records);
+
+    var curCfgFileName = CFG_FOLDER + "/" + record.name + "." + record.version + ".json";
+    var delCfgFileName = CFG_FOLDER + "/" + record.name + "." + record.version + "_" + getTimeStamp() + ".deleted";
+
+    fs.rename(curCfgFileName, delCfgFileName, function(err) {
+        if (err) {
+            res.send({"success": false, "message": err});
+            res.end();
+            return console.log(err);
+        }
+        console.log("The file \"" + curCfgFileName + "\" was renamed to " + delCfgFileName);
+
+        if (req.body.callback) {
+            res.writeHead(200, {"Content-Type": "application/javascript"});
+            res.write(req.body.callback + '({"success": true})');
+        } else {
+            res.writeHead(200, {"Content-Type": "application/json"});
+            res.write('{"success": true}');
+        }
+        res.end();
+    });
+};

@@ -22,7 +22,7 @@ router.get('/metamodules', common.metamodules);
 router.get('/saveconfig', routes.saveconfig);
 router.get('/getconfig/:id', routes.getconfig);
 router.get('/getconfigs', routes.getconfigs);
-router.delete('/delconfig/:id', routes.delconfig);
+router.get('/delconfig', routes.delconfig);
 router.post('/runhosts', routes.runhosts);
 router.post('/stophosts', routes.stophosts);
 router.get('/gethoststatus', routes.gethoststatus);
