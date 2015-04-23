@@ -883,7 +883,8 @@ return;
     GetHostStatus: function () {
         var model = this.getView().getViewModel();
 
-        $.getJSON('http://192.168.1.20:4000/gethoststatus?callback=?').done(function (resp) {
+        var host = window.document.location.host.replace(/:.*/, '');
+        $.getJSON('http://' + host + ':4000/gethoststatus?callback=?').done(function (resp) {
             switch (resp.status) {
                 case 'running':
                     model.set('started', true);
@@ -894,7 +895,6 @@ return;
                     break;
             }
         });
-
     }
 })
 ;

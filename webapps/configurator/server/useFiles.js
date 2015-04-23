@@ -2,23 +2,11 @@ var CFG_FOLDER = "../../cfg";
 
 var fs = require('fs');
 
-var hostStatus = {
-    status: 'stopped', // running
-    schemaName: '',
-    schemaVersion: ''
-};
 
-
-exports.gethoststatus = function (req, res) {
-    if (req.body.callback) {
-        res.writeHead(200, {"Content-Type": "application/javascript"});
-        res.write(req.body.callback + '(' + JSON.stringify(hostStatus) + ')');
-    } else {
-        res.writeHead(200, {"Content-Type": "application/json"});
-        res.write(JSON.stringify(hostStatus));
-    }
-    res.end();
-};
+function requireUncached(module){
+    delete require.cache[require.resolve(module)];
+    return require(module);
+}
 
 exports.getconfigs = function (req, res) {
     fs.readdir(CFG_FOLDER, function (err, list) {
@@ -33,7 +21,7 @@ exports.getconfigs = function (req, res) {
             var ar = file.split('.');
 
             if (ar[ar.length - 1] == "json") {
-                var cfg = require(CFG_FOLDER + '/' + file);
+                var cfg = requireUncached(CFG_FOLDER + '/' + file);
                 cfgFiles.push(cfg);
             }
         });
