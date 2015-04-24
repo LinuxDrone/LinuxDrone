@@ -25,6 +25,21 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
             },
             items: [
                 {
+                    title: 'Instance',
+                    //width: 300,
+                    bodyPadding: 5,
+                    items: [{
+                        xtype: 'textfield',
+                        name: 'name',
+                        labelWidth: 40,
+                        fieldLabel: 'Name',
+                        allowBlank: false,  // requires a non-empty value
+                        bind: {
+                            value: '{nameOfSelectedInstance}'
+                        }
+                    }]
+                },
+                {
                     title: 'Common Properties',
                     items: [
                         {
