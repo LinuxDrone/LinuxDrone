@@ -610,6 +610,20 @@ return;
             configuratorModel.set('currentModuleProps', moduleParams);
             configuratorModel.set('nameOfSelectedInstance', instanceName);
 
+            model.bind('{nameOfSelectedInstance}', function (nameSelectedInstance) {
+                console.log(nameSelectedInstance);
+                cell.attributes.attrs[".label"].text = nameSelectedInstance;
+                //cell.sync();
+
+                //getViewModel().get('paper').resetCells(cell);
+
+                var vvv = this.getView().getViewModel().get('paper').findViewByModel(cell);
+                vvv.update();
+                vvv.translate(0,0);
+                //resetCells
+                //findViewByModel
+            });
+
             // Показать панель свойств инстанса
             configuratorModel.set('hideInstanceProperties', false);
 
