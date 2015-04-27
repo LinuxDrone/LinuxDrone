@@ -24,9 +24,9 @@
 		<key>1E4B7D5B9FE8700CBA9EDCFCE3B7D1011A205287</key>
 		<string>../..</string>
 		<key>9A96748234B91F0949764DE8405817039D66DAF6</key>
-		<string>../..tools/libbson/</string>
+		<string>../..tools/libbson</string>
 		<key>DAF0552197E3AB68DCC15C28A891877C0D0E6981</key>
-		<string>../..tools/libwebsockets/</string>
+		<string>../..tools/libwebsockets</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>ssh://git.linuxdrone.org/LinuxDrone.git</string>
