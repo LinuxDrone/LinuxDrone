@@ -192,6 +192,11 @@
                 "title": "Под Windows",
                 "name": "winwebserver",
                 "url": "guides/configurator/client/webserver/windows"
+              },
+              {
+                "title": "Запуск Web сервера под Mac OS и Linux",
+                "name": "macosLinuxwWbserver",
+                "url": "guides/configurator/client/webserver/macos-linux"
               }
             ]
           },
