@@ -64,7 +64,11 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
 
     initWebSockets: function () {
-        return;
+
+
+return;
+
+
         // Пока не установлено соединение вебсокета, кнопки старта и стопа будут красными
         //res.cssClass4ButtonsRunStop('btn btn-danger');
         var controller = this;
@@ -511,7 +515,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         versionsStore.addFilter([
             {
                 property: 'name',
-                value: records[0].get('name'),
+                value: records.get('name'),
                 operator: '='
             }
         ]);
@@ -533,7 +537,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
         // Найдем в хранилище схему с указанными именем и версией
         var ind = storeListSchemas.findBy(function (record, id) {
-            return record.get('version') == records[0].get('version') && record.get('name') == model.get('currentSchema').get('name');
+            return record.get('version') == records.get('version') && record.get('name') == model.get('currentSchema').get('name');
         });
 
         // Но перед эти пометим текущую схему как не активную
@@ -605,6 +609,20 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
             configuratorModel.set('currentModuleProps', moduleParams);
             configuratorModel.set('nameOfSelectedInstance', instanceName);
+
+            model.bind('{nameOfSelectedInstance}', function (nameSelectedInstance) {
+                console.log(nameSelectedInstance);
+                cell.attributes.attrs[".label"].text = nameSelectedInstance;
+                //cell.sync();
+
+                //getViewModel().get('paper').resetCells(cell);
+
+                var vvv = this.getView().getViewModel().get('paper').findViewByModel(cell);
+                vvv.update();
+                vvv.translate(0,0);
+                //resetCells
+                //findViewByModel
+            });
 
             // Показать панель свойств инстанса
             configuratorModel.set('hideInstanceProperties', false);
@@ -879,7 +897,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     GetHostStatus: function () {
         var model = this.getView().getViewModel();
 
-        $.getJSON('http://192.168.1.20:4000/gethoststatus?callback=?').done(function (resp) {
+        var host = window.document.location.host.replace(/:.*/, '');
+        $.getJSON('http://' + host + ':4000/gethoststatus?callback=?').done(function (resp) {
             switch (resp.status) {
                 case 'running':
                     model.set('started', true);
@@ -890,7 +909,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                     break;
             }
         });
-
     }
 })
 ;

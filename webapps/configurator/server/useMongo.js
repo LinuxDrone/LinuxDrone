@@ -4,7 +4,8 @@ var commonModuleParams = require('../client/ModulesCommonParams.def.js');
 
 //var mongo = require('mongodb');
 var monk = require('monk');
-var db = monk('localhost:27017/test');
+//var db = monk('localhost:27017/test');
+var db = monk('vrubel.linuxdrone.org:27017/test');
 
 
 exports.droneconfig = function (req, res) {
@@ -173,7 +174,7 @@ var hostStatus = {
 
 
 exports.gethoststatus = function (req, res) {
-    return;
+    //return;
     res.json(hostStatus);
 };
 

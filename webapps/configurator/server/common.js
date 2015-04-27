@@ -1,4 +1,6 @@
-var BIN_FOLDER = "../../bin";
+//var BIN_FOLDER = "../../bin"; // Linux BBB
+var BIN_FOLDER = "../../../x64/Debug"; // Windows
+
 
 var fs = require('fs');
 var exec = require('child_process').exec;
@@ -32,7 +34,7 @@ exports.MetaOfModules = {
     // Возвращаемый результат (определение модуля в JSON) пишет в выходной поток http ответа
     executeFile : function (ar_res, files, recursive, callback_end) {
         if (files.length > 0) {
-            var fullFile = files.pop();
+            var fullFile = "\"" + files.pop() + "\"";
 
             process.stdout.write("execute " + fullFile + " --module-definition");
 
@@ -72,11 +74,11 @@ exports.MetaOfModules = {
             }
 
             var listFiles = new Array();
-
             list.forEach(function (file) {
-                // для начала проверим, что расширение файла .mod
-                var ext = file.substr(file.length - 4, 4);
-                if (ext == ".mod") {
+                // для начала проверим, что расширение файла .mod или .mod.exe
+                var ar = file.split('.');
+
+                if (ar[ar.length-1] == "mod" || (ar[ar.length-2] == "mod" && ar[ar.length-1] == "exe")) {
                     listFiles.push(BIN_FOLDER + '/' + file);
                 }
             });

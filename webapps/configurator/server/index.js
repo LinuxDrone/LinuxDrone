@@ -11,25 +11,23 @@ common.MetaOfModules.get(function(res){
 
 
 
-//var routes = require("./useFiles");
-var routes = require("./useMongo");
+var routes = require("./useFiles");
+//var routes = require("./useMongo");
 
 
 var router = new Router();
 
-router.get('/droneconfig', routes.droneconfig);
 router.get('/metamodules', common.metamodules);
-router.get('/newconfig', routes.newconfig);
-router.get('/saveconfig', routes.saveconfig);
-router.get('/getconfig/:id', routes.getconfig);
 router.get('/getconfigs', routes.getconfigs);
-router.delete('/delconfig/:id', routes.delconfig);
+router.get('/gethoststatus', common.gethoststatus);
+router.get('/saveconfig', routes.saveconfig);
+router.get('/delconfig', routes.delconfig);
 router.post('/runhosts', routes.runhosts);
 router.post('/stophosts', routes.stophosts);
-router.get('/gethoststatus', routes.gethoststatus);
 
+
+//router.get('/droneconfig', routes.droneconfig);
+//router.get('/getconfig/:id', routes.getconfig);
 
 var server = http.createServer(router);
 server.listen(process.env.PORT || 4000);
-
-

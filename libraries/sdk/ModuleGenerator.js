@@ -514,8 +514,14 @@ function Create_C_file(module) {
     var module_type = module.name;
     var r = "";
 
+    r += "#ifdef WIN32\n";
     r += "#include <apr_general.h>\n";
-    r += "#include <apr_getopt.h>\n\n";
+    r += "#include <apr_getopt.h>\n";
+    r += "#else\n";
+    r += "// Mac OS X\n";
+    r += "#include <apr-1/apr_general.h>\n";
+    r += "#include <apr-1/apr_getopt.h>\n";
+    r += "#endif\n\n";
 
     if(platform!="MSVC") {
         r += "#include <sys/mman.h>\n";

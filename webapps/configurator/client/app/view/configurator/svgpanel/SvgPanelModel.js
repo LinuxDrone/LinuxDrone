@@ -28,7 +28,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
                 api: {
                     read: location.protocol + '//' + location.hostname + ':4000/getconfigs',
                     update: location.protocol + '//' + location.hostname + ':4000/saveconfig',
-                    create: location.protocol + '//' + location.hostname + ':4000/newconfig',
+                    create: location.protocol + '//' + location.hostname + ':4000/saveconfig',
                     destroy: location.protocol + '//' + location.hostname + ':4000/delconfig'
                 },
                 listeners: {
@@ -37,10 +37,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
                         if (operation.getError().statusText) {
                             errMsg = operation.getError().statusText;
                         }
-                        Ext.window.MessageBox.show({
+                        Ext.MessageBox.show({
                             title: 'REMOTE EXCEPTION',
                             msg: errMsg,
-                            icon: Ext.window.MessageBox.ERROR,
+                            icon: Ext.MessageBox.ERROR,
                             buttons: Ext.Msg.OK
                         });
                     }

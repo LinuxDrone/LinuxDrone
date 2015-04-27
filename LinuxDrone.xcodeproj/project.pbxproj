@@ -27,11 +27,14 @@
 		B10493941A717CAE001F0221 /* apr-module-functions.h in Headers */ = {isa = PBXBuildFile; fileRef = B10493911A717CAE001F0221 /* apr-module-functions.h */; };
 		B10493951A717CAE001F0221 /* apr-helper-functions.c in Sources */ = {isa = PBXBuildFile; fileRef = B10493921A717CAE001F0221 /* apr-helper-functions.c */; };
 		B10493961A717CAE001F0221 /* apr-module-functions.c in Sources */ = {isa = PBXBuildFile; fileRef = B10493931A717CAE001F0221 /* apr-module-functions.c */; };
+		B1118AD01AE55EB800EBFC36 /* libapr-1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1118ACF1AE55EB800EBFC36 /* libapr-1.0.dylib */; };
 		B135AD121AAC5C4C005EAF8E /* test-sender-receiver.c in Sources */ = {isa = PBXBuildFile; fileRef = B135AD031AAC5794005EAF8E /* test-sender-receiver.c */; };
 		B135AD131AAC5C4C005EAF8E /* test-sender-receiver.def.json in Sources */ = {isa = PBXBuildFile; fileRef = B135AD041AAC5794005EAF8E /* test-sender-receiver.def.json */; };
 		B135AD141AAC5C69005EAF8E /* libsdk.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493871A717BE3001F0221 /* libsdk.dylib */; };
 		B135AD151AAC5CCF005EAF8E /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
-		B135AD161AAC5CFF005EAF8E /* libapr-2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493811A703AC3001F0221 /* libapr-2.0.dylib */; };
+		B14AF43E1AE69EF200DD4DFC /* libapr-1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1118ACF1AE55EB800EBFC36 /* libapr-1.0.dylib */; };
+		B14AF43F1AE69EFB00DD4DFC /* libapr-1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1118ACF1AE55EB800EBFC36 /* libapr-1.0.dylib */; };
+		B14AF4401AE69F0600DD4DFC /* libapr-1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1118ACF1AE55EB800EBFC36 /* libapr-1.0.dylib */; };
 		B16EF9191AE06086004FE501 /* telemetry.c in Sources */ = {isa = PBXBuildFile; fileRef = B16EF90D1AE0601C004FE501 /* telemetry.c */; };
 		B16EF91C1AE060AF004FE501 /* libsdk.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493871A717BE3001F0221 /* libsdk.dylib */; };
 		B16EF91D1AE0610D004FE501 /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
@@ -42,9 +45,6 @@
 		B1F0A34E1A87913200C7E995 /* libbson-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */; };
 		B1F0A3511A8BDB3A00C7E995 /* ModulesCommonParams.def.js in Sources */ = {isa = PBXBuildFile; fileRef = B1F0A3501A8BDB3A00C7E995 /* ModulesCommonParams.def.js */; };
 		B1F0A3521A8BDE8800C7E995 /* libsdk.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493871A717BE3001F0221 /* libsdk.dylib */; };
-		B1F0A3531A8D451C00C7E995 /* libapr-2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493811A703AC3001F0221 /* libapr-2.0.dylib */; };
-		B1F0A3541A8E676700C7E995 /* libapr-2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493811A703AC3001F0221 /* libapr-2.0.dylib */; };
-		B1F291651AE0698100157AAF /* libapr-2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B10493811A703AC3001F0221 /* libapr-2.0.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -169,11 +169,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		B10493811A703AC3001F0221 /* libapr-2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libapr-2.0.dylib"; path = "../../../usr/local/apr/lib/libapr-2.0.dylib"; sourceTree = "<group>"; };
 		B10493871A717BE3001F0221 /* libsdk.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libsdk.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10493911A717CAE001F0221 /* apr-module-functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "apr-module-functions.h"; path = "libraries/sdk/include/apr-module-functions.h"; sourceTree = "<group>"; };
 		B10493921A717CAE001F0221 /* apr-helper-functions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "apr-helper-functions.c"; path = "libraries/sdk/src/apr-helper-functions.c"; sourceTree = "<group>"; };
 		B10493931A717CAE001F0221 /* apr-module-functions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "apr-module-functions.c"; path = "libraries/sdk/src/apr-module-functions.c"; sourceTree = "<group>"; };
+		B1118ACF1AE55EB800EBFC36 /* libapr-1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libapr-1.0.dylib"; path = "usr/lib/libapr-1.0.dylib"; sourceTree = SDKROOT; };
 		B135AD031AAC5794005EAF8E /* test-sender-receiver.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "test-sender-receiver.c"; path = "modules/test-sender-receiver/test-sender-receiver.c"; sourceTree = "<group>"; };
 		B135AD041AAC5794005EAF8E /* test-sender-receiver.def.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = "test-sender-receiver.def.json"; path = "modules/test-sender-receiver/test-sender-receiver.def.json"; sourceTree = "<group>"; };
 		B135AD091AAC5852005EAF8E /* test-sender-receiver */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "test-sender-receiver"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -193,7 +193,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B1F0A3541A8E676700C7E995 /* libapr-2.0.dylib in Frameworks */,
+				B1118AD01AE55EB800EBFC36 /* libapr-1.0.dylib in Frameworks */,
 				B1F0A3351A863DF700C7E995 /* libbson-1.0.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -202,7 +202,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B135AD161AAC5CFF005EAF8E /* libapr-2.0.dylib in Frameworks */,
+				B14AF43F1AE69EFB00DD4DFC /* libapr-1.0.dylib in Frameworks */,
 				B135AD151AAC5CCF005EAF8E /* libbson-1.0.0.dylib in Frameworks */,
 				B135AD141AAC5C69005EAF8E /* libsdk.dylib in Frameworks */,
 			);
@@ -212,7 +212,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B1F291651AE0698100157AAF /* libapr-2.0.dylib in Frameworks */,
+				B14AF4401AE69F0600DD4DFC /* libapr-1.0.dylib in Frameworks */,
 				B16EF9211AE06637004FE501 /* libwebsockets.dylib in Frameworks */,
 				B16EF91D1AE0610D004FE501 /* libbson-1.0.0.dylib in Frameworks */,
 				B16EF91C1AE060AF004FE501 /* libsdk.dylib in Frameworks */,
@@ -223,7 +223,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B1F0A3531A8D451C00C7E995 /* libapr-2.0.dylib in Frameworks */,
+				B14AF43E1AE69EF200DD4DFC /* libapr-1.0.dylib in Frameworks */,
 				B1F0A3521A8BDE8800C7E995 /* libsdk.dylib in Frameworks */,
 				B1F0A34E1A87913200C7E995 /* libbson-1.0.0.dylib in Frameworks */,
 			);
@@ -270,11 +270,11 @@
 		B1BF4C4F1A70398E009CEFDC = {
 			isa = PBXGroup;
 			children = (
+				B1118ACF1AE55EB800EBFC36 /* libapr-1.0.dylib */,
 				B16EF9201AE06637004FE501 /* libwebsockets.dylib */,
 				B1F0A3471A8650C800C7E995 /* sdk */,
 				B1F0A3481A8650D200C7E995 /* modules */,
 				B16EF90A1AE05F73004FE501 /* services */,
-				B10493811A703AC3001F0221 /* libapr-2.0.dylib */,
 				B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */,
 				B1BF4C591A70398E009CEFDC /* Products */,
 			);
@@ -540,12 +540,10 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"tools/rootfs/beaglebone/usr/local/include/libbson-1.0",
-					"/usr/local/apr/include/apr-2",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
-					/usr/local/apr/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VALID_ARCHS = "i386 x86_64";
@@ -563,7 +561,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
-					/usr/local/apr/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				VALID_ARCHS = "i386 x86_64";
@@ -583,11 +580,11 @@
 					"tools/rootfs/beaglebone/usr/local/include/libbson-1.0",
 					"$(DERIVED_FILE_DIR)/../../sdk.build/DerivedSources",
 					"/usr/local/apr/include/apr-2",
+					"/opt/local/include/apr-1",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
-					/usr/local/apr/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -599,7 +596,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
-					/usr/local/apr/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -621,12 +617,12 @@
 					"/usr/local/apr/include/apr-2",
 					"$(PROJECT_DIR)/tools/libwebsockets/lib",
 					"$(TARGET_TEMP_DIR)/../sdk.build/DerivedSources/**",
+					"/opt/local/include/apr-1",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
-					"$(PROJECT_DIR)/tools/libwebsockets/build/lib",
-					/usr/local/apr/lib,
+					/usr/local/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -640,8 +636,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
-					"$(PROJECT_DIR)/tools/libwebsockets/build/lib",
-					/usr/local/apr/lib,
+					/usr/local/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -753,12 +748,10 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"tools/rootfs/beaglebone/usr/local/include/libbson-1.0",
 					"$(DERIVED_FILE_DIR)/../../sdk.build/DerivedSources/**",
-					"/usr/local/apr/include/apr-2",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
-					/usr/local/apr/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -772,7 +765,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
-					/usr/local/apr/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
