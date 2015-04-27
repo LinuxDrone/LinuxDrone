@@ -13,8 +13,8 @@
 			buildPhases = (
 			);
 			dependencies = (
-				B16EF91F1AE065AF004FE501 /* PBXTargetDependency */,
 				B18F2A561AD5D386001324C2 /* PBXTargetDependency */,
+				B16EF91F1AE065AF004FE501 /* PBXTargetDependency */,
 				B18F2A581AD5D386001324C2 /* PBXTargetDependency */,
 				B18F2A5A1AD5D386001324C2 /* PBXTargetDependency */,
 			);
@@ -176,14 +176,14 @@
 		B1118ACF1AE55EB800EBFC36 /* libapr-1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libapr-1.0.dylib"; path = "usr/lib/libapr-1.0.dylib"; sourceTree = SDKROOT; };
 		B135AD031AAC5794005EAF8E /* test-sender-receiver.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "test-sender-receiver.c"; path = "modules/test-sender-receiver/test-sender-receiver.c"; sourceTree = "<group>"; };
 		B135AD041AAC5794005EAF8E /* test-sender-receiver.def.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = "test-sender-receiver.def.json"; path = "modules/test-sender-receiver/test-sender-receiver.def.json"; sourceTree = "<group>"; };
-		B135AD091AAC5852005EAF8E /* test-sender-receiver */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "test-sender-receiver"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B135AD091AAC5852005EAF8E /* test-sender-receiver.mod */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "test-sender-receiver.mod"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B16EF90C1AE0601C004FE501 /* telemetry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = telemetry.h; path = services/telemetry/include/telemetry.h; sourceTree = "<group>"; };
 		B16EF90D1AE0601C004FE501 /* telemetry.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = telemetry.c; path = services/telemetry/src/telemetry.c; sourceTree = "<group>"; };
 		B16EF9121AE0606A004FE501 /* telemetry */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = telemetry; sourceTree = BUILT_PRODUCTS_DIR; };
 		B16EF9201AE06637004FE501 /* libwebsockets.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libwebsockets.dylib; path = tools/libwebsockets/build/lib/libwebsockets.dylib; sourceTree = "<group>"; };
 		B1F0A3341A863DF700C7E995 /* libbson-1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libbson-1.0.0.dylib"; path = "tools/libbson/libbson-1.0.0.dylib"; sourceTree = "<group>"; };
 		B1F0A3361A864F9100C7E995 /* test-sender.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "test-sender.c"; path = "modules/test-sender/test-sender.c"; sourceTree = "<group>"; };
-		B1F0A33C1A864FDB00C7E995 /* test-sender */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "test-sender"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1F0A33C1A864FDB00C7E995 /* test-sender.mod */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "test-sender.mod"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1F0A34B1A878F3200C7E995 /* test-sender.def.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = "test-sender.def.json"; path = "modules/test-sender/test-sender.def.json"; sourceTree = "<group>"; };
 		B1F0A3501A8BDB3A00C7E995 /* ModulesCommonParams.def.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = ModulesCommonParams.def.js; path = webapps/configurator/client/ModulesCommonParams.def.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -284,8 +284,8 @@
 			isa = PBXGroup;
 			children = (
 				B10493871A717BE3001F0221 /* libsdk.dylib */,
-				B1F0A33C1A864FDB00C7E995 /* test-sender */,
-				B135AD091AAC5852005EAF8E /* test-sender-receiver */,
+				B1F0A33C1A864FDB00C7E995 /* test-sender.mod */,
+				B135AD091AAC5852005EAF8E /* test-sender-receiver.mod */,
 				B16EF9121AE0606A004FE501 /* telemetry */,
 			);
 			name = Products;
@@ -359,7 +359,7 @@
 			);
 			name = "test-sender-receiver";
 			productName = "test-sender-receiver";
-			productReference = B135AD091AAC5852005EAF8E /* test-sender-receiver */;
+			productReference = B135AD091AAC5852005EAF8E /* test-sender-receiver.mod */;
 			productType = "com.apple.product-type.tool";
 		};
 		B16EF9111AE0606A004FE501 /* telemetry */ = {
@@ -396,7 +396,7 @@
 			);
 			name = "test-sender";
 			productName = "test-sender";
-			productReference = B1F0A33C1A864FDB00C7E995 /* test-sender */;
+			productReference = B1F0A33C1A864FDB00C7E995 /* test-sender.mod */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -586,7 +586,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
 				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "$(TARGET_NAME).mod";
 			};
 			name = Debug;
 		};
@@ -597,7 +597,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
 				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "$(TARGET_NAME).mod";
 			};
 			name = Release;
 		};
@@ -753,7 +753,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
 				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "$(TARGET_NAME).mod";
 			};
 			name = Debug;
 		};
@@ -766,7 +766,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/tools/libbson",
 				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "$(TARGET_NAME).mod";
 			};
 			name = Release;
 		};
