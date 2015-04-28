@@ -24,10 +24,10 @@ joint.routers.manhattan = (function() {
         maximumLoops: 500,
 
         // possible starting directions from an element
-        startDirections: ['left','right','top','bottom'],
+        startDirections: ['left', 'right', 'top', 'bottom'],
 
         // possible ending directions to an element
-        endDirections: ['left','right','top','bottom'],
+        endDirections: ['left', 'right', 'top', 'bottom'],
 
         // specify directions above
         directionMap: {
@@ -48,9 +48,9 @@ joint.routers.manhattan = (function() {
             return {
                 x: -step,
                 y: -step,
-                width: 2*step,
-                height: 2*step
-            }
+                width: 2 * step,
+                height: 2 * step
+            };
         },
 
         // an array of directions to find next points on the route
@@ -136,7 +136,7 @@ joint.routers.manhattan = (function() {
             var x = direction.x * bbox.width / 2;
             var y = direction.y * bbox.height / 2;
 
-            var point = g.point(center).offset(x,y).snapToGrid(step);
+            var point = g.point(center).offset(x, y).snapToGrid(step);
 
             if (bbox.containsPoint(point)) {
 
@@ -372,6 +372,24 @@ joint.routers.manhattan = (function() {
 
         var mapGridSize = opt.mapGridSize;
 
+        var excludeAncestors = [];
+
+        var sourceId = link.get('source').id;
+        if (sourceId !== undefined) {
+            var source = graph.getCell(sourceId);
+            if (source !== undefined) {
+                excludeAncestors = _.union(excludeAncestors, _.map(source.getAncestors(), 'id'));
+            };
+        }
+
+        var targetId = link.get('target').id;
+        if (targetId !== undefined) {
+            var target = graph.getCell(targetId);
+            if (target !== undefined) {
+                excludeAncestors = _.union(excludeAncestors, _.map(target.getAncestors(), 'id'));
+            }
+        }
+
         // builds a map of all elements for quicker obstacle queries (i.e. is a point contained
         // in any obstacle?) (a simplified grid search)
         // The paper is divided to smaller cells, where each of them holds an information which
@@ -382,7 +400,8 @@ joint.routers.manhattan = (function() {
             .difference(excludedEnds)
             // remove all elements whose type is listed in excludedTypes array
             .reject(function(element) {
-                return _.contains(opt.excludeTypes, element.get('type'));
+                // reject any element which is an ancestor of either source or target
+                return _.contains(opt.excludeTypes, element.get('type')) || _.contains(excludeAncestors, element.id);
             })
             // change elements (models) to their bounding boxes
             .invoke('getBBox')

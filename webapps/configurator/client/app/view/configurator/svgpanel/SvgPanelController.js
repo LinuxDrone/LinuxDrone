@@ -342,7 +342,8 @@ return;
             position: { x: 10, y: 20 },
             size: { width: 90},
             attrs: {
-                '.label': {'ref-x': .2, 'ref-y': -2 },
+                '.label': {'ref-x': 45, 'ref-y': -20 }, // ref-x - горизонтальное смещение (от левого верхнего угла бокса модуля) для лабела (выравнивается по центру).
+                                                        // ref-y - смещение по вертикали. минусовое - к верхней части экрана.
                 rect: {fill: this.svgColors.normalModuleColor},
                 '.inPorts circle': { fill: this.svgColors.inPortsFillColor },
                 '.outPorts circle': { fill: this.svgColors.outPortsFillColor }
@@ -619,7 +620,7 @@ return;
 
                 var vvv = this.getView().getViewModel().get('paper').findViewByModel(cell);
                 vvv.update();
-                vvv.translate(0,0);
+                //vvv.translate(0,0);
                 //resetCells
                 //findViewByModel
             });

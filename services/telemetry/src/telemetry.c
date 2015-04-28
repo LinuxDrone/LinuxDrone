@@ -165,7 +165,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
 
     case LWS_CALLBACK_RECEIVE:
         bson_request = bson_new_from_data (in, len);
-        //debug_print_bson("received", bson_request);
+debug_print_bson("received", bson_request);
 
         // Get Instance Name
         bson_iter_t iter_instance_name;
