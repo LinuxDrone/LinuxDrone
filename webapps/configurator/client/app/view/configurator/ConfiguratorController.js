@@ -96,7 +96,7 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
         // Удалим параметры инстанса из схемы
         delete svgpanelmodel.get('currentSchema').get('modulesParams')[model.get('nameOfSelectedInstance')];
 
-        // Установим заголовок в коне свйоств, это заблокирует кнопку удаления
+        // Установим заголовок в окне свйоств, это заблокирует кнопку удаления
         model.set('nameOfSelectedInstance', 'Properties');
 
         // Пометим схему как измененную

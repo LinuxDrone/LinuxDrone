@@ -59,6 +59,33 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                 this.getView().logPanel.getViewModel().set('logLabelBackground', 'red');
         });
 
+        // При изменении имени инстанса в панели свойств, необходимо поменять имя инстанса в схеме
+        model.bind('{nameOfSelectedInstance}', function (nameSelectedInstance, oldName) {
+            // Так как имя инстанса отображается в заголовке окна свойств инстанса, а при выборе белого листа там отображается надпись Properties, то игнорируем значение "Properties".
+            if(nameSelectedInstance === 'Properties' || oldName === 'Properties'){
+                return;
+            }
+
+            var cell = model.get('selectedCell');
+
+            // Меняем название инстанса в визульном представлении инстанса
+            cell.attributes.attrs[".label"].text = nameSelectedInstance;
+            var vvv = this.getView().getViewModel().get('paper').findViewByModel(cell);
+            vvv.update();
+
+            // Меняем название инстанса в коллекции параметров для инстансов
+            // Так как список параметров для инстанса хранится под ключом (именем инстанса), то создаем новый ключ, копируем туда параметры, а старый ключ удаляем.
+            var currentSchema = model.get('currentSchema');
+            var modulesParams = currentSchema.get('modulesParams');
+            modulesParams[nameSelectedInstance] = modulesParams[oldName];
+            delete modulesParams[oldName];
+
+            // Помечаем схему как измененную.
+            model.set('schemaChanged', true);
+
+
+        });
+
         this.initWebSockets();
     },
 
@@ -609,21 +636,9 @@ return;
             var moduleParams = currentSchema.get('modulesParams')[instanceName];
 
             configuratorModel.set('currentModuleProps', moduleParams);
+            configuratorModel.set('nameOfSelectedInstance', 'Properties');  // Сначала установим имя модуля как "Properties" и только потом установим настоящее имя инстанса.
+                                                                            // Это из за костыля, встроенного в обработчик изменения имени инстанса
             configuratorModel.set('nameOfSelectedInstance', instanceName);
-
-            model.bind('{nameOfSelectedInstance}', function (nameSelectedInstance) {
-                console.log(nameSelectedInstance);
-                cell.attributes.attrs[".label"].text = nameSelectedInstance;
-                //cell.sync();
-
-                //getViewModel().get('paper').resetCells(cell);
-
-                var vvv = this.getView().getViewModel().get('paper').findViewByModel(cell);
-                vvv.update();
-                //vvv.translate(0,0);
-                //resetCells
-                //findViewByModel
-            });
 
             // Показать панель свойств инстанса
             configuratorModel.set('hideInstanceProperties', false);
