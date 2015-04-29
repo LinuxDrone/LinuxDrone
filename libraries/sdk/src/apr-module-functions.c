@@ -723,7 +723,7 @@ void read_shmem(shmem_in_set_t* remote_shmem, void* data, apr_size_t* datalen)
 	if (rv == APR_EOF || *datalen == 0) {
 		char buf_err[250];
 		apr_strerror(rv, buf_err,	250);
-		fprintf(stderr, "%s", buf_err);
+		fprintf(stderr, "%s\n", buf_err);
 
 		*datalen = 0;
 		return;

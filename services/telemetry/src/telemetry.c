@@ -146,7 +146,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
 
             buf_and_bson_t buf_and_bson = ar_bson2send[k];
             buf_and_bson.buf = malloc(500);
-            unsigned short retlen = 0;
+			apr_size_t retlen = 0;
             read_shmem(remote_shmem, buf_and_bson.buf, &retlen);
             if (retlen < 1)
                 continue;
