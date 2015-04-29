@@ -10,6 +10,10 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorModel', {
         newSchemaName: '',
         newSchemaVersion: '',
         nameOfSelectedInstance: 'Properties',
+        isJustSelectedInstance: false, // Этотакой костыль. Переменная устанавливается в true в момент выбора инстанса на схеме.
+        // После изменеия переменной nameOfSelectedInstance, которой присваивается имя инстанса, флаг сбрасывается.
+        // Это сделано для того, чтобы отличать факт изменения перменной nameOfSelectedInstance от действия выбора инстанса
+        // от действия смены именя инстанса в панели свойств
 
         currentModuleProps: {},
 

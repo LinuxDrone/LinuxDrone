@@ -59,10 +59,20 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                 this.getView().logPanel.getViewModel().set('logLabelBackground', 'red');
         });
 
+
+
         // При изменении имени инстанса в панели свойств, необходимо поменять имя инстанса в схеме
         model.bind('{nameOfSelectedInstance}', function (nameSelectedInstance, oldName) {
             // Так как имя инстанса отображается в заголовке окна свойств инстанса, а при выборе белого листа там отображается надпись Properties, то игнорируем значение "Properties".
             if(nameSelectedInstance === 'Properties' || oldName === 'Properties'){
+                return;
+            }
+
+            var configuratorModel = this.getView().ownerCt.getViewModel();
+
+            if(configuratorModel.get('isJustSelectedInstance')){
+                // Изменение имени инстанса вызвано выбором нового инстанса на схеме а не редактированием в панели свойств
+                configuratorModel.set('isJustSelectedInstance', false);
                 return;
             }
 
@@ -83,7 +93,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             // Помечаем схему как измененную.
             model.set('schemaChanged', true);
 
-
+            console.log("oldName="+oldName+"\tnewName="+nameSelectedInstance);
         });
 
         this.initWebSockets();
@@ -93,7 +103,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     initWebSockets: function () {
 
 
-return;
+//return;
 
 
         // Пока не установлено соединение вебсокета, кнопки старта и стопа будут красными
@@ -636,8 +646,8 @@ return;
             var moduleParams = currentSchema.get('modulesParams')[instanceName];
 
             configuratorModel.set('currentModuleProps', moduleParams);
-            configuratorModel.set('nameOfSelectedInstance', 'Properties');  // Сначала установим имя модуля как "Properties" и только потом установим настоящее имя инстанса.
-                                                                            // Это из за костыля, встроенного в обработчик изменения имени инстанса
+            configuratorModel.set('isJustSelectedInstance', true);  // Сначала установим флаг того, что только что выбран новый модуль
+                                                                    // Это из за костыля, встроенного в обработчик изменения имени инстанса
             configuratorModel.set('nameOfSelectedInstance', instanceName);
 
             // Показать панель свойств инстанса
