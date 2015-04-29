@@ -338,7 +338,7 @@ int usage(module_t* module, char *argv[])
     fprintf(stderr, "\toptional\n");
     fprintf(stderr, "\tBusiness function execution period in microseconds (default: 20000)\n\n");
     
-    fprintf(stderr, "--in-link=INSTANCE_TRANSMITTER.OBJ_NAME.OUT_NAME->IN_NAME\n");
+    fprintf(stderr, "--in-link=INSTANCE_TRANSMITTER@OBJ_NAME@OUT_NAME#IN_NAME\n");
     fprintf(stderr, "\toptional\n");
     fprintf(stderr, "\tInput link (provides data from another instance to this one through shared memory)\n\n");
     
