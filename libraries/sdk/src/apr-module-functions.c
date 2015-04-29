@@ -1009,6 +1009,7 @@ void get_input_data(module_t *module)
                          
                          apr_size_t len = bson_tr.len;
                          apr_status_t rv = apr_socket_send(socket, (const char*)bson_get_data(&bson_tr), &len);
+fprintf(stderr, "was sended: %i bytes\n", len);
                          if (rv != APR_SUCCESS) {
                              fprintf(stderr, "error: %i apr_socket_send in get_input_data\n", rv);
                              //bson_destroy(bson_obj);
@@ -1126,8 +1127,8 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
             if (rv == APR_SUCCESS) 
 			{
 				/* see the tutorial about the reason why we have to specify options again */
-				//apr_socket_opt_set(remote_shmem->socket, APR_SO_NONBLOCK, 0);
-				//apr_socket_timeout_set(remote_shmem->socket, CLIENT_TCP_SOCKET_TIMEOUT);
+				apr_socket_opt_set(remote_shmem->socket, APR_SO_NONBLOCK, 0);
+				apr_socket_timeout_set(remote_shmem->socket, CLIENT_TCP_SOCKET_TIMEOUT);
 
 				fprintf(stderr, "%sCONNECTED: %s to socket %s%s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, remote_shmem->name_outgroup, ANSI_COLOR_RESET);
 				remote_shmem->f_socket_connected = true;
