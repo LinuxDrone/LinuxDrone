@@ -3,7 +3,6 @@ var Router = require('node-simple-router');
 
 var common = require("./common");
 
-
 // Загрузим и закешируем определения модулей
 common.MetaOfModules.get(function(res){
     console.log('Module definitions cached');
@@ -23,7 +22,7 @@ router.get('/gethoststatus', common.gethoststatus);
 router.get('/saveconfig', routes.saveconfig);
 router.get('/delconfig', routes.delconfig);
 router.get('/getconfig/:id', routes.getconfig);
-router.post('/runhosts', routes.runhosts);
+router.get('/runhosts', common.runhosts);
 router.post('/stophosts', routes.stophosts);
 
 

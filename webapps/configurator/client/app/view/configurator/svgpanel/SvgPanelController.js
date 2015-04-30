@@ -882,22 +882,37 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             "version": currentSchema.get('version')
         };
 
+
+        var host = window.document.location.host.replace(/:.*/, '');
+
         if (model.get('schemaChanged')) {
             controller.SaveCurrentConfig(data4send.name, data4send.version, function () {
-                $.post("runhosts", data4send,
-                    function (data) {
+                Ext.data.JsonP.request({
+                    url: 'http://' + host + ':4000/runhosts',
+                    callbackKey: 'callback',
+                    params: data4send,
+                    callback: function (res) {
+                        if(res){
+                            // Выполнение конфигурации начато.
+                            // Следует подписаться на телеметрию
+                            controller.AllSubscribe2Telemetry(currentSchema, controller, 'subscribe');
+                        }
+                    }
+                });
+            });
+        } else {
+            Ext.data.JsonP.request({
+                url: 'http://' + host + ':4000/runhosts',
+                callbackKey: 'callback',
+                params: data4send,
+                callback: function (res) {
+                    if(res){
                         // Выполнение конфигурации начато.
                         // Следует подписаться на телеметрию
                         controller.AllSubscribe2Telemetry(currentSchema, controller, 'subscribe');
-                    });
+                    }
+                }
             });
-        } else {
-            $.post("runhosts", data4send,
-                function (data) {
-                    // Выполнение конфигурации начато.
-                    // Следует подписаться на телеметрию
-                    controller.AllSubscribe2Telemetry(currentSchema, controller, 'subscribe');
-                });
         }
     },
 

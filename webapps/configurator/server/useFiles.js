@@ -1,15 +1,10 @@
-var CFG_FOLDER = "../../cfg";
-
 var fs = require('fs');
 
+var common = require("./common");
 
-function requireUncached(module){
-    delete require.cache[require.resolve(module)];
-    return require(module);
-}
 
 exports.getconfigs = function (req, res) {
-    fs.readdir(CFG_FOLDER, function (err, list) {
+    fs.readdir(common.CFG_FOLDER, function (err, list) {
         if (err) {
             console.log(err);
             return;
@@ -21,7 +16,7 @@ exports.getconfigs = function (req, res) {
             var ar = file.split('.');
 
             if (ar[ar.length - 1] == "json") {
-                var cfg = requireUncached(CFG_FOLDER + '/' + file);
+                var cfg = common.requireUncached(common.CFG_FOLDER + '/' + file);
                 cfgFiles.push(cfg);
             }
         });
@@ -49,7 +44,7 @@ exports.saveconfig = function (req, res) {
     ar.forEach(function (item, i, arr) {
         var record = JSON.parse(item);
 
-        var cfgFileName = CFG_FOLDER + "/" + record.name + "." + record.version + ".json";
+        var cfgFileName = common.CFG_FOLDER + "/" + record.name + "." + record.version + ".json";
         fs.writeFile(cfgFileName, JSON.stringify(record), function (err) {
             if (err) {
                 res.send({"success": false, "message": err});
@@ -78,8 +73,8 @@ function getTimeStamp() {
 exports.delconfig = function (req, res) {
     var record = JSON.parse(req.body.records);
 
-    var curCfgFileName = CFG_FOLDER + "/" + record.name + "." + record.version + ".json";
-    var delCfgFileName = CFG_FOLDER + "/" + record.name + "." + record.version + "_" + getTimeStamp() + ".deleted";
+    var curCfgFileName = common.CFG_FOLDER + "/" + record.name + "." + record.version + ".json";
+    var delCfgFileName = common.CFG_FOLDER + "/" + record.name + "." + record.version + "_" + getTimeStamp() + ".deleted";
 
     fs.rename(curCfgFileName, delCfgFileName, function(err) {
         if (err) {
@@ -101,7 +96,7 @@ exports.delconfig = function (req, res) {
 };
 
 exports.getconfig = function (req, res) {
-    fs.readdir(CFG_FOLDER, function (err, list) {
+    fs.readdir(common.CFG_FOLDER, function (err, list) {
         if (err) {
             console.log(err);
             return;
@@ -112,7 +107,7 @@ exports.getconfig = function (req, res) {
             var ar = file.split('.');
 
             if (ar[ar.length - 1] == "json") {
-                var cfg = requireUncached(CFG_FOLDER + '/' + file);
+                var cfg = common.requireUncached(common.CFG_FOLDER + '/' + file);
                 if(cfg["_id"]===req.params.id){
                     res.setHeader("Content-Type", "application/json");
                     res.setHeader("Content-Disposition", "attachment;filename='" + cfg.name + "." + cfg.version + ".json'");
