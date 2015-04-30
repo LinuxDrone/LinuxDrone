@@ -70,12 +70,10 @@ exports.saveconfig = function (req, res) {
     res.end();
 }
 
-
 function getTimeStamp() {
     var now = new Date();
     return ((now.getMonth() + 1) + '-' + (now.getDate()) + '-' + now.getFullYear() + "_" + now.getHours() + '-' + ((now.getMinutes() < 10) ? ("0" + now.getMinutes()) : (now.getMinutes())) + '-' + ((now.getSeconds() < 10) ? ("0" + now.getSeconds()) : (now.getSeconds())));
 }
-
 
 exports.delconfig = function (req, res) {
     var record = JSON.parse(req.body.records);
@@ -99,5 +97,30 @@ exports.delconfig = function (req, res) {
             res.write('{"success": true}');
         }
         res.end();
+    });
+};
+
+exports.getconfig = function (req, res) {
+    fs.readdir(CFG_FOLDER, function (err, list) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        var cfgFiles = new Array();
+        list.forEach(function (file) {
+            // для начала проверим, что расширение файла .json
+            var ar = file.split('.');
+
+            if (ar[ar.length - 1] == "json") {
+                var cfg = requireUncached(CFG_FOLDER + '/' + file);
+                if(cfg["_id"]===req.params.id){
+                    res.setHeader("Content-Type", "application/json");
+                    res.setHeader("Content-Disposition", "attachment;filename='" + cfg.name + "." + cfg.version + ".json'");
+                    res.write(JSON.stringify(cfg));
+                    res.end();
+                    return;
+                }
+            }
+        });
     });
 };

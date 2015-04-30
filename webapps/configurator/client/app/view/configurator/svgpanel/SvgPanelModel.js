@@ -119,7 +119,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
 
         exportLink: function(get){
             var curSchema = get('currentSchema');
-            return '<a target="_blank" href="getconfig/'+curSchema.id +'">Export</a>';
+            return '<a target="_blank" href="' + location.protocol + '//' + location.hostname + ':4000/getconfig/'+curSchema.id +'">Export</a>';
         }
     }
 });
