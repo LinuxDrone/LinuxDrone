@@ -1,5 +1,5 @@
-var BIN_FOLDER = "../../bin"; // Linux BBB
-//var BIN_FOLDER = "../../../x64/Debug"; // Windows
+//var BIN_FOLDER = "../../bin"; // Linux BBB
+var BIN_FOLDER = "../../../x64/Debug"; // Windows
 
 
 var fs = require('fs');
