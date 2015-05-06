@@ -7,6 +7,7 @@ var commonModuleParams = require('../client/ModulesCommonParams.def.js');
 var _ = require('underscore');
 var fs = require('fs');
 var exec = require('child_process').exec;
+var spawn = require('child_process').spawn;
 
 
 // Приведение значения к типу
@@ -156,6 +157,20 @@ function ConvertGraph2Configuration(graph, modulesParams, metaModules) {
 }
 
 
+// Генерит строку параметров командной строки, для запуска инстанса модуля
+function MakeInstanceCommandParams(instance, configuration){
+    var res = new Array();
+    res.push("--name=" + instance.instance);
+
+    var addrs = instance.instance.split(":");
+    if(addrs.length>1){
+        var port = addrs[1];
+        res.push("--port=" + port);
+    }
+
+    return res;
+}
+
 exports.requireUncached = function(module){
     delete require.cache[require.resolve(module)];
     return require(module);
@@ -286,7 +301,7 @@ exports.runhosts = function (req, res) {
             if (ar[ar.length - 1] == "json") {
                 var schema = exports.requireUncached(exports.CFG_FOLDER + '/' + file);
                 if (schema.name === req.body.name && schema.version === req.body.version) {
-                    console.log('Нашлась схема ' + schema.name + " " + schema.version);
+                    //console.log('Нашлась схема ' + schema.name + " " + schema.version);
 
                     // Теперь надо вытащить из схемы все модули, сформировать для каждого из них параметры командной строки запустить каждый в отдельном процессе.
                     exports.MetaOfModules.get(function (metaModules) {
@@ -295,6 +310,21 @@ exports.runhosts = function (req, res) {
 
                         configuration.modules.forEach(function (instance) {
                             console.log(instance.instance);
+                            var instanceCmdParams = MakeInstanceCommandParams(instance, configuration);
+
+                            var cmdName = instance.name + ".mod";
+                            cmdName += ".exe";
+
+                            var chost;
+                            try {
+                                chost = spawn(BIN_FOLDER + cmdName, instanceCmdParams);
+                            } catch (e) {
+                                console.log(e);
+                                //res.send({"success": false, "message": e});
+                                return;
+                            }
+
+                            var ddd = 0;
                         });
 
                         if (req.body.callback) {
