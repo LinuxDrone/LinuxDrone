@@ -70,7 +70,7 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
         });
 
         // Перенос общих (определенных для всех типов модулей) параметров
-        if (modulesParams && modulesParams[module.instance].common) { //&& modulesParams[module.instance]
+        if (modulesParams && modulesParams[module.instance] && modulesParams[module.instance].common) { //&& modulesParams[module.instance]
             var commonParams = modulesParams[module.instance].common;
             Object.keys(commonParams).forEach(function (paramName) {
                 var metaParam = _.find(commonModuleParams.commonModuleParamsDefinition, function (meta) {
@@ -85,6 +85,9 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
                 }
                 module[paramName] = typedValue;
             });
+        }else{
+            console.log("For instance " + module.instance + ". Not found common parameters");
+            return;
         }
 
         // Перенос специфических для модуля параметров
@@ -290,6 +293,9 @@ exports.runhosts = function (req, res) {
                         // Получаем описания модулей и вызываем функцию, передавай ей граф объектов из графической схемы и настроечные параметры модулей.
                         var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
 
+                        configuration.modules.forEach(function (instance) {
+                            console.log(instance.instance);
+                        });
 
                         if (req.body.callback) {
                             res.writeHead(200, {"Content-Type": "application/javascript"});

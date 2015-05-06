@@ -63,12 +63,13 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
         // При изменении имени инстанса в панели свойств, необходимо поменять имя инстанса в схеме
         model.bind('{nameOfSelectedInstance}', function (nameSelectedInstance, oldName) {
+            var configuratorModel = this.getView().ownerCt.getViewModel();
+
             // Так как имя инстанса отображается в заголовке окна свойств инстанса, а при выборе белого листа там отображается надпись Properties, то игнорируем значение "Properties".
             if(nameSelectedInstance === 'Properties' || oldName === 'Properties'){
+                configuratorModel.set('isJustSelectedInstance', false);
                 return;
             }
-
-            var configuratorModel = this.getView().ownerCt.getViewModel();
 
             if(configuratorModel.get('isJustSelectedInstance')){
                 // Изменение имени инстанса вызвано выбором нового инстанса на схеме а не редактированием в панели свойств
