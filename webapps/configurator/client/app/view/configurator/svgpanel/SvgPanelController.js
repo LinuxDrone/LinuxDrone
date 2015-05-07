@@ -7,7 +7,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     requires: [
         'RtConfigurator.view.configurator.dialogs.ImportSchemaDialog',
         'RtConfigurator.view.configurator.logpanel.LogContentPanel',
-        'RtConfigurator.model.Schema'
+        'RtConfigurator.model.Schema',
+        'RtConfigurator.model.LogRecord'
     ],
 
     alias: 'controller.svgpanel',

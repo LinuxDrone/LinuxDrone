@@ -279,6 +279,7 @@ exports.gethoststatus = function (req, res) {
     res.end();
 };
 
+var processes = {};
 
 exports.runhosts = function (req, res) {
 
@@ -315,14 +316,77 @@ exports.runhosts = function (req, res) {
                             var cmdName = instance.name + ".mod";
                             cmdName += ".exe";
 
-                            var chost;
+                            var process;
                             try {
-                                chost = spawn(BIN_FOLDER + cmdName, instanceCmdParams);
+                                process = spawn(BIN_FOLDER + "/" + cmdName, instanceCmdParams);
                             } catch (e) {
                                 console.log(e);
                                 //res.send({"success": false, "message": e});
                                 return;
                             }
+                            processes[instance.name] = process;
+
+                            process.stdout.on('data', function (data) {
+                                if (global.ws_server == undefined) return;
+                                global.ws_server.send(
+                                    JSON.stringify({
+                                        process: 'c-host',
+                                        type: 'stdout',
+                                        data: data
+                                    }), function () {
+                                    });
+                                console.log('stdout: ' + data);
+                            });
+
+
+                            process.stderr.on('data', function (data) {
+                                if (global.ws_server == undefined) return;
+                                global.ws_server.send(
+                                    JSON.stringify({
+                                        process: 'c-host',
+                                        type: 'stderr',
+                                        data: data
+                                    }), function () {
+                                    });
+                                console.log('stderr: ' + data);
+                            });
+
+                            process.on('close', function (code) {
+                                chost = undefined;
+
+                                hostStatus.status = 'stopped';
+                                if (global.ws_server != undefined) {
+                                    global.ws_server.send(JSON.stringify(hostStatus), function () {
+                                    });
+                                }
+                                hostStatus.schemaName = '';
+                                hostStatus.schemaVersion = '';
+
+                                console.log('c-host child process exited with code ' + code);
+                            });
+
+                            process.on('error', function (code) {
+                                chost = undefined;
+
+                                hostStatus.status = 'stopped';
+                                if (global.ws_server != undefined) {
+                                    global.ws_server.send(JSON.stringify(hostStatus), function () {
+                                    });
+                                }
+                                hostStatus.schemaName = '';
+                                hostStatus.schemaVersion = '';
+
+                                console.log('c-host child process exited with code ' + code);
+                            });
+
+
+                            if (global.ws_server != undefined) {
+                                global.ws_server.send(JSON.stringify(hostStatus), function () {
+                                });
+                            }
+
+                            //res.send({"success": true});
+
 
                             var ddd = 0;
                         });
