@@ -316,21 +316,22 @@ exports.runhosts = function (req, res) {
                             var cmdName = instance.name + ".mod";
                             cmdName += ".exe";
 
-                            var process;
+                            var new_process;
                             try {
-                                process = spawn(BIN_FOLDER + "/" + cmdName, instanceCmdParams);
+                                new_process = spawn(BIN_FOLDER + "/" + cmdName, instanceCmdParams, {env: process.env});
                             } catch (e) {
                                 console.log(e);
                                 //res.send({"success": false, "message": e});
                                 return;
                             }
-                            processes[instance.name] = process;
+                            processes[instance.name] = new_process;
 
-                            process.stdout.on('data', function (data) {
+                            new_process.stdout.on('data', function (data) {
                                 if (global.ws_server == undefined) return;
+                                console.log("prc=" + instance.instance);
                                 global.ws_server.send(
                                     JSON.stringify({
-                                        process: 'c-host',
+                                        process: instance.instance,
                                         type: 'stdout',
                                         data: data
                                     }), function () {
@@ -339,7 +340,7 @@ exports.runhosts = function (req, res) {
                             });
 
 
-                            process.stderr.on('data', function (data) {
+                            new_process.stderr.on('data', function (data) {
                                 if (global.ws_server == undefined) return;
                                 global.ws_server.send(
                                     JSON.stringify({
@@ -351,7 +352,7 @@ exports.runhosts = function (req, res) {
                                 console.log('stderr: ' + data);
                             });
 
-                            process.on('close', function (code) {
+                            new_process.on('close', function (code) {
                                 chost = undefined;
 
                                 hostStatus.status = 'stopped';
@@ -365,7 +366,7 @@ exports.runhosts = function (req, res) {
                                 console.log('c-host child process exited with code ' + code);
                             });
 
-                            process.on('error', function (code) {
+                            new_process.on('error', function (code) {
                                 chost = undefined;
 
                                 hostStatus.status = 'stopped';
@@ -388,7 +389,6 @@ exports.runhosts = function (req, res) {
                             //res.send({"success": true});
 
 
-                            var ddd = 0;
                         });
 
                         if (req.body.callback) {
