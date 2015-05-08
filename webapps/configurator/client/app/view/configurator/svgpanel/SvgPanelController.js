@@ -929,12 +929,21 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             "name": currentSchema.get('name'),
             "version": currentSchema.get('version')
         };
-        $.post("stophosts", data4send,
-            function (data) {
-                // Выполнение конфигурации остановлено.
-                // Следует отписаться от телеметрии
-                controller.AllSubscribe2Telemetry(currentSchema, controller, 'unsubscribe');
-            });
+
+        var host = window.document.location.host.replace(/:.*/, '');
+
+        Ext.data.JsonP.request({
+            url: 'http://' + host + ':4000/stophosts',
+            callbackKey: 'callback',
+            params: data4send,
+            callback: function (res) {
+                if(res){
+                    // Выполнение конфигурации остановлено.
+                    // Следует отписаться от телеметрии
+                    controller.AllSubscribe2Telemetry(currentSchema, controller, 'unsubscribe');
+                }
+            }
+        });
     },
 
     // Запрос статуса процесса выполнения

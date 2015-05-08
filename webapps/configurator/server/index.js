@@ -24,7 +24,7 @@ router.get('/saveconfig', routes.saveconfig);
 router.get('/delconfig', routes.delconfig);
 router.get('/getconfig/:id', routes.getconfig);
 router.get('/runhosts', common.runhosts);
-router.post('/stophosts', routes.stophosts);
+router.get('/stophosts', common.stophosts);
 
 
 //router.get('/droneconfig', routes.droneconfig);

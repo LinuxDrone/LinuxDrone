@@ -285,6 +285,7 @@ exports.runhosts = function (req, res) {
 
     if (hostStatus.status === 'running') {
         res.send({"success": false, message: "Host already running"});
+        res.end();
         return;
     }
 
@@ -321,10 +322,11 @@ exports.runhosts = function (req, res) {
                                 new_process = spawn(BIN_FOLDER + "/" + cmdName, instanceCmdParams, {env: process.env});
                             } catch (e) {
                                 console.log(e);
-                                //res.send({"success": false, "message": e});
+                                res.send({"success": false, "message": e});
+                                res.end();
                                 return;
                             }
-                            processes[instance.name] = new_process;
+                            processes[instance.instance] = new_process;
 
                             hostStatus.status = 'running';
                             hostStatus.schemaName = schema.name;
@@ -356,8 +358,6 @@ exports.runhosts = function (req, res) {
                             });
 
                             new_process.on('close', function (code) {
-                                chost = undefined;
-
                                 hostStatus.status = 'stopped';
                                 if (global.ws_server != undefined) {
                                     global.ws_server.send(JSON.stringify(hostStatus), function () {
@@ -370,8 +370,6 @@ exports.runhosts = function (req, res) {
                             });
 
                             new_process.on('error', function (code) {
-                                chost = undefined;
-
                                 hostStatus.status = 'stopped';
                                 if (global.ws_server != undefined) {
                                     global.ws_server.send(JSON.stringify(hostStatus), function () {
@@ -382,7 +380,6 @@ exports.runhosts = function (req, res) {
 
                                 console.log('c-host child process exited with code ' + code);
                             });
-
 
                             if (global.ws_server != undefined) {
                                 global.ws_server.send(JSON.stringify(hostStatus), function () {
@@ -405,3 +402,49 @@ exports.runhosts = function (req, res) {
     });
 };
 
+
+exports.stophosts = function (req, res) {
+
+    if (Object.keys(processes).length == 0) {
+        res.send({"success": false, message: "Host already stopped"});
+        res.end();
+        return;
+    }
+
+
+
+
+    Object.keys(processes).forEach(function (key) {
+        stopped_process = processes[key];
+        try {
+            stopped_process.kill();
+        } catch (e) {
+            console.log(e);
+            res.send({"success": false, "message": e});
+            res.end();
+            return;
+        }
+    });
+
+    processes = {};
+
+
+     hostStatus.status = 'stopped';
+     if (global.ws_server != undefined) {
+     global.ws_server.send(JSON.stringify(hostStatus), function () {
+     });
+     }
+     hostStatus.schemaName = '';
+     hostStatus.schemaVersion = '';
+
+
+
+    if (req.body.callback) {
+        res.writeHead(200, {"Content-Type": "application/javascript"});
+        res.write(req.body.callback + '(' + JSON.stringify({"success": true}) + ')');
+    } else {
+        res.writeHead(200, {"Content-Type": "application/json"});
+        res.write(JSON.stringify({"success": true}));
+    }
+
+};
