@@ -12,6 +12,9 @@ Ext.define('RtConfigurator.view.main.Main', {
         //'RtConfigurator.view.configurator.ConfiguratorPanel'
     ],
 
+    alias: 'widget.mainpanel',
+    reference: 'MainPanel',
+
     xtype: 'app-main',
 
     controller: 'main',
@@ -32,10 +35,12 @@ Ext.define('RtConfigurator.view.main.Main', {
                     title: 'Tab 1',
                     html: '<h2>Content appropriate for the current navigation.</h2>'
                 },*/
+                /*
                 {
                     xtype: 'configurator',
                     title: 'Configuration'
                 }
+                */
             ]
         }
     ]

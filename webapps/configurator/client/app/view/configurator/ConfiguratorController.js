@@ -40,7 +40,6 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorController', {
                 svgpanelmodel.set('schemaChanged', true);
             }
         });
-
     },
 
     onTelemetrySubscribeChanged: function (store, record, operation, modifiedFieldNames, eOpts) {
