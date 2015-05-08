@@ -236,7 +236,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 if (store.count() > 100) {
                                     store.removeAt(0);
                                 }
-
                                 break;
 
                             case 'status':

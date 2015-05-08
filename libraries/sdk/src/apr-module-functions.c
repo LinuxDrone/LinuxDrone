@@ -182,7 +182,7 @@ shmem_in_set_t* register_remote_shmem(apr_pool_t *mp, ar_remote_shmems_t* ar_rem
     strcpy(new_remote_shmem->name_outgroup, name_remote_outgroup);
     
     
-    // создадим клинский сокет для пулинга по данной входящей связи
+    // создадим клиентский сокет для пулинга по данной входящей связи
     char* remote_addr = malloc(strlen(name_remote_instance) + 1);
     strcpy(remote_addr, name_remote_instance);
     char* name_remote_host = strtok(remote_addr, PORT_SEPARATOR);
@@ -224,7 +224,6 @@ __declspec(dllexport) int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_
 int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* name_remote_instance, const char* name_remote_outgroup)
 #endif
 {
-    /*
     if(ar_remote_shmems==NULL)
     {
         fprintf(stderr, "Function \"unregister_remote_shmem\" null parameter ar_remote_shmems\n");
@@ -273,9 +272,7 @@ int unregister_remote_shmem(ar_remote_shmems_t* ar_remote_shmems, const char* na
             return 0;
         }
     }
-*/
     return -1;
-     
 }
 
 
@@ -1158,48 +1155,13 @@ int connect_in_links(ar_remote_shmems_t* ar_remote_shmems, const char* instance_
 
 int disconnect_in_links(shmem_in_set_t* remote_shmem)
 {
-    /*
-    if(remote_shmem->f_shmem_connected)
-    {
-        int res = rt_heap_unbind	(&remote_shmem->remote_shmem.h_shmem);
-        if(res!=0)
-        {
-            fprintf(stderr, "Error:%i rt_heap_unbind for instance=%s\n", res, remote_shmem->name_instance);
-            return -1;
-        }
+	if (remote_shmem->f_socket_connected)
+	{
+		apr_socket_close(remote_shmem->socket);
+		remote_shmem->f_socket_connected = false;
+	}
 
-        fprintf(stderr, "%sDISCONNECTED: %s shmem%s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
-        remote_shmem->f_shmem_connected = false;
-    }
-
-
-    if(remote_shmem->f_event_connected)
-    {
-        int res = rt_event_unbind(&remote_shmem->remote_shmem.eflags);
-        if(res!=0)
-        {
-            fprintf(stderr, "Error:%i rt_event_unbind instance=%s\n", res, remote_shmem->name_instance);
-            return -1;
-        }
-        fprintf(stderr, "%sDISCONNECTED: %s event service %s\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
-        remote_shmem->f_event_connected = false;
-    }
-
-
-    if(remote_shmem->f_mutex_connected)
-    {
-        int res = rt_mutex_unbind(&remote_shmem->remote_shmem.mutex_read_shmem);
-        if(res!=0)
-        {
-            fprintf(stderr, "Error:%i rt_mutex_unbind instance=%s\n", res, remote_shmem->name_instance);
-            return -1;
-        }
-        fprintf(stderr, "%sDISCONNECTED: %s to mutex service %s\n\n", ANSI_COLOR_YELLOW, remote_shmem->name_instance, ANSI_COLOR_RESET);
-        remote_shmem->f_mutex_connected = false;
-    }
-*/
     return 0;
-     
 }
 
 

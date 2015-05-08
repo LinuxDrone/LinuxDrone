@@ -43,7 +43,6 @@ function CastValue2Type(value, type) {
     return value;
 }
 
-
 // Возвращает название инстанса по идентификатору
 function GetInstanceName(graph, id) {
     var res;
@@ -54,7 +53,6 @@ function GetInstanceName(graph, id) {
     });
     return res;
 }
-
 
 // Выгреюает информацию о инстансе из визуальной конфигурации и раскладывает по полочкам
 function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaModules) {
@@ -156,7 +154,6 @@ function ConvertGraph2Configuration(graph, modulesParams, metaModules) {
     return config;
 }
 
-
 // Генерит строку параметров командной строки, для запуска инстанса модуля
 function MakeInstanceCommandParams(instance, configuration) {
     var res = new Array();
@@ -170,6 +167,7 @@ function MakeInstanceCommandParams(instance, configuration) {
 
     return res;
 }
+
 
 exports.requireUncached = function (module) {
     delete require.cache[require.resolve(module)];
@@ -284,7 +282,13 @@ var processes = {};
 exports.runhosts = function (req, res) {
 
     if (hostStatus.status === 'running') {
-        res.send({"success": false, message: "Host already running"});
+        if (req.body.callback) {
+            res.writeHead(200, {"Content-Type": "application/javascript"});
+            res.write(req.body.callback + '(' + JSON.stringify({"success": false, message: "Host already running"}) + ')');
+        } else {
+            res.writeHead(200, {"Content-Type": "application/json"});
+            res.write(JSON.stringify({"success": false, message: "Host already running"}));
+        }
         res.end();
         return;
     }
@@ -366,7 +370,15 @@ exports.runhosts = function (req, res) {
                                 hostStatus.schemaName = '';
                                 hostStatus.schemaVersion = '';
 
-                                console.log('c-host child process exited with code ' + code);
+                                console.log('close c-host child process exited with code ' + code);
+
+                                global.ws_server.send(
+                                    JSON.stringify({
+                                        process: instance.instance,
+                                        type: 'stdout',
+                                        data: new Buffer(instance.instance + ' child process exited with code ' + code)
+                                    }), function () {
+                                    });
                             });
 
                             new_process.on('error', function (code) {
@@ -378,7 +390,7 @@ exports.runhosts = function (req, res) {
                                 hostStatus.schemaName = '';
                                 hostStatus.schemaVersion = '';
 
-                                console.log('c-host child process exited with code ' + code);
+                                console.log('error c-host child process exited with code ' + code);
                             });
 
                             if (global.ws_server != undefined) {
@@ -410,9 +422,6 @@ exports.stophosts = function (req, res) {
         res.end();
         return;
     }
-
-
-
 
     Object.keys(processes).forEach(function (key) {
         stopped_process = processes[key];
@@ -446,5 +455,5 @@ exports.stophosts = function (req, res) {
         res.writeHead(200, {"Content-Type": "application/json"});
         res.write(JSON.stringify({"success": true}));
     }
-
+    res.end();
 };
