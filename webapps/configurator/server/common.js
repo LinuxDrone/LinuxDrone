@@ -86,7 +86,7 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
                 }
                 module[paramName] = typedValue;
             });
-        }else{
+        } else {
             console.log("For instance " + module.instance + ". Not found common parameters");
             return;
         }
@@ -158,12 +158,12 @@ function ConvertGraph2Configuration(graph, modulesParams, metaModules) {
 
 
 // Генерит строку параметров командной строки, для запуска инстанса модуля
-function MakeInstanceCommandParams(instance, configuration){
+function MakeInstanceCommandParams(instance, configuration) {
     var res = new Array();
     res.push("--name=" + instance.instance);
 
     var addrs = instance.instance.split(":");
-    if(addrs.length>1){
+    if (addrs.length > 1) {
         var port = addrs[1];
         res.push("--port=" + port);
     }
@@ -171,7 +171,7 @@ function MakeInstanceCommandParams(instance, configuration){
     return res;
 }
 
-exports.requireUncached = function(module){
+exports.requireUncached = function (module) {
     delete require.cache[require.resolve(module)];
     return require(module);
 }
@@ -326,9 +326,13 @@ exports.runhosts = function (req, res) {
                             }
                             processes[instance.name] = new_process;
 
+                            hostStatus.status = 'running';
+                            hostStatus.schemaName = schema.name;
+                            hostStatus.schemaVersion = schema.version;
+
                             new_process.stdout.on('data', function (data) {
                                 if (global.ws_server == undefined) return;
-                                console.log("prc=" + instance.instance);
+                                //console.log("prc=" + instance.instance);
                                 global.ws_server.send(
                                     JSON.stringify({
                                         process: instance.instance,
@@ -339,12 +343,11 @@ exports.runhosts = function (req, res) {
                                 console.log('stdout: ' + data);
                             });
 
-
                             new_process.stderr.on('data', function (data) {
                                 if (global.ws_server == undefined) return;
                                 global.ws_server.send(
                                     JSON.stringify({
-                                        process: 'c-host',
+                                        process: instance.instance,
                                         type: 'stderr',
                                         data: data
                                     }), function () {
@@ -385,10 +388,6 @@ exports.runhosts = function (req, res) {
                                 global.ws_server.send(JSON.stringify(hostStatus), function () {
                                 });
                             }
-
-                            //res.send({"success": true});
-
-
                         });
 
                         if (req.body.callback) {
@@ -404,82 +403,5 @@ exports.runhosts = function (req, res) {
             }
         });
     });
-
-
-    /*
-     try {
-     chost = spawn('/usr/local/linuxdrone/bin/c-host', [req.body.name, req.body.version]);
-     } catch (e) {
-     console.log(e);
-     res.send({"success": false, "message": e});
-     return;
-     }
-
-
-     hostStatus.status = 'running';
-     hostStatus.schemaName = req.body.name;
-     hostStatus.schemaVersion = req.body.version;
-
-
-     chost.stdout.on('data', function (data) {
-     if (global.ws_server == undefined) return;
-     global.ws_server.send(
-     JSON.stringify({
-     process: 'c-host',
-     type: 'stdout',
-     data: data
-     }), function () {
-     });
-     console.log('stdout: ' + data);
-     });
-
-     chost.stderr.on('data', function (data) {
-     if (global.ws_server == undefined) return;
-     global.ws_server.send(
-     JSON.stringify({
-     process: 'c-host',
-     type: 'stderr',
-     data: data
-     }), function () {
-     });
-     console.log('stderr: ' + data);
-     });
-
-     chost.on('close', function (code) {
-     chost = undefined;
-
-     hostStatus.status = 'stopped';
-     if (global.ws_server != undefined) {
-     global.ws_server.send(JSON.stringify(hostStatus), function () {
-     });
-     }
-     hostStatus.schemaName = '';
-     hostStatus.schemaVersion = '';
-
-     console.log('c-host child process exited with code ' + code);
-     });
-
-     chost.on('error', function (code) {
-     chost = undefined;
-
-     hostStatus.status = 'stopped';
-     if (global.ws_server != undefined) {
-     global.ws_server.send(JSON.stringify(hostStatus), function () {
-     });
-     }
-     hostStatus.schemaName = '';
-     hostStatus.schemaVersion = '';
-
-     console.log('c-host child process exited with code ' + code);
-     });
-
-
-     if (global.ws_server != undefined) {
-     global.ws_server.send(JSON.stringify(hostStatus), function () {
-     });
-     }
-
-     res.send({"success": true});
-     */
-
 };
+

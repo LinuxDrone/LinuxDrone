@@ -215,15 +215,16 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 //document.getElementById('host_out').innerHTML = text;
 
                                 //RtConfigurator.view.configurator.logpanel.LogContentPanel
-                                console.log(resp);
-                                console.log(text);
+                                //console.log(resp);
+                                //console.log(text);
                                 // Найти панель для данного лога
 
-                                var logContentPanel = logPanel.lookupReference(resp.process);
+                                var logPanelID = resp.process.replace(":","-");
+                                var logContentPanel = logPanel.lookupReference(logPanelID);
                                 if (!logContentPanel) {
                                     logContentPanel = Ext.create('RtConfigurator.view.configurator.logpanel.LogContentPanel', {
                                         title: resp.process,
-                                        reference: resp.process,
+                                        reference: logPanelID,
                                         store: Ext.create('Ext.data.Store', {
                                             model: 'RtConfigurator.model.LogRecord'
                                         })
