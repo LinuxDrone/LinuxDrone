@@ -1,14 +1,18 @@
 exports.CFG_FOLDER = "../../cfg";
 
-//var BIN_FOLDER = "../../bin"; // Linux BBB
 var BIN_FOLDER = "../../../x64/Debug"; // Windows
+if(process.platform==='darwin'){
+    BIN_FOLDER = "../../bin"; // Linux BBB
+}
+
+
 
 
 var fs = require('fs');
 var exec = require('child_process').exec;
 
 
-exports.requireUncached = function(module){
+exports.requireUncached = function (module) {
     delete require.cache[require.resolve(module)];
     return require(module);
 }
@@ -140,6 +144,9 @@ exports.runhosts = function (req, res) {
                 if (schema.name === req.body.name && schema.version === req.body.version) {
                     console.log('Нашлась схема ' + schema.name + " " + schema.version);
 
+
+
+
                     if (req.body.callback) {
                         res.writeHead(200, {"Content-Type": "application/javascript"});
                         res.write(req.body.callback + '(' + JSON.stringify({"success": true}) + ')');
@@ -153,81 +160,80 @@ exports.runhosts = function (req, res) {
         });
     });
 
-
-    /*
-     try {
-     chost = spawn('/usr/local/linuxdrone/bin/c-host', [req.body.name, req.body.version]);
-     } catch (e) {
-     console.log(e);
-     res.send({"success": false, "message": e});
-     return;
-     }
-
-
-     hostStatus.status = 'running';
-     hostStatus.schemaName = req.body.name;
-     hostStatus.schemaVersion = req.body.version;
+/*
+    try {
+        chost = spawn('/usr/local/linuxdrone/bin/c-host', [req.body.name, req.body.version]);
+    } catch (e) {
+        console.log(e);
+        res.send({"success": false, "message": e});
+        return;
+    }
 
 
-     chost.stdout.on('data', function (data) {
-     if (global.ws_server == undefined) return;
-     global.ws_server.send(
-     JSON.stringify({
-     process: 'c-host',
-     type: 'stdout',
-     data: data
-     }), function () {
-     });
-     console.log('stdout: ' + data);
-     });
-
-     chost.stderr.on('data', function (data) {
-     if (global.ws_server == undefined) return;
-     global.ws_server.send(
-     JSON.stringify({
-     process: 'c-host',
-     type: 'stderr',
-     data: data
-     }), function () {
-     });
-     console.log('stderr: ' + data);
-     });
-
-     chost.on('close', function (code) {
-     chost = undefined;
-
-     hostStatus.status = 'stopped';
-     if (global.ws_server != undefined) {
-     global.ws_server.send(JSON.stringify(hostStatus), function () {
-     });
-     }
-     hostStatus.schemaName = '';
-     hostStatus.schemaVersion = '';
-
-     console.log('c-host child process exited with code ' + code);
-     });
-
-     chost.on('error', function (code) {
-     chost = undefined;
-
-     hostStatus.status = 'stopped';
-     if (global.ws_server != undefined) {
-     global.ws_server.send(JSON.stringify(hostStatus), function () {
-     });
-     }
-     hostStatus.schemaName = '';
-     hostStatus.schemaVersion = '';
-
-     console.log('c-host child process exited with code ' + code);
-     });
+    hostStatus.status = 'running';
+    hostStatus.schemaName = req.body.name;
+    hostStatus.schemaVersion = req.body.version;
 
 
-     if (global.ws_server != undefined) {
-     global.ws_server.send(JSON.stringify(hostStatus), function () {
-     });
-     }
+    chost.stdout.on('data', function (data) {
+        if (global.ws_server == undefined) return;
+        global.ws_server.send(
+            JSON.stringify({
+                process: 'c-host',
+                type: 'stdout',
+                data: data
+            }), function () {
+            });
+        console.log('stdout: ' + data);
+    });
 
-     res.send({"success": true});
-     */
+    chost.stderr.on('data', function (data) {
+        if (global.ws_server == undefined) return;
+        global.ws_server.send(
+            JSON.stringify({
+                process: 'c-host',
+                type: 'stderr',
+                data: data
+            }), function () {
+            });
+        console.log('stderr: ' + data);
+    });
+
+    chost.on('close', function (code) {
+        chost = undefined;
+
+        hostStatus.status = 'stopped';
+        if (global.ws_server != undefined) {
+            global.ws_server.send(JSON.stringify(hostStatus), function () {
+            });
+        }
+        hostStatus.schemaName = '';
+        hostStatus.schemaVersion = '';
+
+        console.log('c-host child process exited with code ' + code);
+    });
+
+    chost.on('error', function (code) {
+        chost = undefined;
+
+        hostStatus.status = 'stopped';
+        if (global.ws_server != undefined) {
+            global.ws_server.send(JSON.stringify(hostStatus), function () {
+            });
+        }
+        hostStatus.schemaName = '';
+        hostStatus.schemaVersion = '';
+
+        console.log('c-host child process exited with code ' + code);
+    });
+
+
+    if (global.ws_server != undefined) {
+        global.ws_server.send(JSON.stringify(hostStatus), function () {
+        });
+    }
+
+    res.send({"success": true});
+*/
 
 };
