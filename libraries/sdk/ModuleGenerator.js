@@ -828,8 +828,9 @@ function Create_C_file(module) {
     r += "{\n";
     if(platform==="XENO") {
         r += "    mlockall(MCL_CURRENT|MCL_FUTURE);\n";
-        r += "    setvbuf(stdout, NULL, _IONBF, 0);\n\n\n";
     }
+    r += "    setvbuf(stdout, NULL, _IONBF, 0);\n\n\n";
+
     r += "    apr_initialize();\n\n\n";
 
     r += "    m_module = " + module_type + "_create(NULL);\n";

@@ -13,7 +13,7 @@ Ext.define('RtConfigurator.Application', {
     ],
 
     controllers: [
-        'Root'
+        //'Root'
     ],
 
     stores: [
@@ -22,6 +22,9 @@ Ext.define('RtConfigurator.Application', {
     
     launch: function () {
         // TODO - Launch the application
-        //var store = Ext.data.StoreManager.lookup('StoreMetaModules');
+        var newSaveAsDialog = Ext.create('RtConfigurator.view.configurator.dialogs.LoginDialog', {
+            ownerCt: this._mainView
+        });
+        newSaveAsDialog.show();
     }
 });

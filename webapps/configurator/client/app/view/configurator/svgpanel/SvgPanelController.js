@@ -7,7 +7,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     requires: [
         'RtConfigurator.view.configurator.dialogs.ImportSchemaDialog',
         'RtConfigurator.view.configurator.logpanel.LogContentPanel',
-        'RtConfigurator.model.Schema'
+        'RtConfigurator.model.Schema',
+        'RtConfigurator.model.LogRecord'
     ],
 
     alias: 'controller.svgpanel',
@@ -63,12 +64,13 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
         // При изменении имени инстанса в панели свойств, необходимо поменять имя инстанса в схеме
         model.bind('{nameOfSelectedInstance}', function (nameSelectedInstance, oldName) {
+            var configuratorModel = this.getView().ownerCt.getViewModel();
+
             // Так как имя инстанса отображается в заголовке окна свойств инстанса, а при выборе белого листа там отображается надпись Properties, то игнорируем значение "Properties".
             if(nameSelectedInstance === 'Properties' || oldName === 'Properties'){
+                configuratorModel.set('isJustSelectedInstance', false);
                 return;
             }
-
-            var configuratorModel = this.getView().ownerCt.getViewModel();
 
             if(configuratorModel.get('isJustSelectedInstance')){
                 // Изменение имени инстанса вызвано выбором нового инстанса на схеме а не редактированием в панели свойств
@@ -213,15 +215,16 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 //document.getElementById('host_out').innerHTML = text;
 
                                 //RtConfigurator.view.configurator.logpanel.LogContentPanel
-                                console.log(resp);
-                                console.log(text);
+                                //console.log(resp);
+                                //console.log(text);
                                 // Найти панель для данного лога
 
-                                var logContentPanel = logPanel.lookupReference(resp.process);
+                                var logPanelID = resp.process.replace(":","-");
+                                var logContentPanel = logPanel.lookupReference(logPanelID);
                                 if (!logContentPanel) {
                                     logContentPanel = Ext.create('RtConfigurator.view.configurator.logpanel.LogContentPanel', {
                                         title: resp.process,
-                                        reference: resp.process,
+                                        reference: logPanelID,
                                         store: Ext.create('Ext.data.Store', {
                                             model: 'RtConfigurator.model.LogRecord'
                                         })
@@ -233,7 +236,6 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 if (store.count() > 100) {
                                     store.removeAt(0);
                                 }
-
                                 break;
 
                             case 'status':
@@ -926,12 +928,21 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             "name": currentSchema.get('name'),
             "version": currentSchema.get('version')
         };
-        $.post("stophosts", data4send,
-            function (data) {
-                // Выполнение конфигурации остановлено.
-                // Следует отписаться от телеметрии
-                controller.AllSubscribe2Telemetry(currentSchema, controller, 'unsubscribe');
-            });
+
+        var host = window.document.location.host.replace(/:.*/, '');
+
+        Ext.data.JsonP.request({
+            url: 'http://' + host + ':4000/stophosts',
+            callbackKey: 'callback',
+            params: data4send,
+            callback: function (res) {
+                if(res){
+                    // Выполнение конфигурации остановлено.
+                    // Следует отписаться от телеметрии
+                    controller.AllSubscribe2Telemetry(currentSchema, controller, 'unsubscribe');
+                }
+            }
+        });
     },
 
     // Запрос статуса процесса выполнения
