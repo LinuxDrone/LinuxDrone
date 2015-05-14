@@ -25,12 +25,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
                     successProperty: 'success',
                     messageProperty: 'message'
                 },
-                api: {
-                    read: location.protocol + '//' + location.hostname + ':4000/getconfigs',
-                    update: location.protocol + '//' + location.hostname + ':4000/saveconfig',
-                    create: location.protocol + '//' + location.hostname + ':4000/saveconfig',
-                    destroy: location.protocol + '//' + location.hostname + ':4000/delconfig'
-                },
+                // api: устанавливается в функции init в контроллере SvgPanelController
                 listeners: {
                     exception: function (proxy, response, operation) {
                         var errMsg = operation.getError();
@@ -118,8 +113,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
         },
 
         exportLink: function(get){
-            var curSchema = get('currentSchema');
-            return '<a target="_blank" href="' + location.protocol + '//' + location.hostname + ':4000/getconfig/'+curSchema.id +'">Export</a>';
+            return '<a target="_blank" href="http://' + this.getView().ownerCt.url_server + '/getconfig/' + get('currentSchema').id + '">Export</a>';
         }
     }
 });

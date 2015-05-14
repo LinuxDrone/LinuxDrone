@@ -21,6 +21,17 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     init: function () {
         var model = this.getView().getViewModel();
 
+        var hostServer = this.getView().initOwnerCt.url_server;
+        model.getStore('listSchemas').getProxy().setApi(
+            {
+                read: 'http://' + hostServer + '/getconfigs',
+                update: 'http://' + hostServer + '/saveconfig',
+                create: 'http://' + hostServer + '/saveconfig',
+                destroy: 'http://' + hostServer + '/delconfig'
+            }
+        );
+
+
         // Подписываемся на факт изменения текущей схемы
         model.bind('{currentSchema}', this.onSwitchCurrentSchema, this);
 
@@ -114,13 +125,18 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var model = this.getView().getViewModel();
         var logPanel = this.getView().logPanel;
 
-        var host = window.document.location.host.replace(/:.*/, '');
+        var hostServer = this.getView().initOwnerCt.url_server;
+        var hostTelemetry = this.getView().initOwnerCt.url_telemetry;
+        if(hostTelemetry == undefined || hostTelemetry == "" ){
+            hostTelemetry = window.document.location.host.replace(/:.*/, '') + ':7681';
+        }
+
         if (typeof MozWebSocket != "undefined") {
-            this.socketTelemetry = new MozWebSocket('ws://' + host + ':7681/xxx', "telemetry-protocol");
-            this.socketHostsOut = new MozWebSocket('ws://' + host + ':4000');
+            this.socketTelemetry = new MozWebSocket('ws://' + hostTelemetry + '/xxx', "telemetry-protocol");
+            this.socketHostsOut = new MozWebSocket('ws://' + hostServer);
         } else {
-            this.socketTelemetry = new ReconnectingWebSocket('ws://' + host + ':7681/xxx', "telemetry-protocol");
-            this.socketHostsOut = new ReconnectingWebSocket('ws://' + host + ':4000');
+            this.socketTelemetry = new ReconnectingWebSocket('ws://' + hostTelemetry + '/xxx', "telemetry-protocol");
+            this.socketHostsOut = new ReconnectingWebSocket('ws://' + hostServer);
         }
         this.socketTelemetry.binaryType = "arraybuffer";
 
@@ -884,13 +900,11 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             "version": currentSchema.get('version')
         };
 
-
-        var host = window.document.location.host.replace(/:.*/, '');
-
+        var hostServer = this.getView().ownerCt.url_server;
         if (model.get('schemaChanged')) {
             controller.SaveCurrentConfig(data4send.name, data4send.version, function () {
                 Ext.data.JsonP.request({
-                    url: 'http://' + host + ':4000/runhosts',
+                    url: 'http://' + hostServer + '/runhosts',
                     callbackKey: 'callback',
                     params: data4send,
                     callback: function (res) {
@@ -904,7 +918,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             });
         } else {
             Ext.data.JsonP.request({
-                url: 'http://' + host + ':4000/runhosts',
+                url: 'http://' + hostServer + '/runhosts',
                 callbackKey: 'callback',
                 params: data4send,
                 callback: function (res) {
@@ -929,10 +943,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             "version": currentSchema.get('version')
         };
 
-        var host = window.document.location.host.replace(/:.*/, '');
+        var hostServer = this.getView().ownerCt.url_server;
 
         Ext.data.JsonP.request({
-            url: 'http://' + host + ':4000/stophosts',
+            url: 'http://' + hostServer + '/stophosts',
             callbackKey: 'callback',
             params: data4send,
             callback: function (res) {
@@ -949,8 +963,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     GetHostStatus: function () {
         var model = this.getView().getViewModel();
 
-        var host = window.document.location.host.replace(/:.*/, '');
-        $.getJSON('http://' + host + ':4000/gethoststatus?callback=?').done(function (resp) {
+        var hostServer = this.getView().ownerCt.url_server;
+        $.getJSON('http://' + hostServer + '/gethoststatus?callback=?').done(function (resp) {
             switch (resp.status) {
                 case 'running':
                     model.set('started', true);

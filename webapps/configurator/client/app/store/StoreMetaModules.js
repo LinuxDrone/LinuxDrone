@@ -7,8 +7,7 @@ Ext.define('RtConfigurator.store.StoreMetaModules', {
 
     proxy: {
         type: 'jsonp',
-        url: location.protocol + '//' + location.hostname + ':4000/metamodules',
-
+        // url задается при инициализации в файле LoginDialog
         listeners: {
             exception: function (proxy, request, operation, eOpts) {
                 //console.log(operation);

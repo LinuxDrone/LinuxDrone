@@ -70,5 +70,4 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorPanel', {
             xtype: 'svgpanel'
         }
     ]
-
 });
