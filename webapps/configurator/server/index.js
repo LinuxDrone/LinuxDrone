@@ -25,9 +25,8 @@ router.get('/delconfig', routes.delconfig);
 router.get('/getconfig/:id', routes.getconfig);
 router.get('/runhosts', common.runhosts);
 router.get('/stophosts', common.stophosts);
+router.get('/getscript/:id', routes.getscript);
 
-
-//router.get('/droneconfig', routes.droneconfig);
 
 
 var server = http.createServer(router);

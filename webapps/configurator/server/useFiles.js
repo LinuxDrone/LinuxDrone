@@ -101,7 +101,6 @@ exports.getconfig = function (req, res) {
             console.log(err);
             return;
         }
-        var cfgFiles = new Array();
         list.forEach(function (file) {
             // для начала проверим, что расширение файла .json
             var ar = file.split('.');
@@ -114,6 +113,45 @@ exports.getconfig = function (req, res) {
                     res.write(JSON.stringify(cfg));
                     res.end();
                     return;
+                }
+            }
+        });
+    });
+};
+
+// Возвращает шелл скрипт, для ручного запуска инстансов в командной строке
+exports.getscript = function (req, res) {
+    fs.readdir(common.CFG_FOLDER, function (err, list) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        list.forEach(function (file) {
+            // для начала проверим, что расширение файла .json
+            var ar = file.split('.');
+
+            if (ar[ar.length - 1] == "json") {
+                var schema = common.requireUncached(common.CFG_FOLDER + '/' + file);
+                if(schema["_id"]===req.params.id){
+                    common.GetConfiguration(schema, function (configuration) {
+                        res.setHeader("Content-Type", "application/json");
+                        res.setHeader("Content-Disposition", "attachment;filename='run_" + schema.name + "." + schema.version + ".cmd'");
+
+                        configuration.modules.forEach(function (instance) {
+                            //console.log(instance.instance);
+                            var instanceCmdParams = common.MakeInstanceCommandParams(instance, configuration);
+
+                            var cmdName = instance.name + ".mod";
+                            cmdName += ".exe";
+
+                            instanceCmdParams.forEach(function (param) {
+                                cmdName += " " + param;
+                            });
+
+                            res.write(cmdName + "\r\n");
+                        });
+                        res.end();
+                    });
                 }
             }
         });

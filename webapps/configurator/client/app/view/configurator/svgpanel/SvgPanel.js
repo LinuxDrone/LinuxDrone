@@ -117,6 +117,13 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanel', {
                 text: 'Import',
                 handler: 'onClickOpenImportSchemaDialog',
                 tooltip: 'Import Schema from file'
+            },
+            '-',
+            {
+                xtype: 'panel',
+                bind: {
+                    html: '{DownloadScriptLink}'
+                }
             }
         ]
     },

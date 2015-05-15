@@ -155,7 +155,7 @@ function ConvertGraph2Configuration(graph, modulesParams, metaModules) {
 }
 
 // Генерит строку параметров командной строки, для запуска инстанса модуля
-function MakeInstanceCommandParams(instance, configuration) {
+exports.MakeInstanceCommandParams = function (instance, configuration) {
     var res = new Array();
     res.push("--name=" + instance.instance);
 
@@ -164,6 +164,19 @@ function MakeInstanceCommandParams(instance, configuration) {
         var port = addrs[1];
         res.push("--port=" + port);
     }
+
+    res.push("--rt-priority=" + instance["rt-priority"]);
+    res.push("--main-task-period=" + instance["main-task-period"]);
+    res.push("--transfer-task-period=" + instance["transfer-task-period"]);
+
+    configuration.links.forEach(function (link) {
+        if (link.inInst == instance.instance && link.type == "memory") {
+            res.push("--in-link=" + link.outInst + "@" + link.nameOutGroup + "@" + link.outPin + "#" + link.inPin);
+        }
+        if (link.outInst == instance.instance && link.type == "queue") {
+            res.push("--out-link=" + link.outPin + "#" + link.inInst + "@" + link.inPin);
+        }
+    });
 
     return res;
 }
@@ -279,12 +292,22 @@ exports.gethoststatus = function (req, res) {
 
 var processes = {};
 
-exports.runhosts = function (req, res) {
+// В калбэк, в качестве параметра, передает конфигурацию, созданную из графической схемы
+exports.GetConfiguration = function(schema, callback) {
+    exports.MetaOfModules.get(function (metaModules) {
+        // Получаем описания модулей и вызываем функцию, передавай ей граф объектов из графической схемы и настроечные параметры модулей.
+        callback(ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules));
+    });
+}
 
+exports.runhosts = function (req, res) {
     if (hostStatus.status === 'running') {
         if (req.body.callback) {
             res.writeHead(200, {"Content-Type": "application/javascript"});
-            res.write(req.body.callback + '(' + JSON.stringify({"success": false, message: "Host already running"}) + ')');
+            res.write(req.body.callback + '(' + JSON.stringify({
+                "success": false,
+                message: "Host already running"
+            }) + ')');
         } else {
             res.writeHead(200, {"Content-Type": "application/json"});
             res.write(JSON.stringify({"success": false, message: "Host already running"}));
@@ -293,125 +316,108 @@ exports.runhosts = function (req, res) {
         return;
     }
 
-    fs.readdir(exports.CFG_FOLDER, function (err, list) {
-        if (err) {
-            console.log(err);
-            return;
-        }
+    var fileName = exports.CFG_FOLDER + "/" + req.body.name + "." + req.body.version + ".json";
+    var schema = exports.requireUncached(fileName);
+    if (schema.name === req.body.name && schema.version === req.body.version) {
+        // Теперь надо вытащить из схемы все инстансы, сформировать для каждого из них параметры командной строки запустить каждый в отдельном процессе.
+        exports.GetConfiguration(schema, function (configuration) {
+            configuration.modules.forEach(function (instance) {
+                //console.log(instance.instance);
+                var instanceCmdParams = exports.MakeInstanceCommandParams(instance, configuration);
 
-        var cfgFiles = new Array();
-        list.forEach(function (file) {
-            // для начала проверим, что расширение файла .json
-            var ar = file.split('.');
+                var cmdName = instance.name + ".mod";
+                cmdName += ".exe";
 
-            if (ar[ar.length - 1] == "json") {
-                var schema = exports.requireUncached(exports.CFG_FOLDER + '/' + file);
-                if (schema.name === req.body.name && schema.version === req.body.version) {
-                    //console.log('Нашлась схема ' + schema.name + " " + schema.version);
+                var new_process;
+                try {
+                    new_process = spawn(BIN_FOLDER + "/" + cmdName, instanceCmdParams, {env: process.env});
+                } catch (e) {
+                    console.log(e);
+                    res.send({"success": false, "message": e});
+                    res.end();
+                    return;
+                }
+                processes[instance.instance] = new_process;
 
-                    // Теперь надо вытащить из схемы все модули, сформировать для каждого из них параметры командной строки запустить каждый в отдельном процессе.
-                    exports.MetaOfModules.get(function (metaModules) {
-                        // Получаем описания модулей и вызываем функцию, передавай ей граф объектов из графической схемы и настроечные параметры модулей.
-                        var configuration = ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules);
+                hostStatus.status = 'running';
+                hostStatus.schemaName = schema.name;
+                hostStatus.schemaVersion = schema.version;
 
-                        configuration.modules.forEach(function (instance) {
-                            console.log(instance.instance);
-                            var instanceCmdParams = MakeInstanceCommandParams(instance, configuration);
-
-                            var cmdName = instance.name + ".mod";
-                            cmdName += ".exe";
-
-                            var new_process;
-                            try {
-                                new_process = spawn(BIN_FOLDER + "/" + cmdName, instanceCmdParams, {env: process.env});
-                            } catch (e) {
-                                console.log(e);
-                                res.send({"success": false, "message": e});
-                                res.end();
-                                return;
-                            }
-                            processes[instance.instance] = new_process;
-
-                            hostStatus.status = 'running';
-                            hostStatus.schemaName = schema.name;
-                            hostStatus.schemaVersion = schema.version;
-
-                            new_process.stdout.on('data', function (data) {
-                                if (global.ws_server == undefined) return;
-                                //console.log("prc=" + instance.instance);
-                                global.ws_server.send(
-                                    JSON.stringify({
-                                        process: instance.instance,
-                                        type: 'stdout',
-                                        data: data
-                                    }), function () {
-                                    });
-                                console.log('stdout: ' + data);
-                            });
-
-                            new_process.stderr.on('data', function (data) {
-                                if (global.ws_server == undefined) return;
-                                global.ws_server.send(
-                                    JSON.stringify({
-                                        process: instance.instance,
-                                        type: 'stderr',
-                                        data: data
-                                    }), function () {
-                                    });
-                                console.log('stderr: ' + data);
-                            });
-
-                            new_process.on('close', function (code) {
-                                hostStatus.status = 'stopped';
-                                if (global.ws_server != undefined) {
-                                    global.ws_server.send(JSON.stringify(hostStatus), function () {
-                                    });
-                                }
-                                hostStatus.schemaName = '';
-                                hostStatus.schemaVersion = '';
-
-                                console.log('close c-host child process exited with code ' + code);
-
-                                global.ws_server.send(
-                                    JSON.stringify({
-                                        process: instance.instance,
-                                        type: 'stdout',
-                                        data: new Buffer(instance.instance + ' child process exited with code ' + code)
-                                    }), function () {
-                                    });
-                            });
-
-                            new_process.on('error', function (code) {
-                                hostStatus.status = 'stopped';
-                                if (global.ws_server != undefined) {
-                                    global.ws_server.send(JSON.stringify(hostStatus), function () {
-                                    });
-                                }
-                                hostStatus.schemaName = '';
-                                hostStatus.schemaVersion = '';
-
-                                console.log('error c-host child process exited with code ' + code);
-                            });
-
-                            if (global.ws_server != undefined) {
-                                global.ws_server.send(JSON.stringify(hostStatus), function () {
-                                });
-                            }
+                new_process.stdout.on('data', function (data) {
+                    if (global.ws_server == undefined) return;
+                    //console.log("prc=" + instance.instance);
+                    global.ws_server.send(
+                        JSON.stringify({
+                            process: instance.instance,
+                            type: 'stdout',
+                            data: data
+                        }), function () {
                         });
+                    console.log('stdout: ' + data);
+                });
 
-                        if (req.body.callback) {
-                            res.writeHead(200, {"Content-Type": "application/javascript"});
-                            res.write(req.body.callback + '(' + JSON.stringify({"success": true}) + ')');
-                        } else {
-                            res.writeHead(200, {"Content-Type": "application/json"});
-                            res.write(JSON.stringify({"success": true}));
-                        }
-                        res.end();
+                new_process.stderr.on('data', function (data) {
+                    if (global.ws_server == undefined) return;
+                    global.ws_server.send(
+                        JSON.stringify({
+                            process: instance.instance,
+                            type: 'stderr',
+                            data: data
+                        }), function () {
+                        });
+                    console.log('stderr: ' + data);
+                });
+
+                new_process.on('close', function (code) {
+                    hostStatus.status = 'stopped';
+                    if (global.ws_server != undefined) {
+                        global.ws_server.send(JSON.stringify(hostStatus), function () {
+                        });
+                    }
+                    hostStatus.schemaName = '';
+                    hostStatus.schemaVersion = '';
+
+                    console.log('close c-host child process exited with code ' + code);
+
+                    global.ws_server.send(
+                        JSON.stringify({
+                            process: instance.instance,
+                            type: 'stdout',
+                            data: new Buffer(instance.instance + ' child process exited with code ' + code)
+                        }), function () {
+                        });
+                });
+
+                new_process.on('error', function (code) {
+                    hostStatus.status = 'stopped';
+                    if (global.ws_server != undefined) {
+                        global.ws_server.send(JSON.stringify(hostStatus), function () {
+                        });
+                    }
+                    hostStatus.schemaName = '';
+                    hostStatus.schemaVersion = '';
+
+                    console.log('error c-host child process exited with code ' + code);
+                });
+
+                if (global.ws_server != undefined) {
+                    global.ws_server.send(JSON.stringify(hostStatus), function () {
                     });
                 }
+            });
+
+            if (req.body.callback) {
+                res.writeHead(200, {"Content-Type": "application/javascript"});
+                res.write(req.body.callback + '(' + JSON.stringify({"success": true}) + ')');
+            } else {
+                res.writeHead(200, {"Content-Type": "application/json"});
+                res.write(JSON.stringify({"success": true}));
             }
+            res.end();
         });
-    });
+    } else {
+        console.log("Обнаружено несоответсвие имени и версии схемы указанные в названии файла, имени и версии в содержимом файла схемы " + fileName);
+    }
 };
 
 
@@ -438,14 +444,13 @@ exports.stophosts = function (req, res) {
     processes = {};
 
 
-     hostStatus.status = 'stopped';
-     if (global.ws_server != undefined) {
-     global.ws_server.send(JSON.stringify(hostStatus), function () {
-     });
-     }
-     hostStatus.schemaName = '';
-     hostStatus.schemaVersion = '';
-
+    hostStatus.status = 'stopped';
+    if (global.ws_server != undefined) {
+        global.ws_server.send(JSON.stringify(hostStatus), function () {
+        });
+    }
+    hostStatus.schemaName = '';
+    hostStatus.schemaVersion = '';
 
 
     if (req.body.callback) {

@@ -114,6 +114,10 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelModel', {
 
         exportLink: function(get){
             return '<a target="_blank" href="http://' + this.getView().ownerCt.url_server + '/getconfig/' + get('currentSchema').id + '">Export</a>';
+        },
+
+        DownloadScriptLink: function(get){
+            return '<a target="_blank" href="http://' + this.getView().ownerCt.url_server + '/getscript/' + get('currentSchema').id + '">Download Run Script</a>';
         }
     }
 });
