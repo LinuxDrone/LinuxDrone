@@ -26,7 +26,7 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 project(linuxdrone)
 
-set(PLATFORM GCC) #XENO,GCC,MSVC
+set(PLATFORM XENO) #XENO,GCC,MSVC
 
 add_definitions(-D${PLATFORM})
 add_definitions(-D_LARGEFILE64_SOURCE) # Need for apr

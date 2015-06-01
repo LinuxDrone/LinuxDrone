@@ -20,7 +20,6 @@
 #endif
 
 
-//#include <native/pipe.h>
 #include "libwebsockets.h"
 
 #include "../include/telemetry.h"
@@ -141,12 +140,20 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         for(k=0; k < remote_shmems.remote_shmems_len; k++)
         {
             shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[k];
-			if (!remote_shmem->f_socket_connected)
+#ifdef XENO
+            if(!remote_shmem->f_shmem_connected)
+#else
+            if (!remote_shmem->f_socket_connected)
+#endif
                 continue;
 
             buf_and_bson_t buf_and_bson = ar_bson2send[k];
             buf_and_bson.buf = malloc(500);
-			apr_size_t retlen = 500;
+#ifdef XENO
+            unsigned short retlen = 0;
+#else
+            apr_size_t retlen = 500;
+#endif
             read_shmem(remote_shmem, buf_and_bson.buf, &retlen);
             if (retlen < 1)
                 continue;
@@ -206,7 +213,11 @@ debug_print_bson("received", bson_request);
         //printf("module_instance_name: %s\tmodule_out_name: %s\n", module_instance_name, module_out_name);
         if(strcmp(cmd_name, "subscribe")==0)
         {
-			register_remote_shmem(mp, &remote_shmems, module_instance_name, module_out_name);
+#ifdef XENO
+            register_remote_shmem(&remote_shmems, module_instance_name, module_out_name);
+#else
+            register_remote_shmem(mp, &remote_shmems, module_instance_name, module_out_name);
+#endif
         }
         else if(strcmp(cmd_name, "unsubscribe")==0)
         {
