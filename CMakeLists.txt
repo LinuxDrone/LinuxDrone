@@ -26,7 +26,7 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 project(linuxdrone)
 
-set(PLATFORM XENO) #XENO,GCC,MSVC
+set(PLATFORM MSVC) #XENO,GCC,MSVC
 
 add_definitions(-D${PLATFORM})
 add_definitions(-D_LARGEFILE64_SOURCE) # Need for apr
@@ -43,6 +43,8 @@ IF(${BOARD_TYPE} STREQUAL "beaglebone")
     add_definitions(-mfpu=neon ${XENOMAI_DEFINITIONS}) #-std=c++11
 ELSEIF(${BOARD_TYPE} STREQUAL "rpi")
     add_definitions(${XENOMAI_DEFINITIONS})
+ELSEIF(${BOARD_TYPE} STREQUAL "desktop")
+
 ENDIF()
 
 # Library options (comment off to build static libraries)
@@ -86,45 +88,44 @@ SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
 #SET(SSH_PORT_TARGET_SYSTEM 1234)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
+IF(${PLATFORM} STREQUAL "XENO")
+    # MongoDB
+    # Libraries: ${MongoDB_LIBRARIES}
+    find_package(MongoDB REQUIRED)
+    include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 
-# MongoDB
-# Libraries: ${MongoDB_LIBRARIES}
-find_package(MongoDB REQUIRED)
-include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
+    # MongoC
+    # Libraries: ${MongoC_LIBRARIES}
+    find_package(MongoC REQUIRED)
+    include_directories(${INCLUDE_DIRECTORIES} ${MongoC_INCLUDE_DIR})
 
-# MongoC
-# Libraries: ${MongoC_LIBRARIES}
-find_package(MongoC REQUIRED)
-include_directories(${INCLUDE_DIRECTORIES} ${MongoC_INCLUDE_DIR})
+    # Xenomai libraries
+    # Libraries: ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
+    # Compiler options: ${XENOMAI_DEFINITIONS}
+    find_package(Xenomai REQUIRED)
+    include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
 
-# APR
-include_directories(${INCLUDE_DIRECTORIES} ${APR_DIR}/include/apr-2)
+    # BSON
+    # Libraries: ${BSON_LIBRARIES}
+    find_package(BSON REQUIRED)
+    include_directories(${INCLUDE_DIRECTORIES} ${BSON_INCLUDE_DIR})
 
+    # WebSockets
+    # Libraries: ${WebSockets_LIBRARIES}
+    find_package(WebSockets REQUIRED)
+    include_directories(${INCLUDE_DIRECTORIES} ${WebSockets_INCLUDE_DIR})
 
-# Boost
-# Libraries: ${Boost_LIBRARIES}
-#set(Boost_USE_STATIC_LIBS OFF) 
-#find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
-#include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
+    # APR
+    include_directories(${INCLUDE_DIRECTORIES} ${APR_DIR}/include/apr-2)
+ELSE()
+    include_directories(${INCLUDE_DIRECTORIES} ${APR_DIR}/include)
+    include_directories(${INCLUDE_DIRECTORIES} ${TLS_DIR}/libbson-win/include/libbson-1.0)
+ENDIF()
 
-# Xenomai libraries
-# Libraries: ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
-# Compiler options: ${XENOMAI_DEFINITIONS}
-find_package(Xenomai REQUIRED)
-include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
 
 # Threads
 find_package(Threads)
 
-# BSON
-# Libraries: ${BSON_LIBRARIES}
-find_package(BSON REQUIRED)
-include_directories(${INCLUDE_DIRECTORIES} ${BSON_INCLUDE_DIR})
-
-# WebSockets
-# Libraries: ${WebSockets_LIBRARIES}
-find_package(WebSockets REQUIRED)
-include_directories(${INCLUDE_DIRECTORIES} ${WebSockets_INCLUDE_DIR})
 
 #option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
 IF(BUILD_DOCUMENTATION)
@@ -200,6 +201,10 @@ IF(${PLATFORM} STREQUAL "XENO")
     add_subdirectory(${MOD_DIR}/c-ms5611)
     add_subdirectory(${MOD_DIR}/c-bmp180)
     add_subdirectory(${MOD_DIR}/c-mpu9250)
+    add_subdirectory(${MOD_DIR}/c-sum-scale)
+    add_subdirectory(${MOD_DIR}/c-scale)
+    add_subdirectory(${MOD_DIR}/c-generator)
+    add_subdirectory(${MOD_DIR}/attitude)
 ELSE()
 
 ENDIF()
@@ -212,8 +217,6 @@ add_subdirectory(${MOD_DIR}/test-sender)
 add_subdirectory(${MOD_DIR}/test-sender-receiver)
 #add_subdirectory(${MOD_DIR}/c-pru-pwmout)
 #add_subdirectory(${MOD_DIR}/c-pru-pwmin)
-add_subdirectory(${MOD_DIR}/c-sum-scale)
-add_subdirectory(${MOD_DIR}/c-scale)
 
 #add_subdirectory(${MOD_DIR}/MyModule)
 #add_subdirectory(${MOD_DIR}/bmp180)
@@ -223,12 +226,13 @@ add_subdirectory(${MOD_DIR}/c-scale)
 #add_subdirectory(${MOD_DIR}/PwmInput)
 #add_subdirectory(${MOD_DIR}/SimpleTransform)
 #add_subdirectory(${MOD_DIR}/SerialGps)
-add_subdirectory(${MOD_DIR}/c-generator)
-add_subdirectory(${MOD_DIR}/attitude)
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
 # Services
-add_subdirectory(${SVC_DIR}/telemetry)
-add_subdirectory(${SVC_DIR}/i2c)
-add_subdirectory(${SVC_DIR}/spi)
+IF(${PLATFORM} STREQUAL "XENO")
+    add_subdirectory(${SVC_DIR}/i2c)
+    add_subdirectory(${SVC_DIR}/spi)
+ENDIF()
+
+#add_subdirectory(${SVC_DIR}/telemetry)

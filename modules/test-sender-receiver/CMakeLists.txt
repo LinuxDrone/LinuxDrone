@@ -17,11 +17,18 @@ include_directories(${LIB_DIR}/sdk/include ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${BSON_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 
-set(EXTRA_LIBS
-    sdk
-    pthread
-    rt
-)
+IF(${PLATFORM} STREQUAL "XENO")
+    set(EXTRA_LIBS
+        sdk
+        pthread
+        rt
+    )
+ELSE()
+    set(EXTRA_LIBS
+        sdk
+    )
+ENDIF()
+
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test-sender-receiver.helper.c
