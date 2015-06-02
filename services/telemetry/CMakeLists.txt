@@ -19,19 +19,30 @@ include_directories(${WebSockets_INCLUDE_DIR})
 include_directories(${LIB_DIR}/sdk/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 
-set(EXTRA_LIBS
-    sdk
-    ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
-    ${BSON_LIBRARIES}
-    ${MongoC_LIBRARIES}
-    ${WebSockets_LIBRARIES}
-    ${ZLIB_LIBRARIES}
-    ${OPENSSL_LIBRARIES}
-    ${CRYPTO_LIBRARIES}
-    rt
-    dl
-    pthread
-)
+IF(${PLATFORM} STREQUAL "XENO")
+    set(EXTRA_LIBS
+        sdk
+        ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
+        ${BSON_LIBRARIES}
+        ${MongoC_LIBRARIES}
+        ${WebSockets_LIBRARIES}
+        ${ZLIB_LIBRARIES}
+        ${OPENSSL_LIBRARIES}
+        ${CRYPTO_LIBRARIES}
+        rt
+        dl
+        pthread
+    )
+ELSE()
+    include_directories(${RFS_DIR}/usr/local/include)
+    set(EXTRA_LIBS
+        sdk
+        ${RFS_DIR}/x64/bson-1.0.lib
+        ${RFS_DIR}/x64/libapr-1.lib
+        ${RFS_DIR}/x64/websockets.lib
+    )
+ENDIF()
+
 
 add_executable(telemetry ${INC} ${SRC})
 target_link_libraries(telemetry ${EXTRA_LIBS})

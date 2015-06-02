@@ -39,7 +39,6 @@ IF(${PLATFORM} STREQUAL "XENO")
     )
 ELSE()
     set(EXTRA_LIBS
-        ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
         ${RFS_DIR}/x64/bson-1.0.lib
         ${RFS_DIR}/x64/libapr-1.lib
     )

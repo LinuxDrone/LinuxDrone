@@ -235,4 +235,4 @@ IF(${PLATFORM} STREQUAL "XENO")
     add_subdirectory(${SVC_DIR}/spi)
 ENDIF()
 
-#add_subdirectory(${SVC_DIR}/telemetry)
+add_subdirectory(${SVC_DIR}/telemetry)
