@@ -60,7 +60,7 @@ set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
 set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
 set(WEB_DIR ${PROJECT_SOURCE_DIR}/webapps)
 set(RFS_DIR ${TLS_DIR}/rootfs/${BOARD_TYPE})
-set(APR_DIR ${RFS_DIR}/usr/local/apr)
+set(APR_DIR ${RFS_DIR}/libapr)
 
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(SCP ${TLS_DIR}/pscp.exe)
@@ -118,8 +118,9 @@ IF(${PLATFORM} STREQUAL "XENO")
     # APR
     include_directories(${INCLUDE_DIRECTORIES} ${APR_DIR}/include/apr-2)
 ELSE()
+    # APR
     include_directories(${INCLUDE_DIRECTORIES} ${APR_DIR}/include)
-    include_directories(${INCLUDE_DIRECTORIES} ${TLS_DIR}/libbson-win/include/libbson-1.0)
+    include_directories(${INCLUDE_DIRECTORIES} ${RFS_DIR}/libbson/include/win)
 ENDIF()
 
 

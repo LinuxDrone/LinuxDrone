@@ -39,8 +39,8 @@ IF(${PLATFORM} STREQUAL "XENO")
     )
 ELSE()
     set(EXTRA_LIBS
-        ${RFS_DIR}/x64/bson-1.0.lib
-        ${RFS_DIR}/x64/libapr-1.lib
+        ${RFS_DIR}/libbson/lib/win/x64/bson-1.0.lib
+        ${RFS_DIR}/libapr/lib/win/x64/libapr-1.lib
     )
 ENDIF()
 

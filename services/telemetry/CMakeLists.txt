@@ -34,12 +34,12 @@ IF(${PLATFORM} STREQUAL "XENO")
         pthread
     )
 ELSE()
-    include_directories(${RFS_DIR}/usr/local/include)
+    include_directories(${RFS_DIR}/libwebsockets/include)
     set(EXTRA_LIBS
         sdk
-        ${RFS_DIR}/x64/bson-1.0.lib
-        ${RFS_DIR}/x64/libapr-1.lib
-        ${RFS_DIR}/x64/websockets.lib
+        ${RFS_DIR}/libbson/lib/win/x64/bson-1.0.lib
+        ${RFS_DIR}/libapr/lib/win/x64/libapr-1.lib
+        ${RFS_DIR}/libwebsockets/lib/win/x64/websockets.lib
     )
 ENDIF()
 
