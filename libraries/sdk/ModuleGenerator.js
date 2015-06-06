@@ -514,7 +514,7 @@ function Create_C_file(module) {
     var module_type = module.name;
     var r = "";
 
-    r += "#ifdef WIN32\n";
+    r += "#if OS == Windows_NT\n";
     r += "#include <apr_general.h>\n";
     r += "#include <apr_getopt.h>\n";
     r += "#else\n";
