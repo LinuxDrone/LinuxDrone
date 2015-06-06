@@ -1,4 +1,4 @@
-Сборка на Windows для Linux (arm)
+Сборка в Windows для Linux (arm)
 =============================================
 
 {@img RunCMake.png}  

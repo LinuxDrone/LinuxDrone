@@ -23,6 +23,7 @@ set(EXTRA_LIBS
     m
     pthread
     rt
+    dl
 )
 
 ADD_CUSTOM_COMMAND(

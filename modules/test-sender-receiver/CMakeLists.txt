@@ -22,6 +22,7 @@ IF(${PLATFORM} STREQUAL "XENO")
         sdk
         pthread
         rt
+        dl
     )
 ELSE()
     set(EXTRA_LIBS

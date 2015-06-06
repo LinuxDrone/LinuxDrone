@@ -22,6 +22,7 @@ set(EXTRA_LIBS
     pthread
     rt
     i2c_client
+    dl
 )
 
 ADD_CUSTOM_COMMAND(

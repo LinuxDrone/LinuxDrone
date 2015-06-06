@@ -22,6 +22,9 @@ set(EXTRA_LIBS
     i2c_client
     pthread
     rt
+    dl
+    ${CRYPTO_LIBRARIES}
+    ${ZLIB_LIBRARIES}
 )
 
 ADD_CUSTOM_COMMAND(

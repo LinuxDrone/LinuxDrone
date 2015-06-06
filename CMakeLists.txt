@@ -26,7 +26,7 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 project(linuxdrone)
 
-set(PLATFORM MSVC) #XENO,GCC,MSVC
+set(PLATFORM XENO) #XENO,GCC,MSVC
 
 add_definitions(-D${PLATFORM})
 add_definitions(-D_LARGEFILE64_SOURCE) # Need for apr
@@ -91,8 +91,8 @@ SET(SSH_PORT_TARGET_SYSTEM 22)
 IF(${PLATFORM} STREQUAL "XENO")
     # MongoDB
     # Libraries: ${MongoDB_LIBRARIES}
-    find_package(MongoDB REQUIRED)
-    include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
+#    find_package(MongoDB REQUIRED)
+#    include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 
     # MongoC
     # Libraries: ${MongoC_LIBRARIES}
@@ -116,7 +116,12 @@ IF(${PLATFORM} STREQUAL "XENO")
     include_directories(${INCLUDE_DIRECTORIES} ${WebSockets_INCLUDE_DIR})
 
     # APR
-    include_directories(${INCLUDE_DIRECTORIES} ${APR_DIR}/include/apr-2)
+    # Libraries: ${APR_LIBRARIES}
+    find_package(APR REQUIRED)
+    include_directories(${INCLUDE_DIRECTORIES} ${APR_INCLUDE_DIR})
+
+    # APR
+    #include_directories(${INCLUDE_DIRECTORIES} ${APR_DIR}/include/apr-2)
 ELSE()
     # APR
     include_directories(${INCLUDE_DIRECTORIES} ${APR_DIR}/include)
