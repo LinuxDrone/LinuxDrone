@@ -33,7 +33,7 @@ void test_sender_run (module_test_sender_t *module)
         char buffer_string_out [32];
         //snprintf(buffer_string_out, 32, "data: %i", cycle);
         objOutput1->string_out = buffer_string_out;
-//print_Output1(objOutput1);
+print_Output1(objOutput1);
         checkin_Output1(module, &objOutput1);
 
         Output2_t* objOutput2;
