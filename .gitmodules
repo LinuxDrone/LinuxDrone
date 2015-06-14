@@ -3,4 +3,4 @@
 	url = https://github.com/mongodb/libbson.git
 [submodule "libraries/ardu/ardupilot"]
 	path = libraries/ardu/ardupilot
-	url = git://github.com/diydrones/ardupilot.git
+url=https://github.com/LinuxDrone/ardupilot.git
