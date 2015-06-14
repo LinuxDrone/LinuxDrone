@@ -29,6 +29,8 @@ include_directories(
     ../../libraries/ardu/ardupilot/libraries/AP_Notify
     ../../libraries/ardu/ardupilot/libraries/AP_Curve
     ../../libraries/ardu/ardupilot/libraries/AP_Motors
+    ../../libraries/ardu/ardupilot/libraries/GCS_MAVLink
+    ../../libraries/ardu/ardupilot/libraries/Filter
 )
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)

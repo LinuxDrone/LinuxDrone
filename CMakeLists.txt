@@ -47,6 +47,7 @@ IF(${BOARD_TYPE} STREQUAL "beaglebone")
 -ffunction-sections -fdata-sections -fno-exceptions -fsigned-char
 -Wno-pointer-arith
 -D_GNU_SOURCE
+-std=c++11
     ) #-std=c++11
 
 ELSEIF(${BOARD_TYPE} STREQUAL "rpi")

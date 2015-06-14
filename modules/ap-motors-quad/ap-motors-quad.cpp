@@ -9,7 +9,7 @@ void ap_motors_quad_run (module_ap_motors_quad_t *module)
     RC_Channel out2(2);
     RC_Channel out3(3);
     RC_Channel out4(4);
-    static AP_MotorsQuad motors(out1, out2, out3, out4);
+    static AP_MotorsQuad motors(0,0);//out1, out2, out3, out4);
 
     int cycle=0;
     while(1) {
