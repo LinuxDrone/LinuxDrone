@@ -9,7 +9,7 @@
 [https://github.com/mongodb/libbson](https://github.com/mongodb/libbson)  
 [https://libwebsockets.org/trac/libwebsockets](https://libwebsockets.org/trac/libwebsockets)  
 
-Дабы не собирать данные библиотеки самостоятельно, вы можете скачать скомпилированные версии данных библиотек (и заголовочных файлов) в виде zip архива.  
+Дабы не собирать данные библиотеки самостоятельно, вы можете скачать скомпилированные версии данных библиотек (и заголовочные файлы) в виде zip архива.  
 
 **[Скачать](http://rt-platform.org/rootfs/rootfs-desktop-win.zip)**
 
