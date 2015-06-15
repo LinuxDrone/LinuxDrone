@@ -580,7 +580,6 @@
 					"tools/rootfs/beaglebone/usr/local/include/libbson-1.0",
 					"$(DERIVED_FILE_DIR)/../../sdk.build/DerivedSources",
 					"/usr/local/apr/include/apr-2",
-					"/opt/local/include/apr-1",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -748,6 +747,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"tools/rootfs/beaglebone/usr/local/include/libbson-1.0",
 					"$(DERIVED_FILE_DIR)/../../sdk.build/DerivedSources/**",
+					"/usr/local/apr/include/apr-2",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
