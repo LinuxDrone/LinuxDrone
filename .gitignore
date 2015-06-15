@@ -51,3 +51,4 @@ webapps/configurator/public/ext
 *.opensdf
 *.dia~
 /doc/ru/release
+/webapps/cfg
