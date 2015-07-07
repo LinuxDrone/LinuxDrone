@@ -1,0 +1,257 @@
+{
+    "type": "module_def",
+    "name": "ap-motors-matrix",
+    "version": 2,
+    "rt-priority": 80,
+    "main-task-period": 200000,
+    "transfer-task-period": 200000,
+    "Notify on change": false,
+    "description": {
+        "en": "en description",
+        "ru": "русское описание"
+    },
+    "paramsDefinitions": [
+        {
+            "name": "I2C Device",
+            "displayName": {
+                "en": "param 1",
+                "ru": "параметр 1"
+            },
+            "description": {
+                "en": "en description",
+                "ru": "русское описание"
+            },
+            "type": "const char*",
+            "defaultValue": "default value",
+            "validValues": [
+                "str1",
+                "str2"
+            ],
+            "unitMeasured": ""
+        },
+        {
+            "name": "Test Number Param",
+            "displayName": {
+                "en": "param 2",
+                "ru": "параметр 2"
+            },
+            "description": {
+                "en": "en description",
+                "ru": "русское описание"
+            },
+            "type": "int",
+            "defaultValue": 123,
+            "validValues": [
+                56,
+                123
+            ],
+            "unitMeasured": "Ms"
+        },
+        {
+            "name": "Test Boolean Param",
+            "displayName": {
+                "en": "param 3",
+                "ru": "параметр 3"
+            },
+            "description": {
+                "en": "en description",
+                "ru": "русское описание"
+            },
+            "type": "bool",
+            "defaultValue": false,
+            "unitMeasured": "bool"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "Output1",
+            "Schema": {
+                "type": "object",
+                "id": "http://jsonschema.net",
+                "properties": {
+                    "ch1": {
+                        "type": "int",
+                        "required": true
+                    },
+                    "ch2": {
+                        "type": "int",
+                        "required": true
+                    },
+                    "ch3": {
+                        "type": "int",
+                        "required": true
+                    },
+                    "ch4": {
+                        "type": "int",
+                        "required": true
+                    }
+                }
+            }
+        }
+    ],
+    "inputShema": {
+        "type": "object",
+        "id": "http://jsonschema.net",
+        "properties": {
+            "roll": {
+                "type": "float",
+                "required": true,
+                "description": {
+                    "en": "rc_roll",
+                    "ru": "rc_roll"
+                }
+            },
+            "pitch": {
+                "type": "float",
+                "required": true,
+                "description": {
+                    "en": "rc_pitch",
+                    "ru": "rc_pitch"
+                }
+            },
+            "throttle": {
+                "type": "float",
+                "required": true,
+                "description": {
+                    "en": "rc_throttle",
+                    "ru": "rc_throttle"
+                }
+            },
+            "yaw": {
+                "type": "float",
+                "required": true,
+                "description": {
+                    "en": "rc_yaw",
+                    "ru": "rc_yaw"
+                }
+            }
+        }
+    },
+    "commands": [
+        {
+            "name": "command0"
+        },
+        {
+            "name": "command1",
+            "displayName": {
+                "en": "Command 1",
+                "ru": "Команда 1"
+            },
+            "description": {
+                "en": "en description",
+                "ru": "русское описание"
+            },
+            "commandParams": [
+                {
+                    "name": "Command Char Param",
+                    "displayName": {
+                        "en": "param 1",
+                        "ru": "параметр 1"
+                    },
+                    "description": {
+                        "en": "en description",
+                        "ru": "русское описание"
+                    },
+                    "type": "const char*",
+                    "defaultValue": "default value",
+                    "validValues": [
+                        "str1",
+                        "str2"
+                    ],
+                    "unitMeasured": ""
+                },
+                {
+                    "name": "Command Number Param",
+                    "displayName": {
+                        "en": "param 2",
+                        "ru": "параметр 2"
+                    },
+                    "description": {
+                        "en": "en description",
+                        "ru": "русское описание"
+                    },
+                    "type": "int",
+                    "defaultValue": 123,
+                    "validValues": [
+                        56,
+                        123
+                    ],
+                    "unitMeasured": "Ms"
+                },
+                {
+                    "name": "Command Boolean Param",
+                    "displayName": {
+                        "en": "param 3",
+                        "ru": "параметр 3"
+                    },
+                    "description": {
+                        "en": "en description",
+                        "ru": "русское описание"
+                    },
+                    "type": "bool",
+                    "defaultValue": false,
+                    "unitMeasured": "bool"
+                }
+            ]
+        },
+        {
+            "name": "command2",
+            "description": {
+                "en": "en description",
+                "ru": "русское описание"
+            },
+            "commandParams": [
+                {
+                    "name": "Command float Param",
+                    "displayName": {
+                        "en": "param 1",
+                        "ru": "параметр 1"
+                    },
+                    "description": {
+                        "en": "en description",
+                        "ru": "русское описание"
+                    },
+                    "type": "float",
+                    "defaultValue": "default value",
+                    "validValues": [
+                        "1.0",
+                        "2.3"
+                    ],
+                    "unitMeasured": ""
+                },
+                {
+                    "name": "Command Number Param",
+                    "displayName": {
+                        "en": "param 2",
+                        "ru": "параметр 2"
+                    },
+                    "description": {
+                        "en": "en description",
+                        "ru": "русское описание"
+                    },
+                    "type": "int",
+                    "defaultValue": 123,
+                    "validValues": [
+                        56,
+                        123
+                    ],
+                    "unitMeasured": "Ms"
+                },
+                {
+                    "name": "Command Boolean Param",
+                    "displayName": {
+                        "en": "param 3",
+                        "ru": "параметр 3"
+                    },
+                    "description": {
+                        "en": "en description",
+                        "ru": "русское описание"
+                    },
+                    "type": "bool",
+                    "defaultValue": false,
+                    "unitMeasured": "bool"
+                }
+            ]
+        }
+    ]
+}

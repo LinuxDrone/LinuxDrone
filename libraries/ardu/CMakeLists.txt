@@ -335,6 +335,7 @@ set(ArduCopter_EXTRA_LIBS
 
 file(GLOB ArduCopter_INC "ardupilot/ArduCopter/*.h")
 file(GLOB ArduCopter_SRC "ardupilot/ArduCopter/ArduCopter.cpp")
+add_library(ArduCopter ${ArduCopter_INC} ${ArduCopter_SRC})
 #add_executable(ArduCopter ${ArduCopter_INC} ${ArduCopter_SRC})
 #target_link_libraries(ArduCopter ${ArduCopter_EXTRA_LIBS})
 
