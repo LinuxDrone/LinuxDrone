@@ -1,7 +1,7 @@
 exports.CFG_FOLDER = "../../cfg";
 
-//var BIN_FOLDER = "../../bin"; // Linux BBB
-var BIN_FOLDER = "../../../x64/Debug"; // Windows
+var BIN_FOLDER = "../../bin"; // Linux BBB
+//var BIN_FOLDER = "../../../x64/Debug"; // Windows
 
 var commonModuleParams = require('../client/ModulesCommonParams.def.js');
 var _ = require('underscore');
@@ -112,7 +112,7 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
 
         // Перенос конфигурации сложных модулей
         if (cell.blocksJSON) {
-            module.blocksConfig = {"blocks": new Array(), "links": new Array()};
+            module.blocksConfig = {"blocks": [], "links": []};
 
             cell.blocksJSON.cells.forEach(function (blockInstance) {
                 var blockParams = modulesParams[module.instance].blocksConfig;
@@ -142,8 +142,8 @@ function ConvertVisualCell(graph, arModules, arLinks, cell, modulesParams, metaM
 function ConvertGraph2Configuration(graph, modulesParams, metaModules) {
     var config = {
         "type": "configuration",
-        "modules": new Array(),
-        "links": new Array()
+        "modules": [],
+        "links": []
     };
 
     graph.cells.forEach(function (cell) {
@@ -156,7 +156,7 @@ function ConvertGraph2Configuration(graph, modulesParams, metaModules) {
 
 // Генерит строку параметров командной строки, для запуска инстанса модуля
 exports.MakeInstanceCommandParams = function (instance, configuration) {
-    var res = new Array();
+    var res = [];
     res.push("--name=" + instance.instance);
 
     var addrs = instance.instance.split(":");
@@ -179,13 +179,13 @@ exports.MakeInstanceCommandParams = function (instance, configuration) {
     });
 
     return res;
-}
+};
 
 
 exports.requireUncached = function (module) {
     delete require.cache[require.resolve(module)];
     return require(module);
-}
+};
 
 // Получает определения модулей, запуская модули с параметром --module-definition
 // Полученные определения возвращает в виде массива JSON
@@ -244,7 +244,7 @@ exports.MetaOfModules = {
             return;
         }
 
-        this.meta = new Array();
+        this.meta = [];
 
         var self = this;
 
@@ -254,7 +254,7 @@ exports.MetaOfModules = {
                 return;
             }
 
-            var listFiles = new Array();
+            var listFiles = [];
             list.forEach(function (file) {
                 // для начала проверим, что расширение файла .mod или .mod.exe
                 var ar = file.split('.');
@@ -270,7 +270,7 @@ exports.MetaOfModules = {
             });
         });
     }
-}
+};
 
 var hostStatus = {
     status: 'stopped', // running
@@ -298,7 +298,7 @@ exports.GetConfiguration = function(schema, callback) {
         // Получаем описания модулей и вызываем функцию, передавай ей граф объектов из графической схемы и настроечные параметры модулей.
         callback(ConvertGraph2Configuration(JSON.parse(schema.jsonGraph), schema.modulesParams, metaModules));
     });
-}
+};
 
 exports.runhosts = function (req, res) {
     if (hostStatus.status === 'running') {
@@ -437,7 +437,7 @@ exports.stophosts = function (req, res) {
             console.log(e);
             res.send({"success": false, "message": e});
             res.end();
-            return;
+
         }
     });
 
