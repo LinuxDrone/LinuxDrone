@@ -27,7 +27,12 @@ include_directories(
     ${LIB_DIR}/ardu/ardupilot/libraries/AP_Param
     ${LIB_DIR}/ardu/ardupilot/libraries/StorageManager
     ${LIB_DIR}/ardu/ardupilot/libraries/AP_HAL_AVR
+    ${LIB_DIR}/ardu/ardupilot/libraries/AP_HAL_SITL
+    ${LIB_DIR}/ardu/ardupilot/libraries/AP_HAL_PX4
+    ${LIB_DIR}/ardu/ardupilot/libraries/AP_HAL_VRBRAIN
+    ${LIB_DIR}/ardu/ardupilot/libraries/AP_HAL_FLYMAPLE
     ${LIB_DIR}/ardu/ardupilot/libraries/AP_HAL_Linux
+    ${LIB_DIR}/ardu/ardupilot/libraries/AP_HAL_Empty
     ${LIB_DIR}/ardu/ardupilot/libraries/AP_Math
     ${LIB_DIR}/ardu/ardupilot/libraries/AP_Vehicle
     ${LIB_DIR}/ardu/ardupilot/libraries/AP_GPS
@@ -71,9 +76,11 @@ include_directories(
     ${LIB_DIR}/ardu/ardupilot/libraries/AC_Sprayer
     ${LIB_DIR}/ardu/ardupilot/libraries/AP_EPM
     ${LIB_DIR}/ardu/ardupilot/libraries/AP_Parachute
+    ${LIB_DIR}/ardu/ardupilot/libraries/AP_LandingGear
     ${LIB_DIR}/ardu/ardupilot/libraries/AP_Terrain
-    ${LIB_DIR}/ardu/ardupilot/APMrover2
+    #${LIB_DIR}/ardu/ardupilot/APMrover2
     ${LIB_DIR}/ardu/ardupilot/ArduCopter
+    ${LIB_DIR}/ardu/ardupilot/GPS_Glitch
 )
 
 include_directories(
@@ -81,6 +88,62 @@ include_directories(
 )
 set(EXTRA_LIBS
     sdk
+    pthread
+    rt
+
+    AP_Common
+    AP_HAL
+    AP_HAL_utility
+    AP_Progmem
+    AP_Rally
+    AP_ADC
+    AP_ADC_AnalogSource
+    AP_Terrain
+    AP_Mission
+    GCS_MAVLink
+    AP_Menu
+    AP_Param
+    AP_Math
+    SITL
+    DataFlash
+    AP_GPS
+    AP_HAL_Empty
+    AP_HAL_Linux
+    AP_InertialSensor
+    Filter
+    AP_Baro
+    AP_AHRS
+    AP_Compass
+    AP_Declination
+    AP_Airspeed
+    AP_NavEKF
+    AP_Notify
+    StorageManager
+    AP_Curve
+    AC_PID
+    AP_Motors
+    RC_Channel
+    AP_InertialNav
+    AC_AttitudeControl
+    AP_RangeFinder
+    AP_OpticalFlow
+    AP_Relay
+    AP_ServoRelayEvents
+    AP_Camera
+    AP_Mount
+    AC_WPNav
+    AC_Fence
+    AP_Scheduler
+    AP_RCMapper
+    AP_BattMonitor
+    AP_BoardConfig
+    AP_Frsky_Telem
+    AC_Sprayer
+    AP_EPM
+    AP_Parachute
+    AP_SerialManager
+    AP_LandingGear
+    ArduCopter
 )
 
 ADD_CUSTOM_COMMAND(
@@ -89,8 +152,8 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ardu.def.json
 )
 
-add_library(ardu MODULE ${INC} ${SRC} ardu.helper.c)
-
+#add_library(ardu MODULE ${INC} ${SRC} ardu.helper.c)
+add_executable(ardu ${INC} ${SRC} )
 target_link_libraries(ardu ${EXTRA_LIBS})
 
 IF(${DO_POST_BUILD})

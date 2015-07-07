@@ -16,6 +16,7 @@ add_definitions(-DSKETCHNAME="ArduCopter")
 include_directories(
     ardupilot/libraries/AP_Common
     ardupilot/libraries/AP_HAL
+    ardupilot/libraries/AP_HAL/utility
     ardupilot/libraries/AP_HAL_AVR
     ardupilot/libraries/AP_HAL_AVR_SITL
     ardupilot/libraries/AP_HAL_SITL
@@ -85,6 +86,13 @@ file(GLOB AP_HAL_INC "ardupilot/libraries/AP_HAL/*.h")
 file(GLOB AP_HAL_SRC "ardupilot/libraries/AP_HAL/*.cpp")
 add_library(AP_HAL ${AP_HAL_INC} ${AP_HAL_SRC})
 
+
+file(GLOB AP_HAL_utility_INC "ardupilot/libraries/AP_HAL/utility/*.h")
+file(GLOB AP_HAL_utility_SRC "ardupilot/libraries/AP_HAL/utility/*.cpp")
+add_library(AP_HAL_utility ${AP_HAL_utility_INC} ${AP_HAL_utility_SRC})
+
+
+
 file(GLOB AP_Progmem_INC "ardupilot/libraries/AP_Progmem/*.h")
 file(GLOB AP_Progmem_SRC "ardupilot/libraries/AP_Progmem/*.cpp")
 add_library(AP_Progmem ${AP_Progmem_INC} ${AP_Progmem_SRC})
@@ -108,6 +116,10 @@ add_library(AP_Terrain ${AP_Terrain_INC} ${AP_Terrain_SRC})
 file(GLOB AP_Mission_INC "ardupilot/libraries/AP_Mission/*.h")
 file(GLOB AP_Mission_SRC "ardupilot/libraries/AP_Mission/*.cpp")
 add_library(AP_Mission ${AP_Mission_INC} ${AP_Mission_SRC})
+
+file(GLOB AP_SerialManager_INC "ardupilot/libraries/AP_SerialManager/*.h")
+file(GLOB AP_SerialManager_SRC "ardupilot/libraries/AP_SerialManager/*.cpp")
+add_library(AP_SerialManager ${AP_SerialManager_INC} ${AP_SerialManager_SRC})
 
 file(GLOB GCS_MAVLink_INC "ardupilot/libraries/GCS_MAVLink/*.h")
 file(GLOB GCS_MAVLink_SRC "ardupilot/libraries/GCS_MAVLink/*.cpp")
@@ -273,6 +285,10 @@ file(GLOB AP_Parachute_INC "ardupilot/libraries/AP_Parachute/*.h")
 file(GLOB AP_Parachute_SRC "ardupilot/libraries/AP_Parachute/*.cpp")
 add_library(AP_Parachute ${AP_Parachute_INC} ${AP_Parachute_SRC})
 
+file(GLOB AP_LandingGear_INC "ardupilot/libraries/AP_LandingGear/*.h")
+file(GLOB AP_LandingGear_SRC "ardupilot/libraries/AP_LandingGear/*.cpp")
+add_library(AP_LandingGear ${AP_LandingGear_INC} ${AP_LandingGear_SRC})
+
 
 set(ArduCopter_EXTRA_LIBS
     AP_Common
@@ -334,7 +350,7 @@ set(ArduCopter_EXTRA_LIBS
 )
 
 file(GLOB ArduCopter_INC "ardupilot/ArduCopter/*.h")
-file(GLOB ArduCopter_SRC "ardupilot/ArduCopter/ArduCopter.cpp")
+file(GLOB ArduCopter_SRC "ardupilot/ArduCopter/*.cpp")
 add_library(ArduCopter ${ArduCopter_INC} ${ArduCopter_SRC})
 #add_executable(ArduCopter ${ArduCopter_INC} ${ArduCopter_SRC})
 #target_link_libraries(ArduCopter ${ArduCopter_EXTRA_LIBS})
