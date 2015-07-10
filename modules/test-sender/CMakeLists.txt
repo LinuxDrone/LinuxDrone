@@ -17,17 +17,27 @@ include_directories(${LIB_DIR}/sdk/include ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${BSON_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 
-set(EXTRA_LIBS
-    sdk
-)
+IF(${PLATFORM} STREQUAL "XENO")
+    set(EXTRA_LIBS
+        sdk
+        pthread
+        rt
+        dl
+    )
+ELSE()
+    set(EXTRA_LIBS
+        sdk
+    )
+ENDIF()
+
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test-sender.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/test-sender.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/test-sender.def.json ${CMAKE_CURRENT_BINARY_DIR} ${PLATFORM}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-sender.def.json
 )
 
-add_library(test-sender MODULE ${INC} ${SRC} test-sender.helper.c)
+add_executable(test-sender ${INC} ${SRC} test-sender.helper.c)
 
 target_link_libraries(test-sender ${EXTRA_LIBS})
 
@@ -35,10 +45,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET test-sender
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libtest-sender.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender/libtest-sender.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/test-sender/test-sender.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender/test-sender.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} test-sender ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/test-sender.mod
     )
 ENDIF()
 
-install(TARGETS test-sender DESTINATION modules/test-sender)
-install(FILES test-sender.def.json DESTINATION modules/test-sender)
+install(TARGETS test-sender DESTINATION bin)

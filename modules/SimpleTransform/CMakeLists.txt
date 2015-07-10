@@ -18,9 +18,10 @@ include_directories(${LIB_DIR}/sdk/include)
 set(EXTRA_LIBS
 	sdk
 	core
+    pthread
+    rt
 )
 
-add_library(simpletransform MODULE ${INC} ${SRC})
+add_executable(simpletransform ${INC} ${SRC})
 
-install(TARGETS simpletransform DESTINATION modules/simpletransform)
-install(FILES simpletransform.def.json DESTINATION modules/simpletransform)
+install(TARGETS simpletransform DESTINATION bin)

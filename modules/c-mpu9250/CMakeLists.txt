@@ -21,15 +21,18 @@ set(EXTRA_LIBS
     sdk
     spi_client
     m
+    pthread
+    rt
+    dl
 )
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/c-mpu9250.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-mpu9250.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-mpu9250.def.json ${CMAKE_CURRENT_BINARY_DIR} ${PLATFORM}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-mpu9250.def.json
 )
 
-add_library(c-mpu9250 MODULE ${INC} ${SRC} c-mpu9250.helper.c)
+add_executable(c-mpu9250 ${INC} ${SRC} c-mpu9250.helper.c)
 
 target_link_libraries(c-mpu9250 ${EXTRA_LIBS})
 
@@ -37,10 +40,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-mpu9250
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-mpu9250.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-mpu9250/libc-mpu9250.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-mpu9250/c-mpu9250.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-mpu9250/c-mpu9250.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-mpu9250 ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-mpu9250.mod
     )
 ENDIF()
 
-install(TARGETS c-mpu9250 DESTINATION modules/c-mpu9250)
-install(FILES c-mpu9250.def.json DESTINATION modules/c-mpu9250)
+install(TARGETS c-mpu9250 DESTINATION bin)

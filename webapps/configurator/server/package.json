@@ -1,0 +1,15 @@
+{
+  "name": "linuxdrone-configurator",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "mongodb": "*",
+    "underscore":"*",
+    "monk": "*",
+    "ws":"*",
+    "node-simple-router": "*"
+  }
+}

@@ -23,6 +23,7 @@ set(EXTRA_LIBS
     ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
     rt
     pthread
+    dl
 )
 
 add_executable(i2c_service ${INC} ${SRC})

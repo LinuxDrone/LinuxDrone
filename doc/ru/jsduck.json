@@ -1,0 +1,6 @@
+{
+  "--title": "Документация RT Platform",
+  "--guides": "guides.json",
+  "--output": "release",
+  "--welcome": "index/main.html"
+}

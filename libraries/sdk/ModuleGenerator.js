@@ -1,3 +1,5 @@
+var platform; // Values XENO,MSVC,GCC
+
 function make_params_structure(params_definitions, moduleName) {
     moduleName = moduleName.replace(/-/g, "_");
     var r = "";
@@ -7,19 +9,11 @@ function make_params_structure(params_definitions, moduleName) {
     r += "{\n";
     var i = 0;
     params_definitions.forEach(function (param) {
-        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "");
+        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "").replace(/-/g, "_");
         if (i != 0) {
             r += ",\n";
         }
-        r += "\t" + paramName + " =\t0b";
-        for (var c = 0; c < 32; c++) {
-            if (i == 31 - c) {
-                r += "1";
-            }
-            else {
-                r += "0";
-            }
-        }
+        r += "\t" + paramName + " =\t1 << " + i;
         i++;
     });
 
@@ -30,7 +24,7 @@ function make_params_structure(params_definitions, moduleName) {
     r += "typedef struct\n";
     r += "{\n";
     params_definitions.forEach(function (param) {
-        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "");
+        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "").replace(/-/g, "_");
         r += "\t" + param.type + " " + paramName + ";\n";
     });
     r += "} params_" + moduleName + "_t;\n\n";
@@ -48,15 +42,7 @@ function make_structures(properties, outName) {
         if (i != 0) {
             r += ",\n";
         }
-        r += "\t" + key + " =\t0b";
-        for (var c = 0; c < 32; c++) {
-            if (i == 31 - c) {
-                r += "1";
-            }
-            else {
-                r += "0";
-            }
-        }
+        r += "\t" + key + " =\t1 << " + i;
         i++;
     }
     r += "\n";
@@ -78,7 +64,7 @@ function make_Structure2Bson(properties, outName) {
     r += "int " + outName + "2bson(" + outName + "_t* obj, bson_t* bson)\n";
     r += "{\n";
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
@@ -154,7 +140,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
     r += "    {\n";
     r += "        const char* key = bson_iter_key (&iter);\n\n";
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         r += "        if(!strncmp(key, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
         r += "        {\n";
         switch (properties[key].type) {
@@ -218,20 +204,14 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
         r += "{\n";
     }
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
             case "int":
-                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
-                break;
-
             case "long":
-                r += "    printf(\"" + propName + "=%li\\t\", obj->" + propName + ");\n";
-                break;
-
             case "long long":
-                r += "    printf(\"" + propName + "=%lli\\t\", obj->" + propName + ");\n";
+                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
                 break;
 
             case "float":
@@ -244,7 +224,7 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
                 break;
 
             case "bool":
-                r += "    printf(\"" + propName + "=%s\\t\", obj->" + propName + " ? \"true\" : \"false\");\n";
+                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
                 break;
 
             default:
@@ -253,6 +233,167 @@ function make_Bson2Structure(properties, outName, module_type, set_update_fact) 
         }
     }
     r += "    printf(\"\\n\");\n";
+    r += "}\n\n";
+    return r;
+}
+
+function make_print_help(params){
+    var r = "// Print help\n";
+    r += "void print_help()\n";
+    r += "{\n";
+    for (var key in params) {
+        var paramName = key.replace(/\ /g, "_");
+        var param = params[key];
+
+        r += "    fprintf(stderr, \"--"+paramName+"="+param.type.toUpperCase()+" VALUE\\n\");\n";
+        if('defaultValue' in param){
+            r += "    fprintf(stderr, \"\\toptional\\n\");\n";
+        }else{
+            r += "    fprintf(stderr, \"\\trequired\\n\");\n";
+        }
+
+        if('description' in param){
+            if('en' in param.description){
+                r += "    fprintf(stderr, \"\\t"+param.description.en;
+                if('validValues' in param || 'defaultValue' in param){
+                    r += " (";
+                    if('validValues' in param){
+                        r += param.validValues;
+                        if('defaultValue' in param){
+                            r += " ";
+                        }
+                    }
+                    if('defaultValue' in param){
+                        r += "default: " + param.defaultValue;
+                    }
+                    r += ")";
+                }
+                r += "\\n\\n\");\n\n";
+            }
+        }
+    }
+    r += "}\n\n";
+    return r;
+}
+
+function make_argv2Structure(properties, module_type) {
+    var structureName = "params_" + module_type;
+    var r = "";
+    r += "// Convert argv to structure " + structureName + "\n";
+    r += "int argv2" + structureName + "(module_t* module, int argc, char *argv[])\n";
+    r += "{\n";
+
+    r += "    if(!module)\n";
+    r += "    {\n";
+    r += "        printf(\"Error: func argv2" + structureName + ", NULL parameter\\n\");\n";
+    r += "        return -1;\n";
+    r += "    }\n\n";
+
+    r += "    apr_status_t rv;\n";
+    r += "    apr_pool_t *mp;\n";
+    r += "    static const apr_getopt_option_t opt_option[] = {\n";
+    var ip = 100;
+    for (var key in properties) {
+        var propName = key.replace(/\ /g, "_");
+        r += "        {\"" + propName + "\", " + ip + ", TRUE, NULL },\n";
+        ip++;
+    }
+    r += "        {NULL,0,0,NULL}\n";
+    r += "    };\n\n";
+
+    r += "    apr_getopt_t *opt;\n";
+    r += "    int optch;\n";
+    r += "    const char *optarg;\n";
+    r += "    apr_pool_create(&mp, NULL);\n";
+    r += "    apr_getopt_init(&opt, mp, argc, (const char *const *)argv);\n";
+    r += "    opt->errfn = NULL;\n";
+    r += "    opt->interleave = true;\n";
+
+    r += "    while ((rv = apr_getopt_long(opt, opt_option, &optch, &optarg)) != APR_EOF) {\n";
+    r += "        " + structureName + "_t* obj = (" + structureName + "_t*)module->specific_params;\n";
+    r += "        if (optarg!=NULL){\n";
+    r += "            switch(optch){\n";
+    ip = 100;
+    for (var key in properties) {
+        r += "                case " + ip + ":\n";
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
+        switch (properties[key].type) {
+            case "float":
+            case "double":
+                r += "                    obj->" + propName + " = atof(optarg);\n";
+
+            case "char":
+            case "short":
+            case "int":
+            case "bool":
+                r += "                    obj->" + propName + " = atoi(optarg);\n";
+                break;
+
+            case "long":
+                r += "                    obj->" + propName + " = atol(optarg);\n";
+                break;
+
+            case "long long":
+                r += "                    obj->" + propName + " = atoll(optarg);\n";
+                break;
+
+            case "const char*":
+                // TODO: Возможна проблема с тем, что строку надо освобождать
+                r += "                    obj->" + propName + " = malloc(strlen(optarg)+1);\n";
+                r += "                    strcpy((char*)obj->" + propName + ", optarg);\n";
+                break;
+
+            default:
+                console.log("Unknown type " + properties[key].type + " for port " + propName);
+                break;
+        }
+        r += "                break;\n\n";
+        ip++;
+    }
+    r += "            }\n";
+    r += "        }\n";
+    r += "    }\n";
+
+    r += "    return 0;\n";
+    r += "}\n\n";
+
+
+    r += "// Helper function. Print structure " + structureName + "\n";
+
+    r += "void print_" + structureName + "(" + structureName + "_t* obj)\n";
+    r += "{\n";
+    r += "    fprintf(stdout, \"\\nSpecific params:\\n\");\n";
+
+    for (var key in properties) {
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
+        switch (properties[key].type) {
+            case "char":
+            case "short":
+            case "int":
+            case "long":
+            case "long long":
+                r += "    fprintf(stdout, \"\\t" + key + ": %i\\n\", obj->" + propName + ");\n";
+                break;
+
+            case "float":
+            case "double":
+                r += "    fprintf(stdout, \"\\t" + key + ": %lf\\n\", obj->" + propName + ");\n";
+                break;
+
+            case "const char*":
+                r += "    fprintf(stdout, \"\\t" + key + ": %s\\n\", obj->" + propName + ");\n";
+                break;
+
+            case "bool":
+                r += "    fprintf(stdout, \"\\t" + key + ": %i\\n\", obj->" + propName + ");\n";
+                break;
+
+            default:
+                console.log("Unknown type " + properties[key].type + " for port " + propName);
+                break;
+        }
+    }
+    r += "    fprintf(stdout, \"\\n\");\n";
     r += "}\n\n";
 
     return r;
@@ -264,7 +405,11 @@ function Create_H_file(module) {
 
     r += "#pragma once\n\n";
 
-    r += "#include \"module-functions.h\"\n\n";
+    if(platform==="XENO") {
+        r += "#include \"module-functions.h\"\n\n";
+    }else{
+        r += "#include \"apr-module-functions.h\"\n\n";
+    }
 
     r += "\n#ifdef __cplusplus\n";
     r += "extern \"C\" {\n"
@@ -313,7 +458,7 @@ function Create_H_file(module) {
     // Формирование объявлений функций
     r += "\n// Helper functions\n";
     r += "module_" + module_type + "_t* " + module_type + "_create(void *handle);\n";
-    r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len);\n";
+    r += "int " + module_type + "_init(module_" + module_type + "_t* module, int argc, char *argv[]);\n";
     r += "int " + module_type + "_start(module_" + module_type + "_t* module);\n";
     r += "void " + module_type + "_delete(module_" + module_type + "_t* module);\n\n";
 
@@ -369,9 +514,27 @@ function Create_C_file(module) {
     var module_type = module.name;
     var r = "";
 
-    r += "#include \"" + module_type + ".helper.h\"\n\n";
+    r += "#if OS == Windows_NT\n";
+    r += "#include <apr_general.h>\n";
+    r += "#include <apr_getopt.h>\n";
+    r += "#else\n";
+    r += "// Mac OS X\n";
+    r += "#include <apr-1/apr_general.h>\n";
+    r += "#include <apr-1/apr_getopt.h>\n";
+    r += "#endif\n\n";
+
+    if(platform!="MSVC") {
+        r += "#include <sys/mman.h>\n";
+    }
+
+    r += "#include \"" + module_type + ".helper.h\"\n";
+
+    r += "// Определение модуля в JSON\n";
+    r += "const char* m_definition = \"" + JSON.stringify(module).replace(/"/g, "\\\"") + "\";\n\n";
 
     module_type = module_type.replace(/-/g, "_");
+
+    r += "module_" + module_type + "_t* m_module;\n";
 
     r += "int checkout4writer(module_t* module, out_object_t* set, void** obj);\n";
     r += "int checkin4writer(module_t* module, out_object_t* set, void** obj);\n\n";
@@ -443,7 +606,7 @@ function Create_C_file(module) {
                 for (var key in out.Schema.properties) {
                     r += "    if(!strncmp(name_out_pin, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
                     r += "    {\n";
-                    r += "        (*offset_field) = (void*)&module->obj1_" + outName + "." + key + " - (void*)&module->obj1_" + outName + ";\n";
+                    r += "        (*offset_field) = (uintptr_t)&module->obj1_" + outName + "." + key + " - (uintptr_t)&module->obj1_" + outName + ";\n";
                     r += "        (*index_port) = " + index_port + ";\n";
                     r += "        return &module->" + outName + ";\n";
                     r += "    }\n";
@@ -463,7 +626,7 @@ function Create_C_file(module) {
         for (var key in module.inputShema.properties) {
             r += "    if(!strncmp(name_inpin, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
             r += "    {\n";
-            r += "        return (void*)&module->input4module." + key + " - (void*)&module->input4module;\n";
+            r += "        return (int)((uintptr_t)&module->input4module." + key + " - (uintptr_t)&module->input4module);\n";
             r += "    }\n";
         }
         r += "    printf(\"Not found property \\\"%s\\\" among properties in input object\\n\", name_inpin);\n";
@@ -490,19 +653,21 @@ function Create_C_file(module) {
 
     if ('paramsDefinitions' in module) {
         r += make_Structure2Bson(params, "params_" + module_type);
-        r += make_Bson2Structure(params, "params_" + module_type, "", false);
+        //r += make_Bson2Structure(params, "params_" + module_type, "", false);
+        r += make_argv2Structure(params, module_type);
+        r += make_print_help(params);
     }
 
 
     r += "// Init module.\n";
-    r += "int " + module_type + "_init(module_" + module_type + "_t* module, const uint8_t* bson_data, uint32_t bson_len)\n";
+    r += "int " + module_type + "_init(module_" + module_type + "_t* module, int argc, char *argv[])\n";
     r += "{\n";
 
     if ('paramsDefinitions' in module) {
         r += "    // Настроечные параметры\n";
         r += "    module->module_info.specific_params = &module->params_" + module_type + ";\n";
         r += "    module->module_info.params2bson = (p_obj2bson)&params_" + module_type + "2bson;\n";
-        r += "    module->module_info.bson2params = (p_bson2obj)&bson2params_" + module_type + ";\n";
+        r += "    module->module_info.argv2params = (p_argv2obj)&argv2params_" + module_type + ";\n";
         r += "    module->module_info.print_params = (p_print_obj)&print_params_" + module_type + ";\n\n";
     }
 
@@ -512,12 +677,17 @@ function Create_C_file(module) {
             r += "    // " + outName + "\n";
             r += "    // временное решение для указания размера выделяемой памяти под bson  объекты каждого типа\n";
             r += "    // в реальности должны один раз создаваться тестовые bson объекты, вычисляться их размер и передаваться в функцию инициализации\n";
-            r += "    module->" + outName + ".shmem_set.shmem_len = 300;\n";
+            if (platform==="XENO") {
+                r += "    module->" + outName + ".shmem_set.shmem_len = 300;\n";
+            }
             r += "    module->" + outName + ".obj1 = &module->obj1_" + outName + ";\n";
             r += "    module->" + outName + ".obj2 = &module->obj2_" + outName + ";\n";
             r += "    module->" + outName + ".obj2bson = (p_obj2bson)&" + outName + "2bson;\n";
             r += "    module->" + outName + ".bson2obj = (p_bson2obj)&bson2" + outName + ";\n";
-            r += "    module->" + outName + ".print_obj = (p_print_obj)&print_" + outName + ";\n\n";
+            r += "    module->" + outName + ".print_obj = (p_print_obj)&print_" + outName + ";\n";
+            if (platform!="XENO") {
+                r += "    module->" + outName + ".out_name = \"" + outName + "\";\n\n";
+            }
         });
         r += "    module->module_info.get_outobj_by_outpin = (p_get_outobj_by_outpin)&get_outobject_by_outpin;\n";
     }
@@ -535,6 +705,12 @@ function Create_C_file(module) {
         r += "    module->module_info.input_data = NULL;\n";
     }
     r += "\n";
+
+    r += "    // Строка с JSON определением модуля.\n";
+    r += "    module->module_info.json_module_definition = m_definition;\n\n";
+
+    r += "    // ССылка на функцию выводящую в консоль справку по параметрам запсука модуля.\n";
+    r += "    module->module_info.print_help = (p_print_help)&print_help;\n\n";
 
     r += "    // Сохранение ссылки на бизнес-функцию.\n";
     r += "    module->module_info.func = &" + module_type + "_run;\n";
@@ -554,8 +730,8 @@ function Create_C_file(module) {
     if ('inputShema' in module) {
         r += "    module->module_info.print_input = &print_" + module_type + ";\n\n";
     }
-    r += "    int res = init(&module->module_info, bson_data, bson_len);\n\n";
-    if (module.outputs) {
+    r += "    int res = init(&module->module_info, argc, argv);\n\n";
+    if (module.outputs && platform==="XENO") {
         r += "    // для каждого типа порождаемого объекта инициализируется соответсвующая структура\n";
         r += "    // и указываются буферы (для обмена данными между основным и передающим потоком)\n";
         module.outputs.forEach(function (out) {
@@ -615,12 +791,14 @@ function Create_C_file(module) {
         r += "*/\n";
         r += "int checkout_params_" + module_type + "(module_t* module, void** params)\n";
         r += "{\n";
-        r += "  int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);\n";
-        r += "  if (res != 0)\n";
-        r += "  {\n";
-        r += "      printf(\"error checkout_params_" + module_type + ": rt_mutex_acquire\\n\");\n";
-        r += "      return res;\n";
-        r += "  }\n";
+        if(platform==="XENO") {
+            r += "  int res = rt_mutex_acquire(&module->mutex_obj_exchange, TM_INFINITE);\n";
+            r += "  if (res != 0)\n";
+            r += "  {\n";
+            r += "      printf(\"error checkout_params_" + module_type + ": rt_mutex_acquire\\n\");\n";
+            r += "      return res;\n";
+            r += "  }\n";
+        }
         r += "  *params = module->specific_params;\n";
         r += "  return 0;\n";
         r += "}\n\n";
@@ -632,28 +810,60 @@ function Create_C_file(module) {
         r += "*/\n";
         r += "int checkin_params_" + module_type + "(module_t* module)\n";
         r += "{\n";
-        r += "  int res = rt_mutex_release(&module->mutex_obj_exchange);\n";
-        r += "  if (res != 0)\n";
-        r += "  {\n";
-        r += "      printf(\"error checkin_params_" + module_type + ":  rt_mutex_release\\n\");\n";
-        r += "      return res;\n";
-        r += "  }\n";
+        if(platform==="XENO") {
+            r += "  int res = rt_mutex_release(&module->mutex_obj_exchange);\n";
+            r += "  if (res != 0)\n";
+            r += "  {\n";
+            r += "      printf(\"error checkin_params_" + module_type + ":  rt_mutex_release\\n\");\n";
+            r += "      return res;\n";
+            r += "  }\n";
+        }
         r += "  return 0;\n";
-        r += "}\n";
-
+        r += "}\n\n";
     }
+
+
+    // Функция main
+    r += "int main (int argc, char *argv[])\n";
+    r += "{\n";
+    if(platform==="XENO") {
+        r += "    mlockall(MCL_CURRENT|MCL_FUTURE);\n";
+    }
+    r += "    setvbuf(stdout, NULL, _IONBF, 0);\n\n\n";
+
+    r += "    apr_initialize();\n\n\n";
+
+    r += "    m_module = " + module_type + "_create(NULL);\n";
+
+    r += "    apr_pool_create(&m_module->module_info.mp, NULL);\n\n";
+
+    r += "    " + module_type + "_init(m_module, argc, argv);\n\n";
+    r += "    " + module_type + "_start(m_module);\n\n";
+    r += "    printf(\"\\nPress ENTER for exit\\n\\n\");\n";
+    r += "    getchar();\n\n";
+
+    r += "    apr_pool_destroy(m_module->module_info.mp);\n";
+    r += "    apr_terminate();\n\n\n";
+
+    r += "    return 0;\n";
+    r += "}\n";
 
     return r;
 }
 
 function main() {
-    if (process.argv.length < 4) {
-        console.log("Use " + process.argv[0] + " " + process.argv[1] + " YOUR_MODULE.def.json OUT_DIR");
+    if (process.argv.length < 5) {
+        console.log("Use " + process.argv[0] + " " + process.argv[1] + " YOUR_MODULE.def.json OUT_DIR PLATFORM");
+        console.log("Where PLATFORM = XENO,MSVC,GCC");
+        console.log("XENO - to use the XENOMAI library and the GCC. Only Linux.");
+        console.log("GCC - to use the APR library and the GCC. Linux, Mac OS X.");
+        console.log("MSVC - to use the APR library and the MSVC. Only Windows.");
         return -1;
     }
 
     var file_module_definition = process.argv[2];
     var out_dir = process.argv[3];
+    platform = process.argv[4];
     var fs = require('fs');
 
     fs.readFile(file_module_definition, 'utf8', function (err, data) {

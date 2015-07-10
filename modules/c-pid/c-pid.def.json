@@ -2,9 +2,9 @@
     "type": "module_def",
     "name": "c-pid",
     "version": 2,
-    "Task Priority": 80,
-    "Task Period": 20000,
-    "Transfer task period": 200000,
+    "rt-priority": 80,
+    "main-task-period": 20000,
+    "transfer-task-period": 200000,
     "description": {
     "en": "PID module 3x",
     "ru": "PID регулятор 3 канала"

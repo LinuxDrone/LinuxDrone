@@ -1,3 +1,5 @@
+var platform; // Values XENO,MSVC,GCC
+
 function make_params_structure(params_definitions) {
     var r = "";
 
@@ -5,7 +7,7 @@ function make_params_structure(params_definitions) {
     r += "typedef struct\n";
     r += "{\n";
     params_definitions.forEach(function (param) {
-        var paramName = param.name.replace(/\ /g, "_").replace(/\+/g, "");
+        var paramName = param.name.replace(/\ /g, "_").replace(/-/g, "_").replace(/\+/g, "");
         r += "\t" + param.type + " " + paramName + ";\n";
     });
     r += "} common_params_t;\n\n";
@@ -18,7 +20,7 @@ function make_Structure2Bson(properties) {
     r += "int common_params2bson(common_params_t* obj, bson_t* bson)\n";
     r += "{\n";
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
@@ -84,7 +86,7 @@ function make_Bson2Structure(properties) {
     r += "    {\n";
     r += "        const char* key = bson_iter_key (&iter);\n\n";
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         r += "        if(!strncmp(key, \"" + key + "\", XNOBJECT_NAME_LEN))\n";
         r += "        {\n";
         switch (properties[key].type) {
@@ -139,43 +141,44 @@ function make_Bson2Structure(properties) {
 
     r += "void print_common_params(common_params_t* obj)\n";
     r += "{\n";
+    r += "    fprintf(stdout, \"\\nCommon params:\\n\");\n";
 
     for (var key in properties) {
-        var propName = key.replace(/\ /g, "_");
+        var propName = key.replace(/\ /g, "_").replace(/-/g, "_");
         switch (properties[key].type) {
             case "char":
             case "short":
             case "int":
-                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %i\\n\", obj->" + propName + ");\n";
                 break;
 
             case "long":
-                r += "    printf(\"" + propName + "=%i\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %i\\n\", obj->" + propName + ");\n";
                 break;
 
             case "long long":
-                r += "    printf(\"" + propName + "=%llu\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t"+ key + ": %llu\\n\", obj->" + propName + ");\n";
                 break;
 
             case "float":
             case "double":
-                r += "    printf(\"" + propName + "=%lf\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %lf\\n\", obj->" + propName + ");\n";
                 break;
 
             case "const char*":
-                r += "    printf(\"" + propName + "=%s\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %s\\n\", obj->" + propName + ");\n";
                 break;
 
             case "bool":
-                r += "    printf(\"" + propName + "=%s\\t\", obj->" + propName + ");\n";
+                r += "    fprintf(stdout, \"\\t" + key + ": %s\\n\", obj->" + propName + ");\n";
                 break;
 
             default:
-                console.log("Unknown type " + properties[key].type + " for port " + propName);
+                console.log("Unknown type " + properties[key].type + " for port " + key);
                 break;
         }
     }
-    r += "    printf(\"\\n\");\n";
+    r += "    fprintf(stdout, \"\\n\");\n";
     r += "}\n\n";
 
     return r;
@@ -196,8 +199,12 @@ function Create_H_file(paramsDefinitions) {
 function Create_C_file(paramsDefinitions) {
     var r = "";
 
-    r += "#include \"common-params.h\"\n";
-    r += "#include \"module-functions.h\"\n\n";
+    if(platform==="XENO") {
+        //r += "#include \"common-params.h\"\n";
+        r += "#include \"module-functions.h\"\n\n";
+    }else{
+        r += "#include \"apr-module-functions.h\"\n\n";
+    }
 
     // Хитрожопая процедура преобразования массива объектов в объект, где каждый член - объект из массива.
     // Все танцы для того, чтобы вызвать функции создания функций bson преобразования, без их изменения.
@@ -215,13 +222,19 @@ function Create_C_file(paramsDefinitions) {
 }
 
 function main() {
-    if (process.argv.length < 4) {
-        console.log("Use " + process.argv[0] + " " + process.argv[1] + " path_to/ModulesCommonParams.def.js OUT_DIR");
+    if (process.argv.length < 5) {
+        console.log("Use " + process.argv[0] + " " + process.argv[1] + " path_to/ModulesCommonParams.def.js OUT_DIR PLATFORM");
+        console.log("Where PLATFORM = XENO,MSVC,GCC");
+        console.log("XENO - to use the XENOMAI library and the GCC. Only Linux.");
+        console.log("GCC - to use the APR library and the GCC. Linux, Mac OS X.");
+        console.log("MSVC - to use the APR library and the MSVC. Only Windows.");
         return -1;
     }
 
+
     var file_module_definition = process.argv[2];
     var out_dir = process.argv[3];
+    platform = process.argv[4];
 
     var commonModuleParams = require(file_module_definition);
 

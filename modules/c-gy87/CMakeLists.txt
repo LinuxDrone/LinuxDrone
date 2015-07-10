@@ -20,15 +20,18 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 set(EXTRA_LIBS
     sdk
     i2c_client
+    pthread
+    rt
+    dl
 )
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/c-gy87.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-gy87.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-gy87.def.json ${CMAKE_CURRENT_BINARY_DIR} ${PLATFORM}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-gy87.def.json
 )
 
-add_library(c-gy87 MODULE ${INC} ${SRC} c-gy87.helper.c)
+add_executable(c-gy87 ${INC} ${SRC} c-gy87.helper.c)
 
 target_link_libraries(c-gy87 ${EXTRA_LIBS})
 
@@ -36,10 +39,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-gy87
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-gy87.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-gy87/libc-gy87.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-gy87/c-gy87.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-gy87/c-gy87.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-gy87 ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-gy87.mod
     )
 ENDIF()
 
-install(TARGETS c-gy87 DESTINATION modules/c-gy87)
-install(FILES c-gy87.def.json DESTINATION modules/c-gy87)
+install(TARGETS c-gy87 DESTINATION bin)

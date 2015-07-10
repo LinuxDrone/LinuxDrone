@@ -1,5 +1,6 @@
 #pragma once
 
+#include <apr_general.h>
 #include <native/task.h>
 #include <bson.h>
 #include <native/queue.h>
@@ -85,8 +86,14 @@ typedef int (*p_obj2bson)(void* obj, bson_t* bson);
 // Тип функции конвертирующей данные BSON объекта в структуру
 typedef int (*p_bson2obj)(void* p_module, bson_t* bson);
 
+// Тип функции конвертирующей данные параметров командной строки в структуру
+typedef int (*p_argv2obj)(void* p_module, int argc, char *argv[]);
+
 // Тип функции выводящей на печать (в консоль) данные структуры
 typedef void (*p_print_obj)(void* obj);
+
+// Тип функции выводящей на печать help
+typedef void (*p_print_help)();
 
 // Тип функции возвращающей маску входного порта, по его имени
 typedef t_mask (*p_get_inputmask_by_inputname)(const char* input_name);
@@ -501,6 +508,14 @@ typedef struct {
     p_bson2obj bson2params;
 
     /**
+     * @brief \~russian
+     * Функция переноса данных из параметров командной строки модуля
+     * в структуру конфигурационных параметров.
+     * Указатель на функцию должен подставляться пользовательским (автогенеренным) кодом.
+     */
+    p_argv2obj argv2params;
+
+    /**
      * @brief \~russian Печать настроечных параметров модуля в консоль
      */
     p_print_obj print_params;
@@ -509,6 +524,14 @@ typedef struct {
      * @brief \~russian Функция печати в консоль входного объекта
      */
     p_print_obj print_input;
+
+
+    /**
+     * @brief \~russian Функция в автогенеренной части модуля,
+     * выводящая в консоль help по настроечным параметрам модуля
+     */
+    p_print_help print_help;
+
 
     /**
      * @brief \~russian Функция преобразования принятого из очереди bson объекта
@@ -559,6 +582,16 @@ typedef struct {
      */
     RTIME time_attempt_link_modules;
 
+    /**
+     * @brief \~russian Строка в формате JSON содержащая определение модуля
+     */
+    const char* json_module_definition;
+
+    /**
+     * @brief \~russian Memory pool библиотеки apr
+     */
+    apr_pool_t *mp;
+
 } module_t;
 
 
@@ -568,7 +601,7 @@ typedef struct {
 typedef module_t* (*create_f)(void *);
 
 // Тип функции инициализации модуля
-typedef int (*init_f)(module_t*, const uint8_t*, uint32_t);
+typedef int (*init_f)(module_t*, int argc, char *argv[]);
 
 // Тип функции старта модуля
 typedef int (*start_f)(module_t*);
@@ -576,7 +609,7 @@ typedef int (*start_f)(module_t*);
 // Тип функции удаления модуля
 typedef void (*delete_f)(module_t*);
 
-int init(module_t* module, const uint8_t * data, uint32_t length);
+int init(module_t* module, int argc, char *argv[]);
 
 int init_object_set(shmem_out_set_t * shmem, char* instance_name, char* out_name);
 

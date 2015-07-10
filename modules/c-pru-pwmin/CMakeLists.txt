@@ -19,6 +19,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 
 set(EXTRA_LIBS
     sdk
+    pthread
+    rt
 )
 
 ADD_CUSTOM_COMMAND(
@@ -27,7 +29,7 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-pru-pwmin.def.json
 )
 
-add_library(c-pru-pwmin MODULE ${INC} ${SRC} c-pru-pwmin.helper.c)
+add_executable(c-pru-pwmin ${INC} ${SRC} c-pru-pwmin.helper.c)
 
 ADD_CUSTOM_COMMAND(
     TARGET c-pru-pwmin
@@ -42,13 +44,11 @@ IF(${DO_POST_BUILD})
         TARGET c-pru-pwmin
         POST_BUILD
         COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} BB-BONE-PRU-LD-00A0.dtbo ${URL_TARGET_SYSTEM}:/lib/firmware/BB-BONE-PRU-LD-00A0.dtbo
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} pru-pwmin.bin ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pru-pwmin/pru-pwmin.bin
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-pru-pwmin.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pru-pwmin/libc-pru-pwmin.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-pru-pwmin/c-pru-pwmin.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-pru-pwmin/c-pru-pwmin.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} pru-pwmin.bin ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/pru-pwmin.bin
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-pru-pwmin ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-pru-pwmin.mod
     )
 ENDIF()
 
-install(TARGETS c-pru-pwmin DESTINATION modules/c-pru-pwmin)
-install(FILES c-pru-pwmin.def.json DESTINATION modules/c-pru-pwmin)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pru-pwmin.bin DESTINATION modules/c-pru-pwmin)
+install(TARGETS c-pru-pwmin DESTINATION bin)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pru-pwmin.bin DESTINATION bin)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/BB-BONE-PRU-LD-00A0.dtbo DESTINATION ../../../lib/firmware)

@@ -90,6 +90,7 @@ set(EXTRA_LIBS
     sdk
     pthread
     rt
+    dl
 
     AP_Common
     AP_HAL

@@ -26,6 +26,12 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 project(linuxdrone)
 
+set(PLATFORM XENO) #XENO,GCC,MSVC
+
+add_definitions(-D${PLATFORM})
+add_definitions(-D_LARGEFILE64_SOURCE) # Need for apr
+
+
 # Extra cmake modules path (must be set by toolchain file passed from command line)
 #set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
 
@@ -41,17 +47,27 @@ IF(${BOARD_TYPE} STREQUAL "beaglebone")
         -Wno-unused-but-set-variable
         -Wno-unused-label
         -Wno-pmf-conversions
-
--Wformat -Wall -Wshadow -Wpointer-arith -Wcast-align -Wno-unused-parameter -Wno-missing-field-initializers
--Wwrite-strings -Wformat=2
--ffunction-sections -fdata-sections -fno-exceptions -fsigned-char
--Wno-pointer-arith
--D_GNU_SOURCE
--std=c++11
-    ) #-std=c++11
-
+        -Wformat
+        -Wall
+        -Wshadow
+        -Wpointer-arith
+        -Wcast-align
+        -Wno-unused-parameter
+        -Wno-missing-field-initializers
+        -Wwrite-strings
+        -Wformat=2
+        -ffunction-sections
+        -fdata-sections
+        -fno-exceptions
+        -fsigned-char
+        -Wno-pointer-arith
+        -D_GNU_SOURCE
+        -std=c++11
+)
 ELSEIF(${BOARD_TYPE} STREQUAL "rpi")
     add_definitions(${XENOMAI_DEFINITIONS})
+ELSEIF(${BOARD_TYPE} STREQUAL "desktop")
+
 ENDIF()
 
 # Library options (comment off to build static libraries)
@@ -67,6 +83,7 @@ set(TGT_DIR ${PROJECT_SOURCE_DIR}/targets)
 set(TLS_DIR ${PROJECT_SOURCE_DIR}/tools)
 set(WEB_DIR ${PROJECT_SOURCE_DIR}/webapps)
 set(RFS_DIR ${TLS_DIR}/rootfs/${BOARD_TYPE})
+set(APR_DIR ${RFS_DIR}/libapr)
 
 IF(${CMAKE_HOST_SYSTEM} MATCHES "Windows")
     SET(SCP ${TLS_DIR}/pscp.exe)
@@ -87,50 +104,57 @@ ENDIF()
 
 SET(DO_POST_BUILD NO)
 
-#SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
-#SET(URL_TARGET_SYSTEM root@192.168.1.2)
-#SET(SSH_PORT_TARGET_SYSTEM 22)
-
+SET(URL_TARGET_SYSTEM root@vrubel.linuxdrone.org)
+#SET(URL_TARGET_SYSTEM root@192.168.1.20)
 #SET(URL_TARGET_SYSTEM root@voha-bbb.linuxdrone.org)
-#SET(SSH_PORT_TARGET_SYSTEM 1234)
 
-SET(URL_TARGET_SYSTEM root@192.168.1.20)
+#SET(SSH_PORT_TARGET_SYSTEM 1234)
 SET(SSH_PORT_TARGET_SYSTEM 22)
 
-# MongoDB
-# Libraries: ${MongoDB_LIBRARIES}
-find_package(MongoDB REQUIRED)
-include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
+IF(${PLATFORM} STREQUAL "XENO")
+    # MongoDB
+    # Libraries: ${MongoDB_LIBRARIES}
+#    find_package(MongoDB REQUIRED)
+#    include_directories(${INCLUDE_DIRECTORIES} ${MongoDB_INCLUDE_DIRS})
 
-# MongoC
-# Libraries: ${MongoC_LIBRARIES}
-find_package(MongoC REQUIRED)
-include_directories(${INCLUDE_DIRECTORIES} ${MongoC_INCLUDE_DIR})
+    # MongoC
+    # Libraries: ${MongoC_LIBRARIES}
+    find_package(MongoC REQUIRED)
+    include_directories(${INCLUDE_DIRECTORIES} ${MongoC_INCLUDE_DIR})
 
-# Boost
-# Libraries: ${Boost_LIBRARIES}
-#set(Boost_USE_STATIC_LIBS OFF) 
-#find_package(Boost REQUIRED COMPONENTS system filesystem thread program_options)
-#include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
+    # Xenomai libraries
+    # Libraries: ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
+    # Compiler options: ${XENOMAI_DEFINITIONS}
+    find_package(Xenomai REQUIRED)
+    include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
 
-# Xenomai libraries
-# Libraries: ${XENOMAI_LIBRARY_NATIVE} ${XENOMAI_LIBRARY_XENOMAI}
-# Compiler options: ${XENOMAI_DEFINITIONS}
-find_package(Xenomai REQUIRED)
-include_directories(${INCLUDE_DIRECTORIES} ${XENOMAI_INCLUDE_DIR})
+    # BSON
+    # Libraries: ${BSON_LIBRARIES}
+    find_package(BSON REQUIRED)
+    include_directories(${INCLUDE_DIRECTORIES} ${BSON_INCLUDE_DIR})
+
+    # WebSockets
+    # Libraries: ${WebSockets_LIBRARIES}
+    find_package(WebSockets REQUIRED)
+    include_directories(${INCLUDE_DIRECTORIES} ${WebSockets_INCLUDE_DIR})
+
+    # APR
+    # Libraries: ${APR_LIBRARIES}
+    find_package(APR REQUIRED)
+    include_directories(${INCLUDE_DIRECTORIES} ${APR_INCLUDE_DIR})
+
+    # APR
+    #include_directories(${INCLUDE_DIRECTORIES} ${APR_DIR}/include/apr-2)
+ELSE()
+    # APR
+    include_directories(${INCLUDE_DIRECTORIES} ${APR_DIR}/include)
+    include_directories(${INCLUDE_DIRECTORIES} ${RFS_DIR}/libbson/include/win)
+ENDIF()
+
 
 # Threads
 find_package(Threads)
 
-# BSON
-# Libraries: ${BSON_LIBRARIES}
-find_package(BSON REQUIRED)
-include_directories(${INCLUDE_DIRECTORIES} ${BSON_INCLUDE_DIR})
-
-# WebSockets
-# Libraries: ${WebSockets_LIBRARIES}
-find_package(WebSockets REQUIRED)
-include_directories(${INCLUDE_DIRECTORIES} ${WebSockets_INCLUDE_DIR})
 
 #option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
 IF(BUILD_DOCUMENTATION)
@@ -177,11 +201,12 @@ IF(BUILD_DOCUMENTATION)
 ENDIF()
 
 
-
 # Link-only libraries (do not check headers, just link shared objects)
 find_library(ZLIB_LIBRARIES z)
 find_library(OPENSSL_LIBRARIES ssl)
 find_library(CRYPTO_LIBRARIES crypto)
+find_library(EXPAT_LIBRARIES expat)
+
 
 # RPATH handling to use relative paths in the install tree
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
@@ -189,28 +214,41 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
 # Project libraries
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-#add_subdirectory(${LIB_DIR}/core)
 #add_subdirectory(${LIB_DIR}/dotnet-sdk)
 add_subdirectory(${LIB_DIR}/sdk)
 add_subdirectory(${LIB_DIR}/ardu)
 add_subdirectory(${LIB_DIR}/ardu/ldr)
 
-# Loadable modules (one level deeper than apps or libs)
+
+# Modules (one level deeper than apps or libs)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../../lib")
 #add_subdirectory(${MOD_DIR}/gy87)
-add_subdirectory(${MOD_DIR}/rx-openlrs)
+IF(${PLATFORM} STREQUAL "XENO")
+    add_subdirectory(${MOD_DIR}/rx-openlrs)
+    add_subdirectory(${MOD_DIR}/c-gy87)
+    add_subdirectory(${MOD_DIR}/test-receiver)
+    add_subdirectory(${MOD_DIR}/c-pid)
+    add_subdirectory(${MOD_DIR}/c-ms5611)
+    add_subdirectory(${MOD_DIR}/c-bmp180)
+    add_subdirectory(${MOD_DIR}/c-mpu9250)
+    add_subdirectory(${MOD_DIR}/c-sum-scale)
+    add_subdirectory(${MOD_DIR}/c-scale)
+    add_subdirectory(${MOD_DIR}/c-generator)
+    add_subdirectory(${MOD_DIR}/attitude)
+    add_subdirectory(${MOD_DIR}/ardu)
+ELSE()
+
+ENDIF()
+
+
+#add_subdirectory(${MOD_DIR}/test)
 add_subdirectory(${MOD_DIR}/short_terminator)
-add_subdirectory(${MOD_DIR}/c-gy87)
 #add_subdirectory(${MOD_DIR}/test-params)
 add_subdirectory(${MOD_DIR}/test-sender)
-add_subdirectory(${MOD_DIR}/test-receiver)
 add_subdirectory(${MOD_DIR}/test-sender-receiver)
 #add_subdirectory(${MOD_DIR}/c-pru-pwmout)
 #add_subdirectory(${MOD_DIR}/c-pru-pwmin)
-add_subdirectory(${MOD_DIR}/c-pid)
-add_subdirectory(${MOD_DIR}/c-sum-scale)
-add_subdirectory(${MOD_DIR}/c-scale)
-add_subdirectory(${MOD_DIR}/c-ms5611)
+
 #add_subdirectory(${MOD_DIR}/MyModule)
 #add_subdirectory(${MOD_DIR}/bmp180)
 #add_subdirectory(${MOD_DIR}/ms5611)
@@ -219,23 +257,13 @@ add_subdirectory(${MOD_DIR}/c-ms5611)
 #add_subdirectory(${MOD_DIR}/PwmInput)
 #add_subdirectory(${MOD_DIR}/SimpleTransform)
 #add_subdirectory(${MOD_DIR}/SerialGps)
-add_subdirectory(${MOD_DIR}/c-bmp180)
-add_subdirectory(${MOD_DIR}/c-generator)
-add_subdirectory(${MOD_DIR}/c-mpu9250)
-add_subdirectory(${MOD_DIR}/attitude)
-add_subdirectory(${MOD_DIR}/ardu)
-add_subdirectory(${MOD_DIR}/ap-motors-quad)
-
 
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
-# Host programms
-add_subdirectory(${HST_DIR}/c-host)
-
 # Services
-add_subdirectory(${SVC_DIR}/telemetry)
-add_subdirectory(${SVC_DIR}/i2c)
-add_subdirectory(${SVC_DIR}/spi)
+IF(${PLATFORM} STREQUAL "XENO")
+    add_subdirectory(${SVC_DIR}/i2c)
+    add_subdirectory(${SVC_DIR}/spi)
+ENDIF()
 
-# Main project target
-#add_subdirectory(${TGT_DIR}/beaglebone) 
+add_subdirectory(${SVC_DIR}/telemetry)

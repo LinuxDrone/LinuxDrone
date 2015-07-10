@@ -19,9 +19,10 @@ include_directories(${LIB_DIR}/sdk/include)
 set(EXTRA_LIBS
 	sdk
 	core
+    pthread
+    rt
 )
 
-add_library(gpsserial MODULE ${INC} ${SRC})
+add_executable(gpsserial ${INC} ${SRC})
 
-install(TARGETS gpsserial DESTINATION modules/gpsserial)
-install(FILES gpsserial.def.json DESTINATION modules/gpsserial)
+install(TARGETS gpsserial DESTINATION bin)

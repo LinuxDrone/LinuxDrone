@@ -20,15 +20,20 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 set(EXTRA_LIBS
     sdk
     i2c_client
+    pthread
+    rt
+    dl
+    ${CRYPTO_LIBRARIES}
+    ${ZLIB_LIBRARIES}
 )
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rx-openlrs.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/rx-openlrs.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/rx-openlrs.def.json ${CMAKE_CURRENT_BINARY_DIR} ${PLATFORM}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rx-openlrs.def.json
 )
 
-add_library(rx-openlrs MODULE ${INC} ${SRC} rx-openlrs.helper.c)
+add_executable(rx-openlrs ${INC} ${SRC} rx-openlrs.helper.c)
 
 target_link_libraries(rx-openlrs ${EXTRA_LIBS})
 
@@ -36,10 +41,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET rx-openlrs
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} librx-openlrs.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/rx-openlrs/librx-openlrs.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/rx-openlrs/rx-openlrs.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/rx-openlrs/rx-openlrs.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} rx-openlrs ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/rx-openlrs.mod
     )
 ENDIF()
 
-install(TARGETS rx-openlrs DESTINATION modules/rx-openlrs)
-install(FILES rx-openlrs.def.json DESTINATION modules/rx-openlrs)
+install(TARGETS rx-openlrs DESTINATION bin)

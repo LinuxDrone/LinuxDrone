@@ -45,3 +45,10 @@ cmake_install.cmake
 /webapps/configurator/public/ext-5.0.0
 webapps/configurator/public/build
 webapps/configurator/public/ext
+*.suo
+*.filters
+*.sdf
+*.opensdf
+*.dia~
+/doc/ru/release
+/webapps/cfg

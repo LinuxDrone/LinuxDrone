@@ -17,17 +17,27 @@ include_directories(${LIB_DIR}/sdk/include ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${BSON_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 
-set(EXTRA_LIBS
-    sdk
-)
+IF(${PLATFORM} STREQUAL "XENO")
+    set(EXTRA_LIBS
+        sdk
+        pthread
+        rt
+        dl
+    )
+ELSE()
+    set(EXTRA_LIBS
+        sdk
+    )
+ENDIF()
+
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test-sender-receiver.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/test-sender-receiver.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/test-sender-receiver.def.json ${CMAKE_CURRENT_BINARY_DIR} ${PLATFORM}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test-sender-receiver.def.json
 )
 
-add_library(test-sender-receiver MODULE ${INC} ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/test-sender-receiver.helper.c)
+add_executable(test-sender-receiver ${INC} ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/test-sender-receiver.helper.c)
 
 target_link_libraries(test-sender-receiver ${EXTRA_LIBS})
 
@@ -35,10 +45,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET test-sender-receiver
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libtest-sender-receiver.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender-receiver/libtest-sender-receiver.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/test-sender-receiver/test-sender-receiver.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/test-sender-receiver/test-sender-receiver.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} test-sender-receiver ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/test-sender-receiver.mod
     )
 ENDIF()
 
-install(TARGETS test-sender-receiver DESTINATION modules/test-sender-receiver)
-install(FILES test-sender-receiver.def.json DESTINATION modules/test-sender-receiver)
+install(TARGETS test-sender-receiver DESTINATION bin)

@@ -2,9 +2,9 @@
   "type": "module_def",
   "name": "c-pru-pwmin",
   "version": 1,
-  "Task Priority": 80,
-  "Task Period": 20000,
-  "Transfer task period": 200000,
+  "rt-priority": 80,
+  "main-task-period": 20000,
+  "transfer-task-period": 200000,
   "description": {
     "en": "pru pwm input",
     "ru": "Модуль чтения pwm сигнала блоком PRU"

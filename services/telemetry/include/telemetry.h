@@ -1,10 +1,12 @@
 #pragma once
 
+#ifdef XENO
 #include "../../../libraries/sdk/include/module-functions.h"
+#else
+#include "../../../libraries/sdk/include/apr-module-functions.h"
+#endif
+
 #include <bcon.h>
-#include <bson.h>
-
-
 
 typedef struct
 {

@@ -20,15 +20,18 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 set(EXTRA_LIBS
     sdk
     m
+    pthread
+    rt
+    dl
 )
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/c-generator.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-generator.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/c-generator.def.json ${CMAKE_CURRENT_BINARY_DIR} ${PLATFORM}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/c-generator.def.json
 )
 
-add_library(c-generator MODULE ${INC} ${SRC} c-generator.helper.c)
+add_executable(c-generator ${INC} ${SRC} c-generator.helper.c)
 
 target_link_libraries(c-generator ${EXTRA_LIBS})
 
@@ -36,10 +39,8 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET c-generator
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libc-generator.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-generator/libc-generator.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/c-generator/c-generator.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/c-generator/c-generator.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} c-generator ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/c-generator.mod
     )
 ENDIF()
 
-install(TARGETS c-generator DESTINATION modules/c-generator)
-install(FILES c-generator.def.json DESTINATION modules/c-generator)
+install(TARGETS c-generator DESTINATION bin)

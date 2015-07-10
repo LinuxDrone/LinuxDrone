@@ -1,0 +1,217 @@
+[
+  {
+    "title": "О системе",
+    "items": [
+      {
+        "title": "Введение",
+        "name": "introduction",
+        "url": "guides/about/introduction"
+      }
+    ]
+  },
+  {
+    "title": "Сборка системы",
+    "items": [
+      {
+        "title": "О сборке на различных платформах",
+        "name": "buildUnderDifferentOS",
+        "url": "guides/build"
+      },
+      {
+        "title": "Сборка на Windows",
+        "items": [
+          {
+            "title": "Общие требования",
+            "name": "buildWindowsCommon",
+            "url": "guides/build/windows/common"
+          },
+          {
+            "title": "Для Windows в Visual Studio",
+            "name": "buildWwindowsVs",
+            "url": "guides/build/windows/vs"
+          },
+          {
+            "title": "Для Windows в QT Creator",
+            "name": "buildWindowsQtCreator",
+            "url": "guides/build/windows/qtcreator"
+          },
+          {
+            "title": "Для Linux (ARM)",
+            "name": "buildWindowsARM",
+            "url": "guides/build/windows/arm"
+          }
+        ]
+      },
+      {
+        "title": "Сборка на Mac OS X",
+        "items": [
+          {
+            "title": "Общие требования",
+            "name": "buildMacosCommon",
+            "url": "guides/build/macos/common"
+          },
+          {
+            "title": "Для Mac OS в XCode",
+            "name": "buildMacosXcode",
+            "url": "guides/build/macos/xcode"
+          },
+          {
+            "title": "Для Linux (ARM)",
+            "name": "buildMacosArm",
+            "url": "guides/build/macos/arm"
+          }
+        ]
+      },
+      {
+        "title": "Сборка на Linux",
+        "items": [
+          {
+            "title": "Общие требования",
+            "name": "buildLinuxCommon",
+            "url": "guides/build/linux/common"
+          },
+          {
+            "title": "Для Linux в QT Creator",
+            "name": "buildLinuxCreator",
+            "url": "guides/build/linux/qtcreator"
+          },
+          {
+            "title": "Для Linux (ARM)",
+            "name": "buildLinuxARM",
+            "url": "guides/build/linux/arm"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Модули",
+    "items": [
+      {
+        "title": "О модулях",
+        "name": "aboutModules",
+        "url": "guides/modules/about"
+      },
+      {
+        "title": "Определение модуля",
+        "name": "definition",
+        "url": "guides/modules/definition"
+      },
+      {
+        "title": "Генерация исходного кода модуля",
+        "name": "bgeneration",
+        "url": "guides/modules/generation"
+      },
+      {
+        "title": "Создание проекта модуля в IDE",
+        "items": [
+          {
+            "title": "Visual Studio",
+            "name": "visualstudio",
+            "url": "guides/modules/ide/vs"
+          },
+          {
+            "title": "QT Creator",
+            "name": "qtcreator",
+            "url": "guides/modules/ide/qt"
+          },
+          {
+            "title": "XCode",
+            "name": "xcode",
+            "url": "guides/modules/ide/xcode"
+          }
+        ]
+      },
+      {
+        "title": "Запуск модуля",
+        "name": "start",
+        "url": "guides/modules/start"
+      },
+      {
+        "title": "Анатомия модуля",
+        "items": [
+          {
+            "title": "Генерация helper кода модуля",
+            "name": "hgeneration",
+            "url": "guides/modules/anatomy/helpers"
+          },
+          {
+            "title": "Внутреннее устройство",
+            "name": "internal",
+            "url": "guides/modules/anatomy/internal"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Сервисы",
+    "items": [
+      {
+        "title": "О сервисах",
+        "name": "aboutServices",
+        "url": "guides/services/about"
+      },
+      {
+        "title": "Сервис телеметрии",
+        "name": "telemetry",
+        "url": "guides/services/telemetry"
+      },
+      {
+        "title": "Сервис I2C",
+        "name": "i2c",
+        "url": "guides/services/i2c"
+      },
+      {
+        "title": "Сервис SPI",
+        "name": "spi",
+        "url": "guides/services/spi"
+      }
+    ]
+  },
+  {
+    "title": "Конфигуратор",
+    "items": [
+      {
+        "title": "Клиентское Web приложение",
+        "items": [
+          {
+            "title": "Сборка web приложения",
+            "name": "clientBuild",
+            "url": "guides/configurator/client/build"
+          },
+          {
+            "title": "Публикация web приложения",
+            "name": "clientPublish",
+            "url": "guides/configurator/client/publish"
+          },
+          {
+            "title": "Настройка Web сервера",
+            "items": [
+              {
+                "title": "Под Windows",
+                "name": "winwebserver",
+                "url": "guides/configurator/client/webserver/windows"
+              },
+              {
+                "title": "Запуск Web сервера под Mac OS и Linux",
+                "name": "macosLinuxwWbserver",
+                "url": "guides/configurator/client/webserver/macos-linux"
+              }
+            ]
+          },
+          {
+            "title": "Обновление версии ExtJS",
+            "name": "clientUpgrade",
+            "url": "guides/configurator/client/upgrade"
+          }
+        ]
+      },
+      {
+        "title": "Серверное приложение",
+        "name": "webServer",
+        "url": "guides/configurator/server"
+      }
+    ]
+  }
+]

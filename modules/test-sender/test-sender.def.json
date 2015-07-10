@@ -2,34 +2,34 @@
   "type": "module_def",
   "name": "test-sender",
   "version": 2,
-  "Task Priority": 80,
-  "Task Period": 200000,
-  "Transfer task period": 200000,
+  "rt-priority": 80,
+  "main-task-period": 200000,
+  "transfer-task-period": 200000,
   "description": {
     "en": "en description",
     "ru": "русское описание"
   },
   "paramsDefinitions": [
     {
-      "name": "I2C Device",
+      "name": "i2c-device",
       "displayName": {
         "en": "param 1",
         "ru": "параметр 1"
       },
       "description": {
-        "en": "en description",
+        "en": "path to i2c device",
         "ru": "русское описание"
       },
       "type": "const char*",
-      "defaultValue": "default value",
+      "defaultValue": "/dev/i2c1",
       "validValues": [
-        "str1",
-        "str2"
+        "/dev/i2c1",
+        "/dev/i2c2"
       ],
       "unitMeasured": ""
     },
     {
-      "name": "Test Number Param",
+      "name": "test-number-param",
       "displayName": {
         "en": "param 2",
         "ru": "параметр 2"
@@ -38,7 +38,7 @@
         "en": "en description",
         "ru": "русское описание"
       },
-      "type": "int",
+      "type": "long",
       "defaultValue": 123,
       "validValues": [
         56,
@@ -47,7 +47,7 @@
       "unitMeasured": "Ms"
     },
     {
-      "name": "Test Boolean Param",
+      "name": "test-boolean-param",
       "displayName": {
         "en": "param 3",
         "ru": "параметр 3"
@@ -57,7 +57,6 @@
         "ru": "русское описание"
       },
       "type": "bool",
-      "defaultValue": false,
       "unitMeasured": "bool"
     }
   ],

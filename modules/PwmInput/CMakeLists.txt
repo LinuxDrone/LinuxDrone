@@ -19,9 +19,10 @@ include_directories(${LIB_DIR}/sdk/include)
 set(EXTRA_LIBS
 	sdk
 	core
+    pthread
+    rt
 )
 
-add_library(pwminput MODULE ${INC} ${SRC})
+add_executable(pwminput ${INC} ${SRC})
 
-install(TARGETS pwminput DESTINATION modules/pwminput)
-install(FILES pwminput.def.json DESTINATION modules/pwminput)
+install(TARGETS pwminput DESTINATION bin)

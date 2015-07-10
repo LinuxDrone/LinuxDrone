@@ -1,19 +1,25 @@
-#include <sys/mman.h>
+//#include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
+#include <apr_getopt.h>
 #include <signal.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <assert.h>
 
+#ifdef _WIN32
+#include <io.h>
+#ifdef EXTERNAL_POLL
+#define poll WSAPoll
+#endif
+#else
 #include <syslog.h>
 #include <sys/time.h>
 #include <unistd.h>
+#endif
 
 
-#include <native/pipe.h>
 #include "libwebsockets.h"
 
 #include "../include/telemetry.h"
@@ -27,6 +33,8 @@ ar_remote_shmems_t remote_shmems;
 void** ar_bufs = NULL;
 size_t ar_bufs_len=0;
 
+apr_pool_t *mp;
+
 RT_TASK task_read_shmem;
 int priority_task_read_shmem = 50;
 
@@ -39,20 +47,6 @@ enum demo_protocols {
     PROTOCOL_TELEMETRY
 };
 
-static struct option options[] = {
-{ "help",	no_argument,		NULL, 'h' },
-{ "debug",	required_argument,	NULL, 'd' },
-{ "port",	required_argument,	NULL, 'p' },
-{ "ssl",	no_argument,		NULL, 's' },
-{ "allow-non-ssl",	no_argument,		NULL, 'a' },
-{ "interface",  required_argument,	NULL, 'i' },
-{ "closetest",  no_argument,		NULL, 'c' },
-{ "libev",  no_argument,		NULL, 'e' },
-#ifndef LWS_NO_DAEMONIZE
-{ "daemonize", 	no_argument,		NULL, 'D' },
-#endif
-{ NULL, 0, 0, 0 }
-};
 
 
 static volatile int force_exit = 0;
@@ -146,12 +140,20 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         for(k=0; k < remote_shmems.remote_shmems_len; k++)
         {
             shmem_in_set_t* remote_shmem = remote_shmems.remote_shmems[k];
+#ifdef XENO
             if(!remote_shmem->f_shmem_connected)
+#else
+            if (!remote_shmem->f_socket_connected)
+#endif
                 continue;
 
             buf_and_bson_t buf_and_bson = ar_bson2send[k];
             buf_and_bson.buf = malloc(500);
+#ifdef XENO
             unsigned short retlen = 0;
+#else
+            apr_size_t retlen = 500;
+#endif
             read_shmem(remote_shmem, buf_and_bson.buf, &retlen);
             if (retlen < 1)
                 continue;
@@ -170,7 +172,7 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
 
     case LWS_CALLBACK_RECEIVE:
         bson_request = bson_new_from_data (in, len);
-        //debug_print_bson("received", bson_request);
+debug_print_bson("received", bson_request);
 
         // Get Instance Name
         bson_iter_t iter_instance_name;
@@ -211,7 +213,11 @@ static int callback_telemetry(struct libwebsocket_context *context, struct libwe
         //printf("module_instance_name: %s\tmodule_out_name: %s\n", module_instance_name, module_out_name);
         if(strcmp(cmd_name, "subscribe")==0)
         {
+#ifdef XENO
             register_remote_shmem(&remote_shmems, module_instance_name, module_out_name);
+#else
+            register_remote_shmem(mp, &remote_shmems, module_instance_name, module_out_name);
+#endif
         }
         else if(strcmp(cmd_name, "unsubscribe")==0)
         {
@@ -270,7 +276,11 @@ void run_task_read_shmem (void *module)
         // Потом спит указанное количество миллисекунд
         n = libwebsocket_service(context, 0);
 
-        rt_task_sleep(rt_timer_ns2ticks(200000000));
+#ifdef XENO
+		rt_task_sleep(rt_timer_ns2ticks(200000000));
+#else
+		apr_sleep(200000);
+#endif
     }
 
 }
@@ -279,6 +289,7 @@ void run_task_read_shmem (void *module)
 
 int init_rt_task()
 {
+#ifdef XENO
     int err = rt_task_create(&task_read_shmem, "telemetry_mt", TASK_STKSZ, priority_task_read_shmem, TASK_MODE);
     if (err != 0)
     {
@@ -289,6 +300,9 @@ int init_rt_task()
     err = rt_task_start(&task_read_shmem, &run_task_read_shmem, NULL);
     if (err != 0)
         printf("Error start main task\n");
+#else
+	run_task_read_shmem(NULL);
+#endif
 
     return 0;
 }
@@ -297,9 +311,36 @@ int init_rt_task()
 
 int main(int argc, char **argv)
 {
-    mlockall(MCL_CURRENT|MCL_FUTURE);
+	apr_status_t rv;
 
-    int n = 0;
+	apr_initialize();
+	apr_pool_create(&mp, NULL);
+
+	//m_module = test_sender_create(NULL);
+	//apr_pool_create(&m_module->module_info.mp, NULL);
+
+
+//    mlockall(MCL_CURRENT|MCL_FUTURE);
+
+
+
+	static const apr_getopt_option_t opt_option[] = {
+		{ "help", 'h', FALSE, NULL },
+		{ "debug", 'd', TRUE, NULL },
+		{ "port", 'p', TRUE, NULL },
+		{ "ssl", 's', FALSE, NULL },
+		{ "allow-non-ssl", 'a', FALSE, NULL },
+		{ "interface", 'i', TRUE, NULL },
+		{ "closetest", 'c', FALSE, NULL },
+		{ "libev", 'e', FALSE, NULL },
+#ifndef LWS_NO_DAEMONIZE
+		{ "daemonize", 'D', FALSE, NULL },
+#endif
+		{ NULL, 0, 0, NULL }
+	};
+
+
+    //int n = 0;
     int use_ssl = 0;
     int opts = 0;
     char interface_name[128] = "";
@@ -315,11 +356,23 @@ int main(int argc, char **argv)
     memset(&info, 0, sizeof info);
     info.port = 7681;
 
-    while (n >= 0) {
-        n = getopt_long(argc, argv, "eci:hsap:d:Dr:", options, NULL);
-        if (n < 0)
-            continue;
-        switch (n) {
+
+	apr_getopt_t *opt;
+	int optch;
+	const char *optarg;
+	/* initialize apr_getopt_t */
+	apr_getopt_init(&opt, mp, argc, (const char * const*)argv);
+	opt->errfn = NULL;
+	opt->interleave = true;
+
+
+
+	while ((rv = apr_getopt_long(opt, opt_option, &optch, &optarg)) != APR_EOF) {
+        //n = getopt_long(argc, argv, "eci:hsap:d:Dr:", options, NULL);
+        //if (n < 0)
+          //  continue;
+
+		switch (optch) {
         case 'e':
             opts |= LWS_SERVER_OPTION_LIBEV;
             break;
@@ -394,6 +447,8 @@ int main(int argc, char **argv)
 
     lwsl_notice("libwebsockets-test-server exited cleanly\n");
 
+	apr_pool_destroy(mp);
+	apr_terminate();
     return 0;
 }
 

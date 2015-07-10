@@ -17,17 +17,27 @@ include_directories(${LIB_DIR}/sdk/include ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${BSON_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/../../libraries/sdk)
 
-set(EXTRA_LIBS
-    sdk
-)
+IF(${PLATFORM} STREQUAL "XENO")
+    set(EXTRA_LIBS
+        sdk
+        pthread
+        rt
+        dl
+    )
+ELSE()
+    set(EXTRA_LIBS
+        sdk
+    )
+ENDIF()
+
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/short_terminator.helper.c
-    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/short_terminator.def.json ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${NODEJS} ${LIB_DIR}/sdk/ModuleGenerator.js ${CMAKE_CURRENT_SOURCE_DIR}/short_terminator.def.json ${CMAKE_CURRENT_BINARY_DIR} ${PLATFORM}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/short_terminator.def.json
 )
 
-add_library(short_terminator MODULE ${INC} ${SRC} short_terminator.helper.c)
+add_executable(short_terminator ${INC} ${SRC} short_terminator.helper.c)
 
 target_link_libraries(short_terminator ${EXTRA_LIBS})
 
@@ -35,10 +45,9 @@ IF(${DO_POST_BUILD})
     add_custom_command(
         TARGET short_terminator
         POST_BUILD
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} libshort_terminator.so ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/short_terminator/libshort_terminator.so
-        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} ${MOD_DIR}/short_terminator/short_terminator.def.json ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/modules/short_terminator/short_terminator.def.json
+        COMMAND ${SCP} -P ${SSH_PORT_TARGET_SYSTEM} short_terminator ${URL_TARGET_SYSTEM}:/usr/local/linuxdrone/bin/short_terminator.mod
     )
 ENDIF()
 
-install(TARGETS short_terminator DESTINATION modules/short_terminator)
-install(FILES short_terminator.def.json DESTINATION modules/short_terminator)
+install(TARGETS short_terminator DESTINATION bin)
+

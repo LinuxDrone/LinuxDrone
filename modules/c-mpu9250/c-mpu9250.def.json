@@ -2,9 +2,9 @@
   "type": "module_def",
   "name": "c-mpu9250",
   "version": 1,
-  "Task Priority": 80,
-  "Task Period": 2000,
-  "Transfer task period": 200000,
+  "rt-priority": 80,
+  "main-task-period": 2000,
+  "transfer-task-period": 200000,
   "description": {
     "en": "IMU 9DoF sensor fusion",
     "ru": "9 осевой датчик ориентации"

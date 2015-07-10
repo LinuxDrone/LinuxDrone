@@ -19,9 +19,10 @@ include_directories(${LIB_DIR}/sdk/include)
 set(EXTRA_LIBS
 	sdk
 	core
+    pthread
+    rt
 )
 
-add_library(ms5611 MODULE ${INC} ${SRC})
+add_executable(ms5611 ${INC} ${SRC})
 
-install(TARGETS ms5611 DESTINATION modules/ms5611)
-install(FILES ms5611.def.json DESTINATION modules/ms5611)
+install(TARGETS ms5611 DESTINATION bin)
