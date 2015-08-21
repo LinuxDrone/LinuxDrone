@@ -2,6 +2,7 @@ Ext.define('RtConfigurator.store.StoreMetaModules', {
     extend: 'Ext.data.Store',
     autoLoad: false,
     storeId: 'MetamodulesStore',
+    alias: 'store.metamodules',
 
     model: 'RtConfigurator.model.MetaModule',
 

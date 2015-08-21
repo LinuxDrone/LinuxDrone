@@ -21,7 +21,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
     init: function () {
         var model = this.getView().getViewModel();
 
-        var hostServer = this.getView().initOwnerCt.url_server;
+        var hostServer = this.getView().$initParent.url_server;
         model.getStore('listSchemas').getProxy().setApi(
             {
                 read: 'http://' + hostServer + '/getconfigs',
@@ -125,8 +125,8 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         var model = this.getView().getViewModel();
         var logPanel = this.getView().logPanel;
 
-        var hostServer = this.getView().initOwnerCt.url_server;
-        var hostTelemetry = this.getView().initOwnerCt.url_telemetry;
+        var hostServer = this.getView().$initParent.url_server;
+        var hostTelemetry = this.getView().$initParent.url_telemetry;
         if(hostTelemetry == undefined || hostTelemetry == "" ){
             hostTelemetry = window.document.location.host.replace(/:.*/, '') + ':7681';
         }
@@ -694,7 +694,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
             var paper = this.getView().getViewModel().get('paper');
             var controller = this.getView().getController();
             // Инициализация портов на модулях, с целью показа их описания в тултипе
-            var storeMetamodules = Ext.data.StoreManager.lookup('StoreMetaModules');
+            var storeMetamodules = Ext.data.StoreManager.lookup('MetamodulesStore');
             var elements = graph.getElements();
             $.each(elements, function (i, element) {
                 controller.MakeToolTipsForPortsOfInstance(element, paper, controller, storeMetamodules);

@@ -22,9 +22,9 @@ Ext.define('RtConfigurator.Application', {
     
     launch: function () {
         // TODO - Launch the application
-        var newSaveAsDialog = Ext.create('RtConfigurator.view.configurator.dialogs.LoginDialog', {
+        var loginDialog = Ext.create('RtConfigurator.view.configurator.dialogs.LoginDialog', {
             ownerCt: this._mainView
         });
-        newSaveAsDialog.show();
+        loginDialog.show();
     }
 });
