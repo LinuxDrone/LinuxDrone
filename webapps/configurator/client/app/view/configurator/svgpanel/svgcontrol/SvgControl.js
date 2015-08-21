@@ -24,7 +24,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.svgcontrol.SvgControl', {
                 cell.attributes["mode"] = "queue";
 
                 var moduleType = model.getView().getController().GetModuleTypeByGraphId(cell.attributes.source.id);
-                var storeMetamodules = Ext.data.StoreManager.lookup('StoreMetaModules');
+                var storeMetamodules = Ext.data.StoreManager.lookup('MetamodulesStore');
                 var moduleDef = storeMetamodules.findRecord('name', moduleType);
 
                 var group = _.find(moduleDef.get('outputs'), function (group) {

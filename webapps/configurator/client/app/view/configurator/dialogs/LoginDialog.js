@@ -48,6 +48,12 @@ Ext.define('RtConfigurator.view.configurator.dialogs.LoginDialog', {
                 //console.log(values.server);
                 //console.log(values.telemetry);
 
+                // Найдем хранилище и иницируем загрузку в него определения модулей
+                var storeMetaModules = Ext.StoreMgr.lookup("MetamodulesStore");
+                storeMetaModules.getProxy().setUrl( 'http://' + values.server + '/metamodules' );
+                storeMetaModules.load();
+
+
                 // Добавим вкладку конфигуратора в главный лайаут приложения
                 this.ownerCt.ownerCt.floatParent.items.items[0].add(new RtConfigurator.view.configurator.ConfiguratorPanel(
                     {
@@ -55,11 +61,6 @@ Ext.define('RtConfigurator.view.configurator.dialogs.LoginDialog', {
                         url_telemetry: values.telemetry
                     }
                 ));
-
-                // Найдем хранилище и иницируем загрузку в него определения модулей
-                var storeMetaModules = Ext.StoreMgr.lookup("StoreMetaModules");
-                storeMetaModules.getProxy().setUrl( 'http://' + values.server + '/metamodules' );
-                storeMetaModules.load();
 
                 this.up('form').close();
             }
