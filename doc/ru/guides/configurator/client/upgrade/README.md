@@ -3,6 +3,8 @@
 
 1. Скачиваем последнюю GPL версию ExtJS.  
 Для этого переходим по ссылке [http://www.sencha.com/products/extjs/details](http://www.sencha.com/products/extjs/details) и в самом низу страницы находим секцию **OPEN SOURCE GPL LICENSING** и кнопку **DOWNLOAD**.  
+Так как sencha любит перепрятывать ссылку на GPL версию, можно поискать еще здесь
+[https://www.sencha.com/legal/GPL](https://www.sencha.com/legal/GPL)  
 {@img ExtJS-GPL.png}
 Распаковываем zip архив (например в директорию $PROJECT_ROOT\tools)  
 
