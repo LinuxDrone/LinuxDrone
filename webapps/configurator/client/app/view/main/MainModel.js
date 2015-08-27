@@ -6,5 +6,7 @@ Ext.define('RtConfigurator.view.main.MainModel', {
 
     alias: 'viewmodel.main',
 
-    store: 'MetamodulesStore'
+    store: {
+        type: 'metamodules'
+    }
 });
