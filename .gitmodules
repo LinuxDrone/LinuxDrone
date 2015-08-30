@@ -1,3 +1,6 @@
 [submodule "libraries/libbson"]
 	path = libraries/libbson
 	url = https://github.com/mongodb/libbson.git
+[submodule "webapps/configurator/client/javascripts/reconnecting-websocket"]
+	path = webapps/configurator/client/javascripts/reconnecting-websocket
+	url = https://github.com/joewalnes/reconnecting-websocket.git
