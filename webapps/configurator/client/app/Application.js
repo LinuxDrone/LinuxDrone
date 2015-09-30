@@ -5,7 +5,15 @@
  */
 Ext.define('RtConfigurator.Application', {
     extend: 'Ext.app.Application',
-    
+
+    requires: [
+        'RtConfigurator.store.StoreMetaModules',
+        'RtConfigurator.view.main.MainController',
+        'RtConfigurator.view.configurator.dialogs.LoginDialog',
+        'RtConfigurator.view.configurator.logpanel.LogPanel',
+        'RtConfigurator.view.main.MainModel'
+    ],
+
     name: 'RtConfigurator',
 
     views: [

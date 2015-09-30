@@ -1,7 +1,11 @@
+var os = require('os');
+
 exports.CFG_FOLDER = "../../cfg";
 
-var BIN_FOLDER = "../../bin"; // Linux BBB
-//var BIN_FOLDER = "../../../x64/Debug"; // Windows
+var BIN_FOLDER = "../../../x64/Debug"; // Windows
+if(os.type()=="Linux"){
+    BIN_FOLDER = "../../bin"; // Linux BBB
+}
 
 var commonModuleParams = require('../client/ModulesCommonParams.def.js');
 var _ = require('underscore');

@@ -9,7 +9,8 @@ Ext.define('RtConfigurator.view.main.Main', {
     extend: 'Ext.container.Container',
 
     requires: [
-        //'RtConfigurator.view.configurator.ConfiguratorPanel'
+        'RtConfigurator.view.main.MainModel',
+        'RtConfigurator.view.main.MainController'
     ],
 
     alias: 'widget.mainpanel',
