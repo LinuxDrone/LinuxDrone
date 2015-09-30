@@ -2,9 +2,9 @@ var os = require('os');
 
 exports.CFG_FOLDER = "../../cfg";
 
-var BIN_FOLDER = "../../../x64/Debug"; // Windows
-if(os.type()=="Linux"){
-    BIN_FOLDER = "../../bin"; // Linux BBB
+var BIN_FOLDER = "../../bin"; // Unix
+if(os.type()=="Windows_NT"){
+    BIN_FOLDER = "../../../x64/Debug"; // Windows
 }
 
 var commonModuleParams = require('../client/ModulesCommonParams.def.js');
@@ -172,6 +172,20 @@ exports.MakeInstanceCommandParams = function (instance, configuration) {
     res.push("--rt-priority=" + instance["rt-priority"]);
     res.push("--main-task-period=" + instance["main-task-period"]);
     res.push("--transfer-task-period=" + instance["transfer-task-period"]);
+
+
+    Object.keys(instance.params).forEach(function (paramName) {
+        var paramValue = instance.params[paramName];
+
+        var normParamName = paramName.replace(/\ /g, "_").replace(/\+/g, "");
+
+        if(paramValue.constructor.name == "String"){
+            res.push("--"+normParamName+"=\"" + paramValue +"\"");
+        }else{
+            res.push("--"+normParamName+"=" + paramValue);
+        }
+    });
+
 
     configuration.links.forEach(function (link) {
         if (link.inInst == instance.instance && link.type == "memory") {
