@@ -5,7 +5,15 @@
  */
 Ext.define('RtConfigurator.Application', {
     extend: 'Ext.app.Application',
-    
+
+    requires: [
+        'RtConfigurator.store.StoreMetaModules',
+        'RtConfigurator.view.main.MainController',
+        'RtConfigurator.view.configurator.dialogs.LoginDialog',
+        'RtConfigurator.view.configurator.logpanel.LogPanel',
+        'RtConfigurator.view.main.MainModel'
+    ],
+
     name: 'RtConfigurator',
 
     views: [
@@ -22,9 +30,9 @@ Ext.define('RtConfigurator.Application', {
     
     launch: function () {
         // TODO - Launch the application
-        var newSaveAsDialog = Ext.create('RtConfigurator.view.configurator.dialogs.LoginDialog', {
+        var loginDialog = Ext.create('RtConfigurator.view.configurator.dialogs.LoginDialog', {
             ownerCt: this._mainView
         });
-        newSaveAsDialog.show();
+        loginDialog.show();
     }
 });
