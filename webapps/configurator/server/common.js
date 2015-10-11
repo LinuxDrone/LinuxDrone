@@ -344,7 +344,9 @@ exports.runhosts = function (req, res) {
                 var instanceCmdParams = exports.MakeInstanceCommandParams(instance, configuration);
 
                 var cmdName = instance.name + ".mod";
-                cmdName += ".exe";
+                if(os.type()=="Windows_NT"){
+                    cmdName += ".exe";
+                }
 
                 var new_process;
                 try {
