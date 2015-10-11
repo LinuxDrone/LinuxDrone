@@ -1,24 +1,24 @@
 /**
  * Created by vrubel on 14.07.14.
  */
-Ext.define('RtConfigurator.view.configurator.ConfiguratorPanel', {
+Ext.define('RtConfigurator.view.configurator.SettingsPanel', {
     extend: 'Ext.Panel',
-    alias: 'widget.configurator',
+    alias: 'widget.settings',
 
     requires: [
-        'RtConfigurator.view.configurator.svgpanel.SvgPanel',
-        'RtConfigurator.view.configurator.propertiespanel.PropertiesPanel'
+        //'RtConfigurator.view.configurator.svgpanel.SvgPanel',
+        //'RtConfigurator.view.configurator.propertiespanel.PropertiesPanel'
     ],
 
     viewModel: {
-        type: 'configurator'
+        type: 'settings'
     },
-    controller: 'configurator',
+    controller: 'settings',
 
     layout: 'border',
-    reference: 'svgTab',
+    reference: 'settingsTab',
 
-    title: 'Configuration',
+    title: 'Settings',
 
     items: [
         {
@@ -63,14 +63,6 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorPanel', {
             collapsible: true,
             width: 250,
             split: true
-        },
-        {
-            region: 'east',
-            xtype: 'propertiespanel'
-        },
-        {
-            region: 'center',
-            xtype: 'svgpanel'
         }
     ]
 });

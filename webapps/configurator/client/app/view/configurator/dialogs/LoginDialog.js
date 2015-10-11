@@ -55,12 +55,15 @@ Ext.define('RtConfigurator.view.configurator.dialogs.LoginDialog', {
 
 
                 // Добавим вкладку конфигуратора в главный лайаут приложения
-                this.ownerCt.ownerCt.floatParent.items.items[0].add(new RtConfigurator.view.configurator.ConfiguratorPanel(
+                var mainLayout = this.ownerCt.ownerCt.floatParent.items.items[0];
+                mainLayout.add(new RtConfigurator.view.configurator.ConfiguratorPanel(
                     {
                         url_server: values.server,
                         url_telemetry: values.telemetry
                     }
                 ));
+
+                mainLayout.add(new RtConfigurator.view.configurator.SettingsPanel());
 
                 this.up('form').close();
             }
