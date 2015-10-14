@@ -23,7 +23,7 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
     resizable: true,
     resizeHandles: 'n',
 
-        tabPosition: 'bottom',
+    tabPosition: 'bottom',
     height: 300,
     border: true,
     bodyStyle:{

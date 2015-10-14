@@ -7,7 +7,8 @@ Ext.define('RtConfigurator.view.configurator.dialogs.LoginDialog', {
     width: 350,
 
     requires: [
-        'RtConfigurator.view.configurator.ConfiguratorPanel'
+        'RtConfigurator.view.configurator.ConfiguratorPanel',
+        'RtConfigurator.view.configurator.SettingsPanel'
     ],
 
     // Fields will be arranged vertically, stretched to full width
