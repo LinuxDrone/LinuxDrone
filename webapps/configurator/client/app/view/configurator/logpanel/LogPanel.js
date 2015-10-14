@@ -3,17 +3,22 @@
  */
 Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
     extend: 'Ext.tab.Panel',
-
+    alias: 'widget.logpanel',
     requires: [
         'RtConfigurator.view.configurator.logpanel.LogModel',
         'RtConfigurator.view.configurator.logpanel.LogController'
     ],
 
-    floating: true,
-    autoShow: false,
-    layout: 'fit',
+    collapsible: true,
+    split: true,
+    layout:'fit',
+    title: 'Output',
+    collapsed : true,
+
+//    floating: true,
+//    autoShow: false,
     //bodyPadding: 5,
-    width: 550,
+//    width: 550,
 
     viewModel: {
         type: 'logpanel'
@@ -21,16 +26,16 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
     controller: 'logpanel',
     bodyPadding: 0,
     resizable: true,
-    resizeHandles: 'n',
+    //resizeHandles: 'n',
 
     tabPosition: 'bottom',
     height: 300,
-    border: true,
+//    border: true,
     bodyStyle:{
         opacity: 0.8
     },
     rbar: [
-        {
+        /*{
             xtype: 'tool',
             type: 'up',
             bind: {
@@ -51,7 +56,8 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
                 var logPanel = tbar.ownerCt;
                 logPanel.getViewModel().set('expanded', false);
             }
-        },{
+        },
+        */{
             xtype:'panel',
             bind: {
                 bodyStyle: {
@@ -72,7 +78,8 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
                         });
                     }
                 }
-            }
+            },
+            width: 20
         },{
             xtype:'panel',
             bind: {

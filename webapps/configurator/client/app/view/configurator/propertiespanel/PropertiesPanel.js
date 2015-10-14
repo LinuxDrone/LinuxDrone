@@ -109,6 +109,4 @@ Ext.define('RtConfigurator.view.configurator.propertiespanel.PropertiesPanel', {
             ]
         }
     ]
-
-
 });

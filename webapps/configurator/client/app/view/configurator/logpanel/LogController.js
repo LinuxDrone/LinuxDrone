@@ -9,7 +9,7 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogController', {
     init: function () {
         var view = this.getView();
         var model = view.getViewModel();
-
+/*
         model.bind('{expanded}', function (expanded) {
             var logPanel = this.getView();
             if (!logPanel.rendered) return;
@@ -29,6 +29,7 @@ Ext.define('RtConfigurator.view.configurator.logpanel.LogController', {
                 duration: 500
             });
         });
+        */
 
 /*
         var labelTelemetryStatus = view.lookupReference('LabelTelemetryStatus');

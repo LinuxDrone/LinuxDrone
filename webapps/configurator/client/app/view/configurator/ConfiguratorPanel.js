@@ -71,6 +71,10 @@ Ext.define('RtConfigurator.view.configurator.ConfiguratorPanel', {
         {
             region: 'center',
             xtype: 'svgpanel'
+        },
+        {
+            region: 'south',
+            xtype: 'logpanel'
         }
     ]
 });
