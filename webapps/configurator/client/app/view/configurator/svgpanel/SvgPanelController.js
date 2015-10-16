@@ -122,8 +122,9 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
         // Пока не установлено соединение вебсокета, кнопки старта и стопа будут красными
         //res.cssClass4ButtonsRunStop('btn btn-danger');
         var controller = this;
-        var model = this.getView().getViewModel();
-        var logPanel = this.getView().logPanel;
+        var view = this.getView();
+        var model = view.getViewModel();
+
 
         var hostServer = this.getView().$initParent.url_server;
         var hostTelemetry = this.getView().$initParent.url_telemetry;
@@ -236,6 +237,7 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
                                 // Найти панель для данного лога
 
                                 var logPanelID = resp.process.replace(":","-");
+                                var logPanel = view.ownerCt.lookupReference('refLogPanel');
                                 var logContentPanel = logPanel.lookupReference(logPanelID);
                                 if (!logContentPanel) {
                                     logContentPanel = Ext.create('RtConfigurator.view.configurator.logpanel.LogContentPanel', {
