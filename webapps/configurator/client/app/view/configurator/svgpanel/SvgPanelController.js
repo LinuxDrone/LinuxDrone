@@ -57,22 +57,18 @@ Ext.define('RtConfigurator.view.configurator.svgpanel.SvgPanelController', {
 
         // меняем цвет лабела отражающего статус коннекта вебсокета телеметрии
         model.bind('{telemetrySocketConnected}', function (socketConnected) {
-            /*
             if (socketConnected)
-                this.getView().logPanel.getViewModel().set('telemetryLabelBackground', 'LightGreen');
+                this.getView().ownerCt.lookupReference('refLogPanel').getViewModel().set('telemetryLabelBackground', 'LightGreen');
             else
-                this.getView().logPanel.getViewModel().set('telemetryLabelBackground', 'red');
-                */
+                this.getView().ownerCt.lookupReference('refLogPanel').getViewModel().set('telemetryLabelBackground', 'red');
         });
 
         // меняем цвет лабела отражающего статус коннекта вебсокета логов
         model.bind('{logSocketConnected}', function (socketConnected) {
-            /*
             if (socketConnected)
-                this.getView().logPanel.getViewModel().set('logLabelBackground', 'LightGreen');
+                this.getView().ownerCt.lookupReference('refLogPanel').getViewModel().set('logLabelBackground', 'LightGreen');
             else
-                this.getView().logPanel.getViewModel().set('logLabelBackground', 'red');
-                */
+                this.getView().ownerCt.lookupReference('refLogPanel').getViewModel().set('logLabelBackground', 'red');
         });
 
 

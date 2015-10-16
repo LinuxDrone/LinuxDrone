@@ -4,6 +4,7 @@
 Ext.define('RtConfigurator.view.configurator.logpanel.LogPanel', {
     extend: 'Ext.tab.Panel',
     alias: 'widget.logpanel',
+    reference: 'refLogPanel',
     requires: [
         'RtConfigurator.view.configurator.logpanel.LogModel',
         'RtConfigurator.view.configurator.logpanel.LogController'
